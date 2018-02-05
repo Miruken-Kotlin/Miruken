@@ -12,6 +12,7 @@ subprojects {
     }
 
     dependencies {
+        compile 'nl.komponents.kovenant:kovenant:3.3.0'
         testCompile 'junit:junit:4.12'
         testCompile "org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}"
     }
