@@ -1,14 +1,18 @@
 plugins {
-   id 'org.jetbrains.kotlin.jvm' version '1.2.21'
+   id 'org.jetbrains.kotlin.jvm' version '1.2.21' apply false
 }
 
 ext.kotlinVersion = '1.2.21'
 
-repositories {
-    jcenter()
-}
+subprojects {
+    apply plugin: 'org.jetbrains.kotlin.jvm'
 
-dependencies {
-    testCompile 'junit:junit:4.12'
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}" 
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
+        testCompile "org.jetbrains.kotlin:kotlin-test-junit:${kotlinVersion}"
+    }
 }
