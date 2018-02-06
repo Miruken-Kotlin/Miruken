@@ -1,12 +1,12 @@
-package com.miruken
+package com.miruken.callback
 
-import kotlin.reflect.KType
+import kotlin.reflect.KClass
 
 class Composition(callback: Any) : Trampoline(callback),
         ICallback, IResolveCallback,
         IFilterCallback, IBatchCallback {
 
-    override val resultType: KType?
+    override val resultType: KClass<*>?
         get() = (callback as? ICallback)?.resultType
 
     override var result: Any?
@@ -24,7 +24,7 @@ class Composition(callback: Any) : Trampoline(callback),
     override fun getResolveCallback(): Any {
         val resolve = (callback as? IResolveCallback)?.getResolveCallback()
         if (resolve === callback) return this
-        val callback = resolve ?: ""
+        val callback = resolve ?: Resolving.getDefaultResolvingCallback(callback)
         return Composition(callback)
     }
 }

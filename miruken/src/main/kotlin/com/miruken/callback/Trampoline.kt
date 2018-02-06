@@ -1,6 +1,7 @@
-package com.miruken
+package com.miruken.callback
 
 open class Trampoline(val callback: Any) : IDispatchCallback {
+
     override val policy: CallbackPolicy?
         get() = (callback as? IDispatchCallback)?.policy
 
@@ -8,6 +9,6 @@ open class Trampoline(val callback: Any) : IDispatchCallback {
             handler:  Any,
             greedy:   Boolean,
             composer: IHandler
-    ) : HandleResult =
+    ): HandleResult =
             Handler.dispatch(handler, callback, greedy, composer)
 }

@@ -1,9 +1,9 @@
-package com.miruken
+package com.miruken.callback
 
-import kotlin.reflect.KType
+import kotlin.reflect.KClass
 
 interface ICallback {
-    val resultType: KType?
+    val resultType: KClass<*>?
     var result:     Any?
 }
 

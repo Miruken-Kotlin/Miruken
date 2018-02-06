@@ -1,11 +1,11 @@
-package com.miruken
+package com.miruken.callback
 
 open class DecoratedHandler(val decoratee: IHandler) : Handler() {
     override fun handleCallback(
             callback: Any,
-            greedy: Boolean,
+            greedy:   Boolean,
             composer: IHandler?
-    ) : HandleResult =
+    ): HandleResult =
         decoratee.handle(callback, greedy, composer).otherwise {
             super.handleCallback(callback, greedy, composer)
         }

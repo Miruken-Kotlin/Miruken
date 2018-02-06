@@ -1,4 +1,4 @@
-package com.miruken
+package com.miruken.callback
 
 import kotlin.test.assertTrue
 import org.junit.Test as test
