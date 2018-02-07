@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.concurrent.Promise
 import kotlin.reflect.KClass
 
 open class Inquiry(val key: Any, many: Boolean = false)
@@ -18,7 +19,7 @@ open class Inquiry(val key: Any, many: Boolean = false)
     val resolutions: List<Any> = _resolutions.toList()
 
     override val resultType: KClass<*>?
-        get() = if (wantsAsync || isAsync) Any::class else null
+        get() = if (wantsAsync || isAsync) Promise::class else null
 
     override var result: Any?
         get() = TODO("not implemented")
