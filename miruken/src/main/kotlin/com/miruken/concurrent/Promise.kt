@@ -1,5 +1,6 @@
 package com.miruken.concurrent
 
+import com.miruken.*
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -52,7 +53,7 @@ open class Promise<out T>
     ) : this(mode) {
         try {
             executor(::resolve, ::reject) {
-                _onCancel.combine(it)
+                _onCancel += it
             }
         } catch (e: Throwable) {
             reject(e)
@@ -64,12 +65,12 @@ open class Promise<out T>
 
     private val isCompleted get() = _completed.get()
 
-    fun <R> then(then: ((T) -> R)) : Promise<R> {
+    fun <R> then(success: ((T) -> R)) : Promise<R> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = fun(result) {
                 try {
                     @Suppress("UNCHECKED_CAST")
-                    resolveChild(then(result as T))
+                    resolveChild(success(result as T))
                 } catch (e: Throwable) {
                     rejectChild(e)
                     return
@@ -83,19 +84,19 @@ open class Promise<out T>
                         rejectChild(_throwable!!)
                 }
                 else {
-                    _fulfilled = _fulfilled.combine(res)
-                    _rejected  = _rejected.combine(rejectChild)
+                    _fulfilled += res
+                    _rejected  += rejectChild
                 }
             }
         }
     }
 
-    fun <R> then(then: ((T) -> R), fail: ((Throwable) -> R)) : Promise<R> {
+    fun <R, S> then(success: ((T) -> R), fail: ((Throwable) -> S)) : Promise<Either<S, R>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = fun(result) {
                 try {
                     @Suppress("UNCHECKED_CAST")
-                    resolveChild(then(result as T))
+                    resolveChild(Either.Right(success(result as T)))
                 } catch (e: Throwable) {
                     rejectChild(e)
                     return
@@ -104,7 +105,7 @@ open class Promise<out T>
             val rej: ((Throwable) -> Unit) = fun(e) {
                 if (e !is CancellationException) {
                     try {
-                        resolveChild(fail(e))
+                        resolveChild(Either.Left(fail(e)))
                     } catch (t: Throwable) {
                         rejectChild(t)
                     }
@@ -120,19 +121,23 @@ open class Promise<out T>
                         rej(_throwable!!)
                 }
                 else {
-                    _fulfilled = _fulfilled.combine(res)
-                    _rejected  = _rejected.combine(rej)
+                    _fulfilled += res
+                    _rejected  += rej
                 }
             }
         }
     }
 
-    fun catch(fail: ((Throwable) -> Any)) : Promise<Any> {
+    fun <R> catch(fail: ((Throwable) -> R)) : Promise<Either<R, T>> {
         return createChild { resolveChild, rejectChild ->
+            val res: ((Any) -> Unit) =  fun(result) {
+                @Suppress("UNCHECKED_CAST")
+                resolveChild(Either.Right(result as T))
+            }
             val rej: ((Throwable) -> Unit) = fun(e) {
                 if (e !is CancellationException) {
                     try {
-                        resolveChild(fail(e))
+                        resolveChild(Either.Left(fail(e)))
                     } catch (t: Throwable) {
                         rejectChild(t)
                     }
@@ -144,14 +149,14 @@ open class Promise<out T>
                 if (isCompleted)
                 {
                     if (state == PromiseState.Fulfilled)
-                        resolveChild(_result as Any)
+                        res(_result!!)
                     else
                         rej(_throwable!!)
                 }
                 else
                 {
-                    _fulfilled = _fulfilled.combine(resolveChild)
-                    _rejected  = _rejected.combine(rej)
+                    _fulfilled += res
+                    _rejected  += rej
                 }
             }
         }
@@ -185,8 +190,8 @@ open class Promise<out T>
                         rej(_throwable!!)
                 }
                 else {
-                    _fulfilled = _fulfilled.combine(res)
-                    _rejected  = _rejected.combine(rej)
+                    _fulfilled += res
+                    _rejected  += rej
                 }
             }
         }
@@ -196,19 +201,20 @@ open class Promise<out T>
         reject(CancellationException())
     }
 
-    fun cancelled(cancelled: ((CancellationException) -> Unit)) {
+    fun cancelled(cancelled: ((CancellationException) -> Unit)) : Promise<T> {
         synchronized (_guard) {
             if (isCompleted) {
                 if (state == PromiseState.Cancelled) {
                     cancelled(_throwable as CancellationException)
                 }
             } else {
-                _rejected = _rejected.combine {
+                _rejected +=  {
                     val cancel = it as? CancellationException
                     if (cancel != null) cancelled(cancel)
                 }
             }
         }
+        return this
     }
 
     protected open fun <R> createChild(
@@ -295,16 +301,16 @@ fun <T> Promise<Promise<T>>.unwrap() : Promise<T> {
     })
 }
 
-private fun <R> (() -> R).combine(other: (() -> R)) : (() -> R) {
-    return {
+private operator fun <R> (() -> R)?.plus(other: (() -> R)) : (() -> R) {
+    return if (this == null) other else ({
         this()
         other()
-    }
+    })
 }
 
-private fun <T, R> ((T) -> R).combine(other: ((T) -> R)) : ((T) -> R) {
-    return {
+private operator fun <T, R> ((T) -> R)?.plus(other: ((T) -> R)) : ((T) -> R) {
+    return if (this == null) other else ({
         this(it)
         other(it)
-    }
+    })
 }
