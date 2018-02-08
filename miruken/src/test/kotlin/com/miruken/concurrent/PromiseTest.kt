@@ -213,6 +213,21 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
+    @test fun `Finalizes fulfilled promise rejection`() {
+        var called = 0
+        Promise.resolve("Hello")
+        .finallyp {
+            ++called
+            Promise.reject(Exception("Not good"))
+        }.then {
+            fail("Should skip")
+        }.catch {
+            assertEquals("Not good", it.message)
+            ++called
+        }
+        assertEquals(2, called)
+    }
+
     @test fun `Finalizes rejected promise`() {
         var called  = 0
         val promise = Promise.reject(Exception("Rejected"))
@@ -286,7 +301,6 @@ class PromiseTest {
         assertTrue { called }
         assertTrue { cancelled }
     }
-
 
     @test fun `Behaves covariantly`() {
         val promise = Promise.resolve(listOf(1, 2, 3))

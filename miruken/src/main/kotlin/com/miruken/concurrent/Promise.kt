@@ -12,10 +12,7 @@ enum class PromiseState {
     Cancelled
 }
 
-enum class ChildCancelMode {
-    All,
-    Any
-}
+enum class ChildCancelMode { All, Any }
 
 open class Promise<out T>
     private constructor(val cancelMode: ChildCancelMode) {
@@ -27,6 +24,11 @@ open class Promise<out T>
     private val _completed  : AtomicBoolean = AtomicBoolean()
     private val _childCount : AtomicInteger = AtomicInteger()
     private val _guard      = java.lang.Object()
+
+    var state : PromiseState = PromiseState.Pending
+        protected set
+
+    private val isCompleted get() = _completed.get()
 
     constructor(
             executor: ((T) -> Unit, (Throwable) -> Unit) -> Unit
@@ -52,18 +54,11 @@ open class Promise<out T>
             executor: ((T) -> Unit, (Throwable) -> Unit, (((() -> Unit)) -> Unit)) -> Unit
     ) : this(mode) {
         try {
-            executor(::resolve, ::reject) {
-                _onCancel += it
-            }
+            executor(::resolve, ::reject) { _onCancel = it }
         } catch (e: Throwable) {
             reject(e)
         }
     }
-
-    var state : PromiseState = PromiseState.Pending
-        protected set
-
-    private val isCompleted get() = _completed.get()
 
     fun <R> then(success: ((T) -> R)) : Promise<R> {
         return createChild { resolveChild, rejectChild ->
