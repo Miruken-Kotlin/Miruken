@@ -166,11 +166,46 @@ class PromiseTest {
         assertTrue { verify }
     }
 
+    @test fun `Pipes fulfilled promise with projection`() {
+        var called = 0
+        Promise.resolve(22).thenp {
+            Promise.resolve(it * 2)
+        }.then {
+            assertEquals(44, it)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @test fun `Pipes rejected promise with projection`() {
+        var called = 0
+        Promise.resolve(22).thenp {
+            Promise.reject(Exception("Crash and burn"))
+        }.catch {
+            assertEquals("Crash and burn", it.message)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
     @test fun `Finalizes fulfilled promise`() {
         var called = 0
         Promise.resolve("Hello")
         .finally {
             ++called
+        }.then {
+            assertEquals("Hello", it)
+            ++called
+        }
+        assertEquals(2, called)
+    }
+
+    @test fun `Finalizes fulfilled promise projection`() {
+        var called = 0
+        Promise.resolve("Hello")
+        .finallyp {
+            ++called
+            Promise.resolve("Goodbye")
         }.then {
             assertEquals("Hello", it)
             ++called
@@ -252,7 +287,7 @@ class PromiseTest {
         assertTrue { cancelled }
     }
 
-    
+
     @test fun `Behaves covariantly`() {
         val promise = Promise.resolve(listOf(1, 2, 3))
         val promise2 : Promise<Collection<Int>> = promise
