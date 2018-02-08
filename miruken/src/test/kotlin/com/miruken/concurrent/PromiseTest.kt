@@ -21,6 +21,11 @@ class PromiseTest {
         assertTrue { promise.state === PromiseState.Rejected }
     }
 
+    @test fun `Creates cancellable promise`() {
+        val promise = Promise<String> { _, _, _ -> }
+        assertTrue { promise.state === PromiseState.Pending }
+    }
+
     @test fun `Resolves promise`() {
         val promise = Promise<String> { resolve, _ ->
             resolve("Hello")
@@ -215,17 +220,6 @@ class PromiseTest {
                 assertEquals("22", it)
                 ++called
             }
-        }
-        assertEquals(1, called)
-    }
-
-    @test fun `Unwraps rejected promise with catch`() {
-        var called = 0
-        Promise.reject(Exception("Unknown")) flatMap {
-            Promise.resolve(it.toString())
-        } catch {
-            assertEquals("Unknown", it.message)
-            ++called
         }
         assertEquals(1, called)
     }

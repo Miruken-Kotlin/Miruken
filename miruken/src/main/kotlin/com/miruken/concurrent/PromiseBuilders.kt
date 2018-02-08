@@ -2,18 +2,68 @@ package com.miruken.concurrent
 
 import com.miruken.Either
 import com.miruken.fold
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.schedule
 
-/**
-fun Promise.Companion.all(results: Collection<Any>) : Promise<Array<Any>> {
+fun Promise.Companion.all(results: Collection<Any>) : Promise<Array<out Any>> {
     if (results.isEmpty())
         return Promise.resolve(emptyArray())
 
     var pending   = AtomicInteger(0)
     val promises  = results.map(::resolve)
     var fulfilled = arrayOfNulls<Any>(promises.size)
+
+    return Promise { resolveChild, rejectChild ->
+        for (index in 1..promises.size) {
+            promises[index].then({
+                fulfilled[index] = it
+                if (pending.incrementAndGet() == promises.size)
+                    resolveChild(fulfilled as Array<Any>)
+            }, rejectChild)
+        }
+    }
 }
-*/
+
+fun Promise.Companion.race(promises: Collection<Promise<Any>>) : Promise<Any> {
+    return Promise { resolve, reject ->
+        for (promise in promises) {
+            promise.then(resolve, reject)
+        }
+    }
+}
+
+fun Promise.Companion.delay(delayMs: Long) : Promise<Unit> {
+    var timer: TimerTask? = null
+    return Promise<Unit> { resolve, _ ->
+        timer = Timer().schedule(delayMs) {
+            resolve(Unit)
+        }
+    } finally {
+        timer?.cancel()
+    }
+}
+
+fun <T> Promise.Companion.run(block: () -> T) : Promise<T> {
+    return Promise { resolve, reject ->
+        try {
+            resolve(block())
+        } catch (e: Throwable) {
+            reject(e)
+        }
+    }
+}
+
+fun <T> Promise.Companion.start(block: () -> Promise<T>) : Promise<T> {
+    return Promise { resolve, reject ->
+        try {
+            block().then(resolve, reject)
+        } catch (e: Throwable) {
+            reject(e)
+        }
+    }
+}
 
 /**
  * seq
