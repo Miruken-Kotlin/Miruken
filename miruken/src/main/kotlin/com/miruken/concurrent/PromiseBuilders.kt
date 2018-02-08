@@ -45,6 +45,14 @@ infix fun <T, S> Promise<T>
         .flatMap(f: (T) -> Promise<S>): Promise<S> =
         then(f).unwrap()
 
+fun <T, S, U> Promise<T>
+        .flatMap(f: (T) -> Promise<S>,
+                 t: (Throwable) -> U): Promise<Either<U, S>> =
+        then(f, t).then {
+            it.fold(
+                    { Promise.resolve(Either.Left(it)) },
+                    { it.then { Either.Right(it) } })
+        }.unwrap()
 
 infix fun <T> Promise<T>
         .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =

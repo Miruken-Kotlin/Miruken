@@ -205,18 +205,27 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Unwraps fulfilled promise with fail projection`() {
+    @test fun `Unwraps fulfilled promise with success or fail`() {
         var called = 0
-        Promise.resolve(22).then(
+        Promise.resolve(22).flatMap(
                 { Promise.resolve(it.toString()) },
                 { fail("Should skip") }
-        ).then { it: Either<Nothing, Promise<String>> ->
+        ).then {
             it.map {
-                it.then {
-                    assertEquals("22", it)
-                    ++called
-                }
+                assertEquals("22", it)
+                ++called
             }
+        }
+        assertEquals(1, called)
+    }
+
+    @test fun `Unwraps rejected promise with catch`() {
+        var called = 0
+        Promise.reject(Exception("Unknown")) flatMap {
+            Promise.resolve(it.toString())
+        } catch {
+            assertEquals("Unknown", it.message)
+            ++called
         }
         assertEquals(1, called)
     }
