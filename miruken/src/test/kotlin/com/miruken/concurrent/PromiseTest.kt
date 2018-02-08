@@ -177,7 +177,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Unwraps rejected promise with projection`() {
+    @test fun `Unwraps fulfilled promise with rejection`() {
         var called = 0
         Promise.resolve(22).then {
             Promise.reject(Exception("Crash and burn"))
@@ -186,6 +186,10 @@ class PromiseTest {
             ++called
         }
         assertEquals(1, called)
+    }
+
+    @test fun `Unwraps rejected promise with projection`() {
+
     }
 
     @test fun `Unwraps fulfilled promise with fail projection`() {

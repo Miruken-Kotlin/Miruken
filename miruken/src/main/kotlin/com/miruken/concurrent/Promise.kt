@@ -83,7 +83,7 @@ open class Promise<out T>
             }
         }
     }
-    
+
     fun <R, S> then(success: ((T) -> R), fail: ((Throwable) -> S)) : Promise<Either<S, R>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
@@ -203,8 +203,8 @@ open class Promise<out T>
                 }
             } else {
                 _rejected +=  {
-                    val cancel = it as? CancellationException
-                    if (cancel != null) cancelled(cancel)
+                    if (it is CancellationException)
+                        cancelled(it)
                 }
             }
         }
@@ -291,10 +291,8 @@ open class Promise<out T>
 fun <T> Promise<Promise<T>>.unwrap() : Promise<T> {
     return Promise(this.cancelMode, {
         resolve, reject, onCancel -> onCancel { this.cancel() }
-        then({ inner -> inner.then(
-                { result -> resolve(result) },
-                { e -> reject(e) }
-            ).cancelled(reject)}, reject).cancelled(reject)
+        then({ inner -> inner.then(resolve, reject)
+            .cancelled(reject)}, reject).cancelled(reject)
     })
 }
 
