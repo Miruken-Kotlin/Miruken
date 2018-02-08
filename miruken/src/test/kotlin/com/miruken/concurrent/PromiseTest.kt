@@ -166,23 +166,37 @@ class PromiseTest {
         assertTrue { verify }
     }
 
-    @test fun `Pipes fulfilled promise with projection`() {
+    @test fun `Unwraps fulfilled promise with projection`() {
         var called = 0
-        Promise.resolve(22).thenp {
+        Promise.resolve(22).then {
             Promise.resolve(it * 2)
-        }.then {
+        }.unwrap().then {
             assertEquals(44, it)
             ++called
         }
         assertEquals(1, called)
     }
 
-    @test fun `Pipes rejected promise with projection`() {
+    @test fun `Unwraps rejected promise with projection`() {
         var called = 0
-        Promise.resolve(22).thenp {
+        Promise.resolve(22).then {
             Promise.reject(Exception("Crash and burn"))
-        }.catch {
+        }.unwrap().catch {
             assertEquals("Crash and burn", it.message)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @test fun `Unwraps fulfilled promise with fail projection`() {
+        var called = 0
+        Promise<Int> { resolve, _ ->
+            resolve(22)
+        }.then(
+                { Promise.resolve(it.toString()) },
+                { fail("Should skip") }
+        ).then {
+            it.fold({}, { it.then { assertEquals("22", it) } })
             ++called
         }
         assertEquals(1, called)
@@ -203,7 +217,7 @@ class PromiseTest {
     @test fun `Finalizes fulfilled promise projection`() {
         var called = 0
         Promise.resolve("Hello")
-        .finallyp {
+        .finally {
             ++called
             Promise.resolve("Goodbye")
         }.then {
@@ -216,7 +230,7 @@ class PromiseTest {
     @test fun `Finalizes fulfilled promise rejection`() {
         var called = 0
         Promise.resolve("Hello")
-        .finallyp {
+        .finally {
             ++called
             Promise.reject(Exception("Not good"))
         }.then {

@@ -83,7 +83,7 @@ open class Promise<out T>
             }
         }
     }
-
+    
     fun <R, S> then(success: ((T) -> R), fail: ((Throwable) -> S)) : Promise<Either<S, R>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
@@ -152,46 +152,18 @@ open class Promise<out T>
         }
     }
 
-    fun finally(final: (() -> Unit)) : Promise<T> {
+    fun <R> finally(final: (() -> R)) : Promise<T> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
                 try {
-                    final()
-                    resolveChild(_result!!)
-                } catch (e: Throwable) {
-                    rejectChild(e)
-                }
-            }
-            val rej: ((Throwable) -> Unit) = {
-                try {
-                    final()
-                    rejectChild(it)
-                } catch (t: Throwable) {
-                    rejectChild(t)
-                }
-            }
-            synchronized (_guard) {
-                if (isCompleted) {
-                    if (state == PromiseState.Fulfilled)
-                        res(_result!!)
-                    else
-                        rej(_throwable!!)
-                }
-                else {
-                    _fulfilled += res
-                    _rejected  += rej
-                }
-            }
-        }
-    }
-
-    fun finallyp(final: (() -> Promise<*>)) : Promise<T> {
-        return createChild { resolveChild, rejectChild ->
-            val res: ((Any) -> Unit) = {
-                try {
-                    final().then(
-                        { _ -> resolveChild(_result!!) },
-                        rejectChild)
+                    val result = final()
+                    if (result is Promise<*>) {
+                        result.then(
+                            { _ -> resolveChild(_result!!) },
+                            rejectChild)
+                    } else {
+                        resolveChild(_result!!)
+                    }
                 } catch (e: Throwable) {
                     rejectChild(e)
                 }
@@ -312,36 +284,6 @@ open class Promise<out T>
                 }
     }
 }
-
-/**
- * Pipes [Promise] results
- */
-fun <T, R> Promise<T>.thenp(success: ((T) -> Promise<R>)) =
-        then(success).unwrap()
-
-/**
- * Pipes [Promise] results or catches and pipes [Throwable]
- */
-fun <T, R, S> Promise<T>.thenp(
-        success: ((T) -> Promise<R>),
-        fail: ((Throwable) -> Promise<S>)
-): Promise<Either<S, R>> = then(success, fail)
-        .then({
-            it.fold(
-                    { it.then { Either.Left(it) } },
-                    { it.then { Either.Right(it) } })
-        }).unwrap()
-
-/**
- * Catches and pipes [Throwable]
- */
-fun <T, R> Promise<T>.catchp(
-        fail: ((Throwable) -> Promise<R>)
-) : Promise<Either<R, T>> = catch(fail)
-        .then({ it -> it.fold(
-                { it.then { Either.Left(it) } },
-                { Promise.resolve(Either.Right(it)) })
-        }).unwrap()
 
 /**
  * Unwraps [Promise] pipeline
