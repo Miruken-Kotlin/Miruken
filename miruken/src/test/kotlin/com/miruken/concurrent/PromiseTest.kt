@@ -90,24 +90,24 @@ class PromiseTest {
             ++called
             19
         }.then {
-            it.fold({}, {
+            it mapLeft {
               assertEquals(19, it)
-            })
-            ++called
+              ++called
+            }
         }
         assertEquals(2, called)
     }
 
     @test fun `Handles fulfilled promise with fail projection`() {
         var called = 0
-        Promise<Int> { resolve, _ ->
-            resolve(22)
-        }.then(
+        Promise.resolve(22).then(
             { it.toString() },
             { fail("Should skip") }
         ).then {
-            it.fold({}, { assertEquals("22", it) })
-            ++called
+            it map {
+                assertEquals("22", it)
+                ++called
+            }
         }
         assertEquals(1, called)
     }
@@ -123,9 +123,12 @@ class PromiseTest {
                 ++called
             }
         ).then {
-            it.fold({ assertEquals(1, it) }, {})
+            it mapLeft {
+                assertEquals(1, it)
+                ++called
+            }
         }
-        assertEquals(1, called)
+        assertEquals(2, called)
     }
 
     @test fun `Propagates fulfilled promise`() {
@@ -133,15 +136,18 @@ class PromiseTest {
         Promise.resolve("Hello")
          .catch { }
          .then {
-             it.fold({}, {
+             it map {
                  assertEquals("Hello", it)
-             })
-             ++called
-             "Goodbye"
+                 ++called
+                 "Goodbye"
+             }
         }.then {
-            assertEquals("Goodbye", it)
+            it map {
+                assertEquals("Goodbye", it)
+                ++called
+            }
         }
-        assertEquals(1, called)
+        assertEquals(2, called)
     }
 
     @test fun `Propagates rejected promise`() {
@@ -168,9 +174,9 @@ class PromiseTest {
 
     @test fun `Unwraps fulfilled promise with projection`() {
         var called = 0
-        Promise.resolve(22).then {
+        Promise.resolve(22) flatMap {
             Promise.resolve(it * 2)
-        }.unwrap().then {
+        } then {
             assertEquals(44, it)
             ++called
         }
@@ -179,9 +185,9 @@ class PromiseTest {
 
     @test fun `Unwraps fulfilled promise with rejection`() {
         var called = 0
-        Promise.resolve(22).then {
+        Promise.resolve(22) flatMap  {
             Promise.reject(Exception("Crash and burn"))
-        }.unwrap().catch {
+        } catch {
             assertEquals("Crash and burn", it.message)
             ++called
         }
@@ -189,29 +195,37 @@ class PromiseTest {
     }
 
     @test fun `Unwraps rejected promise with projection`() {
-
+        var called = 0
+        Promise.reject(Exception("Wrong Order")) flatMapError  {
+            Promise.resolve("Soccer")
+        } then {
+            assertEquals("Soccer", it)
+            ++called
+        }
+        assertEquals(1, called)
     }
 
     @test fun `Unwraps fulfilled promise with fail projection`() {
         var called = 0
-        Promise<Int> { resolve, _ ->
-            resolve(22)
-        }.then(
+        Promise.resolve(22).then(
                 { Promise.resolve(it.toString()) },
                 { fail("Should skip") }
-        ).then {
-            it.fold({}, { it.then { assertEquals("22", it) } })
-            ++called
+        ).then { it: Either<Nothing, Promise<String>> ->
+            it.map {
+                it.then {
+                    assertEquals("22", it)
+                    ++called
+                }
+            }
         }
         assertEquals(1, called)
     }
 
     @test fun `Finalizes fulfilled promise`() {
         var called = 0
-        Promise.resolve("Hello")
-        .finally {
+        Promise.resolve("Hello") finally {
             ++called
-        }.then {
+        } then {
             assertEquals("Hello", it)
             ++called
         }
@@ -220,11 +234,10 @@ class PromiseTest {
 
     @test fun `Finalizes fulfilled promise projection`() {
         var called = 0
-        Promise.resolve("Hello")
-        .finally {
+        Promise.resolve("Hello") finally {
             ++called
             Promise.resolve("Goodbye")
-        }.then {
+        } then {
             assertEquals("Hello", it)
             ++called
         }
@@ -233,13 +246,12 @@ class PromiseTest {
 
     @test fun `Finalizes fulfilled promise rejection`() {
         var called = 0
-        Promise.resolve("Hello")
-        .finally {
+        Promise.resolve("Hello") finally {
             ++called
             Promise.reject(Exception("Not good"))
-        }.then {
+        } then {
             fail("Should skip")
-        }.catch {
+        } catch {
             assertEquals("Not good", it.message)
             ++called
         }
@@ -249,9 +261,9 @@ class PromiseTest {
     @test fun `Finalizes rejected promise`() {
         var called  = 0
         val promise = Promise.reject(Exception("Rejected"))
-        promise.finally {
+        promise finally {
             ++called
-        }.catch {
+        } catch {
             assertEquals("Rejected", it.message)
             ++called
         }
@@ -318,6 +330,34 @@ class PromiseTest {
         assertEquals(PromiseState.Cancelled, promise.state)
         assertTrue { called }
         assertTrue { cancelled }
+    }
+
+    @test fun `Fulfills promise using infix notation`() {
+        var called = 0
+        Promise.resolve("Hello") then {
+            assertEquals("Hello", it)
+            ++called
+            24
+        } then {
+            assertEquals(24, it)
+            ++called
+        }
+       assertEquals(2, called)
+    }
+
+    @test fun `Rejects promise using infix notation`() {
+        var called = 0
+        Promise.reject(Exception("Cool!!")) catch {
+            assertEquals("Cool!!", it.message)
+            ++called
+            19
+        } then {
+            it.mapLeft {
+                assertEquals(19, it)
+                ++called
+            }
+        }
+        assertEquals(2, called)
     }
 
     @test fun `Behaves covariantly`() {

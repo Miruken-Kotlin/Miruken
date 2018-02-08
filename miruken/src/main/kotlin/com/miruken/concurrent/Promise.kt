@@ -60,7 +60,7 @@ open class Promise<out T>
         }
     }
 
-    fun <R> then(success: ((T) -> R)) : Promise<R> {
+    infix fun <R> then(success: ((T) -> R)) : Promise<R> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
                 try {
@@ -119,7 +119,7 @@ open class Promise<out T>
         }
     }
 
-    fun <R> catch(fail: ((Throwable) -> R)) : Promise<Either<R, T>> {
+    infix fun <R> catch(fail: ((Throwable) -> R)) : Promise<Either<R, T>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) =  {
                 resolveChild(Either.Right(_result!!))
@@ -152,7 +152,7 @@ open class Promise<out T>
         }
     }
 
-    fun <R> finally(final: (() -> R)) : Promise<T> {
+    infix fun <R> finally(final: (() -> R)) : Promise<T> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
                 try {
@@ -292,7 +292,8 @@ fun <T> Promise<Promise<T>>.unwrap() : Promise<T> {
     return Promise(this.cancelMode, {
         resolve, reject, onCancel -> onCancel { this.cancel() }
         then({ inner -> inner.then(resolve, reject)
-            .cancelled(reject)}, reject).cancelled(reject)
+            .cancelled(reject)}, reject)
+            .cancelled(reject)
     })
 }
 

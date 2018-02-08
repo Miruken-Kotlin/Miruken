@@ -18,14 +18,14 @@ fun Promise.Companion.all(results: Collection<Any>) : Promise<Array<Any>> {
 /**
  * seq
  */
-inline infix fun <T, S> Promise<T>
+infix fun <T, S> Promise<T>
         .seq(p: Promise<S>): Promise<S> = p
 
 /**
  * map/fmap
  */
-inline infix fun <T, S> Promise<T>
-        .map(noinline f: (T) -> S): Promise<S> = then(f)
+infix fun <T, S> Promise<T>
+        .map(f: (T) -> S): Promise<S> = then(f)
 
 infix fun <T> Promise<T>
         .mapError(f: (Throwable) -> T): Promise<T> =
@@ -41,9 +41,10 @@ infix fun <T, S> Promise<(T) -> S>
 /**
  * flatMap/bind/chain/liftM
  */
-inline infix fun <T, S> Promise<T>
-        .flatMap(noinline f: (T) -> Promise<S>): Promise<S> =
+infix fun <T, S> Promise<T>
+        .flatMap(f: (T) -> Promise<S>): Promise<S> =
         then(f).unwrap()
+
 
 infix fun <T> Promise<T>
         .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =
