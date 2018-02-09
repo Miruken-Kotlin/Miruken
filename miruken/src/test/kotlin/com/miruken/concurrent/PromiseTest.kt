@@ -6,6 +6,7 @@ import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import kotlin.test.*
 import org.junit.Test as test
+import org.junit.Ignore as ignore
 
 class PromiseTest {
     @test fun `Starts in pending state`() {
@@ -67,7 +68,7 @@ class PromiseTest {
 
     @test fun `Adopts resolved promise dynamically`() {
         var called   = false
-        var any: Any = Promise.resolve("Hello")
+        val any: Any = Promise.resolve("Hello")
         val promise  = Promise.resolve(any) then {
             assertEquals("Hello", it)
             called = true
@@ -78,7 +79,7 @@ class PromiseTest {
 
     @test fun `Adopts rejected promise dynamically`() {
         var called   = false
-        var any: Any = Promise.reject(Exception("Rejected"))
+        val any: Any = Promise.reject(Exception("Rejected"))
         val promise  = Promise.resolve(any) catch {
             assertEquals("Rejected", it.message)
             called = true
@@ -88,7 +89,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Behaves covariantly`() {
+    @test fun `Promises are covariant`() {
         val promise = Promise.resolve(listOf(1, 2, 3))
         val promise2 : Promise<Collection<Int>> = promise
         promise2.then {
@@ -410,16 +411,34 @@ class PromiseTest {
     @test fun `Waits for all promises to fulfill`() {
         var called   = false
         val promises = (1..5).map { Promise.resolve(it) }
-        Promise.all(promises).then {
+        Promise.all(promises) then {
+            assertEquals(promises.size, it.size)
+            assertTrue { it == (1..5).toList() }
             called = true
         }
-        //assertTrue { called }
+        assertTrue { called }
     }
 
+    @test fun `Rejects promise if any promise fails`() {
+        var called   = false
+        val promises = (1..5).mapIndexed { index, result ->
+            if (index == 3)
+                Promise.reject(Exception("$index failed"))
+            else
+                Promise.resolve(result)
+        }
+        Promise.all(promises) catch {
+            called = true
+        }
+        assertTrue { called }
+    }
+
+    /**
     @test fun `Resolves after delay`() {
         val stopwatch = object : Stopwatch() {}
         Promise.delay(300) then {
             val elapsed = stopwatch.runtime(TimeUnit.MILLISECONDS)
         }
     }
+    */
 }

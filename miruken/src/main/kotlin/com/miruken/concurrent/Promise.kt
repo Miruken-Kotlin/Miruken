@@ -277,6 +277,7 @@ open class Promise<out T>
 
         fun resolve() = resolve(Unit)
 
+        @Suppress("UNCHECKED_CAST")
         inline fun <reified S: Any> resolve(result: S): Promise<S> =
                 if (S::class === Any::class && result is Promise<*>) {
                     Promise<Any> { suc, fail ->

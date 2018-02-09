@@ -18,8 +18,8 @@ fun Promise.Companion.all(results: Collection<Any>) : Promise<List<Any>> {
     val fulfilled = arrayOfNulls<Any>(promises.size)
 
     return Promise { resolveChild, rejectChild ->
-        for (index in 1..promises.size) {
-            promises[index].then({
+        promises.forEachIndexed { index, promise ->
+            promise.then({
                 fulfilled[index] = it
                 @Suppress("UNCHECKED_CAST")
                 if (pending.incrementAndGet() == promises.size)
