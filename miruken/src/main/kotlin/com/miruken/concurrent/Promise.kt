@@ -272,10 +272,12 @@ open class Promise<out T>
     }
 
     companion object {
+        val True  = resolve(true)
+        val False = resolve(false)
+        val Empty = resolve(Unit)
+
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }
-
-        fun resolve() = resolve(Unit)
 
         @Suppress("UNCHECKED_CAST")
         inline fun <reified S: Any> resolve(result: S): Promise<S> =

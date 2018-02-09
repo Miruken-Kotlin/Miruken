@@ -96,6 +96,37 @@ class PromiseTest {
             assertTrue { it.containsAll(listOf(1, 2, 3)) }
         }
     }
+
+    @test fun `Returns canonical true promise`() {
+        var called = false
+        Promise.True then {
+            assertTrue { it }
+            called = true
+        }
+        assertTrue { called }
+        assertSame(Promise.True, Promise.True)
+    }
+
+    @test fun `Returns canonical false promise`() {
+        var called = false
+        Promise.False then {
+            assertFalse { it }
+            called = true
+        }
+        assertTrue { called }
+        assertSame(Promise.False, Promise.False)
+    }
+
+    @test fun `Returns canonical empty promise`() {
+        var called = false
+        Promise.Empty then {
+            assertEquals(Unit, it)
+            called = true
+        }
+        assertTrue { called }
+        assertSame(Promise.Empty, Promise.Empty)
+    }
+
     @test fun `Fulfills promise only once`() {
         var called = 0
         Promise<String> { resolve, _ ->
@@ -428,6 +459,7 @@ class PromiseTest {
                 Promise.resolve(result)
         }
         Promise.all(promises) catch {
+            assertEquals("3 failed", it.message)
             called = true
         }
         assertTrue { called }
