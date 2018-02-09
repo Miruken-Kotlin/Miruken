@@ -506,4 +506,20 @@ class PromiseTest {
         done.await()
         assertTrue { called }
     }
+
+
+    @test fun `Cancels timeout when promise cancelled`() {
+        var called  = false
+        val done    = CountDownLatch(1)
+        var promise = Promise.delay(100).timeout(50) then {
+            called = true
+        } finally {
+            done.countDown()
+        } cancelled {
+            called = true
+        }
+        promise.cancel()
+        done.await()
+        assertTrue { called }
+    }
 }

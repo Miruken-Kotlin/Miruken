@@ -195,7 +195,7 @@ open class Promise<out T>
         reject(CancellationException())
     }
 
-    fun cancelled(cancelled: ((CancellationException) -> Unit)) : Promise<T> {
+    infix fun cancelled(cancelled: ((CancellationException) -> Unit)) : Promise<T> {
         synchronized (_guard) {
             if (isCompleted) {
                 if (state == PromiseState.Cancelled) {
