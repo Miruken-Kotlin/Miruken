@@ -1,39 +1,40 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallbackPolicy
 import kotlin.reflect.KClass
 
-interface ICallback {
+interface Callback {
     val resultType: KClass<*>?
     var result:     Any?
 }
 
-interface IAsyncCallback {
+interface AsyncCallback {
     val isAsync:    Boolean
     val wantsAsync: Boolean
 }
 
-interface IBoundCallback {
+interface Bounding {
     val bounds: Any
 }
 
-interface IResolveCallback {
+interface Resolving {
     fun getResolveCallback() : Any
 }
 
-interface IBatchCallback {
+interface Batching {
     val allowBatching: Boolean
 }
 
-interface IFilterCallback {
+interface Filtering {
     val allowFiltering: Boolean
 }
 
-interface IDispatchCallback {
+interface Dispatching {
     val policy: CallbackPolicy?
 
     fun dispatch(
             handler:  Any,
             greedy:   Boolean,
-            composer: IHandler
+            composer: Handling
     ) : HandleResult
 }

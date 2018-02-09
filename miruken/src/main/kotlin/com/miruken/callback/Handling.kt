@@ -1,13 +1,13 @@
 package com.miruken.callback
 
-interface IHandler {
+interface Handling {
     fun handle(
             callback: Any,
             greedy:   Boolean,
-            composer: IHandler? = null
+            composer: Handling? = null
     ) : HandleResult
 
-    operator fun plus(other: IHandler) =
+    operator fun plus(other: Handling) =
             CascadeHandler(this, other)
 
     operator fun plus(others: Collection<Any>) =

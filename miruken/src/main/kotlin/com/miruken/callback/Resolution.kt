@@ -1,7 +1,7 @@
 package com.miruken.callback
 
-open class Resolving(key: Any, callback: Any)
-    : Inquiry(key, true), IResolveCallback {
+open class Resolution(key: Any, val callback: Any)
+    : Inquiry(key, true), Resolving {
 
     override fun getResolveCallback(): Any = this
 

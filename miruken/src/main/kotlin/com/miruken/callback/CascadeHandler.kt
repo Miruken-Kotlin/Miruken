@@ -1,13 +1,13 @@
 package com.miruken.callback
 
 class CascadeHandler(
-        private val handlerA: IHandler,
-        private val handlerB: IHandler) : Handler() {
+        private val handlerA: Handling,
+        private val handlerB: Handling) : Handler() {
 
     override fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: IHandler?
+            composer: Handling?
     ): HandleResult {
         val result = super.handleCallback(callback, greedy, composer)
         return if (greedy) {

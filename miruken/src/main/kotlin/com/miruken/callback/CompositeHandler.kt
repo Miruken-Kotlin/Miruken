@@ -3,7 +3,7 @@ package com.miruken.callback
 class CompositeHandler(vararg handlers: Any)
     : Handler(), ICompositeHandler {
 
-    private val _handlers = mutableListOf<IHandler>()
+    private val _handlers = mutableListOf<Handling>()
 
     init {
         addHandlers(handlers)
@@ -28,7 +28,7 @@ class CompositeHandler(vararg handlers: Any)
         return this
     }
 
-    private fun find(target: Any) : IHandler? {
+    private fun find(target: Any) : Handling? {
         for (handler in _handlers) {
             if (handler === target) return handler
             if (handler is HandlerAdapter && handler.handler === target)

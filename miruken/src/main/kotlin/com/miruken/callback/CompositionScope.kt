@@ -1,10 +1,10 @@
 package com.miruken.callback
 
-class CompositionScope(handler: IHandler) : DecoratedHandler(handler) {
+class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: IHandler?
+            composer: Handling?
     ): HandleResult {
         val wrapped =
                 if (callback::class === Composition::class)

@@ -4,7 +4,7 @@ class HandlerAdapter(val handler: Any) : Handler() {
     override fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: IHandler?
+            composer: Handling?
     ): HandleResult =
             dispatch(handler, callback, greedy, composer)
 }

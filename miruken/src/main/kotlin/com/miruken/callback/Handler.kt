@@ -1,10 +1,10 @@
 package com.miruken.callback
 
-open class Handler : IHandler {
+open class Handler : Handling {
     override fun handle(
             callback: Any,
             greedy:   Boolean,
-            composer: IHandler?
+            composer: Handling?
     ): HandleResult {
         val scope = composer ?:
             this as? CompositionScope ?: CompositionScope(this)
@@ -14,7 +14,7 @@ open class Handler : IHandler {
     protected open fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: IHandler?
+            composer: Handling?
     ): HandleResult =
             dispatch(this, callback, greedy, composer)
 
@@ -23,12 +23,12 @@ open class Handler : IHandler {
                 handler:  Any,
                 callback: Any,
                 greedy:   Boolean,
-                composer: IHandler?
+                composer: Handling?
         ): HandleResult {
             TODO("not implemented")
         }
 
-        fun toHandler(target: Any) : IHandler =
-                target as? IHandler ?: HandlerAdapter(target)
+        fun toHandler(target: Any) : Handling =
+                target as? Handling ?: HandlerAdapter(target)
     }
 }

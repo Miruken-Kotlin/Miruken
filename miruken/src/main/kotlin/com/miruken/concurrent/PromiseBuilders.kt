@@ -1,30 +1,29 @@
 package com.miruken.concurrent
 
-import com.miruken.Either
-import com.miruken.fold
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.schedule
 
-fun Promise.Companion.all(vararg results:Any) : Promise<Array<out Any>> =
+fun Promise.Companion.all(vararg results:Any) : Promise<List<Any>> =
         all(results.asList())
 
-fun Promise.Companion.all(results: Collection<Any>) : Promise<Array<out Any>> {
+fun Promise.Companion.all(results: Collection<Any>) : Promise<List<Any>> {
     if (results.isEmpty())
-        return Promise.resolve(emptyArray())
+        return Promise.resolve(emptyList())
 
-    var pending   = AtomicInteger(0)
+    val pending   = AtomicInteger(0)
     val promises  = results.map(::resolve)
-    var fulfilled = arrayOfNulls<Any>(promises.size)
+    val fulfilled = arrayOfNulls<Any>(promises.size)
 
     return Promise { resolveChild, rejectChild ->
         for (index in 1..promises.size) {
             promises[index].then({
                 fulfilled[index] = it
+                @Suppress("UNCHECKED_CAST")
                 if (pending.incrementAndGet() == promises.size)
-                    resolveChild(fulfilled as Array<Any>)
+                    resolveChild(fulfilled.toList() as List<Any>)
             }, rejectChild)
         }
     }
@@ -52,6 +51,7 @@ fun Promise.Companion.delay(delayMs: Long) : Promise<Unit> {
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 fun <T: Any> Promise<T>.timeout(timeoutMs: Long) : Promise<T> {
     return Promise.race(this, Promise.delay(timeoutMs).then {
         throw TimeoutException()
@@ -77,48 +77,3 @@ fun <T> Promise.Companion.start(block: () -> Promise<T>) : Promise<T> {
         }
     }
 }
-
-/**
- * seq
- */
-infix fun <T, S> Promise<T>
-        .seq(p: Promise<S>): Promise<S> = p
-
-/**
- * map/fmap
- */
-infix fun <T, S> Promise<T>
-        .map(f: (T) -> S): Promise<S> = then(f)
-
-infix fun <T> Promise<T>
-        .mapError(f: (Throwable) -> T): Promise<T> =
-        catch(f).then { it.fold({ it }, { it }) }
-
-/**
- * apply/<*>/ap
- */
-infix fun <T, S> Promise<(T) -> S>
-        .apply(f: Promise<T>): Promise<S> =
-        then { f.then(it) }.unwrap()
-
-/**
- * flatMap/bind/chain/liftM
- */
-infix fun <T, S> Promise<T>
-        .flatMap(f: (T) -> Promise<S>): Promise<S> =
-        then(f).unwrap()
-
-fun <T, S, U> Promise<T>
-        .flatMap(f: (T) -> Promise<S>,
-                 t: (Throwable) -> U): Promise<Either<U, S>> =
-        then(f, t).then {
-            it.fold(
-                    { Promise.resolve(Either.Left(it)) },
-                    { it.then { Either.Right(it) } })
-        }.unwrap()
-
-infix fun <T> Promise<T>
-        .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =
-        catch(f).then {
-            it.fold({ it }, { Promise.resolve(it) })
-        }.unwrap()
