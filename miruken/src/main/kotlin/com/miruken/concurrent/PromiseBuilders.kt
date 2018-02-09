@@ -6,15 +6,15 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.schedule
 
-fun Promise.Companion.all(vararg results:Any) : Promise<List<Any>> =
-        all(results.asList())
+fun Promise.Companion.all(vararg input:Any) : Promise<List<Any>> =
+        all(input.asList())
 
-fun Promise.Companion.all(results: Collection<Any>) : Promise<List<Any>> {
-    if (results.isEmpty())
+fun Promise.Companion.all(input: Collection<Any>) : Promise<List<Any>> {
+    if (input.isEmpty())
         return Promise.resolve(emptyList())
 
     val pending   = AtomicInteger(0)
-    val promises  = results.map(::resolve)
+    val promises  = input.map(::resolve)
     val fulfilled = arrayOfNulls<Any>(promises.size)
 
     return Promise { resolveChild, rejectChild ->
@@ -29,6 +29,10 @@ fun Promise.Companion.all(results: Collection<Any>) : Promise<List<Any>> {
     }
 }
 
+/**
+ * Rejects promise if first promise is a rejection
+ * Never returns if no promises are supplied.  Use .any instead
+ */
 fun Promise.Companion.race(vararg promises: Promise<Any>) : Promise<Any> =
         race(promises.toList())
 

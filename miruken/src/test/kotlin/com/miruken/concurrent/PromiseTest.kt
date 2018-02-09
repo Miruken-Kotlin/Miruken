@@ -1,9 +1,11 @@
 package com.miruken.concurrent
 
 import com.miruken.*
-import org.junit.rules.Stopwatch
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.CancellationException
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeoutException
 import kotlin.test.*
 import org.junit.Test as test
 import org.junit.Ignore as ignore
@@ -465,12 +467,43 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    /**
-    @test fun `Resolves after delay`() {
-        val stopwatch = object : Stopwatch() {}
-        Promise.delay(300) then {
-            val elapsed = stopwatch.runtime(TimeUnit.MILLISECONDS)
+    @test fun `Resolves new promise after delay`() {
+        var called = false
+        val done   = CountDownLatch(1)
+        val start  = Instant.now()
+        Promise.delay(100) then {
+            val elapsed = Duration.between(start, Instant.now())
+            assertTrue { elapsed.toMillis() >= 100 }
+            called = true
+        } finally {
+            done.countDown()
         }
+        done.await()
+        assertTrue { called }
     }
-    */
+
+    @test fun `Resolves promise if before timeout`() {
+        var called = false
+        val done   = CountDownLatch(1)
+        Promise.delay(50).timeout(100) then {
+            called = true
+        } finally {
+            done.countDown()
+        }
+        done.await()
+        assertTrue { called }
+    }
+
+    @test fun `Rejects promise if after timeout`() {
+        var called = false
+        val done   = CountDownLatch(1)
+        Promise.delay(100).timeout(50) catch {
+            assertTrue { it is TimeoutException }
+            called = true
+        } finally {
+            done.countDown()
+        }
+        done.await()
+        assertTrue { called }
+    }
 }
