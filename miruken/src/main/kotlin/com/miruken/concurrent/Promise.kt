@@ -275,22 +275,24 @@ open class Promise<out T>
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }
 
-        fun <S> resolve(result: S): Promise<S> =
-                Promise { resolve, _ -> resolve(result) }
+        fun resolve() = resolve(Unit)
 
-        fun <S> resolve(promise: Promise<S>): Promise<S> =
-                Promise { resolve, reject ->
-                    promise.then(resolve, reject)
+        inline fun <reified S: Any> resolve(result: S): Promise<S> =
+                if (S::class === Any::class && result is Promise<*>) {
+                    Promise<Any> { suc, fail ->
+                        result.then({ suc(it ?: Unit)}, fail) } as Promise<S>
+                } else {
+                    Promise { success, _ -> success(result) }
                 }
+
+        fun <S> resolve(promise: Promise<S>): Promise<S> = promise
     }
 }
 
-/**
- * Unwraps [Promise] pipeline
- */
 fun <T> Promise<Promise<T>>.unwrap() : Promise<T> {
     return Promise(this.cancelMode, {
-        resolve, reject, onCancel -> onCancel { this.cancel() }
+        resolve, reject, onCancel ->
+            onCancel { this.cancel() }
         then({ inner -> inner.then(resolve, reject)
             .cancelled(reject)}, reject)
             .cancelled(reject)

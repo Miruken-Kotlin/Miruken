@@ -42,8 +42,9 @@ fun <T, S, U> Promise<T>
                     { it.then { Either.Right(it) } })
         }.unwrap()
 
-infix fun <T> Promise<T>
+infix fun <T: Any> Promise<T>
         .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =
-        catch(f).then {
-            it.fold({ it }, { Promise.resolve(it) })
+        catch(f).then { it: Either<Promise<T>, T> ->
+            it.fold({ it },
+                    { r: T -> Promise { suc, _ -> suc(r) }})
         }.unwrap()

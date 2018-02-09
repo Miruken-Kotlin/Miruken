@@ -18,7 +18,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     override val policy: CallbackPolicy? = null
 
-    val resolutions: List<Any> = _resolutions.toList()
+    val resolutions: List<Any> get() = _resolutions.toList()
 
     override val resultType: KClass<*>?
         get() = if (wantsAsync || isAsync) Promise::class else null
@@ -50,7 +50,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
                 _result = flatten(_resolutions)
             }
             if (wantsAsync && !isAsync) {
-                _result = Promise.resolve(_result)
+                _result = Promise.resolve(_result ?: Unit)
             }
             _result
         }

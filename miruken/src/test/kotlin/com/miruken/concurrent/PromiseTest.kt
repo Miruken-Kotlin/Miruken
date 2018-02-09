@@ -42,15 +42,50 @@ class PromiseTest {
         assertTrue { promise.state === PromiseState.Rejected }
     }
 
-    @test fun `Adopts resolved promise`() {
-        val promise = Promise.resolve("Hello")
+    @test fun `Adopts resolved promise statically`() {
+        var called = false
+        val promise = Promise.resolve(
+                Promise.resolve("Hello")) then {
+            assertEquals("Hello", it)
+            called = true
+        }
         assertTrue { promise.state === PromiseState.Fulfilled }
+        assertTrue { called }
     }
 
-    @test fun `Adopts rejected promise`() {
+    @test fun `Adopts rejected promise statically`() {
+        var called = false
         val promise = Promise.resolve(
-                Promise.reject(Exception("Rejected")))
+                Promise.reject(Exception("Rejected"))) catch {
+            assertEquals("Rejected", it.message)
+            called = true
+            throw it
+        }
         assertTrue { promise.state === PromiseState.Rejected }
+        assertTrue { called }
+    }
+
+    @test fun `Adopts resolved promise dynamically`() {
+        var called   = false
+        var any: Any = Promise.resolve("Hello")
+        val promise  = Promise.resolve(any) then {
+            assertEquals("Hello", it)
+            called = true
+        }
+        assertTrue { promise.state === PromiseState.Fulfilled }
+        assertTrue { called }
+    }
+
+    @test fun `Adopts rejected promise dynamically`() {
+        var called   = false
+        var any: Any = Promise.reject(Exception("Rejected"))
+        val promise  = Promise.resolve(any) catch {
+            assertEquals("Rejected", it.message)
+            called = true
+            throw it
+        }
+        assertTrue { promise.state === PromiseState.Rejected }
+        assertTrue { called }
     }
 
     @test fun `Behaves covariantly`() {
@@ -370,6 +405,15 @@ class PromiseTest {
             }
         }
         assertEquals(2, called)
+    }
+
+    @test fun `Waits for all promises to fulfill`() {
+        var called   = false
+        val promises = (1..5).map { Promise.resolve(it) }
+        Promise.all(promises).then {
+            called = true
+        }
+        //assertTrue { called }
     }
 
     @test fun `Resolves after delay`() {

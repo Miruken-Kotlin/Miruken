@@ -8,13 +8,13 @@ sealed class Either<out L, out R> {
 /**
  * seq
  */
-inline infix fun <L, R, R2> Either<L, R>
+infix fun <L, R, R2> Either<L, R>
         .seq(e: Either<L, R2>): Either<L, R2> = e
 
 /**
  * map/fmap
  */
-inline infix fun <L, R, R2> Either<L, R>
+infix fun <L, R, R2> Either<L, R>
         .map(f: (R) -> R2): Either<L, R2> = when (this) {
             is Either.Left -> this
             is Either.Right -> Either.Right(f(right))
@@ -32,7 +32,7 @@ infix fun <L, R, R2> Either<L, (R) -> R2>
 /**
  * flatMap/bind/chain/liftM
  */
-inline infix fun <L, R, R2> Either<L, R>
+infix fun <L, R, R2> Either<L, R>
         .flatMap(f: (R) -> Either<L, R2>): Either<L, R2> = when(this) {
             is Either.Left -> this
             is Either.Right -> f(right)
@@ -41,7 +41,7 @@ inline infix fun <L, R, R2> Either<L, R>
 /**
  * mapLeft
  */
-inline infix fun <L, L2, R> Either<L, R>
+infix fun <L, L2, R> Either<L, R>
         .mapLeft(f: (L) -> L2): Either<L2, R> = when(this) {
             is Either.Left -> Either.Left(f(left))
             is Either.Right -> this
@@ -50,7 +50,7 @@ inline infix fun <L, L2, R> Either<L, R>
 /**
  * fold/either
  */
-inline fun <L, R, A> Either<L, R>
+fun <L, R, A> Either<L, R>
         .fold(l: (L) -> A, r: (R) -> A): A = when(this) {
             is Either.Left -> l(left)
             is Either.Right -> r(right)
