@@ -4,8 +4,12 @@ import com.miruken.Either
 import com.miruken.fold
 import java.util.Timer
 import java.util.TimerTask
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.schedule
+
+fun Promise.Companion.all(vararg results:Any) : Promise<Array<out Any>> =
+        all(results.asList())
 
 fun Promise.Companion.all(results: Collection<Any>) : Promise<Array<out Any>> {
     if (results.isEmpty())
@@ -26,6 +30,9 @@ fun Promise.Companion.all(results: Collection<Any>) : Promise<Array<out Any>> {
     }
 }
 
+fun Promise.Companion.race(vararg promises: Promise<Any>) : Promise<Any> =
+        race(promises.toList())
+
 fun Promise.Companion.race(promises: Collection<Promise<Any>>) : Promise<Any> {
     return Promise { resolve, reject ->
         for (promise in promises) {
@@ -43,6 +50,12 @@ fun Promise.Companion.delay(delayMs: Long) : Promise<Unit> {
     } finally {
         timer?.cancel()
     }
+}
+
+fun <T: Any> Promise<T>.timeout(timeoutMs: Long) : Promise<T> {
+    return Promise.race(this, Promise.delay(timeoutMs).then {
+        throw TimeoutException()
+    }).then { it as T }
 }
 
 fun <T> Promise.Companion.run(block: () -> T) : Promise<T> {

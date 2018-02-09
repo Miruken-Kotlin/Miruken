@@ -1,7 +1,9 @@
 package com.miruken.concurrent
 
 import com.miruken.*
+import org.junit.rules.Stopwatch
 import java.util.concurrent.CancellationException
+import java.util.concurrent.TimeUnit
 import kotlin.test.*
 import org.junit.Test as test
 
@@ -51,6 +53,13 @@ class PromiseTest {
         assertTrue { promise.state === PromiseState.Rejected }
     }
 
+    @test fun `Behaves covariantly`() {
+        val promise = Promise.resolve(listOf(1, 2, 3))
+        val promise2 : Promise<Collection<Int>> = promise
+        promise2.then {
+            assertTrue { it.containsAll(listOf(1, 2, 3)) }
+        }
+    }
     @test fun `Fulfills promise only once`() {
         var called = 0
         Promise<String> { resolve, _ ->
@@ -363,11 +372,10 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Behaves covariantly`() {
-        val promise = Promise.resolve(listOf(1, 2, 3))
-        val promise2 : Promise<Collection<Int>> = promise
-        promise2.then {
-            assertTrue { it.containsAll(listOf(1, 2, 3)) }
+    @test fun `Resolves after delay`() {
+        val stopwatch = object : Stopwatch() {}
+        Promise.delay(300) then {
+            val elapsed = stopwatch.runtime(TimeUnit.MILLISECONDS)
         }
     }
 }
