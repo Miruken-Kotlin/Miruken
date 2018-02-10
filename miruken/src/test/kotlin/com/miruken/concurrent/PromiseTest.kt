@@ -466,19 +466,47 @@ class PromiseTest {
         assertTrue { called }
     }
 
+    @test fun `Converts return into a promise`() {
+        Promise.run {
+           2 * 3
+        } then {
+            assertEquals(6, it)
+        }
+    }
+
+    @test fun `Ensures exception become rejected promise`() {
+        Promise.run {
+            2 / 0
+        } catch {
+            assertTrue { it is ArithmeticException }
+        }
+    }
+
+    @test fun `Follows fulfilled promise from return`() {
+        Promise.start {
+            Promise.resolve("Hello")
+        } then {
+            assertEquals("Hello", it)
+        }
+    }
+
+    @test fun `Follows rejected promise from return`() {
+        Promise.start {
+            Promise.reject(Exception("Rejected"))
+        } catch {
+            assertEquals("Rejected", it.message)
+        }
+    }
+
     @test fun `Resolves new promise after delay`() {
-        var called = false
-        val start  = Instant.now()
-        testAsync { done ->
-            Promise.delay(100) then {
+        assertAsync { done ->
+            val start = Instant.now()
+            Promise.delay(50) then {
                 val elapsed = Duration.between(start, Instant.now())
-                assertTrue { elapsed.toMillis() >= 100 }
-                called = true
-            } finally {
+                assertTrue { elapsed.toMillis() >= 50 }
                 done()
             }
         }
-        assertTrue { called }
     }
 
     @test fun `Resolves promise if before timeout`() {
