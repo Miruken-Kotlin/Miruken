@@ -4,7 +4,6 @@ import com.miruken.*
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CancellationException
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeoutException
 import kotlin.test.*
 import org.junit.Test as test
@@ -469,57 +468,45 @@ class PromiseTest {
 
     @test fun `Resolves new promise after delay`() {
         var called = false
-        val done   = CountDownLatch(1)
         val start  = Instant.now()
-        Promise.delay(100) then {
-            val elapsed = Duration.between(start, Instant.now())
-            assertTrue { elapsed.toMillis() >= 100 }
-            called = true
-        } finally {
-            done.countDown()
+        testAsync { done ->
+            Promise.delay(100) then {
+                val elapsed = Duration.between(start, Instant.now())
+                assertTrue { elapsed.toMillis() >= 100 }
+                called = true
+            } finally {
+                done()
+            }
         }
-        done.await()
         assertTrue { called }
     }
 
     @test fun `Resolves promise if before timeout`() {
-        var called = false
-        val done   = CountDownLatch(1)
-        Promise.delay(50).timeout(100) then {
-            called = true
-        } finally {
-            done.countDown()
+        assertAsync { done ->
+            Promise.delay(50).timeout(100) then {
+                done()
+            }
         }
-        done.await()
-        assertTrue { called }
     }
 
     @test fun `Rejects promise if after timeout`() {
-        var called = false
-        val done   = CountDownLatch(1)
-        Promise.delay(100).timeout(50) catch {
-            assertTrue { it is TimeoutException }
-            called = true
-        } finally {
-            done.countDown()
+        assertAsync { done ->
+            Promise.delay(100).timeout(50) catch {
+                assertTrue { it is TimeoutException }
+                done()
+            }
         }
-        done.await()
-        assertTrue { called }
     }
-
 
     @test fun `Cancels timeout when promise cancelled`() {
-        var called  = false
-        val done    = CountDownLatch(1)
-        var promise = Promise.delay(100).timeout(50) then {
-            called = true
-        } finally {
-            done.countDown()
-        } cancelled {
-            called = true
+        assertAsync { done ->
+            var promise = Promise.delay(100).timeout(50) then {
+                fail("Should skip")
+            } cancelled {
+                done()
+            }
+            promise.cancel()
         }
-        promise.cancel()
-        done.await()
-        assertTrue { called }
     }
 }
+

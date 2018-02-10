@@ -25,7 +25,7 @@ open class Promise<out T>
     private val _childCount : AtomicInteger = AtomicInteger()
     private val _guard      = java.lang.Object()
 
-    var state : PromiseState = PromiseState.Pending
+    @Volatile var state : PromiseState = PromiseState.Pending
         protected set
 
     private val isCompleted get() = _completed.get()
