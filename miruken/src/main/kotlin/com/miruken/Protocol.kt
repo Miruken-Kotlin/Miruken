@@ -1,4 +1,3 @@
 package com.miruken
 
-interface Protocol {
-}
+interface Protocol

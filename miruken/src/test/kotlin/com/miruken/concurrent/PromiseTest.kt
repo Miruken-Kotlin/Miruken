@@ -467,27 +467,36 @@ class PromiseTest {
     }
 
     @test fun `Converts return into a promise`() {
+        var called = false
         Promise.run {
            2 * 3
         } then {
             assertEquals(6, it)
+            called = true
         }
+        assertTrue { called }
     }
 
     @test fun `Ensures exception become rejected promise`() {
+        var called = false
         Promise.run {
-            2 / 0
+            val x:Any? = null
+            x!!
         } catch {
-            assertTrue { it is ArithmeticException }
+            called = true
         }
+        assertTrue { called }
     }
 
     @test fun `Follows fulfilled promise from return`() {
+        var called = false
         Promise.start {
             Promise.resolve("Hello")
         } then {
             assertEquals("Hello", it)
+            called = true
         }
+        assertTrue { called }
     }
 
     @test fun `Follows rejected promise from return`() {

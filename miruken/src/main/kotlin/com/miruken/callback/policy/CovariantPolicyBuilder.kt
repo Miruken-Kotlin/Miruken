@@ -1,4 +1,3 @@
 package com.miruken.callback.policy
 
-class CovariantPolicyBuilder {
-}
+class CovariantPolicyBuilder
