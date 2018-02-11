@@ -14,7 +14,7 @@ open class Handler : Handling {
     protected open fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: Handling?
+            composer: Handling
     ): HandleResult =
             dispatch(this, callback, greedy, composer)
 
@@ -23,12 +23,20 @@ open class Handler : Handling {
                 handler:  Any,
                 callback: Any,
                 greedy:   Boolean,
-                composer: Handling?
+                composer: Handling
         ): HandleResult {
-            TODO("not implemented")
+            if (SkipTypes.contains(handler::class))
+                return HandleResult(true)
+            return if (callback is Dispatching)
+                callback.dispatch(handler, greedy, composer)
+            else HandlesPolicy.dispatch(handler, callback, greedy, composer)
         }
 
         fun toHandler(target: Any) : Handling =
                 target as? Handling ?: HandlerAdapter(target)
+
+        private val SkipTypes = setOf(Handler::class,
+                CascadeHandler::class, CompositeHandler::class,
+                CompositionScope::class)
     }
 }

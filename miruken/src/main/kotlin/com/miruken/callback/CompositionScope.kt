@@ -4,7 +4,7 @@ class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: Handling?
+            composer: Handling
     ): HandleResult {
         val wrapped =
                 if (callback::class === Composition::class)

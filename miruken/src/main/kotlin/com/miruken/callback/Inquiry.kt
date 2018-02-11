@@ -16,7 +16,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     final override var isAsync: Boolean = false
         private set
 
-    override val policy: CallbackPolicy? = null
+    override val policy: CallbackPolicy? = ProvidesPolicy
 
     val resolutions: List<Any> get() = _resolutions.toList()
 
@@ -45,7 +45,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             } else if (isAsync) {
                 _result = Promise.all(_resolutions
                         .map { Promise.resolve(it) })
-                        .then { flatten(it) }
+                        .then(::flatten)
             } else {
                 _result = flatten(_resolutions)
             }
@@ -61,7 +61,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     fun resolve(
             resolution: Any,
-            composer: Handling
+            composer:   Handling
     ): Boolean
     {
         return resolve(resolution, false, false, composer)

@@ -7,7 +7,7 @@ class CascadeHandler(
     override fun handleCallback(
             callback: Any,
             greedy:   Boolean,
-            composer: Handling?
+            composer: Handling
     ): HandleResult {
         val result = super.handleCallback(callback, greedy, composer)
         return if (greedy) {
