@@ -11,15 +11,15 @@ class CascadeHandler(
     ): HandleResult {
         val result = super.handleCallback(callback, greedy, composer)
         return if (greedy) {
-            result.then {
+            result then {
                 handlerA.handle(callback, greedy, composer)
-            }.then {
+            } then {
                 handlerB.handle(callback, greedy, composer)
             }
         } else {
-            result.otherwise {
+            result otherwise {
                 handlerA.handle(callback, greedy, composer)
-            }.otherwise {
+            } otherwise {
                 handlerB.handle(callback, greedy, composer)
             }
         }

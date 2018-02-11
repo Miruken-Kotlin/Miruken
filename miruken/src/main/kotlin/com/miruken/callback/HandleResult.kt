@@ -1,20 +1,41 @@
 package com.miruken.callback
 
-data class HandleResult(
+enum class HandleResult(
         val handled: Boolean,
-        val stop:    Boolean = false
+        val stop:    Boolean
 ) {
+    Handled(true, false),
+    HandledAndStop(true, true),
+    NotHandled(false, false),
+    NotHandledAndStop(false, true);
+
     inline infix fun then(block: () -> HandleResult) =
             if (stop) this else this + block()
 
-    inline infix fun otherwise(handled: Boolean): HandleResult =
-            if (this.handled) this else
-                HandleResult(handled, stop)
+    infix fun otherwise(handled: Boolean): HandleResult =
+            when (handled || this.handled) {
+                true  -> when (stop) {
+                    true  -> HandledAndStop
+                    false -> Handled
+                }
+                false -> when (stop) {
+                    true  -> NotHandledAndStop
+                    false -> NotHandled
+                }
+            }
 
     inline infix fun otherwise(block: () -> HandleResult) =
             if (handled || stop) this else block()
 
     infix operator fun plus(other: HandleResult): HandleResult =
-            if (this == other || (handled && stop)) this else
-                HandleResult(handled || other.handled, stop || other.stop)
+            when (handled || other.handled) {
+                true  -> when (stop || other.stop) {
+                    true  -> HandledAndStop
+                    false -> Handled
+                }
+                false -> when (stop || other.stop) {
+                    true  -> NotHandledAndStop
+                    false -> NotHandled
+                }
+            }
 }

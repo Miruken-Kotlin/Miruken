@@ -6,7 +6,7 @@ open class DecoratedHandler(val decoratee: Handling) : Handler() {
             greedy:   Boolean,
             composer: Handling
     ): HandleResult =
-        decoratee.handle(callback, greedy, composer).otherwise {
+        decoratee.handle(callback, greedy, composer) otherwise {
             super.handleCallback(callback, greedy, composer)
         }
 }

@@ -25,17 +25,20 @@ open class Handler : Handling {
                 greedy:   Boolean,
                 composer: Handling
         ): HandleResult {
-            if (SkipTypes.contains(handler::class))
-                return HandleResult(true)
-            return if (callback is Dispatching)
-                callback.dispatch(handler, greedy, composer)
-            else HandlesPolicy.dispatch(handler, callback, greedy, composer)
+            return when {
+                ExcludeTypes.contains(handler::class) ->
+                    HandleResult.NotHandled
+                callback is Dispatching ->
+                    callback.dispatch(handler, greedy, composer)
+                else ->
+                    HandlesPolicy.dispatch(handler, callback, greedy, composer)
+            }
         }
 
         fun toHandler(target: Any) : Handling =
                 target as? Handling ?: HandlerAdapter(target)
 
-        private val SkipTypes = setOf(Handler::class,
+        private val ExcludeTypes = setOf(Handler::class,
                 CascadeHandler::class, CompositeHandler::class,
                 CompositionScope::class)
     }
