@@ -192,6 +192,30 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
+    @Test fun `Handles fulfilled promise with fail projection of same type`() {
+        var called = 0
+        Promise.resolve(22).map(
+                { it.toString() },
+                { "Hello" }
+        ).then { it: String ->
+            assertEquals("22", it)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Handles fulfilled promise with fail projection using Any`() {
+        var called = 0
+        Promise.resolve(19).map(
+                { it.toString() },
+                { 15 }
+        ).then { it: Any ->
+            assertEquals("19", it)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
     @Test fun `Handles rejected promise with success projection`() {
         var called = 0
         Promise<Int> { _, reject ->
@@ -209,6 +233,35 @@ class PromiseTest {
             }
         }
         assertEquals(2, called)
+    }
+
+    @Test fun `Handles rejected promise with success projection of same type`() {
+        var called = 0
+        Promise<Int> { _, reject ->
+            reject(Exception("Halt and catch fire"))
+        }.map(
+                { 0 },
+                {
+                    assertEquals("Halt and catch fire", it.message)
+                    ++called
+                }
+        ).then { it: Int ->
+            assertEquals(1, it)
+            ++called
+        }
+        assertEquals(2, called)
+    }
+
+    @Test fun `Infers Any type if mapping different success fail results`() {
+        var called = 0
+        Promise.resolve(19).map(
+                { it.toString() },
+                { 15 }
+        ).then { it: Any ->
+            assertEquals("19", it)
+            ++called
+        }
+        assertEquals(1, called)
     }
 
     @Test fun `Propagates fulfilled promise`() {

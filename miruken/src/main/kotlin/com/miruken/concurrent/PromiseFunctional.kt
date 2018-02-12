@@ -15,6 +15,13 @@ infix fun <T, S> Promise<T>
 infix fun <T, S> Promise<T>
         .map(f: (T) -> S): Promise<S> = then(f)
 
+fun <T, S> Promise<T>
+        .map(f: (T) -> S,
+             t: (Throwable) -> S): Promise<S> =
+        then(f, t).then {
+            it.fold({ it }, { it })
+        }
+
 infix fun <T> Promise<T>
         .mapError(f: (Throwable) -> T): Promise<T> =
         catch(f).then { it.fold({ it }, { it }) }
