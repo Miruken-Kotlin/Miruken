@@ -7,16 +7,17 @@ import kotlin.reflect.full.isSubclassOf
 
 class Argument(val parameter: KParameter) {
 
-    val parameterType = parameter.type
     val parameterClass: KClass<*>?
-    val logicalType:    KType
     val logicalClass:   KClass<*>?
+    val logicalType:    KType
     val isLazy:         Boolean
     val isList:         Boolean
     val isPromise:      Boolean
     val isOptional:     Boolean
     val isOpenGeneric:  Boolean
-    val annotations:    List<Annotation>
+
+    inline val parameterType get() = parameter.type
+    inline val annotations   get() = parameter.annotations
 
     init {
         var type        = parameter.type
@@ -33,7 +34,6 @@ class Argument(val parameter: KParameter) {
         isList          = listType != null
         logicalType     = listType ?: type
         logicalClass    = getClass(logicalType.classifier)
-        annotations     = parameter.annotations
     }
 
     private fun getClass(classifier: KClassifier?) : KClass<*>? {

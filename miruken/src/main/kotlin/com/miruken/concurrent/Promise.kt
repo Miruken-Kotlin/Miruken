@@ -12,7 +12,7 @@ enum class PromiseState {
     CANCELLED
 }
 
-enum class ChildCancelMode { All, Any }
+enum class ChildCancelMode { ALL, ANY }
 
 open class Promise<out T>
     private constructor(val cancelMode: ChildCancelMode) {
@@ -32,7 +32,7 @@ open class Promise<out T>
 
     constructor(
             executor: ((T) -> Unit, (Throwable) -> Unit) -> Unit
-    ) : this(ChildCancelMode.All, executor)
+    ) : this(ChildCancelMode.ALL, executor)
 
     constructor(
             mode: ChildCancelMode,
@@ -47,7 +47,7 @@ open class Promise<out T>
 
     constructor(
             executor: ((T) -> Unit, (Throwable) -> Unit, (((() -> Unit)) -> Unit)) -> Unit
-    ) : this(ChildCancelMode.All, executor)
+    ) : this(ChildCancelMode.ALL, executor)
 
     constructor(
             mode: ChildCancelMode,
@@ -217,12 +217,12 @@ open class Promise<out T>
         val child = createChild<R>(cancelMode) { resolve, reject, onCancel ->
             executor(resolve, reject)
             onCancel {
-                if (cancelMode == ChildCancelMode.Any ||
+                if (cancelMode == ChildCancelMode.ANY ||
                         _childCount.decrementAndGet() == 0)
                     cancel()
             }
         }
-        if (cancelMode == ChildCancelMode.All)
+        if (cancelMode == ChildCancelMode.ALL)
             _childCount.incrementAndGet()
         return child
     }

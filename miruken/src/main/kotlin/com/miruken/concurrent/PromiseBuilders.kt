@@ -31,7 +31,8 @@ fun Promise.Companion.all(input: Collection<Any>) : Promise<List<Any>> {
 
 /**
  * Rejects promise if first promise is a rejection
- * Never returns if no promises are supplied.  Use .any instead
+ * Never returns if no promises are supplied.
+ * Use [Promise].any instead
  */
 fun Promise.Companion.race(vararg promises: Promise<Any>) : Promise<Any> =
         race(promises.toList())
