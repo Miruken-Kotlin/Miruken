@@ -4,10 +4,10 @@ enum class HandleResult(
         val handled: Boolean,
         val stop:    Boolean
 ) {
-    Handled(true, false),
-    HandledAndStop(true, true),
-    NotHandled(false, false),
-    NotHandledAndStop(false, true);
+    HANDLED(true, false),
+    HANDLED_AND_STOP(true, true),
+    NOT_HANDLED(false, false),
+    NOT_HANDLED_AND_STOP(false, true);
 
     inline infix fun then(block: () -> HandleResult) =
             if (stop) this else this + block()
@@ -15,12 +15,12 @@ enum class HandleResult(
     infix fun otherwise(handled: Boolean): HandleResult =
             when (handled || this.handled) {
                 true  -> when (stop) {
-                    true  -> HandledAndStop
-                    false -> Handled
+                    true  -> HANDLED_AND_STOP
+                    false -> HANDLED
                 }
                 false -> when (stop) {
-                    true  -> NotHandledAndStop
-                    false -> NotHandled
+                    true  -> NOT_HANDLED_AND_STOP
+                    false -> NOT_HANDLED
                 }
             }
 
@@ -30,12 +30,12 @@ enum class HandleResult(
     infix operator fun plus(other: HandleResult): HandleResult =
             when (handled || other.handled) {
                 true  -> when (stop || other.stop) {
-                    true  -> HandledAndStop
-                    false -> Handled
+                    true  -> HANDLED_AND_STOP
+                    false -> HANDLED
                 }
                 false -> when (stop || other.stop) {
-                    true  -> NotHandledAndStop
-                    false -> NotHandled
+                    true  -> NOT_HANDLED_AND_STOP
+                    false -> NOT_HANDLED
                 }
             }
 }

@@ -1,8 +1,8 @@
 package com.miruken.callback
 
-import org.junit.Test as test
+import org.junit.*
 
 class InquiryTest {
-    @test fun `Create Inquiry`() {
+    @Test fun `Create Inquiry`() {
     }
 }

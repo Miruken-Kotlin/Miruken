@@ -6,45 +6,43 @@ import java.time.Instant
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeoutException
 import kotlin.test.*
-import org.junit.Test as test
-import org.junit.Ignore as ignore
 
 class PromiseTest {
-    @test fun `Starts in pending state`() {
+    @Test fun `Starts in pending state`() {
         val promise = Promise<String> { _, _ -> }
         assertTrue { promise.state === PromiseState.Pending }
     }
 
-    @test fun `Creates resolved promise`() {
+    @Test fun `Creates resolved promise`() {
         val promise =  Promise.resolve("Hello")
         assertTrue { promise.state === PromiseState.Fulfilled }
     }
 
-    @test fun `Creates rejected promise`() {
+    @Test fun `Creates rejected promise`() {
         val promise = Promise.reject(Exception("Error"))
         assertTrue { promise.state === PromiseState.Rejected }
     }
 
-    @test fun `Creates cancellable promise`() {
+    @Test fun `Creates cancellable promise`() {
         val promise = Promise<String> { _, _, _ -> }
         assertTrue { promise.state === PromiseState.Pending }
     }
 
-    @test fun `Resolves promise`() {
+    @Test fun `Resolves promise`() {
         val promise = Promise<String> { resolve, _ ->
             resolve("Hello")
         }
         assertTrue { promise.state === PromiseState.Fulfilled }
     }
 
-    @test fun `Rejects promise`() {
+    @Test fun `Rejects promise`() {
         val promise = Promise<String> { _, reject ->
             reject(Exception("Rejected"))
         }
         assertTrue { promise.state === PromiseState.Rejected }
     }
 
-    @test fun `Adopts resolved promise statically`() {
+    @Test fun `Adopts resolved promise statically`() {
         var called = false
         val promise = Promise.resolve(
                 Promise.resolve("Hello")) then {
@@ -55,7 +53,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Adopts rejected promise statically`() {
+    @Test fun `Adopts rejected promise statically`() {
         var called = false
         val promise = Promise.resolve(
                 Promise.reject(Exception("Rejected"))) catch {
@@ -67,7 +65,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Adopts resolved promise dynamically`() {
+    @Test fun `Adopts resolved promise dynamically`() {
         var called   = false
         val any: Any = Promise.resolve("Hello")
         val promise  = Promise.resolve(any) then {
@@ -78,7 +76,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Adopts rejected promise dynamically`() {
+    @Test fun `Adopts rejected promise dynamically`() {
         var called   = false
         val any: Any = Promise.reject(Exception("Rejected"))
         val promise  = Promise.resolve(any) catch {
@@ -90,7 +88,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Promises are covariant`() {
+    @Test fun `Promises are covariant`() {
         val promise = Promise.resolve(listOf(1, 2, 3))
         val promise2 : Promise<Collection<Int>> = promise
         promise2.then {
@@ -98,7 +96,7 @@ class PromiseTest {
         }
     }
 
-    @test fun `Returns canonical true promise`() {
+    @Test fun `Returns canonical true promise`() {
         var called = false
         Promise.True then {
             assertTrue { it }
@@ -108,7 +106,7 @@ class PromiseTest {
         assertSame(Promise.True, Promise.True)
     }
 
-    @test fun `Returns canonical false promise`() {
+    @Test fun `Returns canonical false promise`() {
         var called = false
         Promise.False then {
             assertFalse { it }
@@ -118,7 +116,7 @@ class PromiseTest {
         assertSame(Promise.False, Promise.False)
     }
 
-    @test fun `Returns canonical empty promise`() {
+    @Test fun `Returns canonical empty promise`() {
         var called = false
         Promise.Empty then {
             assertEquals(Unit, it)
@@ -128,7 +126,7 @@ class PromiseTest {
         assertSame(Promise.Empty, Promise.Empty)
     }
 
-    @test fun `Fulfills promise only once`() {
+    @Test fun `Fulfills promise only once`() {
         var called = 0
         Promise<String> { resolve, _ ->
             resolve("Hello")
@@ -140,7 +138,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Rejects promise only once`() {
+    @Test fun `Rejects promise only once`() {
         var called = 0
         Promise<String> { _, reject ->
             reject(Exception("Rejected"))
@@ -152,7 +150,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Fulfills promise with projection`() {
+    @Test fun `Fulfills promise with projection`() {
         var called = 0
         Promise.resolve(22).then {
             it.toString()
@@ -163,7 +161,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Rejects promise with projection`() {
+    @Test fun `Rejects promise with projection`() {
         var called = 0
         Promise<Int> { _, reject ->
             reject(Exception("Rejected"))
@@ -180,7 +178,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Handles fulfilled promise with fail projection`() {
+    @Test fun `Handles fulfilled promise with fail projection`() {
         var called = 0
         Promise.resolve(22).then(
             { it.toString() },
@@ -194,7 +192,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Handles rejected promise with success projection`() {
+    @Test fun `Handles rejected promise with success projection`() {
         var called = 0
         Promise<Int> { _, reject ->
             reject(Exception("Halt and catch fire"))
@@ -213,7 +211,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Propagates fulfilled promise`() {
+    @Test fun `Propagates fulfilled promise`() {
         var called = 0
         Promise.resolve("Hello")
          .catch { }
@@ -232,7 +230,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Propagates rejected promise`() {
+    @Test fun `Propagates rejected promise`() {
         var called  = 0
         var verify  = false
         val promise = Promise.resolve("Hello")
@@ -254,7 +252,7 @@ class PromiseTest {
         assertTrue { verify }
     }
 
-    @test fun `Unwraps fulfilled promise with projection`() {
+    @Test fun `Unwraps fulfilled promise with projection`() {
         var called = 0
         Promise.resolve(22) flatMap {
             Promise.resolve(it * 2)
@@ -265,7 +263,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Unwraps fulfilled promise with rejection`() {
+    @Test fun `Unwraps fulfilled promise with rejection`() {
         var called = 0
         Promise.resolve(22) flatMap  {
             Promise.reject(Exception("Crash and burn"))
@@ -276,7 +274,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Unwraps rejected promise with projection`() {
+    @Test fun `Unwraps rejected promise with projection`() {
         var called = 0
         Promise.reject(Exception("Wrong Order")) flatMapError  {
             Promise.resolve("Soccer")
@@ -287,7 +285,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Unwraps fulfilled promise with success or fail`() {
+    @Test fun `Unwraps fulfilled promise with success or fail`() {
         var called = 0
         Promise.resolve(22).flatMap(
                 { Promise.resolve(it.toString()) },
@@ -301,7 +299,7 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @test fun `Finalizes fulfilled promise`() {
+    @Test fun `Finalizes fulfilled promise`() {
         var called = 0
         Promise.resolve("Hello") finally {
             ++called
@@ -312,7 +310,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Finalizes fulfilled promise projection`() {
+    @Test fun `Finalizes fulfilled promise projection`() {
         var called = 0
         Promise.resolve("Hello") finally {
             ++called
@@ -324,7 +322,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Finalizes fulfilled promise rejection`() {
+    @Test fun `Finalizes fulfilled promise rejection`() {
         var called = 0
         Promise.resolve("Hello") finally {
             ++called
@@ -338,7 +336,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Finalizes rejected promise`() {
+    @Test fun `Finalizes rejected promise`() {
         var called  = 0
         val promise = Promise.reject(Exception("Rejected"))
         promise finally {
@@ -350,7 +348,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Ignores fulfilled and rejected if cancelled`() {
+    @Test fun `Ignores fulfilled and rejected if cancelled`() {
         var called    = false
         var cancelled = false
         var fulfill: (String) -> Unit = {}
@@ -374,7 +372,7 @@ class PromiseTest {
         assertTrue { cancelled }
     }
 
-    @test fun `Ignores fulfilled and rejected if CancellationException`() {
+    @Test fun `Ignores fulfilled and rejected if CancellationException`() {
         var called    = false
         var cancelled = false
         val promise = Promise.resolve("Hello")
@@ -388,7 +386,7 @@ class PromiseTest {
         assertTrue { cancelled }
     }
 
-    @test fun `Calls finally when cancelled`() {
+    @Test fun `Calls finally when cancelled`() {
         var called    = false
         var cancelled = false
         val promise = Promise<String> {_, _ -> }
@@ -400,7 +398,7 @@ class PromiseTest {
         assertTrue { cancelled }
     }
 
-    @test fun `Calls finally if CancelledException`() {
+    @Test fun `Calls finally if CancelledException`() {
         var called    = false
         var cancelled = false
         val promise = Promise.resolve("String")
@@ -412,7 +410,7 @@ class PromiseTest {
         assertTrue { cancelled }
     }
 
-    @test fun `Fulfills promise using infix notation`() {
+    @Test fun `Fulfills promise using infix notation`() {
         var called = 0
         Promise.resolve("Hello") then {
             assertEquals("Hello", it)
@@ -425,7 +423,7 @@ class PromiseTest {
        assertEquals(2, called)
     }
 
-    @test fun `Rejects promise using infix notation`() {
+    @Test fun `Rejects promise using infix notation`() {
         var called = 0
         Promise.reject(Exception("Cool!!")) catch {
             assertEquals("Cool!!", it.message)
@@ -440,7 +438,7 @@ class PromiseTest {
         assertEquals(2, called)
     }
 
-    @test fun `Waits for all promises to fulfill`() {
+    @Test fun `Waits for all promises to fulfill`() {
         var called   = false
         val promises = (1..5).map { Promise.resolve(it) }
         Promise.all(promises) then {
@@ -451,7 +449,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Rejects promise if any promise fails`() {
+    @Test fun `Rejects promise if any promise fails`() {
         var called   = false
         val promises = (1..5).mapIndexed { index, result ->
             if (index == 3)
@@ -466,7 +464,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Converts return into a promise`() {
+    @Test fun `Converts return into a promise`() {
         var called = false
         Promise.run {
            2 * 3
@@ -477,7 +475,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Ensures exception become rejected promise`() {
+    @Test fun `Ensures exception become rejected promise`() {
         var called = false
         Promise.run {
             val x:Any? = null
@@ -488,7 +486,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Follows fulfilled promise from return`() {
+    @Test fun `Follows fulfilled promise from return`() {
         var called = false
         Promise.start {
             Promise.resolve("Hello")
@@ -499,7 +497,7 @@ class PromiseTest {
         assertTrue { called }
     }
 
-    @test fun `Follows rejected promise from return`() {
+    @Test fun `Follows rejected promise from return`() {
         Promise.start {
             Promise.reject(Exception("Rejected"))
         } catch {
@@ -507,7 +505,7 @@ class PromiseTest {
         }
     }
 
-    @test fun `Resolves new promise after delay`() {
+    @Test fun `Resolves new promise after delay`() {
         assertAsync { done ->
             val start = Instant.now()
             Promise.delay(50) then {
@@ -518,7 +516,7 @@ class PromiseTest {
         }
     }
 
-    @test fun `Resolves promise if before timeout`() {
+    @Test fun `Resolves promise if before timeout`() {
         assertAsync { done ->
             Promise.delay(50).timeout(100) then {
                 done()
@@ -526,7 +524,7 @@ class PromiseTest {
         }
     }
 
-    @test fun `Rejects promise if after timeout`() {
+    @Test fun `Rejects promise if after timeout`() {
         assertAsync { done ->
             Promise.delay(100).timeout(50) catch {
                 assertTrue { it is TimeoutException }
@@ -535,7 +533,7 @@ class PromiseTest {
         }
     }
 
-    @test fun `Cancels timeout when promise cancelled`() {
+    @Test fun `Cancels timeout when promise cancelled`() {
         assertAsync { done ->
             var promise = Promise.delay(100).timeout(50) then {
                 fail("Should skip")

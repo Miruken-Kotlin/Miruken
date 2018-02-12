@@ -27,7 +27,7 @@ open class Handler : Handling {
         ): HandleResult {
             return when {
                 ExcludeTypes.contains(handler::class) ->
-                    HandleResult.NotHandled
+                    HandleResult.NOT_HANDLED
                 callback is Dispatching ->
                     callback.dispatch(handler, greedy, composer)
                 else ->

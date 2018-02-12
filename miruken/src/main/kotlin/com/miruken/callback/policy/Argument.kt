@@ -1,15 +1,13 @@
 package com.miruken.callback.policy
 
 import com.miruken.concurrent.Promise
-import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
+import kotlin.reflect.*
 import kotlin.reflect.full.isSubclassOf
 
 class Argument(val parameter: KParameter) {
 
-    val parameterClass: KClass<*>
-    val logicalClass:   KClass<*>
+    val parameterClass: KClass<*>?
+    val logicalClass:   KClass<*>?
     val isLazy:         Boolean
     val isList:         Boolean
     val isPromise:      Boolean
@@ -18,22 +16,29 @@ class Argument(val parameter: KParameter) {
 
     init {
         var type        = parameter.type
-        parameterClass  = type.classifier as KClass<*>
+        parameterClass  = getClass(type.classifier)
         isOptional      = type.isMarkedNullable
-        val lazyType    = extract(type, Function0::class)
+        val lazyType    = extractType(type, Function0::class)
         isLazy          = lazyType != null
         type            = lazyType ?: type
-        val promiseType = extract(type, Promise::class)
+        val promiseType = extractType(type, Promise::class)
         isPromise       = promiseType != null
         type            = promiseType ?: type
-        val listType    = extract(type, List::class)
+        val listType    = extractType(type, List::class)
         isList          = listType != null
         type            = listType ?: type
-        logicalClass    = type.classifier as KClass<*>
+        logicalClass    = getClass(type.classifier)
         annotations     = parameter.annotations
     }
 
-    private fun extract(type: KType, criteria: KClass<*>) : KType? {
+    private fun getClass(classifier: KClassifier?) : KClass<*>? {
+        return classifier as? KClass<*> ?:
+            (classifier as? KTypeParameter)?.let {
+                it.upperBounds.firstOrNull()?.classifier as? KClass<*>
+        }
+    }
+
+    private fun extractType(type: KType, criteria: KClass<*>) : KType? {
         return (type.classifier as? KClass<*>)?.let {
             if (it.isSubclassOf(criteria))
                  type.arguments.firstOrNull()?.type

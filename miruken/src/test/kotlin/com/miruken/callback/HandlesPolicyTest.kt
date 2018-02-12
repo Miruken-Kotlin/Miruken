@@ -1,9 +1,9 @@
 package com.miruken.callback
 
-import org.junit.Test as test
+import org.junit.*
 
 class HandlesPolicyTest {
-    @test fun `Configures HandlesPolicy`() {
+    @Test fun `Configures HandlesPolicy`() {
 
     }
 }
