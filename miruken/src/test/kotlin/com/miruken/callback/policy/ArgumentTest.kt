@@ -6,11 +6,13 @@ import com.miruken.getMethod
 import kotlin.test.*
 
 class ArgumentTest {
-    class Foo
+    open class Foo
+    open class Bar<T>
 
+    @Suppress("UNUSED_PARAMETER")
     class MyHandler {
         @Handles
-        fun handle(cb: Foo) {}
+        fun handle(cb: Foo) { }
 
         @Handles
         fun handleOptional(cb: Foo?) {}
@@ -53,6 +55,12 @@ class ArgumentTest {
 
         @Handles
         fun <T> handleOpenGenericLazy(cb: () -> T) {}
+
+        @Handles
+        fun <T> handleOpenGenericPartial(cb: Bar<T>) {}
+
+        @Handles
+        fun handleClosedGenericPartial(cb: Bar<String>) {}
     }
 
     @Test fun `Extracts parameter information`() {
@@ -65,6 +73,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertFalse { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts optional parameter information`() {
@@ -77,6 +86,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertTrue  { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertFalse { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts promise parameter information`() {
@@ -89,6 +99,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertTrue  { argument.isPromise }
+        assertFalse { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts list parameter information`() {
@@ -101,6 +112,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertFalse { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts lazy parameter information`() {
@@ -113,6 +125,7 @@ class ArgumentTest {
         assertTrue  { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertFalse { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts bounded generic parameter information`() {
@@ -125,6 +138,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts bounded generic optional parameter information`() {
@@ -137,6 +151,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertTrue  { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts bounded generic promise parameter information`() {
@@ -149,6 +164,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertTrue  { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts bounded generic list parameter information`() {
@@ -161,6 +177,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts bounded generic lazy parameter information`() {
@@ -173,6 +190,7 @@ class ArgumentTest {
         assertTrue  { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts open generic parameter information`() {
@@ -185,6 +203,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts open generic optional parameter information`() {
@@ -197,6 +216,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertTrue  { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts open generic promise parameter information`() {
@@ -209,6 +229,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertTrue  { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts open generic list parameter information`() {
@@ -221,6 +242,7 @@ class ArgumentTest {
         assertFalse { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
     }
 
     @Test fun `Extracts open generic lazy parameter information`() {
@@ -233,5 +255,32 @@ class ArgumentTest {
         assertTrue  { argument.isLazy }
         assertFalse { argument.isOptional }
         assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
+    }
+
+    @Test fun `Extracts open partial generic parameter information`() {
+        val handle   = getMethod<MyHandler>("handleOpenGenericPartial")
+        val callback = handle.parameters.component2()
+        val argument = Argument(callback)
+        assertEquals(Bar::class, argument.parameterClass)
+        assertEquals(Bar::class, argument.logicalClass)
+        assertFalse { argument.isList }
+        assertFalse { argument.isLazy }
+        assertFalse { argument.isOptional }
+        assertFalse { argument.isPromise }
+        assertTrue  { argument.isOpenGeneric }
+    }
+
+    @Test fun `Extracts closed partial generic parameter information`() {
+        val handle   = getMethod<MyHandler>("handleClosedGenericPartial")
+        val callback = handle.parameters.component2()
+        val argument = Argument(callback)
+        assertEquals(Bar::class, argument.parameterClass)
+        assertEquals(Bar::class, argument.logicalClass)
+        assertFalse { argument.isList }
+        assertFalse { argument.isLazy }
+        assertFalse { argument.isOptional }
+        assertFalse { argument.isPromise }
+        assertFalse { argument.isOpenGeneric }
     }
 }

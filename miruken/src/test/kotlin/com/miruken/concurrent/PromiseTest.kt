@@ -10,36 +10,36 @@ import kotlin.test.*
 class PromiseTest {
     @Test fun `Starts in pending state`() {
         val promise = Promise<String> { _, _ -> }
-        assertTrue { promise.state === PromiseState.Pending }
+        assertTrue { promise.state === PromiseState.PENDING }
     }
 
     @Test fun `Creates resolved promise`() {
         val promise =  Promise.resolve("Hello")
-        assertTrue { promise.state === PromiseState.Fulfilled }
+        assertTrue { promise.state === PromiseState.FULFILLED }
     }
 
     @Test fun `Creates rejected promise`() {
         val promise = Promise.reject(Exception("Error"))
-        assertTrue { promise.state === PromiseState.Rejected }
+        assertTrue { promise.state === PromiseState.REJECTED }
     }
 
     @Test fun `Creates cancellable promise`() {
         val promise = Promise<String> { _, _, _ -> }
-        assertTrue { promise.state === PromiseState.Pending }
+        assertTrue { promise.state === PromiseState.PENDING }
     }
 
     @Test fun `Resolves promise`() {
         val promise = Promise<String> { resolve, _ ->
             resolve("Hello")
         }
-        assertTrue { promise.state === PromiseState.Fulfilled }
+        assertTrue { promise.state === PromiseState.FULFILLED }
     }
 
     @Test fun `Rejects promise`() {
         val promise = Promise<String> { _, reject ->
             reject(Exception("Rejected"))
         }
-        assertTrue { promise.state === PromiseState.Rejected }
+        assertTrue { promise.state === PromiseState.REJECTED }
     }
 
     @Test fun `Adopts resolved promise statically`() {
@@ -49,7 +49,7 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue { promise.state === PromiseState.Fulfilled }
+        assertTrue { promise.state === PromiseState.FULFILLED }
         assertTrue { called }
     }
 
@@ -61,7 +61,7 @@ class PromiseTest {
             called = true
             throw it
         }
-        assertTrue { promise.state === PromiseState.Rejected }
+        assertTrue { promise.state === PromiseState.REJECTED }
         assertTrue { called }
     }
 
@@ -72,7 +72,7 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue { promise.state === PromiseState.Fulfilled }
+        assertTrue { promise.state === PromiseState.FULFILLED }
         assertTrue { called }
     }
 
@@ -84,7 +84,7 @@ class PromiseTest {
             called = true
             throw it
         }
-        assertTrue { promise.state === PromiseState.Rejected }
+        assertTrue { promise.state === PromiseState.REJECTED }
         assertTrue { called }
     }
 
@@ -420,7 +420,7 @@ class PromiseTest {
         promise.cancel()
         fulfill("Hello")
         failed(Exception())
-        assertEquals(PromiseState.Cancelled, promise.state)
+        assertEquals(PromiseState.CANCELLED, promise.state)
         assertFalse { called }
         assertTrue { cancelled }
     }
@@ -434,7 +434,7 @@ class PromiseTest {
             .catch { cancelled = true }
             .cancelled { cancelled = true }
         promise.cancel()
-        assertEquals(PromiseState.Cancelled, promise.state)
+        assertEquals(PromiseState.CANCELLED, promise.state)
         assertFalse { called }
         assertTrue { cancelled }
     }
@@ -446,7 +446,7 @@ class PromiseTest {
             .finally { called = true }
         promise.cancel()
         promise.cancelled { cancelled = true }
-        assertEquals(PromiseState.Cancelled, promise.state)
+        assertEquals(PromiseState.CANCELLED, promise.state)
         assertTrue { called }
         assertTrue { cancelled }
     }
@@ -458,7 +458,7 @@ class PromiseTest {
             .then { _ -> throw CancellationException() }
             .finally { called = true }
         promise.cancelled { cancelled = true }
-        assertEquals(PromiseState.Cancelled, promise.state)
+        assertEquals(PromiseState.CANCELLED, promise.state)
         assertTrue { called }
         assertTrue { cancelled }
     }

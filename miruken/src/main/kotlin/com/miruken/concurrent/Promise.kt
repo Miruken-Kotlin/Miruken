@@ -6,10 +6,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 enum class PromiseState {
-    Pending,
-    Fulfilled,
-    Rejected,
-    Cancelled
+    PENDING,
+    FULFILLED,
+    REJECTED,
+    CANCELLED
 }
 
 enum class ChildCancelMode { All, Any }
@@ -25,7 +25,7 @@ open class Promise<out T>
     private val _childCount : AtomicInteger = AtomicInteger()
     private val _guard      = java.lang.Object()
 
-    @Volatile var state : PromiseState = PromiseState.Pending
+    @Volatile var state : PromiseState = PromiseState.PENDING
         protected set
 
     private val isCompleted get() = _completed.get()
@@ -71,7 +71,7 @@ open class Promise<out T>
             }
             synchronized (_guard) {
                 if (isCompleted) {
-                    if (state == PromiseState.Fulfilled)
+                    if (state == PromiseState.FULFILLED)
                         res(_result!!)
                     else
                         rejectChild(_throwable!!)
@@ -106,7 +106,7 @@ open class Promise<out T>
             }
             synchronized (_guard) {
                 if (isCompleted) {
-                    if (state == PromiseState.Fulfilled)
+                    if (state == PromiseState.FULFILLED)
                         res(_result!!)
                     else
                         rej(_throwable!!)
@@ -138,7 +138,7 @@ open class Promise<out T>
             synchronized (_guard) {
                 if (isCompleted)
                 {
-                    if (state == PromiseState.Fulfilled)
+                    if (state == PromiseState.FULFILLED)
                         res(_result!!)
                     else
                         rej(_throwable!!)
@@ -178,7 +178,7 @@ open class Promise<out T>
             }
             synchronized (_guard) {
                 if (isCompleted) {
-                    if (state == PromiseState.Fulfilled)
+                    if (state == PromiseState.FULFILLED)
                         res(_result!!)
                     else
                         rej(_throwable!!)
@@ -198,7 +198,7 @@ open class Promise<out T>
     infix fun cancelled(cancelled: ((CancellationException) -> Unit)) : Promise<T> {
         synchronized (_guard) {
             if (isCompleted) {
-                if (state == PromiseState.Cancelled) {
+                if (state == PromiseState.CANCELLED) {
                     cancelled(_throwable as CancellationException)
                 }
             } else {
@@ -239,7 +239,7 @@ open class Promise<out T>
         if (_completed.compareAndSet(false, true)) {
             _result = result
             synchronized (_guard) {
-                state = PromiseState.Fulfilled
+                state = PromiseState.FULFILLED
                 val fulfilled = _fulfilled
                 _fulfilled = {}
                 _rejected  = {}
@@ -261,8 +261,8 @@ open class Promise<out T>
                 }
             }
             synchronized (_guard) {
-                state = if (isCancellation) PromiseState.Cancelled
-                        else PromiseState.Rejected
+                state = if (isCancellation) PromiseState.CANCELLED
+                        else PromiseState.REJECTED
                 val rejected = _rejected
                 _fulfilled = {}
                 _rejected  = {}

@@ -1,21 +1,26 @@
 package com.miruken.callback.policy
 
 import com.miruken.concurrent.Promise
+import com.miruken.isOpenGeneric
 import kotlin.reflect.*
 import kotlin.reflect.full.isSubclassOf
 
 class Argument(val parameter: KParameter) {
 
+    val parameterType = parameter.type
     val parameterClass: KClass<*>?
+    val logicalType:    KType
     val logicalClass:   KClass<*>?
     val isLazy:         Boolean
     val isList:         Boolean
     val isPromise:      Boolean
     val isOptional:     Boolean
+    val isOpenGeneric:  Boolean
     val annotations:    List<Annotation>
 
     init {
         var type        = parameter.type
+        isOpenGeneric   = type.isOpenGeneric
         parameterClass  = getClass(type.classifier)
         isOptional      = type.isMarkedNullable
         val lazyType    = extractType(type, Function0::class)
@@ -26,8 +31,8 @@ class Argument(val parameter: KParameter) {
         type            = promiseType ?: type
         val listType    = extractType(type, List::class)
         isList          = listType != null
-        type            = listType ?: type
-        logicalClass    = getClass(type.classifier)
+        logicalType     = listType ?: type
+        logicalClass    = getClass(logicalType.classifier)
         annotations     = parameter.annotations
     }
 
