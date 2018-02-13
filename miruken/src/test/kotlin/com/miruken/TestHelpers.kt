@@ -28,5 +28,5 @@ fun <T> T.assertAsync(
     assertTrue { testAsync(timeoutMs, block) }
 }
 
-inline fun <reified T: Any> getMethod(name:String): KFunction<*> =
+inline fun <reified T: Any> getMethod(name:String): KFunction<*>? =
         T::class.declaredFunctions.first { it.name == name}

@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-class CompositeHandler(vararg handlers: Any)
+open class CompositeHandler(vararg handlers: Any)
     : Handler(), CompositeHandling {
 
     private val _handlers = mutableListOf<Handling>()
