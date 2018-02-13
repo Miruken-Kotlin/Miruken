@@ -3,7 +3,7 @@ package com.miruken.callback.policy
 import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
 
-abstract class CallbackPolicy {
+abstract class CallbackPolicy : Comparator<Any> {
     abstract fun getKey(callback: Any) : Any?
 
     abstract fun getCompatibleKeys(

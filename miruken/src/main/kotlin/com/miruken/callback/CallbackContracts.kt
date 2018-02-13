@@ -13,23 +13,23 @@ interface AsyncCallback {
     val wantsAsync: Boolean
 }
 
-interface Bounding {
+interface BoundingCallback {
     val bounds: Any
 }
 
-interface Resolving {
+interface ResolvingCallback {
     fun getResolveCallback() : Any
 }
 
-interface Batching {
+interface BatchingCallback {
     val allowBatching: Boolean
 }
 
-interface Filtering {
+interface FilteringCallback {
     val allowFiltering: Boolean
 }
 
-interface Dispatching {
+interface DispatchingCallback {
     val policy: CallbackPolicy?
 
     fun dispatch(

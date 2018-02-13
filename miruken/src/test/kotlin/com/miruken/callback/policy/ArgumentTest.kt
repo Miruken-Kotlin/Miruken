@@ -67,26 +67,28 @@ class ArgumentTest {
         val handle   = getMethod<MyHandler>("handle")
         val callback = handle.parameters.component2()
         val argument = Argument(callback)
-        assertSame(callback, argument.parameter)
+        assertEquals(argument.parameterType, callback.type)
         assertEquals(Foo::class, argument.parameterClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertFalse { argument.isOpenGeneric }
+        assertEquals(Foo::class, argument.logicalClass)
+        assertEquals(Foo::class, argument.logicalType.classifier)
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts optional parameter information`() {
         val handle   = getMethod<MyHandler>("handleOptional")
         val callback = handle.parameters.component2()
         val argument = Argument(callback)
-        assertSame(callback, argument.parameter)
         assertEquals(Foo::class, argument.parameterClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertTrue  { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertFalse { argument.isOpenGeneric }
+        assertEquals(Foo::class, argument.logicalClass)
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts promise parameter information`() {
@@ -95,11 +97,11 @@ class ArgumentTest {
         val argument = Argument(promise)
         assertEquals(Promise::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertTrue  { argument.isPromise }
-        assertFalse { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts list parameter information`() {
@@ -108,11 +110,11 @@ class ArgumentTest {
         val argument = Argument(list)
         assertEquals(List::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertTrue  { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertFalse { argument.isOpenGeneric }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts lazy parameter information`() {
@@ -121,11 +123,11 @@ class ArgumentTest {
         val argument = Argument(lazy)
         assertEquals(Function0::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertTrue  { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertFalse { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic parameter information`() {
@@ -134,11 +136,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Foo::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic optional parameter information`() {
@@ -147,11 +149,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Foo::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertTrue  { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic promise parameter information`() {
@@ -160,11 +162,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Promise::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertTrue  { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic list parameter information`() {
@@ -173,11 +175,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(List::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertTrue  { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic lazy parameter information`() {
@@ -186,11 +188,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Function0::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertTrue  { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic parameter information`() {
@@ -199,11 +201,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Any::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic optional parameter information`() {
@@ -212,11 +214,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Any::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertTrue  { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic promise parameter information`() {
@@ -225,11 +227,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Promise::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertTrue  { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic list parameter information`() {
@@ -238,11 +240,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(List::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertTrue  { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic lazy parameter information`() {
@@ -251,11 +253,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Function0::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertTrue  { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts open partial generic parameter information`() {
@@ -264,11 +266,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Bar::class, argument.parameterClass)
         assertEquals(Bar::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertTrue  { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 
     @Test fun `Extracts closed partial generic parameter information`() {
@@ -277,10 +279,10 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Bar::class, argument.parameterClass)
         assertEquals(Bar::class, argument.logicalClass)
-        assertFalse { argument.isList }
-        assertFalse { argument.isLazy }
-        assertFalse { argument.isOptional }
-        assertFalse { argument.isPromise }
-        assertFalse { argument.isOpenGeneric }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.OPEN) }
     }
 }

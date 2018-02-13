@@ -20,4 +20,8 @@ open class CovariantPolicy<A: Annotation, in C>(
     ): Collection<Any> {
         TODO("not implemented")
     }
+
+    override fun compare(o1: Any?, o2: Any?): Int {
+        TODO("not implemented")
+    }
 }

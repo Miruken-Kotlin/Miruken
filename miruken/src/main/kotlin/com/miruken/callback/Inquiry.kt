@@ -6,7 +6,7 @@ import com.miruken.concurrent.all
 import kotlin.reflect.KClass
 
 open class Inquiry(val key: Any, val many: Boolean = false)
-    : Callback, AsyncCallback, Dispatching {
+    : Callback, AsyncCallback, DispatchingCallback {
 
     private val _resolutions = mutableListOf<Any>()
     private var _result: Any? = null

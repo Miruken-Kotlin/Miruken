@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 open class Resolution(key: Any, val callback: Any)
-    : Inquiry(key, true), Resolving {
+    : Inquiry(key, true), ResolvingCallback {
 
     private var _handled = false
 

@@ -6,7 +6,7 @@ import com.miruken.concurrent.all
 import kotlin.reflect.KClass
 
 open class Command(val callback: Any, val many: Boolean = false)
-    : Callback, AsyncCallback, Dispatching {
+    : Callback, AsyncCallback, DispatchingCallback {
 
     private var _policy: CallbackPolicy? = null
     private val _results = mutableListOf<Any>()
