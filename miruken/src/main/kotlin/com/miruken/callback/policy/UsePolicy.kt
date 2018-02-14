@@ -4,12 +4,12 @@ import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)
-annotation class Policy<P: CallbackPolicy>(val policyClass: KClass<P>)
+annotation class UsePolicy<P: CallbackPolicy>(val policyClass: KClass<P>)
 
 fun getPolicyAnnotations(element:KAnnotatedElement) =
         element.annotations
             .flatMap { it.annotationClass.annotations }
-            .filterIsInstance<Policy<*>>()
+            .filterIsInstance<UsePolicy<*>>()
 
-val Policy<*>.policy : CallbackPolicy?
+val UsePolicy<*>.policy : CallbackPolicy?
     get() = policyClass.objectInstance

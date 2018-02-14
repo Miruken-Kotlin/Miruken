@@ -2,9 +2,11 @@ package com.miruken.callback
 
 import kotlin.reflect.KClass
 
-class Composition(callback: Any) : Trampoline(callback),
+open class Composition(callback: Any) : Trampoline(callback),
         Callback, ResolvingCallback,
         FilteringCallback, BatchingCallback {
+
+    protected constructor() : this(Unit)
 
     override val resultType: KClass<*>?
         get() = (callback as? Callback)?.resultType
@@ -23,8 +25,15 @@ class Composition(callback: Any) : Trampoline(callback),
 
     override fun getResolveCallback(): Any {
         val resolve = (callback as? ResolvingCallback)?.getResolveCallback()
-        if (resolve === callback) return this
-        val callback = resolve ?: Resolution.getDefaultResolvingCallback(callback)
-        return Composition(callback)
+        return if (resolve === callback) this else
+            Composition(resolve ?: Resolution.getDefaultResolvingCallback(callback))
+    }
+
+    companion object {
+        @Suppress("UNCHECKED_CAST")
+        fun <T> extract(callback: Any) : T? {
+            return (callback as? Composition)
+                    ?.let { it.callback as? T }
+        }
     }
 }

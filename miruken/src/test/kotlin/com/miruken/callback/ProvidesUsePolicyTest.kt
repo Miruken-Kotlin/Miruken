@@ -4,7 +4,7 @@ import com.miruken.callback.policy.*
 import com.miruken.getMethod
 import org.junit.Test
 
-class ProvidesPolicyTest {
+class ProvidesUsePolicyTest {
     class Foo
 
     @Suppress("UNUSED_PARAMETER")

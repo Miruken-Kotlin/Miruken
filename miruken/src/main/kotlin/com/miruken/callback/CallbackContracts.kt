@@ -14,7 +14,7 @@ interface AsyncCallback {
 }
 
 interface BoundingCallback {
-    val bounds: Any
+    val bounds: Any?
 }
 
 interface ResolvingCallback {

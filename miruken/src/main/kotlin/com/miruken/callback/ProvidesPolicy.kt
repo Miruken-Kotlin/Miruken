@@ -1,15 +1,14 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.CovariantPolicy
-import com.miruken.callback.policy.Policy
+import com.miruken.callback.policy.UsePolicy
 
 @Target(AnnotationTarget.FUNCTION)
-@Policy<ProvidesPolicy>(ProvidesPolicy::class)
+@UsePolicy<ProvidesPolicy>(ProvidesPolicy::class)
 @Repeatable annotation class Provides
 
 object ProvidesPolicy :
-        CovariantPolicy<Provides, Inquiry>(
-                { it.key },
+        CovariantPolicy<Inquiry>({ it.key },
                 {
 
                 })

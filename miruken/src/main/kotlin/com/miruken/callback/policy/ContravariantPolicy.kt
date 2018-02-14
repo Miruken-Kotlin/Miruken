@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-open class ContravariantPolicy<A : Annotation, in C>(
+open class ContravariantPolicy<in C>(
         val target: (C) -> Any,
         build:  ContravariantPolicyBuilder.() -> Unit
 ) : CallbackPolicy() {

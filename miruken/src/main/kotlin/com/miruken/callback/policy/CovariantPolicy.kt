@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-open class CovariantPolicy<A: Annotation, in C>(
+open class CovariantPolicy<in C>(
         val key: (C) -> Any,
         build: CovariantPolicyBuilder.() -> Unit
 ) : CallbackPolicy() {
