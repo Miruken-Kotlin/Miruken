@@ -1,19 +1,15 @@
 package com.miruken
 
-import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 
 open class Flags<T: Flags<T>> protected constructor() {
-    private var _class: KClass<*> = Flags::class
-
     var value: Long = 0
         private set
 
+    @Suppress("UNUSED_PARAMETER")
     protected constructor(
-            value:     Long,
-            flagClass: KClass<T>) : this() {
-        this.value  = value
-        this._class = flagClass
+            value: Long, unused: Boolean) : this() {
+        this.value = value
     }
 
     operator fun unaryPlus() = value
@@ -42,19 +38,14 @@ open class Flags<T: Flags<T>> protected constructor() {
             "${this::class.simpleName} ($value)"
 
     infix operator fun plus(flag: Flags<T>): Flags<T> =
-            coerce(value or flag.value)
+            Flags(value or flag.value, true)
 
     infix operator fun minus(flag: Flags<T>): Flags<T> =
-            coerce(value and flag.value.inv())
-
-    @Suppress("UNCHECKED_CAST")
-    private fun coerce(value: Long) : Flags<T> {
-        return Flags(value, _class as KClass<T>)
-    }
+            Flags(value and flag.value.inv(), true)
 
     companion object {
         inline operator fun <reified T: Flags<T>> invoke(value : Long) =
-                Flags(value, T::class)
+                Flags<T>(value, true)
 
         @Suppress("UNCHECKED_CAST")
         inline fun <reified T: Flags<T>> valuesOf() : List<T> {
