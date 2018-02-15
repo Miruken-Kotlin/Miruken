@@ -6,12 +6,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FlagsTest {
-    object Direction : Flags<Direction>() {
-        val LEFT  = Flags<Direction>(1 shl 0)
-        val RIGHT = Flags<Direction>(1 shl 1)
-        val UP    = Flags<Direction>(1 shl 2)
-        val DOWN  = Flags<Direction>(1 shl 3)
-        val ALL   = LEFT + RIGHT + UP + DOWN
+    sealed class Direction(value: Long) : Flags<Direction>(value) {
+        object LEFT  : Direction(1 shl 0)
+        object RIGHT : Direction(1 shl 1)
+        object UP    : Direction(1 shl 2)
+        object DOWN  : Direction(1 shl 3)
+        object ALL   : Direction(+LEFT + +RIGHT + +UP + +DOWN)
     }
 
     @Test fun `Flags support presence`() {
@@ -22,14 +22,14 @@ class FlagsTest {
     }
 
     @Test fun `Empty flag fails presence`() {
-        var flag = Direction.UP
+        var flag = Direction.UP.toFlag()
         flag -= Direction.UP
         assertFalse { flag hasFlag flag }
         assertFalse { Direction.DOWN hasFlag flag }
     }
 
     @Test fun `Flags can be combined`() {
-        var flag = Direction.UP
+        var flag = Direction.UP.toFlag()
         flag += Direction.DOWN
         assertTrue { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.DOWN }
@@ -40,7 +40,7 @@ class FlagsTest {
      }
 
     @Test fun `Conditional sets flags`() {
-        var flag = Direction.UP
+        var flag = Direction.UP.toFlag()
         flag = flag.setFlag(Direction.LEFT)
         assertTrue { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.LEFT }
@@ -54,8 +54,8 @@ class FlagsTest {
     }
 
     @Test fun `Flags support equality`() {
-        val flags1 = Direction.LEFT
-        val flags2 = Direction.RIGHT
+        val flags1 = Direction.LEFT.toFlag()
+        val flags2 = Direction.RIGHT.toFlag()
         val flags3 = flags1 + flags2
         assertTrue  { Direction.LEFT == flags1 }
         assertFalse { Direction.LEFT == flags2}
@@ -63,12 +63,22 @@ class FlagsTest {
     }
 
     @Test fun `Flags support exact equality`() {
-        val flags1 = Direction.LEFT
-        val flags2= Direction.RIGHT
+        val flags1 = Direction.LEFT.toFlag()
+        val flags2= Direction.RIGHT.toFlag()
         val flags3 = flags1 + flags2
         assertTrue  { Direction.LEFT === flags1 }
         assertFalse { Direction.LEFT === flags2}
         assertFalse { Direction.LEFT === flags3}
+    }
+
+    @Test
+    fun `Obtains the name of the flag`() {
+        val flag = Direction.RIGHT + Direction.DOWN
+        assertEquals("LEFT", Direction.LEFT.name)
+        assertEquals("RIGHT", Direction.RIGHT.name)
+        assertEquals("UP", Direction.UP.name)
+        assertEquals("DOWN", Direction.DOWN.name)
+        assertEquals("10", flag.name)
     }
 
     @Test fun `Flags expose numerical value`() {

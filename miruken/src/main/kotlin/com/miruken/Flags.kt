@@ -1,18 +1,16 @@
 package com.miruken
 
-import kotlin.reflect.full.declaredMemberProperties
-
-open class Flags<T: Flags<T>> protected constructor() {
-    var value: Long = 0
-        private set
-
-    @Suppress("UNUSED_PARAMETER")
-    protected constructor(
-            value: Long, unused: Boolean) : this() {
-        this.value = value
+open class Flags<T: Flags<T>>(val value: Long) {
+    val name: String by lazy {
+        with(this::class) {
+            objectInstance?.let { simpleName }
+                    ?: value.toString()
+        }
     }
 
     operator fun unaryPlus() = value
+
+    fun toFlag() : Flags<T> = this as? Flags<T> ?: Flags(value)
 
     infix fun hasFlag(flag: Flags<T>): Boolean {
         if (value == 0L || (value > 0L && flag.value == 0L))
@@ -38,27 +36,17 @@ open class Flags<T: Flags<T>> protected constructor() {
             "${this::class.simpleName} ($value)"
 
     infix operator fun plus(flag: Flags<T>): Flags<T> =
-            Flags(value or flag.value, true)
+            Flags(value or flag.value)
 
     infix operator fun minus(flag: Flags<T>): Flags<T> =
-            Flags(value and flag.value.inv(), true)
+            Flags(value and flag.value.inv())
 
     companion object {
-        inline operator fun <reified T: Flags<T>> invoke(value : Long) =
-                Flags<T>(value, true)
-
         @Suppress("UNCHECKED_CAST")
         inline fun <reified T: Flags<T>> valuesOf() : List<T> {
-            val clazz = T::class
-            return clazz.declaredMemberProperties
-                    .filter {
-                        val returnType = it.returnType
-                        returnType.classifier == Flags::class &&
-                        returnType.arguments.firstOrNull()?.let {
-                            it.type?.classifier == clazz
-                        } == true
-                    }
-                    .map { it.getter.call(clazz.objectInstance) } as List<T>
+            return T::class.nestedClasses.mapNotNull {
+                it.objectInstance } as List<T>
         }
     }
 }
+

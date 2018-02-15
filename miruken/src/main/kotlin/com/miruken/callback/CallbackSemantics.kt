@@ -6,7 +6,7 @@ class CallbackSemantics(
         options: Flags<CallbackOptions>) : Composition(),
     ResolvingCallback, FilteringCallback, BatchingCallback {
 
-    private var _specified = CallbackOptions.NONE
+    private var _specified = CallbackOptions.NONE.toFlag()
 
     var options = options
         private set
