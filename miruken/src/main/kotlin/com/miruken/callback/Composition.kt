@@ -31,9 +31,10 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        fun <T> extract(callback: Any) : T? {
+        fun <T, R> map(callback: Any, block: (T) -> R) : R? {
             return (callback as? Composition)
                     ?.let { it.callback as? T }
+                    ?.let(block)
         }
     }
 }

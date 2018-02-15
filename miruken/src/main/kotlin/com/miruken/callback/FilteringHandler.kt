@@ -1,8 +1,8 @@
 package com.miruken.callback
 
-class FilteredHandler(
+class FilteringHandler(
         handler: Handling,
-        val filter: (Any, Handling, () -> HandleResult) -> HandleResult,
+        val filter:    (Any, Handling, () -> HandleResult) -> HandleResult,
         val reentrant: Boolean = false
 ) : DecoratedHandler(handler) {
     override fun handleCallback(

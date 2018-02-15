@@ -3,19 +3,15 @@ package com.miruken
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class FlagsTest {
-    sealed class Direction(value: Long) : Flags<Direction>(value) {
-        object LEFT  : Direction(1 shl 0)
-        object RIGHT : Direction(1 shl 1)
-        object UP    : Direction(1 shl 2)
-        object DOWN  : Direction(1 shl 3)
-        object ALL   : Direction(+LEFT + +RIGHT + +UP + +DOWN)
-
-        private class BitMask(value: Long) : Direction(value)
-        override fun coerceValue(value: Long): Direction = BitMask(value)
+    object Direction : Flags<Direction>() {
+        val LEFT  = Flags<Direction>(1 shl 0)
+        val RIGHT = Flags<Direction>(1 shl 1)
+        val UP    = Flags<Direction>(1 shl 2)
+        val DOWN  = Flags<Direction>(1 shl 3)
+        val ALL   = LEFT + RIGHT + UP + DOWN
     }
 
     @Test fun `Flags support presence`() {
@@ -26,40 +22,40 @@ class FlagsTest {
     }
 
     @Test fun `Empty flag fails presence`() {
-        var flag: Direction = Direction.UP
+        var flag = Direction.UP
         flag -= Direction.UP
         assertFalse { flag hasFlag flag }
         assertFalse { Direction.DOWN hasFlag flag }
     }
 
     @Test fun `Flags can be combined`() {
-        var flag: Direction = Direction.UP
+        var flag = Direction.UP
         flag += Direction.DOWN
         assertTrue { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.DOWN }
         flag -= Direction.UP
         assertFalse { flag hasFlag Direction.UP }
         assertTrue  { flag hasFlag Direction.DOWN }
-        assertSame(Direction.DOWN, flag)
+        assertEquals(Direction.DOWN, flag)
      }
 
     @Test fun `Conditional sets flags`() {
-        var flag: Direction = Direction.UP
-        flag = flag.set(Direction.LEFT, true)
+        var flag = Direction.UP
+        flag = flag.setFlag(Direction.LEFT)
         assertTrue { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.LEFT }
     }
 
     @Test fun `Conditional unsets flags`() {
         var flag = Direction.UP + Direction.DOWN
-        flag = flag.unset(Direction.UP, true)
+        flag = flag.setFlag(Direction.UP, false)
         assertFalse { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.DOWN }
     }
 
     @Test fun `Flags support equality`() {
-        val flags1: Direction = Direction.LEFT
-        val flags2: Direction = Direction.RIGHT
+        val flags1 = Direction.LEFT
+        val flags2 = Direction.RIGHT
         val flags3 = flags1 + flags2
         assertTrue  { Direction.LEFT == flags1 }
         assertFalse { Direction.LEFT == flags2}
@@ -67,8 +63,8 @@ class FlagsTest {
     }
 
     @Test fun `Flags support exact equality`() {
-        val flags1: Direction = Direction.LEFT
-        val flags2: Direction = Direction.RIGHT
+        val flags1 = Direction.LEFT
+        val flags2= Direction.RIGHT
         val flags3 = flags1 + flags2
         assertTrue  { Direction.LEFT === flags1 }
         assertFalse { Direction.LEFT === flags2}
@@ -89,17 +85,8 @@ class FlagsTest {
         assertEquals(0x08, +Direction.DOWN)
     }
 
-    @Test fun `Obtains the name of the flag`() {
-        val flag = Direction.RIGHT + Direction.DOWN
-        assertEquals("LEFT", Direction.LEFT.name)
-        assertEquals("RIGHT", Direction.RIGHT.name)
-        assertEquals("UP", Direction.UP.name)
-        assertEquals("DOWN", Direction.DOWN.name)
-        assertEquals("10", flag.name)
-    }
-
     @Test fun `Retrieves all flags`() {
-        val flags = flagValues<Direction>()
+        val flags = Flags.valuesOf<Direction>()
         assertEquals(5, flags.size)
         assertTrue { flags.containsAll(listOf(
                 Direction.LEFT, Direction.RIGHT,

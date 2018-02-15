@@ -3,7 +3,7 @@ package com.miruken.callback
 interface Handling {
     fun handle(
             callback: Any,
-            greedy:   Boolean,
+            greedy:   Boolean = false,
             composer: Handling? = null
     ) : HandleResult
 

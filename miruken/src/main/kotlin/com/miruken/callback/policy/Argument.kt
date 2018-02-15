@@ -1,9 +1,8 @@
 package com.miruken.callback.policy
 
+import com.miruken.Flags
 import com.miruken.concurrent.Promise
 import com.miruken.isOpenGeneric
-import com.miruken.plus
-import com.miruken.set
 import kotlin.reflect.*
 import kotlin.reflect.full.isSubclassOf
 
@@ -12,7 +11,7 @@ class Argument(val parameter: KParameter) {
     val parameterClass: KClass<*>?
     val logicalType:    KType
     val logicalClass:   KClass<*>?
-    val flags:          ArgumentFlags
+    val flags:          Flags<ArgumentFlags>
 
     inline val parameterType get() = parameter.type
     inline val annotations   get() = parameter.annotations
@@ -22,8 +21,8 @@ class Argument(val parameter: KParameter) {
         parameterClass = getClass(type.classifier)
 
         var flags = ArgumentFlags.NONE
-                .set(ArgumentFlags.OPEN, type.isOpenGeneric)
-                .set(ArgumentFlags.OPTIONAL, type.isMarkedNullable)
+                .setFlag(ArgumentFlags.OPEN) { type.isOpenGeneric }
+                .setFlag(ArgumentFlags.OPTIONAL) { type.isMarkedNullable }
 
         type = extractType(type, Function0::class)?.let {
             flags += ArgumentFlags.LAZY; it } ?: type
