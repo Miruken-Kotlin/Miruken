@@ -12,7 +12,7 @@ enum class HandleResult(
     inline infix fun then(block: () -> HandleResult) =
             if (stop) this else this + block()
 
-    infix fun <T> then(something: T) : T? {
+    infix fun <T> map(something: T) : T? {
         return if (handled) something else null
     }
 
