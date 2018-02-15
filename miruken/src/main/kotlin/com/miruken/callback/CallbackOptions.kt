@@ -9,5 +9,5 @@ sealed class CallbackOptions(value: Long) : Flags<CallbackOptions>(value) {
     object STRICT      : CallbackOptions(1 shl 1)
     object BROADCAST   : CallbackOptions(1 shl 2)
     object BEST_EFFORT : CallbackOptions(1 shl 3)
-    object NOTIFY      : CallbackOptions(+BROADCAST + +BEST_EFFORT)
+    object NOTIFY      : CallbackOptions(+(BROADCAST + BEST_EFFORT))
 }

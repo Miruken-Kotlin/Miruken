@@ -10,6 +10,8 @@ open class Flags<T: Flags<T>>(val value: Long) {
 
     operator fun unaryPlus() = value
 
+    operator fun unaryMinus() : Flags<T> = toFlag()
+
     fun toFlag() : Flags<T> = this as? Flags<T> ?: Flags(value)
 
     infix fun hasFlag(flag: Flags<T>): Boolean {

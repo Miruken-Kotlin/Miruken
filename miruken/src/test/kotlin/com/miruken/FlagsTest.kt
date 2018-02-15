@@ -11,7 +11,7 @@ class FlagsTest {
         object RIGHT : Direction(1 shl 1)
         object UP    : Direction(1 shl 2)
         object DOWN  : Direction(1 shl 3)
-        object ALL   : Direction(+LEFT + +RIGHT + +UP + +DOWN)
+        object ALL   : Direction(+(LEFT + RIGHT + UP + DOWN))
     }
 
     @Test fun `Flags support presence`() {
@@ -22,14 +22,14 @@ class FlagsTest {
     }
 
     @Test fun `Empty flag fails presence`() {
-        var flag = Direction.UP.toFlag()
+        var flag = -Direction.UP
         flag -= Direction.UP
         assertFalse { flag hasFlag flag }
         assertFalse { Direction.DOWN hasFlag flag }
     }
 
     @Test fun `Flags can be combined`() {
-        var flag = Direction.UP.toFlag()
+        var flag = -Direction.UP
         flag += Direction.DOWN
         assertTrue { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.DOWN }
@@ -40,7 +40,7 @@ class FlagsTest {
      }
 
     @Test fun `Conditional sets flags`() {
-        var flag = Direction.UP.toFlag()
+        var flag = -Direction.UP
         flag = flag.setFlag(Direction.LEFT)
         assertTrue { flag hasFlag Direction.UP }
         assertTrue { flag hasFlag Direction.LEFT }
@@ -54,8 +54,8 @@ class FlagsTest {
     }
 
     @Test fun `Flags support equality`() {
-        val flags1 = Direction.LEFT.toFlag()
-        val flags2 = Direction.RIGHT.toFlag()
+        val flags1 = -Direction.LEFT
+        val flags2 = -Direction.RIGHT
         val flags3 = flags1 + flags2
         assertTrue  { Direction.LEFT == flags1 }
         assertFalse { Direction.LEFT == flags2}
@@ -63,8 +63,8 @@ class FlagsTest {
     }
 
     @Test fun `Flags support exact equality`() {
-        val flags1 = Direction.LEFT.toFlag()
-        val flags2= Direction.RIGHT.toFlag()
+        val flags1 = -Direction.LEFT
+        val flags2= -Direction.RIGHT
         val flags3 = flags1 + flags2
         assertTrue  { Direction.LEFT === flags1 }
         assertFalse { Direction.LEFT === flags2}
