@@ -1,7 +1,10 @@
 package com.miruken.concurrent
 
 import com.miruken.*
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.CancellationException
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -211,6 +214,26 @@ open class Promise<out T>
         return this
     }
 
+    fun get(timeoutMs: Long? = null) : T {
+        val deadline = timeoutMs?.let {
+            Instant.now().plusMillis(timeoutMs) }
+        synchronized (_guard) {
+            while (!isCompleted &&
+                    deadline?. let { Instant.now() < deadline } != false) {
+                if (deadline == null)
+                    _guard.wait()
+                else
+                    _guard.wait(Duration.between(Instant.now(),
+                            deadline).toMillis())
+                if (!isCompleted)
+                    throw TimeoutException()
+            }
+        }
+        if (_throwable != null)
+            throw _throwable!!
+        return _result!!
+    }
+
     protected open fun <R> createChild(
             executor: ((R) -> Unit, (Throwable) -> Unit) -> Unit
     ): Promise<R> {
@@ -243,6 +266,7 @@ open class Promise<out T>
                 val fulfilled = _fulfilled
                 _fulfilled = {}
                 _rejected  = {}
+                _guard.notifyAll()
                 fulfilled(result as Any)
             }
         }
@@ -266,6 +290,7 @@ open class Promise<out T>
                 val rejected = _rejected
                 _fulfilled = {}
                 _rejected  = {}
+                _guard.notifyAll()
                 rejected(e)
             }
         }

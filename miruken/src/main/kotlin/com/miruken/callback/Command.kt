@@ -50,6 +50,7 @@ open class Command(val callback: Any, val many: Boolean = false)
             isAsync = _result is Promise<*>
         }
 
+    @Suppress("UNUSED_PARAMETER")
     fun respond(response: Any, strict: Boolean) : Boolean {
         if ((!many && _results.isNotEmpty()))
             return false

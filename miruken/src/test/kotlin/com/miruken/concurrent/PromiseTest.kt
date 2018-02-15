@@ -588,12 +588,33 @@ class PromiseTest {
 
     @Test fun `Cancels timeout when promise cancelled`() {
         assertAsync { done ->
-            var promise = Promise.delay(100).timeout(50) then {
+            val promise = Promise.delay(100).timeout(50) then {
                 fail("Should skip")
             } cancelled {
                 done()
             }
             promise.cancel()
+        }
+    }
+
+    @Test fun `Waits synchronously for promise to fulfill`() {
+        val promise = Promise.delay(50) flatMap  {
+            Promise.resolve("Hello") }
+        val result = promise.get()
+        assertEquals("Hello", result)
+    }
+
+    @Test fun `Waits synchronously for promise to fail`() {
+        val promise = Promise.delay(50) then  {
+            throw Exception("Bad date") }
+        assertFailsWith(Exception::class, "Bad date") {
+            promise.get()
+        }
+    }
+
+    @Test fun `Waits until timeout for promise to fulfill`() {
+        assertFailsWith(TimeoutException::class) {
+            Promise<String> { _, _ -> }.get(50)
         }
     }
 }

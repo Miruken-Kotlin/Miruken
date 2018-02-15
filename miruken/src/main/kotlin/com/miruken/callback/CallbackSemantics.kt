@@ -16,10 +16,10 @@ class CallbackSemantics(
 
     constructor() : this(CallbackOptions.NONE)
 
-    fun hasOptions(options: Flags<CallbackOptions>) =
+    fun hasOption(options: Flags<CallbackOptions>) =
             this.options hasFlag options
 
-    fun setOptions(options: Flags<CallbackOptions>, enabled: Boolean = true)
+    fun setOption(options: Flags<CallbackOptions>, enabled: Boolean = true)
     {
         this.options = options.setFlag(options, enabled)
         _specified += options
@@ -40,6 +40,6 @@ class CallbackSemantics(
     fun mergeInto(semantics: CallbackSemantics,
                   option:    Flags<CallbackOptions>) {
         if (isSpecified(option) && !semantics.isSpecified(options))
-            semantics.setOptions(option, hasOptions(options))
+            semantics.setOption(option, hasOption(options))
     }
 }

@@ -31,6 +31,12 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     companion object {
         @Suppress("UNCHECKED_CAST")
+        fun <T> has(callback: Any) : Boolean {
+            return (callback as? Composition)
+                    ?.let { it.callback as? T } != null
+        }
+
+        @Suppress("UNCHECKED_CAST")
         fun <T, R> map(callback: Any, block: (T) -> R) : R? {
             return (callback as? Composition)
                     ?.let { it.callback as? T }
