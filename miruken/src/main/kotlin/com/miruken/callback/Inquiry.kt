@@ -34,13 +34,9 @@ open class Inquiry(val key: Any, val many: Boolean = false)
                         result.then {
                             if (it is List<*>) {
                                 it.firstOrNull()
-                            } else {
-                                it
-                            }
+                            } else { it }
                         }
-                    } else {
-                        result
-                    }
+                    } else { result }
                 }
             } else if (isAsync) {
                 _result = Promise.all(_resolutions

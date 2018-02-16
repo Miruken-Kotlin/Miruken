@@ -12,7 +12,7 @@ class CallbackSemanticsHandler(
             greedy:   Boolean,
             composer: Handling
     ): HandleResult {
-        if (Composition.has<CallbackSemantics>(callback))
+        if (Composition.get<CallbackSemantics>(callback) != null)
             return HandleResult.NOT_HANDLED
 
         if (callback is CallbackSemantics) {

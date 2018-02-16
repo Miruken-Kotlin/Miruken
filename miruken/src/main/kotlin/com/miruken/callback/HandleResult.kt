@@ -9,11 +9,12 @@ enum class HandleResult(
     NOT_HANDLED(false, false),
     NOT_HANDLED_AND_STOP(false, true);
 
-    inline infix fun then(block: () -> HandleResult) =
+    inline infix fun then(
+            block: HandleResult.() -> HandleResult) =
             if (stop) this else this + block()
 
-    infix fun <T> map(something: T) : T? {
-        return if (handled) something else null
+    infix fun <T> map(block: HandleResult.() -> T) : T? {
+        return if (handled) block() else null
     }
 
     infix fun otherwise(handled: Boolean): HandleResult =
@@ -28,7 +29,8 @@ enum class HandleResult(
                 }
             }
 
-    inline infix fun otherwise(block: () -> HandleResult) =
+    inline infix fun otherwise(
+            block: HandleResult.() -> HandleResult) =
             if (handled || stop) this else block()
 
     infix operator fun plus(other: HandleResult): HandleResult =

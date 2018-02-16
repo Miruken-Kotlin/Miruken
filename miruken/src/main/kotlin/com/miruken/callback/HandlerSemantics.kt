@@ -2,7 +2,7 @@ package com.miruken.callback
 
 fun Handling.getSemantics(): CallbackSemantics? {
     val semantics = CallbackSemantics()
-    return handle(semantics, true) map semantics
+    return handle(semantics, true) map { semantics }
 }
 
 fun Handling.semantics(options: CallbackOptions) =

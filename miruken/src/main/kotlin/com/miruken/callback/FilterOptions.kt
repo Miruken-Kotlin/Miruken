@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-class FilterOptions(
+data class FilterOptions(
         var providers: List<FilteringProvider> = emptyList()
 ) : Options<FilterOptions>() {
 

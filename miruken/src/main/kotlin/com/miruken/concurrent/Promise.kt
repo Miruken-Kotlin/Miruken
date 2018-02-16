@@ -297,9 +297,10 @@ open class Promise<out T>
     }
 
     companion object {
-        val True  = resolve(true)
-        val False = resolve(false)
-        val Empty = resolve(Unit)
+        val True      = resolve(true)
+        val False     = resolve(false)
+        val Empty     = resolve(Unit)
+        val EmptyList = resolve(emptyList<Any>())
 
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }

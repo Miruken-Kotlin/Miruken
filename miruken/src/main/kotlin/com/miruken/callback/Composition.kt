@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import kotlin.reflect.KClass
+import kotlin.reflect.full.safeCast
 
 open class Composition(callback: Any) : Trampoline(callback),
         Callback, ResolvingCallback,
@@ -31,16 +32,15 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        fun <T> has(callback: Any) : Boolean {
-            return (callback as? Composition)
-                    ?.let { it.callback as? T } != null
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        fun <T, R> map(callback: Any, block: (T) -> R) : R? {
+        inline fun <reified T> get(callback: Any) : T? {
             return (callback as? Composition)
                     ?.let { it.callback as? T }
-                    ?.let(block)
+        }
+
+        fun get(callback: Any, clazz: KClass<*>) : Any? {
+            return (callback as? Composition)?.let {
+                clazz.safeCast(it.callback)
+            }
         }
     }
 }

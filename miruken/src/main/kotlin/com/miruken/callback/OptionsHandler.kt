@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 class OptionsHandler<T: Options<T>>(
-        handler: Handling,
+        handler:     Handling,
         val options: T
 ) : DecoratedHandler(handler) {
 
@@ -10,8 +10,10 @@ class OptionsHandler<T: Options<T>>(
             greedy:   Boolean,
             composer: Handling
     ): HandleResult {
-        val result = Composition.map(callback) { other: T ->
-            options.mergeInto(other)
+        @Suppress("UNCHECKED_CAST")
+        val result = Composition.get(
+                callback, options::class)?.let {
+            options.mergeInto(it as T)
             HandleResult.HANDLED
         } ?: HandleResult.NOT_HANDLED
         return if (greedy) result +
