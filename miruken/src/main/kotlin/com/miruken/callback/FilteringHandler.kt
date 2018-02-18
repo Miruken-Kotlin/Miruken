@@ -1,9 +1,11 @@
 package com.miruken.callback
 
+typealias FilterBlock = (Any, Handling, () -> HandleResult) -> HandleResult
+
 class FilteringHandler(
-        handler: Handling,
-        val filter:    (Any, Handling, () -> HandleResult) -> HandleResult,
-        val reentrant: Boolean = false
+        handler:               Handling,
+        private val filter:    FilterBlock,
+        private val reentrant: Boolean = false
 ) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback: Any,
@@ -17,3 +19,9 @@ class FilteringHandler(
                 { super.handleCallback(callback, greedy, composer)})
     }
 }
+
+fun Handling.filter(filter: FilterBlock): Handling =
+        FilteringHandler(this, filter)
+
+fun Handling.filter(reentrant: Boolean, filter: FilterBlock): Handling =
+        FilteringHandler(this, filter, reentrant)

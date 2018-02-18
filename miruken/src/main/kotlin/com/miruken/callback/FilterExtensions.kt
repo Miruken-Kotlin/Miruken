@@ -2,7 +2,7 @@ package com.miruken.callback
 
 fun Handling.getFilterOptions() : FilterOptions? {
     val options = FilterOptions()
-    return handle(options, true) map { options }
+    return handle(options, true) success { options }
 }
 
 fun Handling.withFilters(vararg filters: Filtering<*,*>): Handling {

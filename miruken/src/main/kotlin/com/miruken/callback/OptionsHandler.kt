@@ -16,7 +16,7 @@ class OptionsHandler<T: Options<T>>(
             options.mergeInto(it as T)
             HandleResult.HANDLED
         } ?: HandleResult.NOT_HANDLED
-        return if (greedy) result +
+        return if (greedy) result or
             decoratee.handle(callback, greedy, composer)
         else result otherwise {
             decoratee.handle(callback, greedy, composer)

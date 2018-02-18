@@ -5,7 +5,7 @@ class CallbackSemanticsHandler(
         options: CallbackOptions
 ) : DecoratedHandler(handler) {
 
-    val semantics = CallbackSemantics(options)
+    private val semantics = CallbackSemantics(options)
 
     override fun handleCallback(
             callback: Any,
@@ -18,7 +18,7 @@ class CallbackSemanticsHandler(
         if (callback is CallbackSemantics) {
             callback.mergeInto(semantics)
             val result = HandleResult.HANDLED
-            return if (greedy) result +
+            return if (greedy) result or
                 decoratee.handle(callback, greedy, composer)
              else result
         }
@@ -32,7 +32,7 @@ class CallbackSemanticsHandler(
         if (semantics.hasOption(CallbackOptions.BEST_EFFORT))
         {
             return try {
-                HandleResult.HANDLED +
+                HandleResult.HANDLED or
                         decoratee.handle(callback, greed, composer)
             } catch (ex: RejectedException) {
                 HandleResult.HANDLED

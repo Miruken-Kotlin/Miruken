@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-class HandlerAdapter(val handler: Any) : Handler() {
+open class HandlerAdapter(val handler: Any) : Handler() {
     override fun handleCallback(
             callback: Any,
             greedy:   Boolean,

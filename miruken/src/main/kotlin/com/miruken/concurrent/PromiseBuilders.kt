@@ -63,22 +63,11 @@ fun <T: Any> Promise<T>.timeout(timeoutMs: Long) : Promise<T> {
     }).then { it as T }
 }
 
-fun <T> Promise.Companion.run(block: () -> T) : Promise<T> {
-    return Promise { resolve, reject ->
-        try {
-            resolve(block())
-        } catch (e: Throwable) {
-            reject(e)
-        }
-    }
-}
-
-fun <T> Promise.Companion.start(block: () -> Promise<T>) : Promise<T> {
-    return Promise { resolve, reject ->
-        try {
-            block().then(resolve, reject)
-        } catch (e: Throwable) {
-            reject(e)
-        }
+inline fun <reified T: Any> Promise.Companion.`try`(
+        block: () -> T) : Promise<T> {
+    return try {
+        Promise.resolve(block())
+    } catch (e: Throwable) {
+        Promise.reject(e)
     }
 }

@@ -519,7 +519,7 @@ class PromiseTest {
 
     @Test fun `Converts return into a promise`() {
         var called = false
-        Promise.run {
+        Promise.`try` {
            2 * 3
         } then {
             assertEquals(6, it)
@@ -530,7 +530,7 @@ class PromiseTest {
 
     @Test fun `Ensures exception become rejected promise`() {
         var called = false
-        Promise.run {
+        Promise.`try` {
             val x:Any? = null
             x!!
         } catch {
@@ -541,9 +541,9 @@ class PromiseTest {
 
     @Test fun `Follows fulfilled promise from return`() {
         var called = false
-        Promise.start {
+        Promise.`try` {
             Promise.resolve("Hello")
-        } then {
+        }.unwrap() then {
             assertEquals("Hello", it)
             called = true
         }
@@ -551,7 +551,7 @@ class PromiseTest {
     }
 
     @Test fun `Follows rejected promise from return`() {
-        Promise.start {
+        Promise.`try` {
             Promise.reject(Exception("Rejected"))
         } catch {
             assertEquals("Rejected", it.message)

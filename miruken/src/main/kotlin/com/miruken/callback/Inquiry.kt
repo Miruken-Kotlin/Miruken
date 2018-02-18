@@ -69,15 +69,12 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             greedy:     Boolean,
             composer:   Handling
     ) : Boolean {
-        val resolved =
-                if (strict && resolution is List<*>) {
-                    resolution.filterNotNull()
-                              .fold(false, {s, res ->
-                        include(res, greedy, composer) || s
-                    })
-                } else {
-                    include(resolution, greedy, composer)
-                }
+        val resolved = when {
+            strict && resolution is List<*> ->
+                resolution.filterNotNull().fold(false, {s, res ->
+                    include(res, greedy, composer) || s })
+            else -> include(resolution, greedy, composer)
+        }
         if (resolved) _result = null
         return resolved
     }
@@ -90,17 +87,15 @@ open class Inquiry(val key: Any, val many: Boolean = false)
         if ((!many && _resolutions.isNotEmpty()))
             return false
 
-        var res = resolution
+        var res     = resolution
         var promise = res as? Promise<*>
         if (promise != null) {
             isAsync = true
             if (many) promise = promise.catch {}
-            promise = promise.then {
-                if (it != null && isSatisfied(it, greedy, composer)) {
-                    result
-                } else { null }
+            res = promise.then {
+                it?.takeIf { isSatisfied(it, greedy, composer) }
+                  ?.let { result }
             }
-            res = promise
         } else if (!isSatisfied(res, greedy, composer))
             return false
 
@@ -128,13 +123,11 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             greedy:    Boolean,
             composer:  Handling
     ) : Boolean {
-        val type       = key as? KClass<*> ?: return false
-        val compatible = if (invariant) {
-            type == item::class
-        } else {
-            type.isInstance(item)
-        }
-        return compatible && resolve(item, false, greedy, composer)
+        return when {
+            key !is KClass<*> -> false
+            invariant -> key == item::class
+            else -> key.isInstance(item)
+        } && resolve(item, false, greedy, composer)
     }
 }
 

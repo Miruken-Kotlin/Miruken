@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.*
 import com.miruken.getMethod
-import com.miruken.getTaggedAnnotations
+import com.miruken.RuntimeHelpers.getTaggedAnnotations
 import org.junit.*
 import kotlin.test.assertTrue
 

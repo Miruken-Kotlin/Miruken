@@ -21,23 +21,23 @@ open class CompositeHandler(vararg handlers: Any)
             if (result.stop || (result.handled && !greedy)) {
                 return result
             }
-            result + handler.handle(callback, greedy, composer)
+            result or handler.handle(callback, greedy, composer)
         })
     }
 
-    override fun addHandlers(vararg handlers: Any): CompositeHandler {
+    final override fun addHandlers(vararg handlers: Any): CompositeHandler {
         _handlers.addAll(handlers.filter {
             find(it) == null }.map(::toHandler))
         return this
     }
 
-    override fun insertHandlers(atIndex: Int, vararg handlers: Any): CompositeHandler {
+    final override fun insertHandlers(atIndex: Int, vararg handlers: Any): CompositeHandler {
         _handlers.addAll(atIndex, handlers.filter {
             find(it) == null }.map(::toHandler))
         return this
     }
 
-    override fun removeHandlers(vararg handlers: Any): CompositeHandler {
+    final override fun removeHandlers(vararg handlers: Any): CompositeHandler {
         _handlers.removeAll(handlers.mapNotNull(::find))
         return this
     }

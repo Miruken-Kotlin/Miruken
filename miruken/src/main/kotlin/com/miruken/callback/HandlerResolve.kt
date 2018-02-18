@@ -10,7 +10,7 @@ fun Handling.resolvingAll() = CallbackSemanticsHandler(
 
 fun Handling.resolve(key: Any) : Any? {
     val inquiry = key as? Inquiry ?: Inquiry(key)
-    return handle(inquiry) map {
+    return handle(inquiry) success  {
         inquiry.result?.let {
             when (it) {
                 is Promise<*> -> it.get()
@@ -24,7 +24,7 @@ fun Handling.resolve(key: Any) : Any? {
 fun Handling.resolveAsync(key: Any) : Promise<Any> {
     val inquiry = key as? Inquiry ?: Inquiry(key)
     inquiry.wantsAsync = true
-    return handle(inquiry) map {
+    return handle(inquiry) success  {
         inquiry.result as? Promise<Any>
     } ?: Promise.Empty
 }
@@ -38,7 +38,7 @@ inline fun <reified T> Handling.resolveAsync() : Promise<T?> =
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAll(key: Any) : List<Any> {
     val inquiry = key as? Inquiry ?: Inquiry(key, true)
-    return handle(inquiry, true) map {
+    return handle(inquiry, true) success  {
         inquiry.result?.let {
             when (it) {
                 is Promise<*> -> it.get()
@@ -52,7 +52,7 @@ fun Handling.resolveAll(key: Any) : List<Any> {
 fun Handling.resolveAllAsync(key: Any) : Promise<List<Any>> {
     val inquiry = key as? Inquiry ?: Inquiry(key, true)
     inquiry.wantsAsync = true
-    return handle(inquiry, true) map {
+    return handle(inquiry, true) success  {
         inquiry.result?.let {
             when (it) {
                 is Promise<*> -> it.then {
