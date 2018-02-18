@@ -2,7 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.Flags
 import com.miruken.concurrent.Promise
-import com.miruken.RuntimeHelpers.isOpenGeneric
+import com.miruken.runtime.*
 import kotlin.reflect.*
 import kotlin.reflect.full.isSubclassOf
 

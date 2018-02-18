@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.*
 import com.miruken.getMethod
-import com.miruken.RuntimeHelpers.getTaggedAnnotations
+import com.miruken.runtime.getTaggedAnnotations
 import org.junit.Test
 
 class ProvidesUsePolicyTest {

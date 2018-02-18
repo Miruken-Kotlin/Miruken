@@ -118,7 +118,7 @@ class Bundle(private val all: Boolean = true) :
     }
 
     private fun dispatch(
-            proxy:      Handling,
+            proxy:     Handling,
             operation: Operation
     ) : HandleResult {
         return try {
