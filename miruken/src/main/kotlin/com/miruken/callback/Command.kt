@@ -16,51 +16,53 @@ open class Command(
     private var _result: Any? = null
     private val _results = mutableListOf<Any>()
     private var _policy: CallbackPolicy? = null
-    private val _callbackType: KType = callbackType ?:
-        callback::class.let {
-            it.createType(it.typeParameters.map { KTypeProjection.STAR })
+    private val _callbackType by lazy {
+        callbackType ?: callback::class.let {
+            it.createType(it.typeParameters.map {
+                KTypeProjection.STAR })
         }
+    }
 
     override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
-        private set
+    private set
 
-    override var policy: CallbackPolicy?
-        get() = _policy ?: HandlesPolicy
-        set(value) { _policy = value }
+            override var policy: CallbackPolicy?
+    get() = _policy ?: HandlesPolicy
+    set(value) { _policy = value }
 
     val results: List<Any> get() = _results.toList()
 
     override val resultType: KType?
-        get() = if (wantsAsync || isAsync)
-                    Promise::class.createType(listOf(
-                            KTypeProjection.invariant(_callbackType)))
-                else _callbackType
+    get() = if (wantsAsync || isAsync)
+        Promise::class.createType(listOf(
+                KTypeProjection.invariant(_callbackType)))
+    else _callbackType
 
     override var result: Any?
-        get() = {
-            if (_result != null) {
-                _result
-            } else if (!many) {
-                if (_results.isNotEmpty()) {
-                    _result = _results.first()
-                }
-            } else if (isAsync) {
-                _result = Promise.all(_results
-                        .map { Promise.resolve(it) })
-            } else {
-                _result = _results
-            }
-            if (wantsAsync && !isAsync) {
-                _result = Promise.resolve(_result ?: Unit)
-            }
+    get() = {
+        if (_result != null) {
             _result
+        } else if (!many) {
+            if (_results.isNotEmpty()) {
+                _result = _results.first()
+            }
+        } else if (isAsync) {
+            _result = Promise.all(_results
+                    .map { Promise.resolve(it) })
+        } else {
+            _result = _results
         }
-        set(value) {
-            _result = value
-            isAsync = _result is Promise<*>
+        if (wantsAsync && !isAsync) {
+            _result = Promise.resolve(_result ?: Unit)
         }
+        _result
+    }
+    set(value) {
+        _result = value
+        isAsync = _result is Promise<*>
+    }
 
     @Suppress("UNUSED_PARAMETER")
     fun respond(response: Any, strict: Boolean) : Boolean {
@@ -79,6 +81,6 @@ open class Command(
         val size = _results.size
         return policy!!.dispatch(handler, this, greedy,
                 composer, ::respond).otherwise(
-             _results.size > size)
+                _results.size > size)
     }
 }

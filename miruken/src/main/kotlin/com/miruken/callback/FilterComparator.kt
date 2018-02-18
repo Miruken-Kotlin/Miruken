@@ -5,7 +5,7 @@ object FilterComparator : Comparator<Filtering<*,*>> {
             o1: Filtering<*, *>?,
             o2: Filtering<*, *>?
     ): Int {
-        return when{
+        return when {
             o1 == o2 -> 0
             o1?.order == null -> -1
             o2?.order == null -> 1

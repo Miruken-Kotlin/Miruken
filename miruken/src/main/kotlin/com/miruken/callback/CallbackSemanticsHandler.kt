@@ -19,12 +19,12 @@ class CallbackSemanticsHandler(
             callback.mergeInto(semantics)
             val result = HandleResult.HANDLED
             return if (greedy) result or
-                decoratee.handle(callback, greedy, composer)
+                handler.handle(callback, greedy, composer)
              else result
         }
 
         if (callback is Composition)
-            return decoratee.handle(callback, greedy, composer)
+            return handler.handle(callback, greedy, composer)
 
         val greed = greedy ||
                 semantics.hasOption(CallbackOptions.BROADCAST)
@@ -33,7 +33,7 @@ class CallbackSemanticsHandler(
         {
             return try {
                 HandleResult.HANDLED or
-                        decoratee.handle(callback, greed, composer)
+                        handler.handle(callback, greed, composer)
             } catch (ex: RejectedException) {
                 HandleResult.HANDLED
             }

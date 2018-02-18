@@ -17,9 +17,9 @@ class OptionsHandler<T: Options<T>>(
             HandleResult.HANDLED
         } ?: HandleResult.NOT_HANDLED
         return if (greedy) result or
-            decoratee.handle(callback, greedy, composer)
+            handler.handle(callback, greedy, composer)
         else result otherwise {
-            decoratee.handle(callback, greedy, composer)
+            handler.handle(callback, greedy, composer)
         }
     }
 }

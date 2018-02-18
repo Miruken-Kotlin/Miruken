@@ -21,8 +21,9 @@ class Bundle(private val all: Boolean = true) :
     )
 
     val isEmpty get() = _operations.isEmpty()
-    val handled get() = isEmpty ||
-            _operations.all { it.result.handled }
+    val handled get() = _operations.fold(
+            HandleResult.NOT_HANDLED, { result, operation ->
+                result or operation.result })
 
     override var wantsAsync: Boolean = false
 
@@ -31,8 +32,10 @@ class Bundle(private val all: Boolean = true) :
 
     override val policy: CallbackPolicy? = null
 
-    fun complete(): Promise<*> {
-        if (isEmpty) return Promise.Empty
+    fun complete(): Promise<*>? {
+        if (isEmpty) {
+            return if (wantsAsync) Promise.Empty else null
+        }
         if (all || _operations.any { it.result.handled }) {
             _operations.forEach {
                 if (!it.result.handled)
@@ -43,7 +46,7 @@ class Bundle(private val all: Boolean = true) :
         }
         return if (isAsync) {
             Promise.all(_promises) then { Promise.Empty }
-        } else { Promise.Empty }
+        } else { if (wantsAsync) Promise.Empty else null }
     }
 
     fun add(action: BundleActionBlock,
