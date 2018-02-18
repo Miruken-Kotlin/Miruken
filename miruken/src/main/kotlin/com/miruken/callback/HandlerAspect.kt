@@ -1,7 +1,9 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
+import com.miruken.runtime.getKType
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.isSubtypeOf
 
 typealias AspectBeforeBlock = (Any, Handling) -> Any?
 typealias AspectAfterBlock  = (Any, Handling, Any?) -> Unit
@@ -28,7 +30,7 @@ fun Handling.aspect(
             val state = it(callback, composer)
             if (state is Promise<*>) {
                 // TODO("Use Promise.wait if cb.resultType is not a Promise")
-                // TODO("or you will get a cast exception")
+                // TODO("or you will get a ClassCastException")
                 cb?.result = state.then {
                     if (it != false) {
                         aspectProceed(callback, composer, proceed, after, state)
@@ -40,7 +42,7 @@ fun Handling.aspect(
                 return@filter HandleResult.HANDLED
             }
             if (state == false) {
-                if (cb?.resultType?.isSubclassOf(Promise::class) == true) {
+                if (cb?.resultType?.isSubtypeOf(getKType<Promise<*>>()) == true) {
                     cb.result = Promise.reject(RejectedException(callback))
                     return@filter HandleResult.HANDLED
                 }

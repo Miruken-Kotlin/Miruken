@@ -3,14 +3,24 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
+import com.miruken.runtime.getKType
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection.Companion.STAR
+import kotlin.reflect.KTypeProjection.Companion.invariant
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.starProjectedType
 
 open class Inquiry(val key: Any, val many: Boolean = false)
     : Callback, AsyncCallback, DispatchingCallback {
 
-    private val _resolutions = mutableListOf<Any>()
-    private var _result: Any? = null
-
+    private var _result: Any?    = null
+    private val _resolutions     = mutableListOf<Any>()
+    private val _keyType: KType? = when (key) {
+        is KType -> key
+        is KClass<*> -> key.createType(key.typeParameters.map { STAR })
+        else -> null
+    }
     override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
@@ -20,8 +30,15 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     val resolutions: List<Any> get() = _resolutions.toList()
 
-    override val resultType: KClass<*>?
-        get() = if (wantsAsync || isAsync) Promise::class else null
+    override val resultType: KType?
+        get() = when (key) {
+            is KType,
+            is KClass<*> -> if (wantsAsync || isAsync)
+                Promise::class.createType(listOf(invariant(_keyType!!)))
+                else _keyType
+            else -> if (wantsAsync || isAsync)
+                getKType<Promise<*>>() else null
+        }
 
     override var result: Any?
         get() = {
@@ -58,10 +75,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     fun resolve(
             resolution: Any,
             composer:   Handling
-    ): Boolean
-    {
-        return resolve(resolution, false, false, composer)
-    }
+    ) = resolve(resolution, false, false, composer)
 
     fun resolve(
             resolution: Any,
@@ -103,7 +117,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
         return true
     }
 
-    open fun isSatisfied(
+    protected open fun isSatisfied(
             resolution: Any,
             greedy:     Boolean,
             composer:   Handling
@@ -129,13 +143,14 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             else -> key.isInstance(item)
         } && resolve(item, false, greedy, composer)
     }
+
+    private fun flatten(list: List<Any?>) : List<Any?> {
+        return list.flatMap {
+            when (it) {
+                is Iterable<Any?> -> it
+                else -> listOf(it)
+            }
+        }.distinct()
+    }
 }
 
-private fun flatten(list: List<Any?>) : List<Any?> {
-    return list.flatMap {
-        when (it) {
-            is Iterable<Any?> -> it
-            else -> listOf(it)
-        }
-    }.distinct()
-}

@@ -3,14 +3,23 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 
-open class Command(val callback: Any, val many: Boolean = false)
-    : Callback, AsyncCallback, DispatchingCallback {
+open class Command(
+        val callback: Any,
+        callbackType: KType?  = null,
+        val many:     Boolean = false
+) : Callback, AsyncCallback, DispatchingCallback {
 
-    private var _policy: CallbackPolicy? = null
-    private val _results = mutableListOf<Any>()
     private var _result: Any? = null
+    private val _results = mutableListOf<Any>()
+    private var _policy: CallbackPolicy? = null
+    private val _callbackType: KType = callbackType ?:
+        callback::class.let {
+            it.createType(it.typeParameters.map { KTypeProjection.STAR })
+        }
 
     override var wantsAsync: Boolean = false
 
@@ -18,13 +27,16 @@ open class Command(val callback: Any, val many: Boolean = false)
         private set
 
     override var policy: CallbackPolicy?
-        get() = _policy ?: ProvidesPolicy
+        get() = _policy ?: HandlesPolicy
         set(value) { _policy = value }
 
     val results: List<Any> get() = _results.toList()
 
-    override val resultType: KClass<*>?
-        get() = if (wantsAsync || isAsync) Promise::class else null
+    override val resultType: KType?
+        get() = if (wantsAsync || isAsync)
+                    Promise::class.createType(listOf(
+                            KTypeProjection.invariant(_callbackType)))
+                else _callbackType
 
     override var result: Any?
         get() = {
@@ -52,11 +64,8 @@ open class Command(val callback: Any, val many: Boolean = false)
 
     @Suppress("UNUSED_PARAMETER")
     fun respond(response: Any, strict: Boolean) : Boolean {
-        if ((!many && _results.isNotEmpty()))
-            return false
-
+        if ((!many && _results.isNotEmpty())) return false
         if (response is Promise<*>) isAsync = true
-
         _results.add(response)
         _result = null
         return true

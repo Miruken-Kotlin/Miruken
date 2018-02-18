@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import kotlin.reflect.full.safeCast
 
 open class Composition(callback: Any) : Trampoline(callback),
@@ -9,7 +10,7 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     protected constructor() : this(Unit)
 
-    override val resultType: KClass<*>?
+    override val resultType: KType?
         get() = (callback as? Callback)?.resultType
 
     override var result: Any?
@@ -32,7 +33,7 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T> get(callback: Any) : T? {
+        inline fun <reified T: Any> get(callback: Any) : T? {
             return (callback as? Composition)
                     ?.let { it.callback as? T }
         }

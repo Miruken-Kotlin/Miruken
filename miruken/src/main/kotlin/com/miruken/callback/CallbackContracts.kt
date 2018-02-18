@@ -1,10 +1,10 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.CallbackPolicy
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 interface Callback {
-    val resultType: KClass<*>?
+    val resultType: KType?
     var result:     Any?
 }
 
