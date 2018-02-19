@@ -5,7 +5,7 @@ import com.miruken.getMethod
 import com.miruken.runtime.getTaggedAnnotations
 import org.junit.Test
 
-class ProvidesUsePolicyTest {
+class ProvidesPolicyTest {
     class Foo
 
     @Suppress("UNUSED_PARAMETER")

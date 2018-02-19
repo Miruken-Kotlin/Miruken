@@ -7,6 +7,5 @@ sealed class ArgumentFlags(value: Long) : Flags<ArgumentFlags>(value) {
     object LAZY       : ArgumentFlags(1 shl 0)
     object COLLECTION : ArgumentFlags(1 shl 1)
     object PROMISE    : ArgumentFlags(1 shl 2)
-    object OPTIONAL   : ArgumentFlags(1 shl 3)
-    object OPEN       : ArgumentFlags(1 shl 4)
+    object OPEN       : ArgumentFlags(1 shl 3)
 }
