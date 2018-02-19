@@ -1,8 +1,8 @@
 package com.miruken.callback
 
-import kotlin.reflect.KClass
+import com.miruken.runtime.getKType
+import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
-import kotlin.reflect.full.safeCast
 
 open class Composition(callback: Any) : Trampoline(callback),
         Callback, ResolvingCallback,
@@ -33,14 +33,13 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T: Any> get(callback: Any) : T? {
-            return (callback as? Composition)
-                    ?.let { it.callback as? T }
-        }
+        inline fun <reified T: Any> get(callback: Any) : T? =
+                get(callback, getKType<T>()) as? T
 
-        fun get(callback: Any, clazz: KClass<*>) : Any? {
+        fun get(callback: Any, key: Any) : Any? {
             return (callback as? Composition)?.let {
-                clazz.safeCast(it.callback)
+                if (isAssignableTo(key, it.resultType ?: it.callback))
+                    it.callback else null
             }
         }
     }

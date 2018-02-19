@@ -9,7 +9,7 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.isSuperclassOf
 
-fun isAssignable(leftSide: Any, rightSide: Any?): Boolean {
+fun isAssignableTo(leftSide: Any, rightSide: Any?): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
             null -> false
@@ -67,17 +67,16 @@ fun isAssignable(leftSide: Any, rightSide: Any?): Boolean {
     }
 }
 
-fun Iterable<*>.filterIsAssignable(key: Any): List<Any> {
-    return filterIsAssignable(ArrayList(), key)
+fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
+    return filterIsAssignableTo(ArrayList(), key)
 }
 
-fun Iterable<*>.filterIsAssignable(
+fun Iterable<*>.filterIsAssignableTo(
         destination: ArrayList<Any>, key: Any
 ): MutableList<Any> {
-    filter { isAssignable(key, it) }.mapTo(destination) { it!! }
+    filter { isAssignableTo(key, it) }.mapTo(destination) { it!! }
     return destination
 }
-
 
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||

@@ -4,7 +4,7 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.PROMISE_TYPE
-import com.miruken.runtime.isAssignable
+import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection.Companion.STAR
@@ -143,7 +143,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             greedy:    Boolean,
             composer:  Handling
     ): Boolean {
-        return isAssignable(key, item) &&
+        return isAssignableTo(key, item) &&
                 resolve(item, false, greedy, composer)
     }
 

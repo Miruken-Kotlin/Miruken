@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.filterIsAssignable
+import com.miruken.runtime.filterIsAssignableTo
 import com.miruken.runtime.getKType
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -74,9 +74,12 @@ inline fun <reified T: Any> Handling.resolveAll() : List<T> =
 inline fun <reified T: Any> Handling.resolveAllAsync() : Promise<List<T>> =
         resolveAllAsync(getKType<T>()) then { it.filterIsInstance<T>() }
 
+inline fun <reified T: Any> Handling.provide(value: T) =
+        Provider(value, getKType<T>()) + this
+
 private fun List<Any>.coerceList(key: Any) : List<Any> {
     return when (key) {
-        is KType, is KClass<*>, is Class<*> -> filterIsAssignable(key)
+        is KType, is KClass<*>, is Class<*> -> filterIsAssignableTo(key)
         else -> this
     }
 }
