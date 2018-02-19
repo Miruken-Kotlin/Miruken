@@ -2,8 +2,6 @@ package com.miruken.callback
 
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.PROMISE_TYPE
-import com.miruken.runtime.getKType
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 
 typealias AspectBeforeBlock = (Any, Handling) -> Any?

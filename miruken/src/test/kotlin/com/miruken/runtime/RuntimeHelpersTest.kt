@@ -25,26 +25,43 @@ class RuntimeHelpersTest {
     }
 
     @Test fun `Can check KType assignability`() {
-        assertTrue { isAssignableKeys(
+        assertTrue { isAssignable(
                 getKType<List<*>>(), getKType<List<String>>()) }
-
-        assertFalse { isAssignableKeys(
+        assertFalse { isAssignable(
                 getKType<List<Foo>>(), getKType<List<*>>()) }
-
-        assertFalse { isAssignableKeys(
+        assertFalse { isAssignable(
                 getKType<List<Int>>(), getKType<List<String>>()) }
     }
 
     @Test fun `Can check KClass assignability`() {
-        assertTrue  { isAssignableKeys(Foo::class, Foo()::class) }
-        assertFalse { isAssignableKeys(String::class, Foo()::class) }
-        assertFalse { isAssignableKeys(Bar::class, Bar<Int>()::class) }
+        assertTrue  { isAssignable(Foo::class, Foo()) }
+        assertTrue  { isAssignable(Foo::class, Foo()::class) }
+        assertTrue  { isAssignable(Foo::class, Foo().javaClass) }
+        assertFalse { isAssignable(Foo(), Foo::class) }
+        assertFalse { isAssignable(String::class, Foo()::class) }
+        assertFalse { isAssignable(Bar::class, Bar<Int>()::class) }
     }
 
     @Test fun `Can check mixed assignability`() {
-        assertTrue  { isAssignableKeys(Foo::class, getKType<Foo>()) }
-        assertTrue  { isAssignableKeys(getKType<Foo>(), Foo::class) }
-        assertFalse { isAssignableKeys(getKType<Bar<String>>(), Bar<String>()) }
+        assertTrue  { isAssignable(getKType<Foo>(), Foo()) }
+        assertTrue  { isAssignable(Foo::class, getKType<Foo>()) }
+        assertTrue  { isAssignable(getKType<Foo>(), Foo::class) }
+        assertFalse { isAssignable(Foo(), getKType<Foo>()) }
+        assertFalse { isAssignable(getKType<Bar<String>>(), Bar<String>()) }
+    }
+
+    @Test fun `Can check primitive assignability`() {
+        assertTrue  { isAssignable(getKType<Int>(), 2) }
+        assertTrue  { isAssignable(getKType<Int>(), Int::class) }
+        assertTrue  { isAssignable(Int::class, 2) }
+        assertTrue  { isAssignable(getKType<Int>(), 2::class.java) }
+    }
+
+    @Test fun `Can check assignability to null`() {
+        assertFalse { isAssignable(Foo::class, null) }
+        assertFalse { isAssignable(String::class, null) }
+        assertFalse { isAssignable(Bar::class, null) }
+        assertFalse { isAssignable(getKType<Foo>(), null) }
     }
 
     @Test fun `Can determine KType covariance`() {

@@ -9,29 +9,75 @@ import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.isSuperclassOf
 
-fun isAssignableKeys(leftKey: Any, rightKey: Any): Boolean {
-    return when (leftKey) {
-        is KType -> when (rightKey) {
-            is KType -> rightKey.isSubtypeOf(leftKey)
-            is KClass<*> -> leftKey.arguments.isEmpty() &&
-                    rightKey.typeParameters.isEmpty() &&
-                    (leftKey.classifier as? KClass<*>)
-                            ?.isSuperclassOf(rightKey) == true
-            else -> false
+fun isAssignable(leftSide: Any, rightSide: Any?): Boolean {
+    return when (leftSide) {
+        is KType -> when (rightSide) {
+            null -> false
+            is KType -> rightSide.isSubtypeOf(leftSide)
+            is Class<*> -> leftSide.arguments.isEmpty() &&
+                    rightSide.typeParameters.isEmpty() &&
+                    (leftSide.classifier as? KClass<*>)
+                            ?.java?.isAssignableFrom(rightSide) == true
+            else -> {
+                val rightClass = (rightSide as? KClass<*>)
+                        ?: (rightSide as? Class<*>)?.kotlin
+                        ?: rightSide::class
+                leftSide.arguments.isEmpty() &&
+                        rightClass.typeParameters.isEmpty() &&
+                        (leftSide.classifier as? KClass<*>)
+                                ?.isSuperclassOf(rightClass) == true
+            }
         }
-        is KClass<*> -> when (rightKey) {
-            is KClass<*> -> leftKey.typeParameters.isEmpty() &&
-                    rightKey.typeParameters.isEmpty() &&
-                    rightKey.isSubclassOf(leftKey)
-            is KType -> rightKey.arguments.isEmpty() &&
-                    leftKey.typeParameters.isEmpty() &&
-                    (rightKey.classifier as? KClass<*>)
-                            ?.isSubclassOf(leftKey) == true
-            else -> false
+        is KClass<*> -> when (rightSide) {
+            null -> false
+            is KType -> rightSide.arguments.isEmpty() &&
+                    leftSide.typeParameters.isEmpty() &&
+                    (rightSide.classifier as? KClass<*>)
+                            ?.isSubclassOf(leftSide) == true
+            is Class<*> -> leftSide.typeParameters.isEmpty() &&
+                    rightSide.typeParameters.isEmpty() &&
+                    leftSide.java.isAssignableFrom(rightSide)
+            else -> {
+                val rightClass = (rightSide as? KClass<*>)
+                        ?: rightSide::class
+                leftSide.typeParameters.isEmpty() &&
+                        rightClass.typeParameters.isEmpty() &&
+                        rightClass.isSubclassOf(leftSide)
+            }
+        }
+        is Class<*> ->when (rightSide) {
+            null -> false
+            is KType -> rightSide.arguments.isEmpty() &&
+                    leftSide.typeParameters.isEmpty() &&
+                    (rightSide.classifier as? KClass<*>)?.let {
+                        leftSide.isAssignableFrom(it.java)
+                    } == true
+            is Class<*> -> leftSide.typeParameters.isEmpty() &&
+                    rightSide.typeParameters.isEmpty() &&
+                    leftSide.isAssignableFrom(rightSide)
+            else -> {
+                val rightClass = (rightSide as? KClass<*>)
+                        ?: rightSide::class
+                leftSide.typeParameters.isEmpty() &&
+                        rightClass.typeParameters.isEmpty() &&
+                        leftSide.isAssignableFrom(rightClass.java)
+            }
         }
         else -> false
     }
 }
+
+fun Iterable<*>.filterIsAssignable(key: Any): List<Any> {
+    return filterIsAssignable(ArrayList(), key)
+}
+
+fun Iterable<*>.filterIsAssignable(
+        destination: ArrayList<Any>, key: Any
+): MutableList<Any> {
+    filter { isAssignable(key, it) }.mapTo(destination) { it!! }
+    return destination
+}
+
 
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||

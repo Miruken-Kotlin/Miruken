@@ -4,7 +4,7 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.PROMISE_TYPE
-import com.miruken.runtime.getKType
+import com.miruken.runtime.isAssignable
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection.Companion.STAR
@@ -140,15 +140,11 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     private fun implied(
             item:      Any,
-            invariant: Boolean,
             greedy:    Boolean,
             composer:  Handling
     ): Boolean {
-        return when {
-            key !is KClass<*> -> false
-            invariant -> key == item::class
-            else -> key.isInstance(item)
-        } && resolve(item, false, greedy, composer)
+        return isAssignable(key, item) &&
+                resolve(item, false, greedy, composer)
     }
 
     private fun flatten(list: List<Any?>): List<Any?> {

@@ -3,6 +3,8 @@ package com.miruken.runtime
 import java.lang.reflect.*
 import kotlin.reflect.*
 
+// https://gist.github.com/udalov/bb6f398c2e643ee69586356fdd67e9b1
+
 import kotlin.reflect.full.createType
 
 inline fun <reified T : Any> getKType(): KType =
