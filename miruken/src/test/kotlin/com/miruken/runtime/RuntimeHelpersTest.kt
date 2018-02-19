@@ -49,10 +49,28 @@ class RuntimeHelpersTest {
 
     @Test fun `Can determine KType covariance`() {
         assertTrue { getKType<MutableList<Int>>()
+                .isSubtypeOf(getKType<MutableList<Any>>()) }
+        assertFalse { getKType<MutableList<Any>>()
+                .isSubtypeOf(getKType<MutableList<Int>>()) }
+    }
+
+    @Test fun `Can determine KType wildcard covariance`() {
+        assertTrue { getKType<MutableList<Int>>()
                 .isSubtypeOf(getKType<MutableList<*>>()) }
+        assertFalse { getKType<MutableList<*>>()
+                .isSubtypeOf(getKType<MutableList<Int>>()) }
     }
 
     @Test fun `Can determine KType contravariance`() {
+        assertTrue { getKType<Comparable<Any>>()
+                .isSubtypeOf(getKType<Comparable<String>>()) }
+        assertFalse { getKType<Comparable<String>>()
+                .isSubtypeOf(getKType<Comparable<Any>>()) }
+    }
+
+    @Test fun `Can determine KType wildcard contravariance`() {
+        assertFalse { getKType<Comparable<*>>()
+                .isSubtypeOf(getKType<Comparable<String>>()) }
         assertTrue { getKType<Comparable<String>>()
                 .isSubtypeOf(getKType<Comparable<*>>()) }
     }

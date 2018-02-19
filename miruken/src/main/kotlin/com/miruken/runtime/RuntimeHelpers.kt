@@ -45,6 +45,6 @@ inline fun <reified T> KAnnotatedElement.getTaggedAnnotations() =
         annotations.flatMap { it.annotationClass.annotations }
                    .filterIsInstance<T>()
 
-val COLLECTION_TYPE = getKType<Collection<*>>()
+val COLLECTION_TYPE = getKType<Collection<Any>>()
 
-val PROMISE_TYPE = getKType<Promise<*>>()
+val PROMISE_TYPE = getKType<Promise<Any>>()
