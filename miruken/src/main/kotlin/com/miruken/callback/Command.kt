@@ -26,43 +26,43 @@ open class Command(
     override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
-    private set
+        private set
 
-            override var policy: CallbackPolicy?
-    get() = _policy ?: HandlesPolicy
-    set(value) { _policy = value }
+    override var policy: CallbackPolicy?
+        get() = _policy ?: HandlesPolicy
+        set(value) { _policy = value }
 
     val results: List<Any> get() = _results.toList()
 
     override val resultType: KType?
-    get() = if (wantsAsync || isAsync)
-        Promise::class.createType(listOf(
-                KTypeProjection.invariant(_callbackType)))
-    else _callbackType
+        get() = if (wantsAsync || isAsync)
+            Promise::class.createType(listOf(
+                    KTypeProjection.invariant(_callbackType)))
+            else _callbackType
 
     override var result: Any?
-    get() = {
-        if (_result != null) {
-            _result
-        } else if (!many) {
-            if (_results.isNotEmpty()) {
-                _result = _results.first()
+        get() = {
+            if (_result != null) {
+                _result
+            } else if (!many) {
+                if (_results.isNotEmpty()) {
+                    _result = _results.first()
+                }
+            } else if (isAsync) {
+                _result = Promise.all(_results
+                        .map { Promise.resolve(it) })
+            } else {
+                _result = _results
             }
-        } else if (isAsync) {
-            _result = Promise.all(_results
-                    .map { Promise.resolve(it) })
-        } else {
-            _result = _results
+            if (wantsAsync && !isAsync) {
+                _result = Promise.resolve(_result ?: Unit)
+            }
+            _result
         }
-        if (wantsAsync && !isAsync) {
-            _result = Promise.resolve(_result ?: Unit)
+        set(value) {
+            _result = value
+            isAsync = _result is Promise<*>
         }
-        _result
-    }
-    set(value) {
-        _result = value
-        isAsync = _result is Promise<*>
-    }
 
     @Suppress("UNUSED_PARAMETER")
     fun respond(response: Any, strict: Boolean) : Boolean {

@@ -1,27 +1,50 @@
 package com.miruken.runtime
 
 import org.junit.Test
-import kotlin.reflect.KType
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class RuntimeHelpersTest {
     class Foo
-
-    @Test fun `Identifies open generic type`() {
-        var x = listOf(1, 'A', Foo(), "HELLO", 22)
-        assertEquals(Int::class.javaObjectType, x[0]::class.java)
-        var y = x.filterIsInstance(Int::class.javaObjectType)
-        assertTrue { y[1] == 22 }
-    }
+    class Bar<T>
 
     @Test fun `Can obtain KType from reified T`() {
-        var type: KType = getKType<Set<String?>>()
         assertEquals(getKType<Set<String>>(), getKType<Set<String>>())
         assertNotEquals(getKType<Set<String>>(), getKType<Set<Int>>())
         assertEquals(getKType<List<*>>(), getKType<List<Any>>())
+    }
+
+    @Test fun `Can obtain component KType of List`() {
+        val listType = getKType<List<String>>()
+        assertTrue { listType.isSubtypeOf(getKType<List<*>>()) }
+        val componentType = listType.arguments.single().type
+        assertEquals(getKType<String>(), componentType)
+    }
+
+    @Test fun `Can check KType assignability`() {
+        assertTrue { isAssignableKeys(
+                getKType<List<*>>(), getKType<List<String>>()) }
+
+        assertFalse { isAssignableKeys(
+                getKType<List<Foo>>(), getKType<List<*>>()) }
+
+        assertFalse { isAssignableKeys(
+                getKType<List<Int>>(), getKType<List<String>>()) }
+    }
+
+    @Test fun `Can check KClass assignability`() {
+        assertTrue  { isAssignableKeys(Foo::class, Foo()::class) }
+        assertFalse { isAssignableKeys(String::class, Foo()::class) }
+        assertFalse { isAssignableKeys(Bar::class, Bar<Int>()::class) }
+    }
+
+    @Test fun `Can check mixed assignability`() {
+        assertTrue  { isAssignableKeys(Foo::class, getKType<Foo>()) }
+        assertTrue  { isAssignableKeys(getKType<Foo>(), Foo::class) }
+        assertFalse { isAssignableKeys(getKType<Bar<String>>(), Bar<String>()) }
     }
 
     @Test fun `Can determine KType covariance`() {
@@ -30,12 +53,6 @@ class RuntimeHelpersTest {
     }
 
     @Test fun `Can determine KType contravariance`() {
-        val c1: Comparable<Any> = object : Comparable<Any> {
-            override fun compareTo(other: Any): Int {
-                TODO("not implemented")
-            }
-        }
-        val c2: Comparable<Any> = c1
         assertTrue { getKType<Comparable<String>>()
                 .isSubtypeOf(getKType<Comparable<*>>()) }
     }

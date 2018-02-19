@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
+import com.miruken.runtime.PROMISE_TYPE
 import com.miruken.runtime.getKType
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
@@ -42,7 +43,7 @@ fun Handling.aspect(
                 return@filter HandleResult.HANDLED
             }
             if (state == false) {
-                if (cb?.resultType?.isSubtypeOf(getKType<Promise<*>>()) == true) {
+                if (cb?.resultType?.isSubtypeOf(PROMISE_TYPE) == true) {
                     cb.result = Promise.reject(RejectedException(callback))
                     return@filter HandleResult.HANDLED
                 }

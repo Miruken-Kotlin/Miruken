@@ -19,7 +19,6 @@ fun Handling.resolve(key: Any) : Any? {
         }
     }
 }
-
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAsync(key: Any) : Promise<Any> {
     val inquiry = key as? Inquiry ?: Inquiry(key)

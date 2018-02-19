@@ -3,6 +3,7 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
+import com.miruken.runtime.PROMISE_TYPE
 import com.miruken.runtime.getKType
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -38,9 +39,9 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             is KClass<*> -> if (wantsAsync || isAsync)
                 Promise::class.createType(
                         listOf(invariant(_keyType!!)))
-            else _keyType
+                else _keyType
             else -> if (wantsAsync || isAsync)
-                getKType<Promise<*>>() else null
+                PROMISE_TYPE else null
         }
 
     override var result: Any?
@@ -52,7 +53,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
                     val result = _resolutions.first()
                     _result = if (result is Promise<*>) {
                         result.then {
-                            if (it is List<*>) {
+                            if (it is Collection<*>) {
                                 it.firstOrNull()
                             } else {
                                 it
@@ -89,7 +90,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer:   Handling
     ): Boolean {
         val resolved = when {
-            strict && resolution is List<*> ->
+            strict && resolution is Collection<*> ->
                 resolution.filterNotNull().fold(false, { s, res ->
                     include(res, greedy, composer) || s
                 })

@@ -30,8 +30,8 @@ class Argument(val parameter: KParameter) {
         type = extractType(type, Promise::class)?.let {
             flags += ArgumentFlags.PROMISE; it } ?: type
 
-        logicalType = extractType(type, List::class)?.let {
-            flags += ArgumentFlags.LIST; it } ?: type
+        logicalType = extractType(type, Collection::class)?.let {
+            flags += ArgumentFlags.COLLECTION; it } ?: type
 
         logicalClass = getClass(logicalType.classifier)
         this.flags   = flags

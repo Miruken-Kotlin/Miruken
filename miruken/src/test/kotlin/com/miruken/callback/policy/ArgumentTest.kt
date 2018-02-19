@@ -71,7 +71,7 @@ class ArgumentTest {
         assertEquals(Foo::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
         assertEquals(Foo::class, argument.logicalType.classifier)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -84,7 +84,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Foo::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -97,7 +97,7 @@ class ArgumentTest {
         val argument = Argument(promise)
         assertEquals(Promise::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -110,7 +110,7 @@ class ArgumentTest {
         val argument = Argument(list)
         assertEquals(List::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -123,7 +123,7 @@ class ArgumentTest {
         val argument = Argument(lazy)
         assertEquals(Function0::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -136,7 +136,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Foo::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -149,7 +149,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Foo::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -162,7 +162,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Promise::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -175,7 +175,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(List::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -188,7 +188,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Function0::class, argument.parameterClass)
         assertEquals(Foo::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -201,7 +201,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Any::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -214,7 +214,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Any::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -227,7 +227,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Promise::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -240,7 +240,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(List::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertTrue  { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertTrue  { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -253,7 +253,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Function0::class, argument.parameterClass)
         assertEquals(Any::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -266,7 +266,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Bar::class, argument.parameterClass)
         assertEquals(Bar::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -279,7 +279,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(Bar::class, argument.parameterClass)
         assertEquals(Bar::class, argument.logicalClass)
-        assertFalse { argument.flags.hasFlag(ArgumentFlags.LIST) }
+        assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.OPTIONAL) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
