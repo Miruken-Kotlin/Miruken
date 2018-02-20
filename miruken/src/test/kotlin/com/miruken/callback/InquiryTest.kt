@@ -17,7 +17,7 @@ class InquiryTest {
         assertFalse { inquiry.many }
         assertFalse { inquiry.wantsAsync }
         assertEquals("Service", inquiry.key)
-        assertNull(inquiry.resultType)
+        assertEquals(getKType<Any>(), inquiry.resultType)
         assertSame(ProvidesPolicy, inquiry.policy)
     }
 
@@ -39,6 +39,12 @@ class InquiryTest {
         assertEquals(getKType<Bar<String>>(), inquiry.resultType)
     }
 
+    @Test fun `Creates many Inquiry of KType`() {
+        val inquiry = Inquiry(getKType<Bar<String>>(), true)
+        assertEquals(getKType<Bar<String>>(), inquiry.key)
+        assertEquals(getKType<List<Bar<String>>>(), inquiry.resultType)
+    }
+
     @Test fun `Creates async Inquiry of String`() {
         val inquiry = Inquiry("Service").apply { wantsAsync = true }
         assertTrue { inquiry.wantsAsync }
@@ -48,7 +54,9 @@ class InquiryTest {
     }
 
     @Test fun `Creates async Inquiry of KClass`() {
-        val inquiry = Inquiry(Foo::class).apply { wantsAsync = true }
+        val inquiry = Inquiry(Foo::class).apply {
+            wantsAsync = true
+        }
         assertEquals(Foo::class, inquiry.key)
         assertEquals(getKType<Promise<Foo>>(), inquiry.resultType)
     }
@@ -59,8 +67,18 @@ class InquiryTest {
         assertTrue { getKType<Promise<Bar<*>>>().isSubtypeOf(inquiry.resultType!!) }
     }
 
+    @Test fun `Creates async many Inquiry of KType`() {
+        val inquiry = Inquiry(getKType<Bar<String>>(), true).apply {
+            wantsAsync = true
+        }
+        assertEquals(getKType<Bar<String>>(), inquiry.key)
+        assertEquals(getKType<Promise<List<Bar<String>>>>(), inquiry.resultType)
+    }
+
     @Test fun `Creates async Inquiry of KType`() {
-        val inquiry = Inquiry(getKType<Bar<String>>()).apply { wantsAsync = true }
+        val inquiry = Inquiry(getKType<Bar<String>>()).apply {
+            wantsAsync = true
+        }
         assertEquals(getKType<Bar<String>>(), inquiry.key)
         assertEquals(getKType<Promise<Bar<String>>>(), inquiry.resultType)
     }

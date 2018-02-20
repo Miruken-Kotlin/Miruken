@@ -6,22 +6,20 @@ import com.miruken.concurrent.all
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.starProjectedType
 
 open class Command(
         val callback: Any,
-        callbackType: KType?  = null,
+        resultType:   KType?  = null,
         val many:     Boolean = false
+
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
+    private var _resultType = resultType
+            ?: Any::class.starProjectedType
     private val _results = mutableListOf<Any>()
     private var _policy: CallbackPolicy? = null
-    private val _callbackType by lazy {
-        callbackType ?: callback::class.let {
-            it.createType(it.typeParameters.map {
-                KTypeProjection.STAR })
-        }
-    }
 
     override var wantsAsync: Boolean = false
 
@@ -32,13 +30,21 @@ open class Command(
         get() = _policy ?: HandlesPolicy
         set(value) { _policy = value }
 
-    val results: List<Any> get() = _results.toList()
+    val results: List<Any> get() = _results
 
     override val resultType: KType?
-        get() = if (wantsAsync || isAsync)
-            Promise::class.createType(listOf(
-                    KTypeProjection.invariant(_callbackType)))
-            else _callbackType
+        get() = _resultType.let {
+            var resultType = it
+            if (many) {
+                resultType = List::class.createType(listOf(
+                        KTypeProjection.invariant(resultType)))
+            }
+            if (wantsAsync || isAsync) {
+                resultType = Promise::class.createType(listOf(
+                        KTypeProjection.invariant(resultType)))
+            }
+            resultType
+        }
 
     override var result: Any?
         get() = {

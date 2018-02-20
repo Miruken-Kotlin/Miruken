@@ -7,21 +7,23 @@ import com.miruken.runtime.PROMISE_TYPE
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KTypeProjection.Companion.STAR
 import kotlin.reflect.KTypeProjection.Companion.invariant
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.starProjectedType
 
 open class Inquiry(val key: Any, val many: Boolean = false)
     : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
     private val _resolutions  = mutableListOf<Any>()
-    private val _keyType: KType? by lazy {
+    private val _keyType: KType by lazy {
         when (key) {
             is KType -> key
             is KClass<*> -> key.createType(
                     key.typeParameters.map { STAR })
-            else -> null
+            else -> Any::class.starProjectedType
         }
     }
     override var wantsAsync: Boolean = false
@@ -34,14 +36,17 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     val resolutions: List<Any> get() = _resolutions.toList()
 
     override val resultType: KType?
-        get() = when (key) {
-            is KType,
-            is KClass<*> -> if (wantsAsync || isAsync)
-                Promise::class.createType(
-                        listOf(invariant(_keyType!!)))
-                else _keyType
-            else -> if (wantsAsync || isAsync)
-                PROMISE_TYPE else null
+        get() = _keyType.let {
+            var resultType = it
+            if (many) {
+                resultType = List::class.createType(listOf(
+                        KTypeProjection.invariant(resultType)))
+            }
+            if (wantsAsync || isAsync) {
+                resultType = Promise::class.createType(listOf(
+                        KTypeProjection.invariant(resultType)))
+            }
+            resultType
         }
 
     override var result: Any?
@@ -55,13 +60,9 @@ open class Inquiry(val key: Any, val many: Boolean = false)
                         result.then {
                             if (it is Collection<*>) {
                                 it.firstOrNull()
-                            } else {
-                                it
-                            }
+                            } else { it }
                         }
-                    } else {
-                        result
-                    }
+                    } else { result }
                 }
             } else if (isAsync) {
                 _result = Promise.all(_resolutions
