@@ -15,14 +15,14 @@ open class CallbackPolicyBuilder(
         policy.addRule(MethodRule(returnRule, *arguments))
     }
 
-    fun matchCallback(vararg arguments: ArgumentRule) {
+    fun matchWithCallback(vararg arguments: ArgumentRule) {
         if (!arguments.filterIsInstance<CallbackArgument>().any()) {
             match(*arguments, callback)
         }
         match(*arguments)
     }
 
-    fun matchCallback(returnRule: ReturnRule, vararg arguments: ArgumentRule) {
+    fun matchWithCallback(returnRule: ReturnRule, vararg arguments: ArgumentRule) {
         if (!arguments.filterIsInstance<CallbackArgument>().any()) {
             match(returnRule, *arguments, callback)
         }

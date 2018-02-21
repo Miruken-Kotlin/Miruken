@@ -1,9 +1,9 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.Handling
-import com.miruken.callback.TestHandler
+import com.miruken.callback.*
 import org.junit.Test
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 
 class HandlerDescriptorTest {
@@ -32,7 +32,58 @@ class HandlerDescriptorTest {
     }
 
     @Test fun `Obtains same descriptor per Handler class`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestHandler>()
-        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestHandler>())
+        val descriptor = HandlerDescriptor.getDescriptor<TestHandler.Good>()
+        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestHandler.Good>())
+    }
+
+    @Test fun `Rejects descriptor with Handles method with no parameters`() {
+        assertFailsWith(IllegalStateException::class) {
+            HandlerDescriptor.getDescriptor<TestHandler.NoParameters>()
+        }
+    }
+
+    @Test fun `Rejects descriptor with Handles method with Nothing parameter`() {
+        assertFailsWith(IllegalStateException::class) {
+            HandlerDescriptor.getDescriptor<TestHandler.NothingParameter>()
+        }
+    }
+
+    @Test fun `Rejects descriptor with Handles method using open generics`() {
+        assertFailsWith(IllegalStateException::class) {
+            HandlerDescriptor.getDescriptor<TestHandler.OpenGenerics>()
+        }
+    }
+
+    @Test fun `Obtains same descriptor per Provider class`() {
+        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.Good>()
+        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestProvider.Good>())
+    }
+
+    @Test fun `Obtains descriptor for Provider with properties`() {
+        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.Properties>()
+        assertNotNull(descriptor)
+    }
+
+    @Test fun `Obtains descriptor for Provider with generic properties`() {
+        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.GenericProperties<TestProvider.Foo>>()
+        assertNotNull(descriptor)
+    }
+
+    @Test fun `Rejects descriptor with Provides method returning Nothing`() {
+        assertFailsWith(IllegalStateException::class) {
+            HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothing>()
+        }
+    }
+
+    @Test fun `Rejects descriptor with Provides method returning Nothing taking callback`() {
+        assertFailsWith(IllegalStateException::class) {
+            HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothingWithCallback>()
+        }
+    }
+
+    @Test fun `Rejects descriptor with Provides method returning Unit`() {
+        assertFailsWith(IllegalStateException::class) {
+            HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
+        }
     }
 }

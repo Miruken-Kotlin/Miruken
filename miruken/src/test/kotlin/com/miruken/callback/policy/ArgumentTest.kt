@@ -14,7 +14,7 @@ typealias Bar<T> = TestHandler.Bar<T>
 class ArgumentTest {
 
     @Test fun `Extracts parameter information`() {
-        val handle   = getMethod<TestHandler >("handle")
+        val handle   = getMethod<TestHandler.Good>("handle")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertEquals(getKType<Foo>(), argument.parameterType)
@@ -26,7 +26,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts optional parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOptional")
+        val handle   = getMethod<TestHandler.Good>("handleOptional")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertEquals(getKType<Foo>().withNullability(true), argument.parameterType)
@@ -38,7 +38,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts promise parameter information`() {
-        val handle   = getMethod<TestHandler >("handlePromise")
+        val handle   = getMethod<TestHandler.Good>("handlePromise")
         val promise  = handle!!.parameters.component2()
         val argument = Argument(promise)
         assertEquals(getKType<Promise<Foo>>(), argument.parameterType)
@@ -50,7 +50,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts list parameter information`() {
-        val handle   = getMethod<TestHandler >("handleList")
+        val handle   = getMethod<TestHandler.Good>("handleList")
         val list     = handle!!.parameters.component2()
         val argument = Argument(list)
         assertEquals(getKType<List<Foo>>(), argument.parameterType)
@@ -62,7 +62,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts lazy parameter information`() {
-        val handle   = getMethod<TestHandler >("handleLazy")
+        val handle   = getMethod<TestHandler.Good>("handleLazy")
         val lazy     = handle!!.parameters.component2()
         val argument = Argument(lazy)
         assertEquals(getKType<Lazy<Foo>>(), argument.parameterType)
@@ -74,7 +74,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts bounded generic parameter information`() {
-        val handle   = getMethod<TestHandler >("handleBoundedGeneric")
+        val handle   = getMethod<TestHandler.Good>("handleBoundedGeneric")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType.isSubtypeOf(getKType<Foo>()) }
@@ -86,7 +86,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts bounded generic optional parameter information`() {
-        val handle   = getMethod<TestHandler >("handleBoundedGenericOptional")
+        val handle   = getMethod<TestHandler.Good>("handleBoundedGenericOptional")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType.withNullability(false)
@@ -100,7 +100,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts bounded generic promise parameter information`() {
-        val handle   = getMethod<TestHandler >("handleBoundedGenericPromise")
+        val handle   = getMethod<TestHandler.Good>("handleBoundedGenericPromise")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType
@@ -113,7 +113,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts bounded generic list parameter information`() {
-        val handle   = getMethod<TestHandler >("handleBoundedGenericList")
+        val handle   = getMethod<TestHandler.Good>("handleBoundedGenericList")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType
@@ -126,7 +126,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts bounded generic lazy parameter information`() {
-        val handle   = getMethod<TestHandler >("handleBoundedGenericLazy")
+        val handle   = getMethod<TestHandler.Good>("handleBoundedGenericLazy")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType
@@ -139,7 +139,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts open generic parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOpenGeneric")
+        val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGeneric")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType
@@ -153,7 +153,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts open generic optional parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOpenGenericOptional")
+        val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericOptional")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.parameterType
@@ -167,7 +167,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts open generic promise parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOpenGenericPromise")
+        val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericPromise")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
@@ -177,7 +177,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts open generic list parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOpenGenericList")
+        val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericList")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue  { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
@@ -187,7 +187,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts open generic lazy parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOpenGenericLazy")
+        val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericLazy")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
@@ -197,7 +197,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts open partial generic parameter information`() {
-        val handle   = getMethod<TestHandler >("handleOpenGenericPartial")
+        val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericPartial")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
@@ -207,7 +207,7 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts closed partial generic parameter information`() {
-        val handle   = getMethod<TestHandler >("handleClosedGenericPartial")
+        val handle   = getMethod<TestHandler.Good>("handleClosedGenericPartial")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }

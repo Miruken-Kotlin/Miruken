@@ -21,10 +21,7 @@ class MethodRule(vararg val arguments: ArgumentRule) {
                 !parameters.zip(arguments) { param, arg ->
                     arg.matches(param) }.all { it })
             return false
-        return returnRule?.let {
-            it.matches(method.returnType, parameters) ||
-                    throw IllegalStateException("$method satisfied the arguments but rejected the return")
-        } ?: true
+        return returnRule?.matches(method.returnType, parameters) ?: true
     }
 
     fun resolveArguments(callback: Any) : List<Any> =

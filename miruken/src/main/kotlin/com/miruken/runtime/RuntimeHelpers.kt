@@ -80,6 +80,8 @@ fun Iterable<*>.filterIsAssignableTo(
 
 val KType.isUnit get() = classifier == Unit::class
 
+val KType.isNothing get() = classifier == Nothing::class
+
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||
                 arguments.any { it.type?.isOpenGeneric == true }

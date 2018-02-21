@@ -22,12 +22,10 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->
             for (taggedPolicy in member.getTaggedAnnotations<UsePolicy<*>>()) {
                 taggedPolicy.second.single().policy?.run {
-                    val rule = match(member)
-                    if (rule != null) {
-                        println("'Handled $member")
-                    } else {
-                        println("Didn't Handle $member")
-                    }
+                    val rule = match(member) ?:
+                        throw IllegalStateException(
+                                "The policy for @${taggedPolicy.first.annotationClass.simpleName} rejected '$member'"
+                        )
                 }
             }
         }
