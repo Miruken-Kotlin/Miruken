@@ -11,6 +11,9 @@ class TestHandler {
     fun handleNothing() {}
 
     @Handles
+    fun handleAny(cb: Any) {}
+
+    @Handles
     fun handle(cb: Foo) {}
 
     @Handles

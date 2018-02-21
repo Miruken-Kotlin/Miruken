@@ -17,8 +17,20 @@ enum class PromiseState {
 
 enum class ChildCancelMode { ALL, ANY }
 
+typealias PromiseExecutorBlock<T> =
+        ((T) -> Unit, (Throwable) -> Unit) -> Unit
+
+typealias PromiseExecutorCancelBlock<T> =
+        ((T) -> Unit, (Throwable) -> Unit, (((() -> Unit)) -> Unit)) -> Unit
+
+typealias PromiseSuccessBlock<T, R> = (T) -> R
+typealias PromiseFailureBlock<S>    = (Throwable) -> S
+typealias PromiseFinalBlock<R>      = () -> R
+typealias PromiseCancelledBlock     = (CancellationException) -> Unit
+
 open class Promise<out T>
     private constructor(val cancelMode: ChildCancelMode) {
+
     private var _fulfilled  : ((Any) -> Unit) = {}
     private var _rejected   : ((Throwable) -> Unit) = {}
     private var _onCancel   : (() -> Unit) = {}
@@ -34,12 +46,12 @@ open class Promise<out T>
     private val isCompleted get() = _completed.get()
 
     constructor(
-            executor: ((T) -> Unit, (Throwable) -> Unit) -> Unit
+            executor: PromiseExecutorBlock<T>
     ) : this(ChildCancelMode.ALL, executor)
 
     constructor(
-            mode: ChildCancelMode,
-            executor: ((T) -> Unit, (Throwable) -> Unit) -> Unit
+            mode:     ChildCancelMode,
+            executor: PromiseExecutorBlock<T>
     ) : this(mode) {
         try {
             executor(::resolve, ::reject)
@@ -49,12 +61,12 @@ open class Promise<out T>
     }
 
     constructor(
-            executor: ((T) -> Unit, (Throwable) -> Unit, (((() -> Unit)) -> Unit)) -> Unit
+            executor: PromiseExecutorCancelBlock<T>
     ) : this(ChildCancelMode.ALL, executor)
 
     constructor(
-            mode: ChildCancelMode,
-            executor: ((T) -> Unit, (Throwable) -> Unit, (((() -> Unit)) -> Unit)) -> Unit
+            mode:     ChildCancelMode,
+            executor: PromiseExecutorCancelBlock<T>
     ) : this(mode) {
         try {
             executor(::resolve, ::reject) { _onCancel = it }
@@ -63,7 +75,7 @@ open class Promise<out T>
         }
     }
 
-    infix fun <R> then(success: ((T) -> R)) : Promise<R> {
+    infix fun <R> then(success: PromiseSuccessBlock<T, R>) : Promise<R> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
                 try {
@@ -87,7 +99,10 @@ open class Promise<out T>
         }
     }
 
-    fun <R, S> then(success: ((T) -> R), fail: ((Throwable) -> S)) : Promise<Either<S, R>> {
+    fun <R, S> then(
+            success: PromiseSuccessBlock<T, R>,
+            fail:    PromiseFailureBlock<S>
+    ) : Promise<Either<S, R>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
                 try {
@@ -122,7 +137,9 @@ open class Promise<out T>
         }
     }
 
-    infix fun <R> catch(fail: ((Throwable) -> R)) : Promise<Either<R, T>> {
+    infix fun <R> catch(
+            fail: PromiseFailureBlock<R>
+    ) : Promise<Either<R, T>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) =  {
                 resolveChild(Either.Right(_result!!))
@@ -155,7 +172,7 @@ open class Promise<out T>
         }
     }
 
-    infix fun <R> finally(final: (() -> R)) : Promise<T> {
+    infix fun <R> finally(final: PromiseFinalBlock<R>) : Promise<T> {
         return createChild { resolveChild, rejectChild ->
             val res: ((Any) -> Unit) = {
                 try {
@@ -198,7 +215,7 @@ open class Promise<out T>
         reject(CancellationException())
     }
 
-    infix fun cancelled(cancelled: ((CancellationException) -> Unit)) : Promise<T> {
+    infix fun cancelled(cancelled: PromiseCancelledBlock) : Promise<T> {
         synchronized (_guard) {
             if (isCompleted) {
                 if (state == PromiseState.CANCELLED) {
@@ -235,7 +252,7 @@ open class Promise<out T>
     }
 
     protected open fun <R> createChild(
-            executor: ((R) -> Unit, (Throwable) -> Unit) -> Unit
+            executor: PromiseExecutorBlock<R>
     ): Promise<R> {
         val child = createChild<R>(cancelMode) { resolve, reject, onCancel ->
             executor(resolve, reject)
@@ -251,12 +268,9 @@ open class Promise<out T>
     }
 
     protected open fun <R> createChild(
-        mode:  ChildCancelMode,
-        executor: ((R) -> Unit, (Throwable) -> Unit, (((() -> Unit)) -> Unit)) -> Unit
-    ) : Promise<R>
-    {
-        return Promise(mode, executor)
-    }
+        mode:     ChildCancelMode,
+        executor: PromiseExecutorCancelBlock<R>
+    ) : Promise<R> = Promise(mode, executor)
 
     private fun resolve(result: T) {
         if (_completed.compareAndSet(false, true)) {
