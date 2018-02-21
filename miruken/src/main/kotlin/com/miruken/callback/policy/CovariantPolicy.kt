@@ -1,12 +1,12 @@
 package com.miruken.callback.policy
 
-open class CovariantPolicy<in C>(
-        val key: (C) -> Any,
-        build: CovariantPolicyBuilder.() -> Unit
+open class CovariantPolicy(
+        build:  CovariantTargetBuilder.() -> Unit
 ) : CallbackPolicy() {
 
     init {
-        val builder = CovariantPolicyBuilder()
+        @Suppress("LeakingThis")
+        val builder = CovariantTargetBuilder(this)
         builder.build()
     }
 

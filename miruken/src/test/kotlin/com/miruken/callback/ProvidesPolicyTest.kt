@@ -4,6 +4,7 @@ import com.miruken.callback.policy.*
 import com.miruken.getMethod
 import com.miruken.runtime.getTaggedAnnotations
 import org.junit.Test
+import kotlin.test.assertTrue
 
 class ProvidesPolicyTest {
     class Foo
@@ -18,6 +19,6 @@ class ProvidesPolicyTest {
     fun `Gets ProvidesPolicy from @Provides annotation`() {
         val member   = getMethod<MyProvider>("provideFoo")
         val provides = member!!.getTaggedAnnotations<UsePolicy<*>>().first()
-        kotlin.test.assertTrue { provides.policy == ProvidesPolicy }
+        assertTrue { provides.second.single().policy == ProvidesPolicy }
     }
 }

@@ -1,12 +1,12 @@
 package com.miruken.callback.policy
 
-open class ContravariantPolicy<in C>(
-        val target: (C) -> Any,
-        build:  ContravariantPolicyBuilder.() -> Unit
+open class ContravariantPolicy(
+        build: ContravariantTargetBuilder.() -> Unit
 ) : CallbackPolicy() {
 
     init {
-        val builder = ContravariantPolicyBuilder()
+        @Suppress("LeakingThis")
+        val builder = ContravariantTargetBuilder(this)
         builder.build()
     }
 

@@ -18,6 +18,6 @@ class HandlesPolicyTest {
     @Test fun `Gets HandlesPolicy from @Handles annotation`() {
         val member  = getMethod<MyHandler>("handleFoo")
         val handles = member!!.getTaggedAnnotations<UsePolicy<*>>().first()
-        assertTrue { handles.policy == HandlesPolicy }
+        assertTrue { handles.second.single().policy == HandlesPolicy }
     }
 }

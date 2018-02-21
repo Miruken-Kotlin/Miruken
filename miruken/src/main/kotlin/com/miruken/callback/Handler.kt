@@ -6,8 +6,8 @@ open class Handler : Handling {
             greedy:   Boolean,
             composer: Handling?
     ): HandleResult {
-        val scope = composer ?:
-            this as? CompositionScope ?: CompositionScope(this)
+        val scope = composer ?: this as? CompositionScope
+                  ?: CompositionScope(this)
         return handleCallback(callback, greedy, scope)
     }
 
@@ -15,8 +15,7 @@ open class Handler : Handling {
             callback: Any,
             greedy:   Boolean,
             composer: Handling
-    ): HandleResult =
-            dispatch(this, callback, greedy, composer)
+    ) = dispatch(this, callback, greedy, composer)
 
     companion object {
         fun dispatch(
@@ -24,15 +23,13 @@ open class Handler : Handling {
                 callback: Any,
                 greedy:   Boolean,
                 composer: Handling
-        ): HandleResult {
-            return when {
+        ): HandleResult = when {
                 ExcludeTypes.contains(handler::class) ->
                     HandleResult.NOT_HANDLED
                 callback is DispatchingCallback ->
                     callback.dispatch(handler, greedy, composer)
                 else ->
                     HandlesPolicy.dispatch(handler, callback, greedy, composer)
-            }
         }
 
         fun toHandler(target: Any) : Handling =

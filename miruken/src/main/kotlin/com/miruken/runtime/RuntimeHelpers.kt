@@ -78,6 +78,8 @@ fun Iterable<*>.filterIsAssignableTo(
     return destination
 }
 
+val KType.isUnit get() = classifier == Unit::class
+
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||
                 arguments.any { it.type?.isOpenGeneric == true }
@@ -86,10 +88,11 @@ val KType.componentType: KType?
     get() = if (isSubtypeOf(COLLECTION_TYPE))
         arguments.single().type else this
 
-inline fun <reified T> KAnnotatedElement.getTaggedAnnotations() =
-        annotations.flatMap { it.annotationClass.annotations }
-                   .filterIsInstance<T>()
+inline fun <reified T: Annotation> KAnnotatedElement.getTaggedAnnotations() =
+        annotations.mapNotNull {
+            val tags = it.annotationClass.annotations.filterIsInstance<T>()
+            if (tags.isNotEmpty()) it to tags else null
+        }
 
 val COLLECTION_TYPE = getKType<Collection<Any>>()
-
-val PROMISE_TYPE = getKType<Promise<Any>>()
+val PROMISE_TYPE    = getKType<Promise<Any>>()

@@ -5,9 +5,11 @@ import com.miruken.callback.policy.UsePolicy
 
 @Target(AnnotationTarget.FUNCTION)
 @UsePolicy<HandlesPolicy>(HandlesPolicy::class)
-@Repeatable annotation class Handles
+annotation class Handles
 
-object HandlesPolicy :
-        ContravariantPolicy<Command>({ it.callback },
-                {
-                })
+object HandlesPolicy : ContravariantPolicy({
+    target({ cb: Command -> cb.callback }, {
+        matchCallback(target)
+        match(callback)
+    })
+})

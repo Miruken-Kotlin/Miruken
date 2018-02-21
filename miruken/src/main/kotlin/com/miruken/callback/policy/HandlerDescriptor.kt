@@ -2,7 +2,9 @@ package com.miruken.callback.policy
 
 import com.miruken.runtime.getTaggedAnnotations
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.isSubclassOf
 
 class HandlerDescriptor(val handlerClass: KClass<*>) {
@@ -17,12 +19,25 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     private fun findCompatibleMembers() {
-        for (member in handlerClass.members) {
-            val usesPolicies = member.getTaggedAnnotations<UsePolicy<*>>()
-            if (usesPolicies.isNotEmpty()) {
-
+        handlerClass.members.filter(::isInstanceMethod).forEach { member ->
+            for (taggedPolicy in member.getTaggedAnnotations<UsePolicy<*>>()) {
+                taggedPolicy.second.single().policy?.run {
+                    val rule = match(member)
+                    if (rule != null) {
+                        println("'Handled $member")
+                    } else {
+                        println("Didn't Handle $member")
+                    }
+                }
             }
         }
+    }
+
+    private fun isInstanceMethod(member: KCallable<*>) : Boolean
+    {
+        val parameters = member.parameters
+        return parameters.isNotEmpty() &&
+                parameters[0].kind == KParameter.Kind.INSTANCE
     }
 
     companion object {
