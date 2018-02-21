@@ -12,6 +12,11 @@ class ReturnUnit(rule: ReturnRule) : ReturnRuleDelegate(rule) {
         return returnType.isUnit ||
                 super.matches(returnType, parameters)
     }
+
+    override fun configure(bindingInfo: PolicyMethodBindingInfo) {
+        if (bindingInfo.dispatch.callable.returnType.isUnit)
+            rule.configure(bindingInfo)
+    }
 }
 
 val ReturnRule.orUnit: ReturnRule get() = ReturnUnit(this)

@@ -1,17 +1,22 @@
 package com.miruken.callback.policy
 
-import java.lang.IllegalStateException
 import kotlin.reflect.KCallable
 import kotlin.reflect.full.valueParameters
 
-class MethodRule(vararg val arguments: ArgumentRule) {
+typealias MethodBinderBlock = (PolicyMethodBindingInfo) -> PolicyMethodBinding
+
+class MethodRule(
+        val methodBinder: MethodBinderBlock,
+        vararg val arguments: ArgumentRule) {
+
     var returnRule: ReturnRule? = null
         private set
 
     constructor(
+            methodBinder: MethodBinderBlock,
             returnRule: ReturnRule,
             vararg arguments: ArgumentRule
-    ) : this(*arguments) {
+    ) : this(methodBinder, *arguments) {
         this.returnRule = returnRule
     }
 
@@ -22,6 +27,18 @@ class MethodRule(vararg val arguments: ArgumentRule) {
                     arg.matches(param) }.all { it })
             return false
         return returnRule?.matches(method.returnType, parameters) ?: true
+    }
+
+    fun bind(
+            dispatch: MethodDispatch,
+            annotation: Annotation
+    ): PolicyMethodBinding {
+        val bindingInfo = PolicyMethodBindingInfo(this, dispatch, annotation)
+        returnRule?.configure(bindingInfo)
+        arguments.zip(dispatch.callable.valueParameters) { arg, param ->
+            arg.configure(param, bindingInfo)
+        }
+        return methodBinder(bindingInfo)
     }
 
     fun resolveArguments(callback: Any) : List<Any> =

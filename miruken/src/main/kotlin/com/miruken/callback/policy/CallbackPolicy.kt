@@ -20,12 +20,24 @@ abstract class CallbackPolicy : Comparator<Any> {
     fun match(method: KCallable<*>) =
             _rules.firstOrNull { rule -> rule.matches(method) }
 
+    open fun bindMethod(
+            bindingInfo: PolicyMethodBindingInfo
+    ): PolicyMethodBinding =
+            PolicyMethodBinding(this, bindingInfo)
+
+    open fun createKey(bindingInfo: PolicyMethodBindingInfo): Any? =
+            bindingInfo.inKey ?: bindingInfo.outKey
+
     abstract fun getKey(callback: Any) : Any?
 
     abstract fun getCompatibleKeys(
             key:    Any,
             output: Collection<Any>
     ): Collection<Any>
+
+    open fun approve(callback: Any, annotation: Annotation) : Boolean {
+        return true
+    }
 
     fun dispatch(
             handler:  Any,

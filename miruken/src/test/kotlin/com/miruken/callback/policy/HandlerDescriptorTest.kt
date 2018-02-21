@@ -1,6 +1,8 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.*
+import com.miruken.callback.Handling
+import com.miruken.callback.TestHandler
+import com.miruken.callback.TestProvider
 import org.junit.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -86,4 +88,5 @@ class HandlerDescriptorTest {
             HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
         }
     }
+
 }

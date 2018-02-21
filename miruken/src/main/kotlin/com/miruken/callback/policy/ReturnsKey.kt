@@ -11,4 +11,8 @@ object ReturnsKey : ReturnRule {
             parameters: List<KParameter>
     ): Boolean =
             !returnType.isUnit && !returnType.isNothing
+
+    override fun configure(bindingInfo: PolicyMethodBindingInfo) {
+
+    }
 }

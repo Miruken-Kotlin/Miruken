@@ -4,15 +4,17 @@ open class CovariantPolicy(
         build:  CovariantKeyBuilder.() -> Unit
 ) : CallbackPolicy() {
 
+    lateinit var keyFunctor: (Any) -> Any?
+        internal set
+
     init {
         @Suppress("LeakingThis")
         val builder = CovariantKeyBuilder(this)
         builder.build()
     }
 
-    override fun getKey(callback: Any): Any? {
-        TODO("not implemented")
-    }
+    override fun getKey(callback: Any): Any? =
+            keyFunctor(callback)
 
     override fun getCompatibleKeys(
             key:    Any,

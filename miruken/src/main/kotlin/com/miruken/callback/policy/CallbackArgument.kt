@@ -12,5 +12,13 @@ class CallbackArgument(private val callbackType: KType) : ArgumentRule {
                 parameter.type.withNullability(false))
     }
 
+    override fun configure(
+            parameter:   KParameter,
+            bindingInfo: PolicyMethodBindingInfo)
+    {
+        bindingInfo.callbackIndex = parameter.index
+
+    }
+
     override fun resolve(callback: Any): Any = callback
 }

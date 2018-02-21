@@ -18,6 +18,14 @@ class TargetArgument<in C, out R: Any>(
                         parameter.type.withNullability(false))
     }
 
+    override fun configure(
+            parameter:   KParameter,
+            bindingInfo: PolicyMethodBindingInfo)
+    {
+        bindingInfo.callbackIndex = parameter.index
+
+    }
+
     @Suppress("UNCHECKED_CAST")
     override fun resolve(callback: Any): Any =
             if (isAssignableTo(callbackType, callback))

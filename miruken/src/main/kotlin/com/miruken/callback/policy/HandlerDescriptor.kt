@@ -20,12 +20,19 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
 
     private fun findCompatibleMembers() {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->
-            for (taggedPolicy in member.getTaggedAnnotations<UsePolicy<*>>()) {
-                taggedPolicy.second.single().policy?.run {
-                    val rule = match(member) ?:
+            var dispatch: MethodDispatch? = null
+            for ((annotation, usePolicies) in member
+                    .getTaggedAnnotations<UsePolicy<*>>()) {
+                usePolicies.single().policy?.also {
+                    val rule = it.match(member) ?:
                         throw IllegalStateException(
-                                "The policy for @${taggedPolicy.first.annotationClass.simpleName} rejected '$member'"
+                                "The policy for @${annotation.annotationClass.simpleName} rejected '$member'"
                         )
+                    dispatch       = dispatch ?: MethodDispatch(member)
+                    val binding    = rule.bind(dispatch!!, annotation)
+                    val descriptor = _policies.getOrPut(it, {
+                        CallbackPolicyDescriptor(it) })
+                    descriptor.add(binding)
                 }
             }
         }

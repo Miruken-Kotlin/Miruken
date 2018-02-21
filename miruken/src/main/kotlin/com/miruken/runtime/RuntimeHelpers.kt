@@ -78,6 +78,9 @@ fun Iterable<*>.filterIsAssignableTo(
     return destination
 }
 
+fun <T> List<T>.normalize() : List<T> =
+        if (isEmpty()) emptyList() else this
+
 val KType.isUnit get() = classifier == Unit::class
 
 val KType.isNothing get() = classifier == Nothing::class

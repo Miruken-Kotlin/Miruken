@@ -1,5 +1,8 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.FilterInstanceProvider
+import com.miruken.callback.Filtering
+import com.miruken.callback.FilteringProvider
 import kotlin.reflect.KType
 
 open class CallbackPolicyBuilder(
@@ -7,13 +10,17 @@ open class CallbackPolicyBuilder(
 
     val callback: CallbackArgument = CallbackArgument(callbackType)
 
-    fun match(vararg arguments: ArgumentRule) {
-        policy.addRule(MethodRule(*arguments))
-    }
+    fun filters(vararg filters: Filtering<*,*>) =
+        policy.addFilters(FilterInstanceProvider(filters.toList()))
 
-    fun match(returnRule: ReturnRule, vararg arguments: ArgumentRule) {
-        policy.addRule(MethodRule(returnRule, *arguments))
-    }
+    fun pipeline(vararg providers: FilteringProvider) =
+        policy.addFilters(*providers)
+
+    fun match(vararg arguments: ArgumentRule) =
+        policy.addRule(MethodRule(policy::bindMethod, *arguments))
+
+    fun match(returnRule: ReturnRule, vararg arguments: ArgumentRule) =
+        policy.addRule(MethodRule(policy::bindMethod, returnRule, *arguments))
 
     fun matchWithCallback(vararg arguments: ArgumentRule) {
         if (!arguments.filterIsInstance<CallbackArgument>().any()) {

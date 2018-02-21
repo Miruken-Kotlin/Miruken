@@ -1,8 +1,13 @@
 package com.miruken.callback.policy
 
+import kotlin.reflect.KClass
+
 open class ContravariantPolicy(
         build: ContravariantTargetBuilder.() -> Unit
 ) : CallbackPolicy() {
+
+    lateinit var targetFunctor: (Any) -> Any?
+        internal set
 
     init {
         @Suppress("LeakingThis")
@@ -11,7 +16,9 @@ open class ContravariantPolicy(
     }
 
     override fun getKey(callback: Any): Any? {
-        TODO("not implemented")
+        return targetFunctor(callback)?.let {
+            (it as? KClass<*>) ?: it::class
+        } ?: callback::class
     }
 
     override fun getCompatibleKeys(

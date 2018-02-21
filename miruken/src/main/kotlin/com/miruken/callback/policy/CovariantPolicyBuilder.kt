@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.runtime.getKType
+import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
 
 class CovariantPolicyBuilder<C: Any>(
@@ -8,6 +9,14 @@ class CovariantPolicyBuilder<C: Any>(
         keyFunctor:   (C) -> Any,
         callbackType: KType
 ) : CallbackPolicyBuilder(policy, callbackType) {
+
+    init {
+        policy.keyFunctor = {
+            @Suppress("UNCHECKED_CAST")
+            if (isAssignableTo(callbackType, it))
+                keyFunctor(it as C) else null
+        }
+    }
 
     val returnKey = ReturnsKey
 

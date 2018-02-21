@@ -1,3 +1,4 @@
 package com.miruken
 
-interface Protocol
+@Target(AnnotationTarget.CLASS)
+annotation class Protocol

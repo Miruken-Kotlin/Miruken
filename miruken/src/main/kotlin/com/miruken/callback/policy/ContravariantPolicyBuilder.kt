@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.runtime.getKType
+import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
 
 class ContravariantPolicyBuilder<C: Any, out S: Any>(
@@ -9,6 +10,14 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
         callbackType:  KType,
         targetType:    KType
 ) : CallbackPolicyBuilder(policy, callbackType) {
+
+    init {
+        policy.targetFunctor = {
+            @Suppress("UNCHECKED_CAST")
+            if (isAssignableTo(targetFunctor, it))
+                targetFunctor(it as C) else null
+        }
+    }
 
     val target: TargetArgument<C, S> =
             TargetArgument(callbackType, targetType, targetFunctor)
