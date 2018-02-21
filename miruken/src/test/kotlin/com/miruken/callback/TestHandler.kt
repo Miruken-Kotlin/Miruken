@@ -8,7 +8,10 @@ class TestHandler {
     open class Bar<T>
 
     @Handles
-    fun handle(cb: Foo) { }
+    fun handleNothing() {}
+
+    @Handles
+    fun handle(cb: Foo) {}
 
     @Handles
     fun handleOptional(cb: Foo?) {}

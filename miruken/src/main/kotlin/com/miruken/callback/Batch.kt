@@ -1,8 +1,5 @@
-package com.miruken.callback.policy
+package com.miruken.callback
 
-import com.miruken.callback.BatchingComplete
-import com.miruken.callback.CompositeHandler
-import com.miruken.callback.Handling
 import com.miruken.concurrent.Promise
 
 class Batch(vararg tags: Any) :

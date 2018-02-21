@@ -15,13 +15,20 @@ class CovariantPolicyBuilder<C: Any>(
             ExtractArgument(getKType<E>(), block)
 }
 
-class CovariantTargetBuilder(val policy: CovariantPolicy) {
+class CovariantKeyBuilder(val policy: CovariantPolicy) {
     inline fun <reified C: Any> key(
-            noinline keyFunctor: (C) -> Any,
-            build: CovariantPolicyBuilder<C>.() -> Unit
-    ) {
-        val builder = CovariantPolicyBuilder(
-                policy, keyFunctor, getKType<C>())
+            noinline keyFunctor: (C) -> Any
+    ) = CovariantWithKeyBuilder(policy, keyFunctor,  getKType<C>())
+}
+
+@Suppress("MemberVisibilityCanBePrivate")
+class CovariantWithKeyBuilder<C: Any>(
+        val policy:       CovariantPolicy,
+        val keyFunctor:   (C) -> Any,
+        val callbackType: KType
+) {
+    inline infix fun rules(build: CovariantPolicyBuilder<C>.() -> Unit) {
+        val builder = CovariantPolicyBuilder(policy, keyFunctor, callbackType)
         builder.build()
     }
 }

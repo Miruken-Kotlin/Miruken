@@ -10,8 +10,8 @@ import com.miruken.runtime.getKType
 annotation class Provides
 
 object ProvidesPolicy : CovariantPolicy({
-    key({ cb: Inquiry -> cb.key }, {
+    key { cb: Inquiry -> cb.key } rules {
         match(returnKey.orUnit, callback)
         match(returnKey)
-    })
+    }
 })
