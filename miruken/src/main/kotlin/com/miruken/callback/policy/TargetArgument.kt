@@ -16,7 +16,13 @@ class TargetArgument<in C, out R: Any>(
             argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo)
     {
-        bindingInfo.callbackArgument = argument
+        if (bindingInfo.callbackArgument == null) {
+            bindingInfo.callbackArgument = argument
+            bindingInfo.inKey =
+                    if (argument.flags == TypeFlags.OPEN)
+                        argument.logicalType
+                    else argument.parameterType
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

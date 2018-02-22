@@ -5,6 +5,10 @@ object ReturnsKey : ReturnRule {
             method.returnsSomething
 
     override fun configure(bindingInfo: PolicyMethodBindingInfo) {
-
+        if (bindingInfo.outKey == null) {
+            val dispatch          = bindingInfo.dispatch
+            val logicalReturnType = dispatch.logicalReturnType
+            bindingInfo.outKey = logicalReturnType
+        }
     }
 }
