@@ -1,16 +1,11 @@
 package com.miruken.callback.policy
 
 import com.miruken.runtime.isUnit
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
 
 class ReturnUnit(rule: ReturnRule) : ReturnRuleDelegate(rule) {
-    override fun matches(
-            returnType: KType,
-            parameters: List<KParameter>
-    ): Boolean {
-        return returnType.isUnit ||
-                super.matches(returnType, parameters)
+    override fun matches(method: MethodDispatch): Boolean {
+        val returnType = method.returnType
+        return returnType.isUnit || rule.matches(method)
     }
 
     override fun configure(bindingInfo: PolicyMethodBindingInfo) {

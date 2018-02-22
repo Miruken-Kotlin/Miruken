@@ -30,7 +30,7 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertEquals(getKType<Foo>().withNullability(true), argument.parameterType)
-        assertEquals(argument.parameterType.withNullability(true), argument.logicalType)
+        assertEquals(argument.parameterType.withNullability(false), argument.logicalType)
         assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.PROMISE) }
@@ -91,7 +91,7 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertTrue  { argument.parameterType.withNullability(false)
                 .isSubtypeOf(getKType<Foo>()) }
-        assertEquals(argument.parameterType.withNullability(true),
+        assertEquals(argument.parameterType.withNullability(false),
                 argument.logicalType)
         assertFalse { argument.flags.hasFlag(ArgumentFlags.COLLECTION) }
         assertFalse { argument.flags.hasFlag(ArgumentFlags.LAZY) }

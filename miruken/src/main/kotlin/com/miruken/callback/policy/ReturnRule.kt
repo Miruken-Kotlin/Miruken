@@ -1,10 +1,7 @@
 package com.miruken.callback.policy
 
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
-
 interface ReturnRule {
-    fun matches(returnType: KType, parameters: List<KParameter>) : Boolean
+    fun matches(method: MethodDispatch) : Boolean
 
     fun configure(bindingInfo: PolicyMethodBindingInfo) {}
 

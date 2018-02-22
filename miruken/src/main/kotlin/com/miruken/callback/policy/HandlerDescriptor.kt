@@ -20,16 +20,17 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
 
     private fun findCompatibleMembers() {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->
-            var dispatch: MethodDispatch? = null
+            val dispatch = lazy(LazyThreadSafetyMode.NONE,
+                    { MethodDispatch(member)})
             for ((annotation, usePolicies) in member
                     .getTaggedAnnotations<UsePolicy<*>>()) {
                 usePolicies.single().policy?.also {
-                    val rule = it.match(member) ?:
+                    val rule = it.match(dispatch.value) ?:
                         throw IllegalStateException(
                                 "The policy for @${annotation.annotationClass.simpleName} rejected '$member'"
                         )
-                    dispatch       = dispatch ?: MethodDispatch(member)
-                    val binding    = rule.bind(dispatch!!, annotation)
+
+                    val binding    = rule.bind(dispatch.value, annotation)
                     val descriptor = _policies.getOrPut(it, {
                         CallbackPolicyDescriptor(it) })
                     descriptor.add(binding)

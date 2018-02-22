@@ -5,8 +5,8 @@ data class PolicyMethodBindingInfo(
         val dispatch:   MethodDispatch,
         val annotation: Annotation
 ) {
-    var inKey:         Any?    = null
-    var outKey:        Any?    = null
-    var callbackIndex: Int?    = null
-    var strict:        Boolean = false
+    var inKey:            Any?      = null
+    var outKey:           Any?      = null
+    var callbackArgument: Argument? = null
+    var strict:           Boolean   = false
 }

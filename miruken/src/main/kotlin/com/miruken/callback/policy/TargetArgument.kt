@@ -2,9 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.runtime.isAssignableTo
 import com.miruken.runtime.isNothing
-import kotlin.reflect.KParameter
 import kotlin.reflect.KType
-import kotlin.reflect.full.withNullability
 
 class TargetArgument<in C, out R: Any>(
         private val callbackType: KType,
@@ -12,18 +10,17 @@ class TargetArgument<in C, out R: Any>(
         private val target:       (C) -> R
 ) : ArgumentRule {
 
-    override fun matches(parameter: KParameter) : Boolean {
-        return !parameter.type.isNothing &&
-                isAssignableTo(targetType,
-                        parameter.type.withNullability(false))
+    override fun matches(argument: Argument) : Boolean {
+        val logicalType = argument.logicalType
+        return !logicalType.isNothing &&
+                isAssignableTo(targetType, logicalType)
     }
 
     override fun configure(
-            parameter:   KParameter,
+            argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo)
     {
-        bindingInfo.callbackIndex = parameter.index
-
+        bindingInfo.callbackArgument = argument
     }
 
     @Suppress("UNCHECKED_CAST")

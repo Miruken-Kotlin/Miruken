@@ -17,7 +17,7 @@ abstract class CallbackPolicy : Comparator<Any> {
     fun addFilters(vararg filters: FilteringProvider) =
             _filters.addAll(filters)
 
-    fun match(method: KCallable<*>) =
+    fun match(method: MethodDispatch) =
             _rules.firstOrNull { rule -> rule.matches(method) }
 
     open fun bindMethod(

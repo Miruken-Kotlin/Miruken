@@ -1,12 +1,10 @@
 package com.miruken.callback.policy
 
-import kotlin.reflect.KParameter
-
 interface ArgumentRule {
-    fun matches(parameter: KParameter) : Boolean
+    fun matches(argument: Argument) : Boolean
 
     fun configure(
-            parameter:   KParameter,
+            argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo) {}
 
     fun resolve(callback: Any): Any

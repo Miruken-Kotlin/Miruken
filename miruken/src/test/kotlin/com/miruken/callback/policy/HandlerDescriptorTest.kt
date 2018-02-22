@@ -88,5 +88,4 @@ class HandlerDescriptorTest {
             HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
         }
     }
-
 }
