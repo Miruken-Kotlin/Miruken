@@ -1,7 +1,6 @@
 package com.miruken.callback.policy
 
 import com.miruken.runtime.isAssignableTo
-import com.miruken.runtime.isNothing
 import kotlin.reflect.KType
 
 class TargetArgument<in C, out R: Any>(
@@ -10,11 +9,8 @@ class TargetArgument<in C, out R: Any>(
         private val target:       (C) -> R
 ) : ArgumentRule {
 
-    override fun matches(argument: Argument) : Boolean {
-        val logicalType = argument.logicalType
-        return !logicalType.isNothing &&
-                isAssignableTo(targetType, logicalType)
-    }
+    override fun matches(argument: Argument) =
+            argument.satisfies(targetType)
 
     override fun configure(
             argument:    Argument,

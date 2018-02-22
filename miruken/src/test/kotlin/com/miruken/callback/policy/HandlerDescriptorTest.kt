@@ -38,6 +38,11 @@ class HandlerDescriptorTest {
         assertSame(descriptor, HandlerDescriptor.getDescriptor<TestHandler.Good>())
     }
 
+    @Test fun `Obtains descriptor with Handles method using open generics`() {
+        val descriptor = HandlerDescriptor.getDescriptor<TestHandler.OpenGenerics>()
+        assertNotNull(descriptor)
+    }
+
     @Test fun `Rejects descriptor with Handles method with no parameters`() {
         assertFailsWith(IllegalStateException::class) {
             HandlerDescriptor.getDescriptor<TestHandler.NoParameters>()
@@ -47,12 +52,6 @@ class HandlerDescriptorTest {
     @Test fun `Rejects descriptor with Handles method with Nothing parameter`() {
         assertFailsWith(IllegalStateException::class) {
             HandlerDescriptor.getDescriptor<TestHandler.NothingParameter>()
-        }
-    }
-
-    @Test fun `Rejects descriptor with Handles method using open generics`() {
-        assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<TestHandler.OpenGenerics>()
         }
     }
 

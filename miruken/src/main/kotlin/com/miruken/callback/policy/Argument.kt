@@ -33,10 +33,21 @@ class Argument(val parameter: KParameter) {
         type = extractType(type, Promise::class)?.let {
             flags += ArgumentFlags.PROMISE; it } ?: type
 
-        logicalType = extractType(type, Collection::class)?.let {
+        type = extractType(type, Collection::class)?.let {
             flags += ArgumentFlags.COLLECTION; it } ?: type
 
-        this.flags  = flags
+        logicalType = type.takeIf { it.arguments.isEmpty() }
+                ?.let { it.classifier as? KTypeParameter }
+                ?.let { it.upperBounds.firstOrNull() }
+                ?.let { it.withNullability(false) }
+                ?: type
+
+        this.flags = flags
+    }
+
+    fun satisfies(type: KType): Boolean {
+        return parameterType.classifier != Nothing::class &&
+            parameterType.isSubtypeOf(type.withNullability(true))
     }
 
     private fun extractType(type: KType, criteria: KClass<*>) : KType? {

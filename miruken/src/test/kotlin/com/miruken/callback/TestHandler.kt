@@ -123,7 +123,7 @@ sealed class TestHandler {
         fun <T> handleOpenGenericLazy2(cb: () -> T) {}
 
         @Handles
-        fun <T> handleOpenGenericPartial(cb: TestHandler.Bar<T>) {}
+        fun <T> handleOpenGenericPartial(cb: Bar<T>) {}
     }
 }
 

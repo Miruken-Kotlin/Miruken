@@ -81,6 +81,8 @@ fun Iterable<*>.filterIsAssignableTo(
 fun <T> List<T>.normalize() : List<T> =
         if (isEmpty()) emptyList() else this
 
+val KType.isAny get() = classifier == Any::class
+
 val KType.isUnit get() = classifier == Unit::class
 
 val KType.isNothing get() = classifier == Nothing::class
@@ -99,5 +101,6 @@ inline fun <reified T: Annotation> KAnnotatedElement.getTaggedAnnotations() =
             if (tags.isNotEmpty()) it to tags else null
         }
 
+val ANY_TYPE        = getKType<Any>()
 val COLLECTION_TYPE = getKType<Collection<Any>>()
 val PROMISE_TYPE    = getKType<Promise<Any>>()

@@ -26,10 +26,8 @@ class MethodRule(
         return returnRule?.matches(method) ?: true
     }
 
-    fun bind(
-            dispatch: MethodDispatch,
-            annotation: Annotation
-    ): PolicyMethodBinding {
+    fun bind(dispatch: MethodDispatch,
+             annotation: Annotation): PolicyMethodBinding {
         val bindingInfo = PolicyMethodBindingInfo(this, dispatch, annotation)
         returnRule?.configure(bindingInfo)
         argumentRules.zip(dispatch.arguments) { argRule, arg ->
