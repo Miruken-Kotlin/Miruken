@@ -9,14 +9,6 @@ class MethodRule(
     var returnRule: ReturnRule? = null
         private set
 
-    constructor(
-            methodBinder: MethodBinderBlock,
-            returnRule: ReturnRule,
-            vararg arguments: ArgumentRule
-    ) : this(methodBinder, *arguments) {
-        this.returnRule = returnRule
-    }
-
     fun matches(method: MethodDispatch) : Boolean {
         val arguments = method.arguments
         if (arguments.size < argumentRules.size ||
@@ -24,6 +16,10 @@ class MethodRule(
                     argRule.matches(arg) }.all { it })
             return false
         return returnRule?.matches(method) ?: true
+    }
+
+    infix fun returns(returnRule: ReturnRule) {
+        this.returnRule = returnRule
     }
 
     fun bind(dispatch: MethodDispatch,

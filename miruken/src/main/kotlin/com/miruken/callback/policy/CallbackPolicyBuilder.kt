@@ -16,23 +16,9 @@ open class CallbackPolicyBuilder(
     fun pipeline(vararg providers: FilteringProvider) =
         policy.addFilters(*providers)
 
-    fun match(vararg arguments: ArgumentRule) =
-        policy.addRule(MethodRule(policy::bindMethod, *arguments))
-
-    fun match(returnRule: ReturnRule, vararg arguments: ArgumentRule) =
-        policy.addRule(MethodRule(policy::bindMethod, returnRule, *arguments))
-
-    fun matchWithCallback(vararg arguments: ArgumentRule) {
-        if (!arguments.filterIsInstance<CallbackArgument>().any()) {
-            match(*arguments, callback)
-        }
-        match(*arguments)
-    }
-
-    fun matchWithCallback(returnRule: ReturnRule, vararg arguments: ArgumentRule) {
-        if (!arguments.filterIsInstance<CallbackArgument>().any()) {
-            match(returnRule, *arguments, callback)
-        }
-        match(returnRule, *arguments)
+    fun matches(vararg arguments: ArgumentRule) : MethodRule {
+        val rule = MethodRule(policy::bindMethod, *arguments)
+        policy.addRule(rule)
+        return rule
     }
 }

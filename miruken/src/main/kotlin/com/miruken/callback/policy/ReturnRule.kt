@@ -5,6 +5,10 @@ interface ReturnRule {
 
     fun configure(bindingInfo: PolicyMethodBindingInfo) {}
 
-    @Suppress("UNCHECKED_CAST")
-    fun <R: ReturnRule> getInnerRule() = this as? R
+    infix fun and(otherRule: ReturnRule) =
+            ReturnRuleConjunction(this, otherRule)
+
+    infix fun or(otherRule: ReturnRule) =
+            ReturnRuleDisjunction(this, otherRule)
 }
+

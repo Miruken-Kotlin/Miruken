@@ -9,7 +9,8 @@ annotation class Handles
 
 object HandlesPolicy : ContravariantPolicy({
     target { cb: Command -> cb.callback } rules {
-        matchWithCallback(target)
-        match(callback)
+        matches (target)
+        matches (target, callback)
+        matches (callback)
     }
 })
