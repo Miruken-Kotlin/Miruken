@@ -1,5 +1,7 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.HandleResult
+import com.miruken.callback.Handling
 import com.miruken.runtime.getTaggedAnnotations
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KCallable
@@ -18,6 +20,27 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
         findCompatibleMembers()
     }
 
+    internal fun dispatch(
+            policy:   CallbackPolicy,
+            target:   Any,
+            callback: Any,
+            greedy:   Boolean,
+            composer: Handling,
+            results:  CollectResultsBlock? = null
+    ): HandleResult {
+        return _policies[policy]?.let {
+            (it.getInvariantMethods(callback) +
+             it.getCompatibleMethods(callback))
+                    .fold(HandleResult.NOT_HANDLED, { result, method ->
+                        if ((result.handled && !greedy) || result.stop) {
+                            return result
+                        }
+                        result or method.dispatch(
+                                target, callback, composer, results)
+                    })
+        }?: HandleResult.NOT_HANDLED
+    }
+
     private fun findCompatibleMembers() {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->
             val dispatch = lazy(LazyThreadSafetyMode.NONE,
@@ -31,8 +54,8 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                         )
 
                     val binding    = rule.bind(dispatch.value, annotation)
-                    val descriptor = _policies.getOrPut(it, {
-                        CallbackPolicyDescriptor(it) })
+                    val descriptor = _policies.getOrPut(it) {
+                        CallbackPolicyDescriptor(it) }
                     descriptor.add(binding)
                 }
             }
@@ -62,23 +85,42 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
 
         fun resetDescriptors() = DESCRIPTORS.clear()
 
+        fun getHandlersClasses(policy: CallbackPolicy, callback: Any) =
+                DESCRIPTORS.mapNotNull {
+                    it.value.value._policies[policy]?.let {
+                    it.getInvariantMethods(callback).firstOrNull()
+                    ?: it.getCompatibleMethods(callback).firstOrNull() }
+                }.sortedWith(Comparator { a, b -> policy.compare(a.key, b.key) })
+                 .map { it.dispatch.owningClass }
+                 .distinct()
+
+        fun getPolicyMethods(policy: CallbackPolicy, key: Any) =
+                DESCRIPTORS.values.flatMap {
+                    it.value._policies[policy]?.let {
+                        it.getInvariantMethods(key) +
+                        it.getCompatibleMethods(key)
+                    } ?: emptyList()
+                }.sortedWith(Comparator { a, b -> policy.compare(a.key, b.key) })
+
+        fun getPolicyMethods(policy: CallbackPolicy) =
+                DESCRIPTORS.values.flatMap {
+                    it.value._policies[policy]?.getInvariantMethods()
+                            ?: emptyList()
+                }
+
         private fun validateHandlerClass(handlerClass: KClass<*>) {
             val javaClass = handlerClass.java
-            if (javaClass.isInterface) {
-                throw IllegalArgumentException(
-                        "Handlers cannot be interfaces: ${handlerClass.qualifiedName}")
+            check(!javaClass.isInterface) {
+                "Handlers cannot be interfaces: ${handlerClass.qualifiedName}"
             }
-            if (handlerClass.isAbstract) {
-                throw IllegalArgumentException(
-                        "Handlers cannot be abstract classes: ${handlerClass.qualifiedName}")
+            check(!handlerClass.isAbstract) {
+                "Handlers cannot be abstract classes: ${handlerClass.qualifiedName}"
             }
-            if (handlerClass.javaPrimitiveType != null) {
-                throw IllegalArgumentException(
-                        "Handlers cannot be primitive types: ${handlerClass.qualifiedName}")
+            check(handlerClass.javaPrimitiveType == null) {
+                "Handlers cannot be primitive types: ${handlerClass.qualifiedName}"
             }
-            if (handlerClass.isSubclassOf(Collection::class)) {
-                throw IllegalArgumentException(
-                        "Handlers cannot be collection classes: ${handlerClass.qualifiedName}")
+            check(!handlerClass.isSubclassOf(Collection::class)) {
+                "Handlers cannot be collection classes: ${handlerClass.qualifiedName}"
             }
         }
 

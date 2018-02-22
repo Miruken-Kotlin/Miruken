@@ -10,25 +10,25 @@ import kotlin.test.assertSame
 
 class HandlerDescriptorTest {
     @Test fun `Cannot create descriptors for interfaces`() {
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith(IllegalStateException::class) {
             HandlerDescriptor.getDescriptor<Handling>()
         }
     }
 
     @Test fun `Cannot create descriptors for abstract classes`() {
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith(IllegalStateException::class) {
             HandlerDescriptor.getDescriptor<CallbackPolicy>()
         }
     }
 
     @Test fun `Cannot create descriptors for primitive types`() {
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith(IllegalStateException::class) {
             HandlerDescriptor.getDescriptor<Int>()
         }
     }
 
     @Test fun `Cannot create descriptors for collection classes`() {
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith(IllegalStateException::class) {
             HandlerDescriptor.getDescriptor<List<Foo>>()
         }
     }

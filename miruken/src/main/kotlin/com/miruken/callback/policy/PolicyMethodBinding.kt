@@ -9,8 +9,12 @@ class PolicyMethodBinding(
 ) : MethodBinding(bindingInfo.dispatch) {
 
     val rule             = bindingInfo.rule
+    val annotation       = bindingInfo.annotation
     val callbackArgument = bindingInfo.callbackArgument
     val key              = policy.createKey(bindingInfo)
+
+    fun approves(callback: Any) =
+            policy.approve(callback, annotation)
 
     override fun dispatch(
             handler:  Any,

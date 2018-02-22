@@ -3,13 +3,11 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
-import com.miruken.runtime.PROMISE_TYPE
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KTypeProjection.Companion.STAR
-import kotlin.reflect.KTypeProjection.Companion.invariant
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 
@@ -31,7 +29,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     final override var isAsync: Boolean = false
         private set
 
-    override val policy: CallbackPolicy? = ProvidesPolicy
+    final override val policy: CallbackPolicy? = ProvidesPolicy
 
     val resolutions: List<Any> get() = _resolutions.toList()
 
@@ -136,7 +134,17 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             greedy:   Boolean,
             composer: Handling
     ): HandleResult {
-        TODO("not implemented")
+        val result = if (implied(handler, greedy, composer))
+            HandleResult.HANDLED else HandleResult.HANDLED
+        if (result.handled && !greedy) return result
+
+        val count = _resolutions.size
+        return result then {
+            policy!!.dispatch(handler, this, greedy, composer)
+        } then {
+            if (_resolutions.size > count) HandleResult.HANDLED
+            else HandleResult.NOT_HANDLED
+        }
     }
 
     private fun implied(

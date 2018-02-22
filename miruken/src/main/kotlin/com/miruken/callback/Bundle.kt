@@ -50,7 +50,7 @@ class Bundle(private val all: Boolean = true) :
     }
 
     fun add(action: BundleActionBlock,
-            notify: BundleNotifyBlock?
+            notify: BundleNotifyBlock? = null
     ) : Bundle {
         if (wantsAsync) {
             val act: BundleActionBlock = { handler ->

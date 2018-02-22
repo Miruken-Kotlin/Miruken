@@ -4,15 +4,22 @@ import com.miruken.Flags
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import kotlin.reflect.KCallable
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
 
 class MethodDispatch(val callable: KCallable<*>) {
     val arguments: List<Argument> =
             callable.valueParameters.map { Argument(it) }
 
-    val returnFlags: Flags<TypeFlags>
     val logicalReturnType: KType
+    val returnFlags:       Flags<TypeFlags>
+    val owningClass:       KClass<*> =
+            callable.instanceParameter?.let {
+                it.type.classifier as? KClass<*>
+            } ?: throw IllegalArgumentException(
+                    "Only instance methods are currently supported")
 
     init {
         val typeFlags = TypeFlags.parse(returnType)

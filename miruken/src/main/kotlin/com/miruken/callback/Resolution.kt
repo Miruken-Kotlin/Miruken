@@ -1,5 +1,7 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallbackPolicy
+
 open class Resolution(key: Any, val callback: Any)
     : Inquiry(key, true), ResolvingCallback {
 
@@ -21,7 +23,13 @@ open class Resolution(key: Any, val callback: Any)
 
     companion object {
         fun getDefaultResolvingCallback(callback: Any) : Any {
-            TODO("not implemented")
+            val handlers = CallbackPolicy.getCallbackHandlerClasses(callback)
+            if (handlers.isEmpty()) return callback
+            val bundle = Bundle(false)
+                    .add({ it.handle(NoResolving(callback)) }) { it }
+            handlers.forEach {
+                bundle.add({ it.handle(Resolution(it, callback))}) }
+            return bundle
         }
     }
 }

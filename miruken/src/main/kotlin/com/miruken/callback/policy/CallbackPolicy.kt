@@ -1,8 +1,7 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.FilteringProvider
-import com.miruken.callback.HandleResult
-import com.miruken.callback.Handling
+import com.miruken.callback.*
+import kotlin.reflect.KClass
 
 typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
@@ -36,13 +35,33 @@ abstract class CallbackPolicy : Comparator<Any> {
 
     open fun approve(callback: Any, annotation: Annotation) = true
 
+    fun getMethods() = HandlerDescriptor.getPolicyMethods(this)
+
+    fun getMethods(key: Any) = HandlerDescriptor.getPolicyMethods(this, key)
+
     fun dispatch(
             handler:  Any,
             callback: Any,
             greedy:   Boolean,
             composer: Handling,
             results:  CollectResultsBlock? = null
-    ): HandleResult {
-        TODO("not implemented")
+    ) = HandlerDescriptor.getDescriptor(handler::class)
+            .dispatch(this, handler, callback, greedy, composer, results)
+
+    companion object {
+        fun getCallbackHandlerClasses(callback: Any): List<KClass<*>> {
+            val policy = getCallbackPolicy(callback)
+            return HandlerDescriptor.getHandlersClasses(policy, callback)
+        }
+
+        fun getCallbackMethods(callback: Any): List<PolicyMethodBinding> {
+            val policy = getCallbackPolicy(callback)
+            return policy.getKey(callback)?.let {
+                policy.getMethods(it)
+            } ?: emptyList()
+        }
+
+        fun getCallbackPolicy(callback: Any) =
+                (callback as? DispatchingCallback)?.policy ?: HandlesPolicy
     }
 }
