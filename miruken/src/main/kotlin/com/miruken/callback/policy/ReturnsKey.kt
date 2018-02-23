@@ -6,7 +6,7 @@ object ReturnsKey : ReturnRule {
 
     override fun configure(bindingInfo: PolicyMethodBindingInfo) {
         if (bindingInfo.outKey == null) {
-            val dispatch          = bindingInfo.dispatch
+            val dispatch          = bindingInfo.dispatcher
             val logicalReturnType = dispatch.logicalReturnType
             bindingInfo.outKey = logicalReturnType
         }

@@ -1,8 +1,10 @@
 package com.miruken.callback.policy
 
 import com.miruken.Flags
+import com.miruken.concurrent.Promise
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
+import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -19,7 +21,7 @@ class MethodDispatch(val callable: KCallable<*>) {
             callable.instanceParameter?.let {
                 it.type.classifier as? KClass<*>
             } ?: throw IllegalArgumentException(
-                    "Only instance methods are currently supported")
+                    "Only instance methods are currently supported: $callable")
 
     init {
         val typeFlags = TypeFlags.parse(returnType)
@@ -32,4 +34,18 @@ class MethodDispatch(val callable: KCallable<*>) {
 
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing
+
+    fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
+        return if (returnFlags has TypeFlags.PROMISE) {
+            try {
+                callable.call(receiver, *arguments)
+            } catch (e: Throwable) {
+                if (e is InvocationTargetException)
+                    Promise.reject(e.targetException)
+                else Promise.reject(e)
+            }
+        } else {
+            callable.call(receiver, *arguments)
+        }
+    }
 }

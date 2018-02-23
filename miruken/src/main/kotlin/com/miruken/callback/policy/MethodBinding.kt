@@ -5,9 +5,9 @@ import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
 import com.miruken.runtime.normalize
 
-abstract class MethodBinding(val dispatch: MethodDispatch) {
+abstract class MethodBinding(val dispatcher: MethodDispatch) {
     private val _filters: MutableList<FilteringProvider> =
-            dispatch.annotations
+            dispatcher.annotations
                     .filterIsInstance<FilteringProvider>()
                     .normalize().toMutableList()
 

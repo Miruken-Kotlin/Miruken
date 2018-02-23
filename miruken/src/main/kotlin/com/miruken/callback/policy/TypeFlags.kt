@@ -15,7 +15,8 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object COLLECTION : TypeFlags(1 shl 1)
     object PROMISE    : TypeFlags(1 shl 2)
     object OPTIONAL   : TypeFlags(1 shl 3)
-    object OPEN       : TypeFlags(1 shl 4)
+    object PRIMITIVE  : TypeFlags(1 shl 4)
+    object OPEN       : TypeFlags(1 shl 5)
 
     companion object {
         fun parse(type: KType) : Pair<Flags<TypeFlags>, KType> {
@@ -43,6 +44,12 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
                     ?.let { it.classifier as? KTypeParameter }
                     ?.upperBounds?.firstOrNull()?.withNullability(false)
                     ?: logicalType
+
+            (logicalType.classifier as? KClass<*>)?.also {
+                if (it.javaPrimitiveType != null || it == String::class) {
+                    flags += TypeFlags.PRIMITIVE
+                }
+            }
 
             return flags to logicalType
         }

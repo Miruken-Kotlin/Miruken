@@ -15,42 +15,42 @@ class FlagsTest {
     }
 
     @Test fun `Flags support presence`() {
-        assertTrue  { Direction.LEFT hasFlag Direction.LEFT }
-        assertFalse { Direction.LEFT hasFlag Direction.DOWN }
-        assertTrue  { Direction.LEFT + Direction.UP hasFlag Direction.UP }
-        assertFalse { Direction.LEFT + Direction.UP hasFlag Direction.RIGHT }
+        assertTrue  { Direction.LEFT has Direction.LEFT }
+        assertFalse { Direction.LEFT has Direction.DOWN }
+        assertTrue  { Direction.LEFT + Direction.UP has Direction.UP }
+        assertFalse { Direction.LEFT + Direction.UP has Direction.RIGHT }
     }
 
     @Test fun `Empty flag fails presence`() {
         var flag = -Direction.UP
         flag -= Direction.UP
-        assertFalse { flag hasFlag flag }
-        assertFalse { Direction.DOWN hasFlag flag }
+        assertFalse { flag has flag }
+        assertFalse { Direction.DOWN has flag }
     }
 
     @Test fun `Flags can be combined`() {
         var flag = -Direction.UP
         flag += Direction.DOWN
-        assertTrue { flag hasFlag Direction.UP }
-        assertTrue { flag hasFlag Direction.DOWN }
+        assertTrue { flag has Direction.UP }
+        assertTrue { flag has Direction.DOWN }
         flag -= Direction.UP
-        assertFalse { flag hasFlag Direction.UP }
-        assertTrue  { flag hasFlag Direction.DOWN }
+        assertFalse { flag has Direction.UP }
+        assertTrue  { flag has Direction.DOWN }
         assertEquals(Direction.DOWN, flag)
      }
 
     @Test fun `Conditional sets flags`() {
         var flag = -Direction.UP
-        flag = flag.setFlag(Direction.LEFT)
-        assertTrue { flag hasFlag Direction.UP }
-        assertTrue { flag hasFlag Direction.LEFT }
+        flag = flag.set(Direction.LEFT)
+        assertTrue { flag has Direction.UP }
+        assertTrue { flag has Direction.LEFT }
     }
 
     @Test fun `Conditional unsets flags`() {
         var flag = Direction.UP + Direction.DOWN
-        flag = flag.setFlag(Direction.UP, false)
-        assertFalse { flag hasFlag Direction.UP }
-        assertTrue { flag hasFlag Direction.DOWN }
+        flag = flag.set(Direction.UP, false)
+        assertFalse { flag has Direction.UP }
+        assertTrue { flag has Direction.DOWN }
     }
 
     @Test fun `Flags support equality`() {

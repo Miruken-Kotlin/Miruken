@@ -19,11 +19,26 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(getKType<Foo>(), argument.parameterType)
         assertEquals(argument.parameterType, argument.logicalType)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertFalse { argument.flags.has(TypeFlags.PRIMITIVE) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
+    }
+
+    @Test fun `Extracts primitive parameter information`() {
+        val handle   = getMethod<TestHandler.Good>("handlePrimitive")
+        val callback = handle!!.parameters.component2()
+        val argument = Argument(callback)
+        assertEquals(getKType<Int>(), argument.parameterType)
+        assertEquals(argument.parameterType, argument.logicalType)
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.PRIMITIVE) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts optional parameter information`() {
@@ -32,11 +47,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertEquals(getKType<Foo>().withNullability(true), argument.parameterType)
         assertEquals(argument.parameterType.withNullability(false), argument.logicalType)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertTrue { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertTrue { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts promise parameter information`() {
@@ -45,11 +60,11 @@ class ArgumentTest {
         val argument = Argument(promise)
         assertEquals(getKType<Promise<Foo>>(), argument.parameterType)
         assertEquals(getKType<Foo>(), argument.logicalType)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertTrue  { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts list parameter information`() {
@@ -58,11 +73,11 @@ class ArgumentTest {
         val argument = Argument(list)
         assertEquals(getKType<List<Foo>>(), argument.parameterType)
         assertEquals(getKType<Foo>(), argument.logicalType)
-        assertTrue  { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertTrue  { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts lazy parameter information`() {
@@ -71,11 +86,11 @@ class ArgumentTest {
         val argument = Argument(lazy)
         assertEquals(getKType<Lazy<Foo>>(), argument.parameterType)
         assertEquals(getKType<Foo>(), argument.logicalType)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertTrue  { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic parameter information`() {
@@ -84,11 +99,11 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertTrue  { argument.parameterType.isSubtypeOf(getKType<Foo>()) }
         assertEquals(getKType<Foo>(), argument.logicalType)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic optional parameter information`() {
@@ -98,11 +113,11 @@ class ArgumentTest {
         assertTrue  { argument.parameterType.withNullability(false)
                 .isSubtypeOf(getKType<Foo>()) }
         assertEquals(getKType<Foo>(), argument.logicalType)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertTrue  { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic promise parameter information`() {
@@ -112,11 +127,11 @@ class ArgumentTest {
         assertTrue  { argument.parameterType
                 .isSubtypeOf(getKType<Promise<Foo>>()) }
         assertTrue  { argument.logicalType.isSubtypeOf(getKType<Foo>()) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertTrue  { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic list parameter information`() {
@@ -126,11 +141,11 @@ class ArgumentTest {
         assertTrue  { argument.parameterType
                 .isSubtypeOf(getKType<Collection<Foo>>()) }
         assertTrue  { argument.logicalType.isSubtypeOf(getKType<Foo>()) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertTrue  { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic lazy parameter information`() {
@@ -140,11 +155,11 @@ class ArgumentTest {
         assertTrue  { argument.parameterType
                 .isSubtypeOf(getKType<Lazy<Foo>>()) }
         assertTrue  { argument.logicalType.isSubtypeOf(getKType<Foo>()) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertTrue  { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts bounded generic lazy func parameter information`() {
@@ -154,11 +169,11 @@ class ArgumentTest {
         assertTrue  { argument.parameterType
                 .isSubtypeOf(getKType<Function0<Foo>>()) }
         assertTrue  { argument.logicalType.isSubtypeOf(getKType<Foo>()) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertTrue  { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic parameter information`() {
@@ -169,11 +184,11 @@ class ArgumentTest {
                 .isSubtypeOf(getKType<Any>().withNullability(true)) }
         assertTrue  { argument.logicalType
                 .isSubtypeOf(getKType<Any>().withNullability(true)) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic optional parameter information`() {
@@ -184,65 +199,65 @@ class ArgumentTest {
                 .isSubtypeOf(getKType<Any>().withNullability(true)) }
         assertTrue  { argument.logicalType
                 .isSubtypeOf(getKType<Any>().withNullability(true)) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertTrue  { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic promise parameter information`() {
         val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericPromise")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertTrue  { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic list parameter information`() {
         val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericList")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
-        assertTrue  { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertTrue  { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts open generic lazy parameter information`() {
         val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericLazy")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertTrue  { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts open partial generic parameter information`() {
         val handle   = getMethod<TestHandler.OpenGenerics>("handleOpenGenericPartial")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertTrue  { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertTrue  { argument.flags.has(TypeFlags.OPEN) }
     }
 
     @Test fun `Extracts closed partial generic parameter information`() {
         val handle   = getMethod<TestHandler.Good>("handleClosedGenericPartial")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
-        assertFalse { argument.flags.hasFlag(TypeFlags.COLLECTION) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.LAZY) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.PROMISE) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPTIONAL) }
-        assertFalse { argument.flags.hasFlag(TypeFlags.OPEN) }
+        assertFalse { argument.flags.has(TypeFlags.COLLECTION) }
+        assertFalse { argument.flags.has(TypeFlags.LAZY) }
+        assertFalse { argument.flags.has(TypeFlags.PROMISE) }
+        assertFalse { argument.flags.has(TypeFlags.OPTIONAL) }
+        assertFalse { argument.flags.has(TypeFlags.OPEN) }
     }
 }

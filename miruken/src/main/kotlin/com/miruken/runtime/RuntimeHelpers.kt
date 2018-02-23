@@ -8,59 +8,68 @@ import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.full.withNullability
+import kotlin.reflect.jvm.jvmErasure
+
 
 fun isAssignableTo(leftSide: Any, rightSide: Any?): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
             null -> false
-            is KType -> rightSide.isSubtypeOf(leftSide)
-            is Class<*> -> leftSide.arguments.isEmpty() &&
-                    rightSide.typeParameters.isEmpty() &&
-                    (leftSide.classifier as? KClass<*>)
-                            ?.java?.isAssignableFrom(rightSide) == true
+            is KType -> {
+                leftSide == rightSide ||
+                rightSide.isSubtypeOf(leftSide)
+            }
+            is KClass<*> -> {
+                leftSide.jvmErasure.isSuperclassOf(rightSide) &&
+                        leftSide.isOpenGenericDefinition
+            }
+            is Class<*> -> {
+                leftSide.jvmErasure.java.isAssignableFrom(rightSide) &&
+                        leftSide.isOpenGenericDefinition
+            }
             else -> {
-                val rightClass = (rightSide as? KClass<*>)
-                        ?: (rightSide as? Class<*>)?.kotlin
-                        ?: rightSide::class
-                leftSide.arguments.isEmpty() &&
-                        rightClass.typeParameters.isEmpty() &&
-                        (leftSide.classifier as? KClass<*>)
-                                ?.isSuperclassOf(rightClass) == true
+                val rightClass = rightSide::class
+                leftSide.jvmErasure.isSuperclassOf(rightClass) &&
+                        leftSide.isOpenGenericDefinition
             }
         }
         is KClass<*> -> when (rightSide) {
             null -> false
-            is KType -> rightSide.arguments.isEmpty() &&
-                    leftSide.typeParameters.isEmpty() &&
-                    (rightSide.classifier as? KClass<*>)
-                            ?.isSubclassOf(leftSide) == true
-            is Class<*> -> leftSide.typeParameters.isEmpty() &&
-                    rightSide.typeParameters.isEmpty() &&
-                    leftSide.java.isAssignableFrom(rightSide)
-            else -> {
-                val rightClass = (rightSide as? KClass<*>)
-                        ?: rightSide::class
+            is KType -> {
+                rightSide.jvmErasure.isSubclassOf(leftSide)
+            }
+            is KClass<*> -> {
+                leftSide == rightSide ||
+                rightSide.isSubclassOf(leftSide)
+            }
+            is Class<*> -> {
                 leftSide.typeParameters.isEmpty() &&
-                        rightClass.typeParameters.isEmpty() &&
-                        rightClass.isSubclassOf(leftSide)
+                rightSide.typeParameters.isEmpty() &&
+                leftSide.java.isAssignableFrom(rightSide)
+            }
+            else -> {
+                val rightClass = rightSide::class
+                leftSide.typeParameters.isEmpty() &&
+                rightClass.typeParameters.isEmpty() &&
+                rightClass.isSubclassOf(leftSide)
             }
         }
-        is Class<*> ->when (rightSide) {
+        is Class<*> -> when (rightSide) {
             null -> false
-            is KType -> rightSide.arguments.isEmpty() &&
-                    leftSide.typeParameters.isEmpty() &&
-                    (rightSide.classifier as? KClass<*>)?.let {
-                        leftSide.isAssignableFrom(it.java)
-                    } == true
-            is Class<*> -> leftSide.typeParameters.isEmpty() &&
-                    rightSide.typeParameters.isEmpty() &&
-                    leftSide.isAssignableFrom(rightSide)
+            is KType -> {
+                leftSide.isAssignableFrom(rightSide.jvmErasure.java)
+            }
+            is KClass<*> -> {
+                leftSide.isAssignableFrom(rightSide.java)
+            }
+            is Class<*> -> {
+                leftSide == rightSide ||
+                leftSide.isAssignableFrom(rightSide)
+            }
             else -> {
-                val rightClass = (rightSide as? KClass<*>)
-                        ?: rightSide::class
-                leftSide.typeParameters.isEmpty() &&
-                        rightClass.typeParameters.isEmpty() &&
-                        leftSide.isAssignableFrom(rightClass.java)
+                val rightClass = rightSide::class
+                leftSide.isAssignableFrom(rightClass.java)
             }
         }
         else -> false
@@ -71,10 +80,21 @@ fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
     return filterIsAssignableTo(ArrayList(), key)
 }
 
+fun Iterable<*>.filterIsAssignableFrom(key: Any): List<Any> {
+    return filterIsAssignableFrom(ArrayList(), key)
+}
+
 fun Iterable<*>.filterIsAssignableTo(
         destination: ArrayList<Any>, key: Any
 ): MutableList<Any> {
     filter { isAssignableTo(key, it) }.mapTo(destination) { it!! }
+    return destination
+}
+
+fun Iterable<*>.filterIsAssignableFrom(
+        destination: ArrayList<Any>, key: Any
+): MutableList<Any> {
+    filter { isAssignableTo(it!!, key) }.mapTo(destination) { it!! }
     return destination
 }
 
@@ -91,16 +111,25 @@ val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||
                 arguments.any { it.type?.isOpenGeneric == true }
 
+val KType.isOpenGenericDefinition: Boolean
+    get() = arguments.all {
+        (it.type?.classifier as? KTypeParameter)
+            ?.upperBounds?.all { it == ANY_TYPE } == true }
+
 val KType.componentType: KType?
     get() = if (isSubtypeOf(COLLECTION_TYPE))
         arguments.single().type else this
 
-inline fun <reified T: Annotation> KAnnotatedElement.getTaggedAnnotations() =
-        annotations.mapNotNull {
+inline fun <reified T: Annotation> KAnnotatedElement
+        .getTaggedAnnotations() = annotations.mapNotNull {
             val tags = it.annotationClass.annotations.filterIsInstance<T>()
             if (tags.isNotEmpty()) it to tags else null
         }
 
-val ANY_TYPE        = getKType<Any>()
-val COLLECTION_TYPE = getKType<Collection<Any>>()
-val PROMISE_TYPE    = getKType<Promise<Any>>()
+inline fun <reified T: Annotation> KAnnotatedElement
+        .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
+        .firstOrNull()?.second?.firstOrNull()
+
+val ANY_TYPE        = getKType<Any>().withNullability(true)
+val COLLECTION_TYPE = getKType<Collection<Any>>().withNullability(true)
+val PROMISE_TYPE    = getKType<Promise<Any>>().withNullability(true)

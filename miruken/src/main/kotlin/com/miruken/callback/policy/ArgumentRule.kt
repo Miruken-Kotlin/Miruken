@@ -7,5 +7,5 @@ interface ArgumentRule {
             argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo) {}
 
-    fun resolve(callback: Any): Any
+    fun resolve(callback: Any): Any?
 }

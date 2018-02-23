@@ -48,7 +48,7 @@ class getKTypeTest {
         assertTrue  { isAssignableTo(Foo::class, Foo().javaClass) }
         assertFalse { isAssignableTo(Foo(), Foo::class) }
         assertFalse { isAssignableTo(String::class, Foo()::class) }
-        assertFalse { isAssignableTo(Bar::class, Bar<Int>()::class) }
+        assertTrue  { isAssignableTo(Bar::class, Bar<Int>()::class) }
     }
 
     @Test fun `Can check mixed assignability`() {

@@ -13,6 +13,11 @@ enum class HandleResult(
             block: HandleResult.() -> HandleResult) =
             if (stop) this else this or block()
 
+    inline fun then(
+            condition: Boolean,
+            block:     HandleResult.() -> HandleResult) =
+            if (stop || !condition) this else this or block()
+
     infix fun <T> success(block: HandleResult.() -> T) : T? {
         return if (handled) block() else null
     }
@@ -36,6 +41,11 @@ enum class HandleResult(
     inline infix fun otherwise(
             block: HandleResult.() -> HandleResult) =
             if (handled || stop) this else block()
+
+    inline fun otherwise(
+            condition: Boolean,
+            block:     HandleResult.() -> HandleResult) =
+            if ((handled || stop) && !condition) this else block()
 
     infix fun or(other: HandleResult): HandleResult =
             when (handled || other.handled) {

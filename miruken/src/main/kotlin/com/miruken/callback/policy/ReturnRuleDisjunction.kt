@@ -8,9 +8,9 @@ class ReturnRuleDisjunction(
             leftSide.matches(method) || rightSide.matches(method)
 
     override fun configure(bindingInfo: PolicyMethodBindingInfo) {
-        if (leftSide.matches(bindingInfo.dispatch))
+        if (leftSide.matches(bindingInfo.dispatcher))
             leftSide.configure(bindingInfo)
-        else if (rightSide.matches(bindingInfo.dispatch))
+        else if (rightSide.matches(bindingInfo.dispatcher))
             rightSide.configure(bindingInfo)
     }
 }

@@ -17,16 +17,16 @@ class CallbackSemantics(
     constructor() : this(CallbackOptions.NONE)
 
     fun hasOption(options: Flags<CallbackOptions>) =
-            this.options hasFlag options
+            this.options has options
 
     fun setOption(options: Flags<CallbackOptions>, enabled: Boolean = true)
     {
-        this.options = options.setFlag(options, enabled)
+        this.options = options.set(options, enabled)
         _specified += options
     }
 
     fun isSpecified(options: Flags<CallbackOptions>) =
-            _specified hasFlag options
+            _specified has options
 
     override fun getResolveCallback() = this
 

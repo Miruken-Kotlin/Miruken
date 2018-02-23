@@ -2,7 +2,7 @@ package com.miruken.callback.policy
 
 data class PolicyMethodBindingInfo(
         val rule:       MethodRule,
-        val dispatch:   MethodDispatch,
+        val dispatcher: MethodDispatch,
         val annotation: Annotation
 ) {
     var inKey:            Any?      = null

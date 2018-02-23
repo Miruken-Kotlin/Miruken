@@ -19,5 +19,5 @@ class CallbackArgument(private val callbackType: KType) : ArgumentRule {
         }
     }
 
-    override fun resolve(callback: Any): Any = callback
+    override fun resolve(callback: Any) = callback
 }

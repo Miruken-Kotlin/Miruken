@@ -6,22 +6,13 @@ class CascadeHandler(
 
     override fun handleCallback(
             callback: Any,
-            greedy:   Boolean,
+            greedy: Boolean,
             composer: Handling
-    ): HandleResult {
-        val result = super.handleCallback(callback, greedy, composer)
-        return if (greedy) {
-            result then {
-                handlerA.handle(callback, greedy, composer)
-            } then {
-                handlerB.handle(callback, greedy, composer)
-            }
-        } else {
-            result otherwise {
-                handlerA.handle(callback, greedy, composer)
-            } otherwise {
-                handlerB.handle(callback, greedy, composer)
-            }
-        }
-    }
+    ): HandleResult =
+            super.handleCallback(callback, greedy, composer)
+                    .otherwise(greedy) {
+                        handlerA.handle(callback, greedy, composer)
+                    }.otherwise(greedy) {
+                        handlerB.handle(callback, greedy, composer)
+                    }
 }

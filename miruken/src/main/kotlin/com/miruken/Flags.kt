@@ -14,13 +14,13 @@ open class Flags<T: Flags<T>>(val value: Long) {
 
     fun toFlag() : Flags<T> = this as? Flags<T> ?: Flags(value)
 
-    infix fun hasFlag(flag: Flags<T>): Boolean {
+    infix fun has(flag: Flags<T>): Boolean {
         if (value == 0L || (value > 0L && flag.value == 0L))
             return false
         return value and flag.value == flag.value
     }
 
-    fun setFlag(flag: Flags<T>, enabled: Boolean = true,
+    fun set(flag: Flags<T>, enabled: Boolean = true,
             condition: (() -> Boolean)? = null
     ): Flags<T> {
         return if (condition == null || condition()) {

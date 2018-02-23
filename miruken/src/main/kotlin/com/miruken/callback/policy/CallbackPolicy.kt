@@ -3,11 +3,15 @@ package com.miruken.callback.policy
 import com.miruken.callback.*
 import kotlin.reflect.KClass
 
+typealias AcceptsResultBlock  = (Any, PolicyMethodBinding) -> Boolean
 typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
 abstract class CallbackPolicy : Comparator<Any> {
     private val _rules   = mutableListOf<MethodRule>()
     private val _filters = mutableListOf<FilteringProvider>()
+
+    val methodBindingComparator : Comparator<PolicyMethodBinding> =
+            Comparator { a, b -> compare(a.key, b.key) }
 
     fun addRule(vararg rules: MethodRule) =
             _rules.addAll(rules)
@@ -32,6 +36,13 @@ abstract class CallbackPolicy : Comparator<Any> {
             key:    Any,
             output: Collection<Any>
     ): Collection<Any>
+
+    open fun acceptResult(result: Any?, binding: MethodBinding) =
+         when (result) {
+             null -> HandleResult.NOT_HANDLED
+             is HandleResult -> result
+             else -> HandleResult.HANDLED
+         }
 
     open fun approve(callback: Any, annotation: Annotation) = true
 

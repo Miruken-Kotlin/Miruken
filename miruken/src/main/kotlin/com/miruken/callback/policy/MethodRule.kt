@@ -32,6 +32,7 @@ class MethodRule(
         return methodBinder(bindingInfo)
     }
 
-    fun resolveArguments(callback: Any) : List<Any> =
+    fun resolveArguments(callback: Any) : Array<Any?> =
             argumentRules.map { it.resolve(callback) }
+                    .toTypedArray()
 }

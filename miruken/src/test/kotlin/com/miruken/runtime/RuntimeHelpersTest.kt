@@ -1,6 +1,7 @@
 package com.miruken.runtime
 
 import org.junit.Test
+import java.lang.reflect.Type
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 

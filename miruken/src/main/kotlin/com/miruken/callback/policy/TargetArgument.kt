@@ -19,14 +19,14 @@ class TargetArgument<in C, out R: Any>(
         if (bindingInfo.callbackArgument == null) {
             bindingInfo.callbackArgument = argument
             bindingInfo.inKey =
-                    if (argument.flags == TypeFlags.OPEN)
+                    if ((argument.flags - TypeFlags.OPTIONAL) == TypeFlags.OPEN)
                         argument.logicalType
                     else argument.parameterType
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun resolve(callback: Any): Any =
+    override fun resolve(callback: Any) =
             if (isAssignableTo(callbackType, callback))
                 target(callback as C) else callback
 }
