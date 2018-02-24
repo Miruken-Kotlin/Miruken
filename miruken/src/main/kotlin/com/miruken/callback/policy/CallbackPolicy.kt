@@ -39,7 +39,7 @@ abstract class CallbackPolicy : Comparator<Any> {
 
     open fun acceptResult(result: Any?, binding: MethodBinding) =
          when (result) {
-             null -> HandleResult.NOT_HANDLED
+             null, Unit -> HandleResult.NOT_HANDLED
              is HandleResult -> result
              else -> HandleResult.HANDLED
          }

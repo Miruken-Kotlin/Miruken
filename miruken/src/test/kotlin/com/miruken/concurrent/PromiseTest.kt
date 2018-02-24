@@ -119,7 +119,7 @@ class PromiseTest {
     @Test fun `Returns canonical empty promise`() {
         var called = false
         Promise.Empty then {
-            assertEquals(Unit, it)
+            assertNull(it)
             called = true
         }
         assertTrue(called)

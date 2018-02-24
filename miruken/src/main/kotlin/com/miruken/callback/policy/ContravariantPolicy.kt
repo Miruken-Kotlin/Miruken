@@ -1,6 +1,8 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.HandleResult
 import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -30,6 +32,15 @@ open class ContravariantPolicy(
             output.filter { key != it && isAssignableTo(it, key)
     }
 
+    override fun acceptResult(result: Any?, binding: MethodBinding) =
+            when (result) {
+                null, Unit ->
+                    if (binding.dispatcher.returnType.isUnit)
+                        HandleResult.HANDLED else HandleResult.NOT_HANDLED
+                is HandleResult -> result
+                else -> HandleResult.HANDLED
+            }
+
     override fun compare(o1: Any?, o2: Any?): Int {
         return when {
             o1 == o2 -> 0
@@ -40,27 +51,28 @@ open class ContravariantPolicy(
         }
     }
     
-    private fun compareGenericArity(o1: Any?, o2: Any?): Int? =
-            when (o1) {
-                is KType -> when (o2) {
-                    is KType -> o2.arguments.size - o1.arguments.size
-                    is KClass<*> ->
-                        o2.typeParameters.size - o1.arguments.size
-                    is Class<*> ->
-                        o2.typeParameters.size - o1.arguments.size
-                    else -> null
-                }
-                is KClass<*> -> when (o2) {
-                    is KType -> o2.arguments.size - o1.typeParameters.size
-                    is KClass<*> -> o2.typeParameters.size - o1.typeParameters.size
-                    is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
-                    else -> null
-                }
-                is Class<*> -> when (o2) {
-                    is KType -> o2.arguments.size - o1.typeParameters.size
-                    is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
-                    else -> null
-                }
+    private fun compareGenericArity(o1: Any?, o2: Any?): Int? {
+        return when (o1) {
+            is KType -> when (o2) {
+                is KType -> o2.arguments.size - o1.arguments.size
+                is KClass<*> ->
+                    o2.typeParameters.size - o1.arguments.size
+                is Class<*> ->
+                    o2.typeParameters.size - o1.arguments.size
                 else -> null
             }
+            is KClass<*> -> when (o2) {
+                is KType -> o2.arguments.size - o1.typeParameters.size
+                is KClass<*> -> o2.typeParameters.size - o1.typeParameters.size
+                is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
+                else -> null
+            }
+            is Class<*> -> when (o2) {
+                is KType -> o2.arguments.size - o1.typeParameters.size
+                is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
+                else -> null
+            }
+            else -> null
+        }
+    }
 }

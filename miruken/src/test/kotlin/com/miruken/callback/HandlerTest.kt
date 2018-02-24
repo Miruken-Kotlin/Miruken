@@ -160,6 +160,32 @@ class HandlerTest {
         }
     }
 
+    @Test fun `Provides null if not handled`() {
+        val handler = SimpleHandler()
+        val bam     = handler.resolve<Bam>()
+        assertNull(bam)
+    }
+
+    @Test fun `Provides null if not handled async`() {
+        val handler = SimpleAsyncHandler()
+        assertAsync { done ->
+            handler.resolveAsync<Bam>() then {
+                assertNull(it)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Provides null if not handled coerce async`() {
+        val handler = SimpleHandler()
+        assertAsync { done ->
+            handler.resolveAsync<Bam>() then {
+                assertNull(it)
+                done()
+            }
+        }
+    }
+
     /** Callbacks */
 
     open class Foo {
@@ -278,9 +304,7 @@ class HandlerTest {
 
     class OpenGenericHandler : Handler() {
         @Handles
-        fun <T> handleAnything(cb: T?) {
-
-        }
+        fun <T> handleAnything(cb: T?) {}
     }
 
     class OpenGenericRejectHandler : Handler() {

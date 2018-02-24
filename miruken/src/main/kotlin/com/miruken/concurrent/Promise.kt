@@ -31,10 +31,10 @@ typealias PromiseCancelledBlock     = (CancellationException) -> Unit
 open class Promise<out T>
     private constructor(val cancelMode: ChildCancelMode) {
 
-    private var _fulfilled  : ((Any) -> Unit) = {}
+    private var _fulfilled  : ((T) -> Unit) = {}
     private var _rejected   : ((Throwable) -> Unit) = {}
     private var _onCancel   : (() -> Unit) = {}
-    private var _result     : T? = null
+    private var _result     : Any? = null
     private var _throwable  : Throwable? = null
     private val _completed  : AtomicBoolean = AtomicBoolean()
     private val _childCount : AtomicInteger = AtomicInteger()
@@ -77,17 +77,18 @@ open class Promise<out T>
 
     infix fun <R> then(success: PromiseSuccessBlock<T, R>) : Promise<R> {
         return createChild { resolveChild, rejectChild ->
-            val res: ((Any) -> Unit) = {
+            val res: ((T) -> Unit) = {
                 try {
-                    resolveChild(success(_result!!))
+                    resolveChild(success(it))
                 } catch (e: Throwable) {
                     rejectChild(e)
                 }
             }
             synchronized (_guard) {
                 if (isCompleted) {
+                    @Suppress("UNCHECKED_CAST")
                     if (state == PromiseState.FULFILLED)
-                        res(_result!!)
+                        res(_result as T)
                     else
                         rejectChild(_throwable!!)
                 }
@@ -104,9 +105,9 @@ open class Promise<out T>
             fail:    PromiseFailureBlock<S>
     ) : Promise<Either<S, R>> {
         return createChild { resolveChild, rejectChild ->
-            val res: ((Any) -> Unit) = {
+            val res: ((T) -> Unit) = {
                 try {
-                    resolveChild(Either.Right(success(_result!!)))
+                    resolveChild(Either.Right(success(it)))
                 } catch (e: Throwable) {
                     rejectChild(e)
                 }
@@ -124,8 +125,9 @@ open class Promise<out T>
             }
             synchronized (_guard) {
                 if (isCompleted) {
+                    @Suppress("UNCHECKED_CAST")
                     if (state == PromiseState.FULFILLED)
-                        res(_result!!)
+                        res(_result as T)
                     else
                         rej(_throwable!!)
                 }
@@ -141,8 +143,8 @@ open class Promise<out T>
             fail: PromiseFailureBlock<R>
     ) : Promise<Either<R, T>> {
         return createChild { resolveChild, rejectChild ->
-            val res: ((Any) -> Unit) =  {
-                resolveChild(Either.Right(_result!!))
+            val res: ((T) -> Unit) =  {
+                resolveChild(Either.Right(it))
             }
             val rej: ((Throwable) -> Unit) = {
                 if (_throwable !is CancellationException) {
@@ -158,8 +160,9 @@ open class Promise<out T>
             synchronized (_guard) {
                 if (isCompleted)
                 {
+                    @Suppress("UNCHECKED_CAST")
                     if (state == PromiseState.FULFILLED)
-                        res(_result!!)
+                        res(_result as T)
                     else
                         rej(_throwable!!)
                 }
@@ -174,15 +177,16 @@ open class Promise<out T>
 
     infix fun <R> finally(final: PromiseFinalBlock<R>) : Promise<T> {
         return createChild { resolveChild, rejectChild ->
-            val res: ((Any) -> Unit) = {
+            val res: ((T) -> Unit) = {
                 try {
                     val result = final()
+                    @Suppress("UNCHECKED_CAST")
                     if (result is Promise<*>) {
                         result.then(
-                            { _ -> resolveChild(_result!!) },
+                            { _ -> resolveChild(_result as T) },
                             rejectChild)
                     } else {
-                        resolveChild(_result!!)
+                        resolveChild(_result as T)
                     }
                 } catch (e: Throwable) {
                     rejectChild(e)
@@ -198,8 +202,9 @@ open class Promise<out T>
             }
             synchronized (_guard) {
                 if (isCompleted) {
+                    @Suppress("UNCHECKED_CAST")
                     if (state == PromiseState.FULFILLED)
-                        res(_result!!)
+                        res(_result as T)
                     else
                         rej(_throwable!!)
                 }
@@ -248,7 +253,8 @@ open class Promise<out T>
         }
         if (_throwable != null)
             throw _throwable!!
-        return _result!!
+        @Suppress("UNCHECKED_CAST")
+        return _result as T
     }
 
     protected open fun <R> createChild(
@@ -281,7 +287,7 @@ open class Promise<out T>
                 _fulfilled = {}
                 _rejected  = {}
                 _guard.notifyAll()
-                fulfilled(result as Any)
+                fulfilled(result)
             }
         }
     }
@@ -313,17 +319,17 @@ open class Promise<out T>
     companion object {
         val True      = resolve(true)
         val False     = resolve(false)
-        val Empty     = resolve(Unit)
+        val Empty     = resolve(null as Any?)
         val EmptyList = resolve(emptyList<Any>())
 
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }
 
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified S: Any> resolve(result: S): Promise<S> =
+        inline fun <reified S: Any?> resolve(result: S): Promise<S> =
                 if (S::class === Any::class && result is Promise<*>) {
-                    Promise<Any> { suc, fail ->
-                        result.then({ suc(it ?: Unit)}, fail) } as Promise<S>
+                    Promise<Any?> { suc, fail ->
+                        result.then({ suc(it ?: null)}, fail) } as Promise<S>
                 } else {
                     Promise { success, _ -> success(result) }
                 }

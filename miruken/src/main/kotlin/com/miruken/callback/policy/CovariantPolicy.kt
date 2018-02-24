@@ -1,9 +1,7 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.HandleResult
 import com.miruken.runtime.filterIsAssignableTo
 import com.miruken.runtime.isAssignableTo
-import com.miruken.runtime.isUnit
 
 open class CovariantPolicy(
         build:  CovariantKeyBuilder.() -> Unit
@@ -26,14 +24,6 @@ open class CovariantPolicy(
             output: Collection<Any>
     ): Collection<Any> =
             output.filterIsAssignableTo(key)
-
-    override fun acceptResult(result: Any?, binding: MethodBinding) =
-            when (result) {
-                null -> if (binding.dispatcher.returnType.isUnit)
-                    HandleResult.HANDLED else HandleResult.NOT_HANDLED
-                is HandleResult -> result
-                else -> HandleResult.HANDLED
-            }
 
     override fun compare(o1: Any?, o2: Any?): Int {
         return when {

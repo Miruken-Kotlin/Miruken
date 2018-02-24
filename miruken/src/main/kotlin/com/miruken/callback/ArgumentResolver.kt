@@ -28,7 +28,7 @@ open class ArgumentResolver : ArgumentResolving {
             key:      Any,
             handler:  Handling,
             composer: Handling
-    ) : Promise<Any> = handler.resolveAsync(key)
+    ) : Promise<Any?> = handler.resolveAsync(key)
 
     open fun resolveKeyAll(
             key:      Any,
