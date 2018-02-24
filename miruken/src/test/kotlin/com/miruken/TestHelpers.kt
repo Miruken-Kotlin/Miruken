@@ -25,7 +25,7 @@ fun <T> T.assertAsync(
         timeoutMs: Long = DEFAULT_TIMEOUT,
         block: T.(()->Unit) -> Unit
 ) {
-    assertTrue { testAsync(timeoutMs, block) }
+    assertTrue(testAsync(timeoutMs, block))
 }
 
 inline fun <reified T: Any> getMethod(name:String): KFunction<*>? =

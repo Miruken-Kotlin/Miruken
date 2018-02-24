@@ -19,6 +19,6 @@ class ProvidesPolicyTest {
     fun `Gets ProvidesPolicy from @Provides annotation`() {
         val member   = getMethod<MyProvider>("provideFoo")
         val provides = member!!.getTaggedAnnotations<UsePolicy<*>>().first()
-        assertTrue { provides.second.single().policy == ProvidesPolicy }
+        assertTrue(provides.second.single().policy == ProvidesPolicy)
     }
 }

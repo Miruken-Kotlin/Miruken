@@ -44,13 +44,13 @@ class HandlerDescriptorTest {
     }
 
     @Test fun `Rejects descriptor with Handles method with no parameters`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(PolicyRejectedException::class) {
             HandlerDescriptor.getDescriptor<TestHandler.NoParameters>()
         }
     }
 
     @Test fun `Rejects descriptor with Handles method with Nothing parameter`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(PolicyRejectedException::class) {
             HandlerDescriptor.getDescriptor<TestHandler.NothingParameter>()
         }
     }
@@ -71,19 +71,19 @@ class HandlerDescriptorTest {
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(PolicyRejectedException::class) {
             HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothing>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing taking callback`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(PolicyRejectedException::class) {
             HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothingWithCallback>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Unit`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(PolicyRejectedException::class) {
             HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
         }
     }

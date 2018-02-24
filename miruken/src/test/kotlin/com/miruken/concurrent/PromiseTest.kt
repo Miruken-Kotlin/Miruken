@@ -10,36 +10,36 @@ import kotlin.test.*
 class PromiseTest {
     @Test fun `Starts in pending state`() {
         val promise = Promise<String> { _, _ -> }
-        assertTrue { promise.state === PromiseState.PENDING }
+        assertTrue(promise.state === PromiseState.PENDING)
     }
 
     @Test fun `Creates resolved promise`() {
         val promise =  Promise.resolve("Hello")
-        assertTrue { promise.state === PromiseState.FULFILLED }
+        assertTrue(promise.state === PromiseState.FULFILLED)
     }
 
     @Test fun `Creates rejected promise`() {
         val promise = Promise.reject(Exception("Error"))
-        assertTrue { promise.state === PromiseState.REJECTED }
+        assertTrue(promise.state === PromiseState.REJECTED)
     }
 
     @Test fun `Creates cancellable promise`() {
         val promise = Promise<String> { _, _, _ -> }
-        assertTrue { promise.state === PromiseState.PENDING }
+        assertTrue(promise.state === PromiseState.PENDING)
     }
 
     @Test fun `Resolves promise`() {
         val promise = Promise<String> { resolve, _ ->
             resolve("Hello")
         }
-        assertTrue { promise.state === PromiseState.FULFILLED }
+        assertTrue(promise.state === PromiseState.FULFILLED)
     }
 
     @Test fun `Rejects promise`() {
         val promise = Promise<String> { _, reject ->
             reject(Exception("Rejected"))
         }
-        assertTrue { promise.state === PromiseState.REJECTED }
+        assertTrue(promise.state === PromiseState.REJECTED)
     }
 
     @Test fun `Adopts resolved promise statically`() {
@@ -49,8 +49,8 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue { promise.state === PromiseState.FULFILLED }
-        assertTrue { called }
+        assertTrue(promise.state === PromiseState.FULFILLED)
+        assertTrue(called)
     }
 
     @Test fun `Adopts rejected promise statically`() {
@@ -61,8 +61,8 @@ class PromiseTest {
             called = true
             throw it
         }
-        assertTrue { promise.state === PromiseState.REJECTED }
-        assertTrue { called }
+        assertTrue(promise.state === PromiseState.REJECTED)
+        assertTrue(called)
     }
 
     @Test fun `Adopts resolved promise dynamically`() {
@@ -72,8 +72,8 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue { promise.state === PromiseState.FULFILLED }
-        assertTrue { called }
+        assertTrue(promise.state === PromiseState.FULFILLED)
+        assertTrue(called)
     }
 
     @Test fun `Adopts rejected promise dynamically`() {
@@ -84,35 +84,35 @@ class PromiseTest {
             called = true
             throw it
         }
-        assertTrue { promise.state === PromiseState.REJECTED }
-        assertTrue { called }
+        assertTrue(promise.state === PromiseState.REJECTED)
+        assertTrue(called)
     }
 
     @Test fun `Promises are covariant`() {
         val promise = Promise.resolve(listOf(1, 2, 3))
         val promise2 : Promise<Collection<Int>> = promise
         promise2.then {
-            assertTrue { it.containsAll(listOf(1, 2, 3)) }
+            assertTrue(it.containsAll(listOf(1, 2, 3)))
         }
     }
 
     @Test fun `Returns canonical true promise`() {
         var called = false
         Promise.True then {
-            assertTrue { it }
+            assertTrue(it)
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
         assertSame(Promise.True, Promise.True)
     }
 
     @Test fun `Returns canonical false promise`() {
         var called = false
         Promise.False then {
-            assertFalse { it }
+            assertFalse(it)
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
         assertSame(Promise.False, Promise.False)
     }
 
@@ -122,7 +122,7 @@ class PromiseTest {
             assertEquals(Unit, it)
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
         assertSame(Promise.Empty, Promise.Empty)
     }
 
@@ -302,7 +302,7 @@ class PromiseTest {
             verify = true
         }
         assertEquals(2, called)
-        assertTrue { verify }
+        assertTrue(verify)
     }
 
     @Test fun `Unwraps fulfilled promise with projection`() {
@@ -421,8 +421,8 @@ class PromiseTest {
         fulfill("Hello")
         failed(Exception())
         assertEquals(PromiseState.CANCELLED, promise.state)
-        assertFalse { called }
-        assertTrue { cancelled }
+        assertFalse(called)
+        assertTrue(cancelled)
     }
 
     @Test fun `Ignores fulfilled and rejected if CancellationException`() {
@@ -435,8 +435,8 @@ class PromiseTest {
             .cancelled { cancelled = true }
         promise.cancel()
         assertEquals(PromiseState.CANCELLED, promise.state)
-        assertFalse { called }
-        assertTrue { cancelled }
+        assertFalse(called)
+        assertTrue(cancelled)
     }
 
     @Test fun `Calls finally when cancelled`() {
@@ -447,8 +447,8 @@ class PromiseTest {
         promise.cancel()
         promise.cancelled { cancelled = true }
         assertEquals(PromiseState.CANCELLED, promise.state)
-        assertTrue { called }
-        assertTrue { cancelled }
+        assertTrue(called)
+        assertTrue(cancelled)
     }
 
     @Test fun `Calls finally if CancelledException`() {
@@ -459,8 +459,8 @@ class PromiseTest {
             .finally { called = true }
         promise.cancelled { cancelled = true }
         assertEquals(PromiseState.CANCELLED, promise.state)
-        assertTrue { called }
-        assertTrue { cancelled }
+        assertTrue(called)
+        assertTrue(cancelled)
     }
 
     @Test fun `Fulfills promise using infix notation`() {
@@ -496,10 +496,10 @@ class PromiseTest {
         val promises = (1..5).map { Promise.resolve(it) }
         Promise.all(promises) then {
             assertEquals(promises.size, it.size)
-            assertTrue { it == (1..5).toList() }
+            assertTrue(it == (1..5).toList())
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
     }
 
     @Test fun `Rejects promise if any promise fails`() {
@@ -514,7 +514,7 @@ class PromiseTest {
             assertEquals("3 failed", it.message)
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
     }
 
     @Test fun `Converts return into a promise`() {
@@ -525,7 +525,7 @@ class PromiseTest {
             assertEquals(6, it)
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
     }
 
     @Test fun `Ensures exception become rejected promise`() {
@@ -536,7 +536,7 @@ class PromiseTest {
         } catch {
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
     }
 
     @Test fun `Follows fulfilled promise from return`() {
@@ -547,7 +547,7 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue { called }
+        assertTrue(called)
     }
 
     @Test fun `Follows rejected promise from return`() {
@@ -563,7 +563,7 @@ class PromiseTest {
             val start = Instant.now()
             Promise.delay(50) then {
                 val elapsed = Duration.between(start, Instant.now())
-                assertTrue { elapsed.toMillis() >= 50 }
+                assertTrue(elapsed.toMillis() >= 50)
                 done()
             }
         }
@@ -580,7 +580,7 @@ class PromiseTest {
     @Test fun `Rejects promise if after timeout`() {
         assertAsync { done ->
             Promise.delay(100).timeout(50) catch {
-                assertTrue { it is TimeoutException }
+                assertTrue(it is TimeoutException)
                 done()
             }
         }

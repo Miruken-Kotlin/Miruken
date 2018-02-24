@@ -14,8 +14,8 @@ class CommandTest {
     @Test
     fun `Creates Command of String`() {
         val command = Command(Foo(), getKType<String>())
-        assertFalse { command.many }
-        assertFalse { command.wantsAsync }
+        assertFalse(command.many)
+        assertFalse(command.wantsAsync)
         assertEquals(getKType<String>(), command.resultType)
         assertSame(HandlesPolicy, command.policy)
     }

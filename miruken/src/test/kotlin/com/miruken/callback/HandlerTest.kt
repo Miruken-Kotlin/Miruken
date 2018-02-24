@@ -2,13 +2,13 @@
 
 package com.miruken.callback
 
+import com.miruken.callback.policy.PolicyRejectedException
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class HandlerTest {
     @Test fun `Indicates not handled`() {
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bee()))
     }
 
@@ -18,7 +18,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not handled explicitly`() {
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.NOT_HANDLED_AND_STOP, handler.handle(Bam()))
     }
 
@@ -29,7 +29,7 @@ class HandlerTest {
 
     @Test fun `Handles callbacks implicitly`() {
         val foo     = Foo()
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(1, foo.handled)
     }
@@ -43,7 +43,7 @@ class HandlerTest {
 
     @Test fun `Handles callbacks explicitly`() {
         val bar     = Bar()
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(bar))
         assertTrue { bar.hasComposer }
         assertEquals(1, bar.handled)
@@ -53,7 +53,7 @@ class HandlerTest {
 
     @Test fun `Handles callbacks covariantly`() {
         val foo     = SuperFoo()
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(2, foo.handled)
         assertTrue { foo.hasComposer }
@@ -61,7 +61,7 @@ class HandlerTest {
 
     @Test fun `Handles callbacks generically`() {
         val baz     = BazT(22)
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(baz))
         assertEquals("handlesGenericBaz", baz.tag)
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(BazT('M')))
@@ -69,7 +69,7 @@ class HandlerTest {
 
     @Test fun `Handles callbacks generically using arity`() {
         val baz     = BazTR(22, 15.5)
-        val handler = FeatureHandler()
+        val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(baz))
         assertEquals("handlesGenericBazArity", baz.tag)
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(BazTR('M',2)))
@@ -85,6 +85,11 @@ class HandlerTest {
         assertEquals(HandleResult.HANDLED, handler.handle(Foo()))
     }
 
+    @Test fun `Rejects open callbacks generically`() {
+        val handler = OpenGenericRejectHandler()
+        assertEquals(HandleResult.NOT_HANDLED_AND_STOP, handler.handle(Foo()))
+    }
+
     @Test fun `Handles bounded callbacks generically`() {
         val foo     = Foo()
         val handler = BoundedGenericHandler()
@@ -93,6 +98,43 @@ class HandlerTest {
         assertTrue { foo.hasComposer }
     }
 
+    @Test fun `Rejects bounded callbacks generically`() {
+        val handler = BoundedGenericHandler()
+        assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bar()))
+        assertEquals(HandleResult.NOT_HANDLED, handler.handle(SuperBar()))
+    }
+
+    @Test fun `Rejects handles that do not satisfy policy`() {
+        try {
+            val handler = InvalidHandler()
+            handler.handle(Foo())
+        } catch (e: PolicyRejectedException) {
+            assertSame(HandlesPolicy, e.policy)
+            assertEquals("reset", e.culprit.name)
+        }
+    }
+
+    @Test fun `Indicates not provided`() {
+        val handler = SimpleHandler()
+        val bee     = handler.resolve<Bee>()
+        assertNull(bee)
+    }
+
+    @Test fun `Indicates not provided using adapter`() {
+        val handler = HandlerAdapter(Controller())
+        val bee     = handler.resolve<Bee>()
+        assertNull(bee)
+    }
+
+    /*
+    @Test fun `Provides callbacks implicitly`() {
+        val handler = SimpleHandler()
+        val bar     = handler.resolve<Bar>();
+        assertNotNull(bar)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+*/
     /** Callbacks */
 
     open class Foo {
@@ -138,7 +180,9 @@ class HandlerTest {
 
     /** Handlers */
 
-    class FeatureHandler : Handler() {
+    class SimpleHandler : Handler() {
+        // Handles
+
         @Handles
         fun handleFooImplicitly(foo: Foo)
         {
@@ -181,6 +225,12 @@ class HandlerTest {
             baz.tag = "handlesGenericBazArity"
             return HandleResult.HANDLED
         }
+
+        // Provides
+        @Provides
+        fun provideBarImplicitly() : Bar  {
+            return Bar().apply { handled = 1 }
+        }
     }
 
     class SpecialHandler : Handler() {
@@ -197,6 +247,12 @@ class HandlerTest {
         }
     }
 
+    class OpenGenericRejectHandler : Handler() {
+        @Handles
+        fun <T> rejectEverything(cb: T?) =
+                HandleResult.NOT_HANDLED_AND_STOP
+    }
+
     class BoundedGenericHandler : Handler() {
         @Handles
         fun <T: Foo> handleAnything(cb: T?, composer: Handling) {
@@ -205,6 +261,14 @@ class HandlerTest {
                 hasComposer = true
             }
         }
+
+        @Handles
+        fun <T: Bar> rejectBars(cb: T?): HandleResult? = null
+    }
+
+    class InvalidHandler : Handler() {
+        @Handles
+        fun reset() = 22
     }
 
     class Controller {

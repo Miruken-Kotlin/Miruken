@@ -62,9 +62,8 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     .getTaggedAnnotations<UsePolicy<*>>()) {
                 usePolicies.single().policy?.also {
                     val rule = it.match(dispatch.value) ?:
-                        throw IllegalStateException(
-                                "The policy for @${annotation.annotationClass.simpleName} rejected '$member'"
-                        )
+                        throw PolicyRejectedException(it, member,
+                                "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
 
                     val binding    = rule.bind(dispatch.value, annotation)
                     val descriptor = _policies.getOrPut(it) {

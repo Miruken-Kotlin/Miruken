@@ -14,8 +14,8 @@ class InquiryTest {
 
     @Test fun `Creates Inquiry of String`() {
         val inquiry = Inquiry("Service")
-        assertFalse { inquiry.many }
-        assertFalse { inquiry.wantsAsync }
+        assertFalse(inquiry.many)
+        assertFalse(inquiry.wantsAsync)
         assertEquals("Service", inquiry.key)
         assertEquals(getKType<Any>(), inquiry.resultType)
         assertSame(ProvidesPolicy, inquiry.policy)
@@ -30,7 +30,7 @@ class InquiryTest {
     @Test fun `Creates Inquiry of generic KClass`() {
         val inquiry = Inquiry(Bar::class)
         assertEquals(Bar::class, inquiry.key)
-        assertTrue { getKType<Bar<*>>().isSubtypeOf(inquiry.resultType!!) }
+        assertTrue(getKType<Bar<*>>().isSubtypeOf(inquiry.resultType!!))
     }
 
     @Test fun `Creates Inquiry of KType`() {
@@ -47,7 +47,7 @@ class InquiryTest {
 
     @Test fun `Creates async Inquiry of String`() {
         val inquiry = Inquiry("Service").apply { wantsAsync = true }
-        assertTrue { inquiry.wantsAsync }
+        assertTrue(inquiry.wantsAsync)
         assertEquals("Service", inquiry.key)
         assertEquals(getKType<Promise<*>>(), inquiry.resultType)
         assertSame(ProvidesPolicy, inquiry.policy)
@@ -64,7 +64,7 @@ class InquiryTest {
     @Test fun `Creates async Inquiry of generic KClass`() {
         val inquiry = Inquiry(Bar::class).apply { wantsAsync = true }
         assertEquals(Bar::class, inquiry.key)
-        assertTrue { getKType<Promise<Bar<*>>>().isSubtypeOf(inquiry.resultType!!) }
+        assertTrue(getKType<Promise<Bar<*>>>().isSubtypeOf(inquiry.resultType!!))
     }
 
     @Test fun `Creates async many Inquiry of KType`() {
