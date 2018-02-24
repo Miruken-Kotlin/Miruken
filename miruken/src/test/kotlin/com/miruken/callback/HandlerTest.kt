@@ -2,7 +2,9 @@
 
 package com.miruken.callback
 
+import com.miruken.assertAsync
 import com.miruken.callback.policy.PolicyRejectedException
+import com.miruken.concurrent.Promise
 import org.junit.Test
 import kotlin.test.*
 
@@ -126,15 +128,38 @@ class HandlerTest {
         assertNull(bee)
     }
 
-    /*
     @Test fun `Provides callbacks implicitly`() {
         val handler = SimpleHandler()
-        val bar     = handler.resolve<Bar>();
+        val bar     = handler.resolve<Bar>()
         assertNotNull(bar)
-        assertFalse(bar.hasComposer)
+        assertFalse(bar!!.hasComposer)
         assertEquals(1, bar.handled)
     }
-*/
+
+    @Test fun `Provides callbacks implicitly async`() {
+        val handler = SimpleAsyncHandler()
+        assertAsync { done ->
+            handler.resolveAsync<Bar>() then {
+                assertNotNull(it)
+                assertFalse(it!!.hasComposer)
+                assertEquals(1, it.handled)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Provides callbacks implicitly coerce async`() {
+        val handler = SimpleHandler()
+        assertAsync { done ->
+            handler.resolveAsync<Bar>() then {
+                assertNotNull(it)
+                assertFalse(it!!.hasComposer)
+                assertEquals(1, it.handled)
+                done()
+            }
+        }
+    }
+
     /** Callbacks */
 
     open class Foo {
@@ -227,9 +252,20 @@ class HandlerTest {
         }
 
         // Provides
+
         @Provides
         fun provideBarImplicitly() : Bar  {
             return Bar().apply { handled = 1 }
+        }
+    }
+
+    class SimpleAsyncHandler : Handler() {
+        // Providers
+
+        @Provides
+        fun provideBarImplicitly() : Promise<Bar>
+        {
+            return Promise.resolve(Bar().apply { handled = 1 });
         }
     }
 

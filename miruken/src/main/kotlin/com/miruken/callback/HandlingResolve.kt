@@ -27,7 +27,7 @@ fun Handling.resolve(key: Any) : Any? {
 fun Handling.resolveAsync(key: Any) : Promise<Any> {
     val inquiry = key as? Inquiry ?: Inquiry(key)
     inquiry.wantsAsync = true
-    return handle(inquiry) success  {
+    return handle(inquiry) success {
         inquiry.result as? Promise<Any>
     } ?: Promise.Empty
 }

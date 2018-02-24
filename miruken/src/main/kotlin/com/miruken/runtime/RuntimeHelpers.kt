@@ -5,10 +5,7 @@ import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.isSubtypeOf
-import kotlin.reflect.full.isSuperclassOf
-import kotlin.reflect.full.withNullability
+import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
 
@@ -130,6 +127,7 @@ inline fun <reified T: Annotation> KAnnotatedElement
         .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
         .firstOrNull()?.second?.firstOrNull()
 
+val ANY_STAR        = Any::class.starProjectedType
 val ANY_TYPE        = getKType<Any>().withNullability(true)
 val COLLECTION_TYPE = getKType<Collection<Any>>().withNullability(true)
 val PROMISE_TYPE    = getKType<Promise<Any>>().withNullability(true)

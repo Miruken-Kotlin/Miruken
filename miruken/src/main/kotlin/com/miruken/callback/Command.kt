@@ -3,10 +3,10 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
+import com.miruken.runtime.ANY_STAR
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
-import kotlin.reflect.full.starProjectedType
 
 open class Command(
         val callback: Any,
@@ -16,8 +16,7 @@ open class Command(
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
-    private var _resultType = resultType
-            ?: Any::class.starProjectedType
+    private var _resultType = resultType ?: ANY_STAR
     private val _results = mutableListOf<Any>()
     private var _policy: CallbackPolicy? = null
 
@@ -43,14 +42,13 @@ open class Command(
                 resultType = Promise::class.createType(listOf(
                         KTypeProjection.invariant(resultType)))
             }
-            resultType
+            return resultType
         }
 
     override var result: Any?
-        get() = {
-            if (_result != null) {
-                _result
-            } else if (!many) {
+        get() {
+            if (_result != null) return _result
+            if (!many) {
                 if (_results.isNotEmpty()) {
                     _result = _results.first()
                 }
@@ -63,7 +61,7 @@ open class Command(
             if (wantsAsync && !isAsync) {
                 _result = Promise.resolve(_result ?: Unit)
             }
-            _result
+            return _result
         }
         set(value) {
             _result = value

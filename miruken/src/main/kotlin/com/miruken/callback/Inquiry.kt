@@ -3,11 +3,11 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
+import com.miruken.runtime.ANY_STAR
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
-import kotlin.reflect.KTypeProjection.Companion.STAR
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 
@@ -19,9 +19,8 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     private val _keyType: KType by lazy {
         when (key) {
             is KType -> key
-            is KClass<*> -> key.createType(
-                    key.typeParameters.map { STAR })
-            else -> Any::class.starProjectedType
+            is KClass<*> -> key.starProjectedType
+            else -> ANY_STAR
         }
     }
     override var wantsAsync: Boolean = false
@@ -44,14 +43,13 @@ open class Inquiry(val key: Any, val many: Boolean = false)
                 resultType = Promise::class.createType(listOf(
                         KTypeProjection.invariant(resultType)))
             }
-            resultType
+            return resultType
         }
 
     override var result: Any?
-        get() = {
-            if (_result != null) {
-                _result
-            } else if (!many) {
+        get() {
+            if (_result != null) return _result
+            if (!many) {
                 if (_resolutions.isNotEmpty()) {
                     val result = _resolutions.first()
                     _result = if (result is Promise<*>) {
@@ -72,7 +70,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             if (wantsAsync && !isAsync) {
                 _result = Promise.resolve(_result ?: Unit)
             }
-            _result
+            return _result
         }
         set(value) {
             _result = value
@@ -114,7 +112,6 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             if (many) promise = promise.catch {}
             res = promise.then {
                 it?.takeIf { isSatisfied(it, greedy, composer) }
-                        ?.let { result }
             }
         } else if (!isSatisfied(res, greedy, composer))
             return false
@@ -135,12 +132,13 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer: Handling
     ): HandleResult {
         val result = if (implied(handler, greedy, composer))
-            HandleResult.HANDLED else HandleResult.HANDLED
+            HandleResult.HANDLED else HandleResult.NOT_HANDLED
         if (result.handled && !greedy) return result
 
         val count = _resolutions.size
         return result then {
-            policy!!.dispatch(handler, this, greedy, composer)
+            policy!!.dispatch(handler, this@Inquiry, greedy, composer)
+            { r, strict -> resolve(r, strict, greedy, composer) }
         } then {
             if (_resolutions.size > count) HandleResult.HANDLED
             else HandleResult.NOT_HANDLED
@@ -151,10 +149,8 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             item:      Any,
             greedy:    Boolean,
             composer:  Handling
-    ): Boolean {
-        return isAssignableTo(key, item) &&
+    ) = isAssignableTo(key, item) &&
                 resolve(item, false, greedy, composer)
-    }
 
     private fun flatten(list: List<Any?>): List<Any?> {
         return list.flatMap {
