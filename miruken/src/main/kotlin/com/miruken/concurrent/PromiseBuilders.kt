@@ -6,10 +6,10 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.schedule
 
-fun Promise.Companion.all(vararg input:Any) : Promise<List<Any>> =
+fun Promise.Companion.all(vararg input:Any) : Promise<List<Any?>> =
         all(input.asList())
 
-fun Promise.Companion.all(input: Collection<Any>) : Promise<List<Any>> {
+fun Promise.Companion.all(input: Collection<Any?>) : Promise<List<Any?>> {
     if (input.isEmpty())
         return Promise.resolve(emptyList())
 
@@ -23,8 +23,10 @@ fun Promise.Companion.all(input: Collection<Any>) : Promise<List<Any>> {
                 fulfilled[index] = it
                 @Suppress("UNCHECKED_CAST")
                 if (pending.incrementAndGet() == promises.size)
-                    resolveChild(fulfilled.toList() as List<Any>)
-            }, rejectChild)
+                    resolveChild(fulfilled.toList())
+            }).catch {
+                rejectChild(it)
+            }
         }
     }
 }

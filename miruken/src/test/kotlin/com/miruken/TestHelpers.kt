@@ -18,6 +18,7 @@ fun <T> T.testAsync(
         block { done.countDown() }
     } catch (t: Throwable) {
         done.countDown()
+        throw t
     }
     return done.await(timeoutMs, TimeUnit.MILLISECONDS)
 }

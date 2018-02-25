@@ -15,6 +15,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
+    private val _promises     = mutableListOf<Promise<*>>()
     private val _resolutions  = mutableListOf<Any>()
     private val _keyType: KType by lazy {
         when (key) {
@@ -49,26 +50,18 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     override var result: Any?
         get() {
             if (_result != null) return _result
-            if (!many) {
-                if (_resolutions.isNotEmpty()) {
-                    val result = _resolutions.first()
-                    _result = if (result is Promise<*>) {
-                        result.then {
-                            if (it is Collection<*>) {
-                                it.firstOrNull()
-                            } else { it }
-                        }
-                    } else { result }
+            _result = if (isAsync) {
+                val resolutions = _resolutions
+                Promise.all(_promises) then {
+                    val flat = flatten(listOf(resolutions, it))
+                    if (many) flat else flat.firstOrNull()
                 }
-            } else if (isAsync) {
-                _result = Promise.all(_resolutions
-                        .map { Promise.resolve(it) })
-                        .then(::flatten)
             } else {
-                _result = flatten(_resolutions)
+                val flat = flatten(_resolutions)
+                if (many) flat else flat.firstOrNull()
             }
-            if (wantsAsync && !isAsync) {
-                _result = Promise.resolve(_result ?: Unit)
+            if (wantsAsync && _result !is Promise<*>) {
+                _result = Promise.resolve(_result)
             }
             return _result
         }
@@ -87,7 +80,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer:   Handling
     ): Boolean {
         val resolved = when {
-            strict && resolution is Collection<*> ->
+            !strict && resolution is Collection<*> ->
                 resolution.filterNotNull().fold(false, { s, res ->
                     include(res, greedy, composer) || s
                 })
@@ -102,28 +95,23 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             greedy:     Boolean,
             composer:   Handling
     ): Boolean {
-        if ((!many && _resolutions.isNotEmpty()))
-            return false
-
-        var res = resolution
-        var promise = res as? Promise<*>
-        if (promise != null) {
+        if (resolution is Promise<*>) {
             isAsync = true
-            if (many) promise = promise.catch {}
-            res = promise.then {
+            _promises.add(resolution.then {
                 it?.takeIf { isSatisfied(it, greedy, composer) }
-            }
-        } else if (!isSatisfied(res, greedy, composer))
+            })
+        } else if (!isSatisfied(resolution, greedy, composer)) {
             return false
-
-        _resolutions.add(res)
+        } else {
+            _resolutions.add(resolution)
+        }
         return true
     }
 
     protected open fun isSatisfied(
             resolution: Any,
-            greedy: Boolean,
-            composer: Handling
+            greedy:     Boolean,
+            composer:   Handling
     ): Boolean = true
 
     override fun dispatch(
@@ -135,13 +123,13 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             HandleResult.HANDLED else HandleResult.NOT_HANDLED
         if (result.handled && !greedy) return result
 
-        val count = _resolutions.size
+        val count = _resolutions.size + _promises.size
         return result then {
             policy!!.dispatch(handler, this@Inquiry, greedy, composer)
             { r, strict -> resolve(r, strict, greedy, composer) }
         } then {
-            if (_resolutions.size > count) HandleResult.HANDLED
-            else HandleResult.NOT_HANDLED
+            if (_resolutions.size + _promises.size > count)
+                HandleResult.HANDLED else HandleResult.NOT_HANDLED
         }
     }
 
@@ -152,13 +140,13 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     ) = isAssignableTo(key, item) &&
                 resolve(item, false, greedy, composer)
 
-    private fun flatten(list: List<Any?>): List<Any?> {
+    private fun flatten(list: List<*>): List<*> {
         return list.flatMap {
             when (it) {
                 is Iterable<Any?> -> it
                 else -> listOf(it)
             }
-        }.distinct()
+        }.filterNotNull().distinct()
     }
 }
 

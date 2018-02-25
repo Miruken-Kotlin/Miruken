@@ -305,7 +305,7 @@ class HandlerTest {
         assertEquals("providesGenericBazArity", baz.tag)
     }
 
-    @Test fun `Provides all callbacks`() {
+    @Test fun `Provides many callbacks`() {
         val handler = SimpleHandler()
         val bars    = handler.resolveAll<Bar>()
         assertEquals(2, bars.size)
@@ -424,6 +424,45 @@ class HandlerTest {
         assertSame(controller, result)
     }
 
+    @Test fun `Provides all callbacks`() {
+        val simple  = SimpleHandler()
+        val special = SpecialHandler()
+        val handler = simple + special
+        val all     = handler.resolveAll<Any>()
+        assertEquals(8, all.size)
+        assertTrue(all.contains(simple))
+        assertTrue(all.contains(special))
+    }
+
+    @Test fun `Broadcasts callbacks`() {
+        val foo   = Foo()
+        val group = SimpleHandler() + SimpleHandler() + SimpleHandler()
+        assertEquals(HandleResult.HANDLED, group.broadcast.handle(foo))
+        assertEquals(3, foo.handled)
+    }
+
+    @Test fun `Can override providers`() {
+        val handler = Handler()
+        val foo     = handler.provide(Foo()).resolve<Foo>()
+        assertNotNull(foo)
+    }
+
+    @Test fun `Can override providers many`() {
+        val foo1    = Foo()
+        val foo2    = Foo()
+        val handler = Handler()
+        val foos    = handler.provide(listOf(foo1, foo2))
+                .resolveAll<Foo>()
+        assertTrue(foos.containsAll(listOf(foo1, foo2)))
+    }
+
+    @Test fun `Ignores providers that don't match`() {
+        val handler = Handler()
+        val foo     = handler.provide(Bar()).resolve<Foo>()
+        assertNull(foo)
+    }
+
+    
     /** Callbacks */
 
     open class Foo {

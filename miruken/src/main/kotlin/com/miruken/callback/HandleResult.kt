@@ -45,7 +45,8 @@ enum class HandleResult(
     fun otherwise(
             condition: Boolean,
             block:     HandleResult.() -> HandleResult) =
-            if ((handled || stop) && !condition) this else block()
+            if ((handled || stop) && !condition) this
+            else this or block()
 
     infix fun or(other: HandleResult): HandleResult =
             when (handled || other.handled) {
