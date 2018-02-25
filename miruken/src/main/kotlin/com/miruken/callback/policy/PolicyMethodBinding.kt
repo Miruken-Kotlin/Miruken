@@ -1,8 +1,7 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.HandleResult
-import com.miruken.callback.Handling
-import com.miruken.callback.all
+import com.miruken.callback.*
+import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
 class PolicyMethodBinding(
@@ -66,7 +65,7 @@ class PolicyMethodBinding(
                     argumentClass.isInstance(this@PolicyMethodBinding) ->
                         resolved[i] = this@PolicyMethodBinding
                     else -> {
-                        val resolver = argument.resolver
+                        val resolver = getResolver(argument.useResolver, composer)
                         val optional = argument.flags has TypeFlags.OPTIONAL
                         add({
                             val arg = resolver.resolve(argument, it, composer)
@@ -79,5 +78,18 @@ class PolicyMethodBinding(
                 }
             }
         } success { resolved }
+    }
+
+    private fun getResolver(
+            resolverClass: KClass<out ArgumentResolving>?,
+            composer:      Handling
+    ) : ArgumentResolving {
+        return resolverClass?.let {
+            composer.resolve(it) as? ArgumentResolving
+        } ?: DefaultResolver
+    }
+
+    companion object {
+        object DefaultResolver : ArgumentResolver()
     }
 }

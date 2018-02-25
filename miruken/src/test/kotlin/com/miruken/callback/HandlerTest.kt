@@ -462,7 +462,7 @@ class HandlerTest {
         assertNull(foo)
     }
 
-    
+
     /** Callbacks */
 
     open class Foo {
