@@ -1,5 +1,6 @@
 package com.miruken
 
+import org.junit.rules.TestName
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KFunction
@@ -27,6 +28,15 @@ fun <T> T.assertAsync(
 ) {
     assertTrue(testAsync(timeoutMs, block),
             "Test timed out after $timeoutMs milliseconds")
+}
+
+fun <T> T.assertAsync(
+        testName: TestName,
+        timeoutMs: Long = DEFAULT_TIMEOUT,
+        block: T.(()->Unit) -> Unit
+) {
+    assertTrue(testAsync(timeoutMs, block),
+            "Test '${testName.methodName}' timed out after $timeoutMs milliseconds")
 }
 
 inline fun <reified T: Any> getMethod(name:String): KFunction<*>? =

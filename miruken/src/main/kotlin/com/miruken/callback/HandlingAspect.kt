@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.unwrap
 import com.miruken.runtime.PROMISE_TYPE
 import kotlin.reflect.full.isSubtypeOf
 
@@ -37,7 +38,7 @@ fun Handling.aspect(
                     } else {
                         Promise.reject(RejectedException(callback))
                     }
-                }
+                }.unwrap()
                 return@filter HandleResult.HANDLED
             }
             if (state == false) {

@@ -7,10 +7,16 @@ import com.miruken.callback.policy.PolicyMethodBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.getKType
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestName
+import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import kotlin.test.*
 
 class HandlerTest {
+    @Rule @JvmField val testName = TestName()
+
     @Test fun `Indicates not handled`() {
         val handler = SimpleHandler()
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bee()))
@@ -63,6 +69,13 @@ class HandlerTest {
         assertTrue { foo.hasComposer }
     }
 
+    @Test fun `Handles composed callbacks`() {
+        val foo     = Foo()
+        val handler = SimpleHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(Composition(foo)))
+        assertEquals(1, foo.handled)
+    }
+
     @Test fun `Handles callbacks generically`() {
         val baz     = BazT(22)
         val handler = SimpleHandler()
@@ -108,7 +121,7 @@ class HandlerTest {
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(SuperBar()))
     }
 
-    @Test fun `Rejects handles that do not satisfy policy`() {
+    @Test fun `Rejects @Handles that do not satisfy policy`() {
         try {
             val handler = InvalidHandler()
             handler.handle(Foo())
@@ -156,10 +169,10 @@ class HandlerTest {
 
     @Test fun `Provides callbacks implicitly async`() {
         val handler = SimpleAsyncHandler()
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             handler.resolveAsync<Bar>() then {
-                assertNotNull(it!!)
-                assertFalse(it.hasComposer)
+                assertNotNull(it)
+                assertFalse(it!!.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -168,10 +181,10 @@ class HandlerTest {
 
     @Test fun `Provides callbacks implicitly coerce async`() {
         val handler = SimpleHandler()
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             handler.resolveAsync<Bar>() then {
-                assertNotNull(it!!)
-                assertFalse(it.hasComposer)
+                assertNotNull(it)
+                assertFalse(it!!.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -195,7 +208,7 @@ class HandlerTest {
 
     @Test fun `Provides null if not handled async`() {
         val handler = SimpleAsyncHandler()
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             handler.resolveAsync<Bam>() then {
                 assertNull(it)
                 done()
@@ -205,7 +218,7 @@ class HandlerTest {
 
     @Test fun `Provides null if not handled coerce async`() {
         val handler = SimpleHandler()
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             handler.resolveAsync<Bam>() then {
                 assertNull(it)
                 done()
@@ -233,13 +246,13 @@ class HandlerTest {
 
     @Test fun `Provides many callbacks implicitly async`() {
         val handler = SpecialHandler()
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             handler.resolveAsync<Bar>() then {
                 assertNotNull(it)
                 done()
             }
         }
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             handler.resolveAllAsync<Bar>() then {
                 assertEquals(3, it.size)
                 assertTrue(it.map { it.handled to it.hasComposer }
@@ -259,10 +272,156 @@ class HandlerTest {
 
     @Test fun `Provides callbacks explicitly`() {
         val handler = SimpleHandler()
-        var baz     = handler.resolve<Baz>()
+        val baz     = handler.resolve<Baz>()
         assertNotNull(baz!!)
         assertEquals(SuperBaz::class, baz::class)
         assertFalse(baz.hasComposer)
+    }
+
+    @Test fun `Provides many callbacks explicitly`() {
+        val handler = SpecialHandler()
+        val baz     = handler.resolve<Baz>()
+        assertNotNull(baz!!)
+        assertEquals(SuperBaz::class, baz::class)
+        assertFalse(baz.hasComposer)
+        val bazs    = handler.resolveAll<Baz>()
+        assertEquals(2, bazs.size)
+        assertTrue(bazs.map { it::class to it.hasComposer }
+                .containsAll(listOf(SuperBaz::class to false,
+                        Baz::class to false)))
+    }
+
+    @Test fun `Provides callbacks generically`() {
+        val handler = SimpleHandler()
+        val baz     = handler.resolve<BazT<Int>>()
+        assertNotNull(baz!!)
+        assertEquals("providesGenericBaz", baz.tag)
+    }
+
+    @Test fun `Provides callbacks generically using arity`() {
+        val handler = SimpleHandler()
+        val baz     = handler.resolve<BazTR<Int, String>>()
+        assertNotNull(baz!!)
+        assertEquals("providesGenericBazArity", baz.tag)
+    }
+
+    @Test fun `Provides all callbacks`() {
+        val handler = SimpleHandler()
+        val bars    = handler.resolveAll<Bar>()
+        assertEquals(2, bars.size)
+    }
+
+    @Test fun `Provides empty list if no matches`() {
+        val handler = Handler()
+        val bars    = handler.resolveAll<Bar>()
+        assertEquals(0, bars.size)
+    }
+
+    @Test fun `Provides callbacks by string key`() {
+        val handler = SimpleHandler()
+        val bar     = handler.resolve("Bar")
+        assertNotNull(bar)
+    }
+
+    @Test fun `Provides callbacks using constraints`() {
+        val handler = SpecialHandler()
+        assertNotNull(handler.resolve<Foo>())
+        assertNotNull(handler.resolve<SuperFoo>())
+    }
+
+    @Test fun `Rejects @Provides that do not satisfy policy`() {
+        try {
+            val handler = InvalidProvider()
+            handler.resolve<Foo>()
+        } catch (e: PolicyRejectedException) {
+            assertSame(ProvidesPolicy, e.policy)
+            assertEquals("add", e.culprit.name)
+        }
+    }
+
+    @Test fun `Filters async provides`() {
+        val handler = SimpleHandler()
+        assertAsync(testName) { done ->
+            handler.aspect({ _, _ -> true })
+                    .resolveAsync<Bar>() then {
+                assertNotNull(it)
+                assertFalse(it!!.hasComposer)
+                assertEquals(1, it.handled)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Filters provides async`() {
+        val handler = SimpleHandler()
+        val bar     = handler.aspect({ _, _ -> Promise.TRUE })
+                .resolve<Bar>()
+        assertNotNull(bar)
+        assertFalse(bar!!.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Filters async provides async`() {
+        val handler = SimpleHandler()
+        assertAsync(testName) { done ->
+            handler.aspect({ _, _ -> Promise.TRUE })
+                    .resolveAsync<Bar>() then {
+                assertNotNull(it)
+                assertFalse(it!!.hasComposer)
+                assertEquals(1, it.handled)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Cancels provides async`() {
+        val handler = SimpleHandler()
+        assertFailsWith(RejectedException::class) {
+            handler.aspect({ _, _ -> Promise.FALSE })
+                    .resolve<Bar>()
+        }
+    }
+
+    @Test fun `Cancels async provides`() {
+        val handler = SimpleHandler()
+        assertFailsWith(RejectedException::class) {
+            handler.aspect({ _, _ -> false })
+                    .resolveAsync<Bar>().get()
+        }
+    }
+
+    @Test fun `Cancels async provides async`() {
+        val handler = SimpleHandler()
+        assertFailsWith(RejectedException::class) {
+            handler.aspect({ _, _ -> Promise.FALSE })
+                    .resolveAsync<Bar>().get()
+        }
+    }
+
+    @Test fun `Provides self implicitly`() {
+        val handler = SimpleHandler()
+        val result  = handler.resolve<SimpleHandler>()
+        assertSame(handler, result)
+    }
+
+    @Test fun `Provides self decorated`() {
+        val handler = SimpleHandler()
+        val result  = handler.broadcast.resolve<SimpleHandler>()
+        assertSame(handler, result)
+    }
+
+    @Test fun `Provides adapted self implicitly`() {
+        val controller = Controller()
+        val handler    = HandlerAdapter(controller)
+        val result     = handler.resolve<Controller>()
+        assertSame(controller, result)
+    }
+
+    @Test fun `Provides adapted self decorated`() {
+        val controller = Controller()
+        val handler    = HandlerAdapter(controller)
+        val result     = handler.broadcast.resolve<Controller>()
+        assertSame(controller, result)
     }
 
     /** Callbacks */
@@ -381,12 +540,12 @@ class HandlerTest {
 
         @Provides
         fun <T> provideBazGenerically() : BazT<T> {
-            return BazT(tag = "provideBazGenerically")
+            return BazT(tag = "providesGenericBaz")
         }
 
         @Provides
-        fun <T,R> provideBazGenericallyWithArity() : BazTR<T,R> {
-            return BazTR(tag = "provideBazGenerically")
+        fun <T,R> provideGenericBazWithArity() : BazTR<T,R> {
+            return BazTR(tag = "providesGenericBazArity")
         }
 
         @Provides
@@ -438,13 +597,13 @@ class HandlerTest {
                 Promise.resolve<Baz?>(null)
 
         @Provides
-        fun <T> provideBazGenerically() : Promise<BazT<T>> {
-            return Promise.resolve(BazT(tag = "provideBazGenerically"))
+        fun <T> provideGenericBaz() : Promise<BazT<T>> {
+            return Promise.resolve(BazT(tag = "providesGenericBaz"))
         }
 
         @Provides
-        fun <T,R> provideBazGenericallyWithArity() : Promise<BazTR<T,R>> {
-            return Promise.resolve(BazTR(tag = "provideBazGenerically"))
+        fun <T,R> provideGenericBazWithArity() : Promise<BazTR<T,R>> {
+            return Promise.resolve(BazTR(tag = "providesGenericBazArity"))
         }
 
         @Provides
@@ -491,9 +650,13 @@ class HandlerTest {
         }
 
         @Provides
-        inline fun <reified T: Foo> providesNewFoo(): T
+        fun <T: Foo> providesNewFoo(inquiry: Inquiry): T?
         {
-            return T::class.java.newInstance()
+            @Suppress("UNCHECKED_CAST")
+            return ((inquiry.key as? KType)
+                    ?.classifier as? KClass<*>)?.let {
+                it.java.newInstance() as T
+            }
         }
     }
 
@@ -555,6 +718,11 @@ class HandlerTest {
     class InvalidHandler : Handler() {
         @Handles
         fun reset() = 22
+    }
+
+    class InvalidProvider : Handler() {
+        @Provides
+        fun add(op1: Int, op2: Int){}
     }
 
     class Controller {

@@ -8,12 +8,12 @@ fun Handling.getSemantics(): CallbackSemantics? {
 fun Handling.semantics(options: CallbackOptions) =
         CallbackSemanticsHandler(this, options)
 
-fun Handling.duck() = semantics(CallbackOptions.DUCK)
+val Handling.duck get() = semantics(CallbackOptions.DUCK)
 
-fun Handling.strict() = semantics(CallbackOptions.STRICT)
+val Handling.strict get() = semantics(CallbackOptions.STRICT)
 
-fun Handling.broadcast() = semantics(CallbackOptions.BROADCAST)
+val Handling.broadcast get() = semantics(CallbackOptions.BROADCAST)
 
-fun Handling.bestEffort() = semantics(CallbackOptions.BEST_EFFORT)
+val Handling.bestEffort get() = semantics(CallbackOptions.BEST_EFFORT)
 
-fun Handling.notify() = semantics(CallbackOptions.NOTIFY)
+val Handling.notify get() = semantics(CallbackOptions.NOTIFY)

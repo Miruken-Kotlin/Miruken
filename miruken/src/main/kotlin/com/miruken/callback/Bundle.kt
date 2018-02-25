@@ -70,6 +70,9 @@ class Bundle(private val all: Boolean = true) :
         return this
     }
 
+    infix operator fun plus(action: BundleActionBlock) =
+            add(action)
+
     override fun getResolveCallback(): Any {
         return if (_resolving) this
         else Bundle(all).also {

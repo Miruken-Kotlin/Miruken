@@ -4,6 +4,8 @@ import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.getMethod
 import com.miruken.runtime.getKType
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.withNullability
 import kotlin.test.*
@@ -98,7 +100,9 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue(argument.parameterType.isSubtypeOf(getKType<Foo>()))
-        assertEquals(getKType<Foo>(), argument.logicalType)
+        val classifier = argument.logicalType.classifier as? KTypeParameter
+        assertNotNull(classifier!!)
+        assertTrue(classifier.upperBounds.contains(getKType<Foo>()))
         assertFalse(argument.flags.has(TypeFlags.COLLECTION))
         assertFalse(argument.flags.has(TypeFlags.LAZY))
         assertFalse(argument.flags.has(TypeFlags.PROMISE))
@@ -112,7 +116,9 @@ class ArgumentTest {
         val argument = Argument(callback)
         assertTrue(argument.parameterType.withNullability(false)
                 .isSubtypeOf(getKType<Foo>()))
-        assertEquals(getKType<Foo>(), argument.logicalType)
+        val classifier = argument.logicalType.classifier as? KTypeParameter
+        assertNotNull(classifier!!)
+        assertTrue(classifier.upperBounds.contains(getKType<Foo>()))
         assertFalse(argument.flags.has(TypeFlags.COLLECTION))
         assertFalse(argument.flags.has(TypeFlags.LAZY))
         assertFalse(argument.flags.has(TypeFlags.PROMISE))

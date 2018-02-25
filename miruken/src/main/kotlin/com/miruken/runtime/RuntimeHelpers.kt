@@ -17,7 +17,9 @@ fun isAssignableTo(leftSide: Any, rightSide: Any?): Boolean {
                 leftSide == rightSide -> true
                 rightSide.isOpenGenericDefinition ->
                         leftSide.arguments.isNotEmpty() &&
-                                rightSide.isSubtypeOf(leftSide)
+                                leftSide.classifier == rightSide.classifier
+                rightSide.classifier is KTypeParameter ->
+                    (rightSide.classifier as KTypeParameter).satisfies(leftSide)
                 else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
@@ -99,6 +101,10 @@ val KType.isUnit get() = classifier == Unit::class
 
 val KType.isNothing get() = classifier == Nothing::class
 
+val KType.componentType: KType?
+    get() = if (isSubtypeOf(COLLECTION_TYPE))
+        arguments.single().type else this
+
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||
                 arguments.any { it.type?.isOpenGeneric == true }
@@ -108,9 +114,8 @@ val KType.isOpenGenericDefinition: Boolean
         (it.type?.classifier as? KTypeParameter)
             ?.upperBounds?.all { it == ANY_TYPE } == true }
 
-val KType.componentType: KType?
-    get() = if (isSubtypeOf(COLLECTION_TYPE))
-        arguments.single().type else this
+fun KTypeParameter.satisfies(proposedType: KType) =
+        upperBounds.any { proposedType.isSubtypeOf(it) }
 
 inline fun <reified T: Annotation> KAnnotatedElement
         .getTaggedAnnotations() = annotations.mapNotNull {

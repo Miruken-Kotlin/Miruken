@@ -9,11 +9,11 @@ enum class HandleResult(
     NOT_HANDLED(false, false),
     NOT_HANDLED_AND_STOP(false, true);
 
-    inline infix fun then(
+    infix fun then(
             block: HandleResult.() -> HandleResult) =
             if (stop) this else this or block()
 
-    inline fun then(
+    fun then(
             condition: Boolean,
             block:     HandleResult.() -> HandleResult) =
             if (stop || !condition) this else this or block()
@@ -38,11 +38,11 @@ enum class HandleResult(
                 }
             }
 
-    inline infix fun otherwise(
+    infix fun otherwise(
             block: HandleResult.() -> HandleResult) =
             if (handled || stop) this else block()
 
-    inline fun otherwise(
+    fun otherwise(
             condition: Boolean,
             block:     HandleResult.() -> HandleResult) =
             if ((handled || stop) && !condition) this else block()

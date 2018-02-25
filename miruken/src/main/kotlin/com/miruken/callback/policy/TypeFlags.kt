@@ -40,10 +40,12 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             logicalType = extractType(type, Collection::class)?.let {
                 flags += TypeFlags.COLLECTION; it } ?: logicalType
 
+            /*
             logicalType = logicalType.takeIf { it.arguments.isEmpty() }
                     ?.let { it.classifier as? KTypeParameter }
                     ?.upperBounds?.firstOrNull()?.withNullability(false)
                     ?: logicalType
+*/
 
             (logicalType.classifier as? KClass<*>)?.also {
                 if (it.javaPrimitiveType != null || it == String::class) {

@@ -5,32 +5,45 @@ import com.miruken.graph.TraversingAxis
 fun HandlingAxis.axis(axis: TraversingAxis) : HandlingAxis =
         TraversingHandler(this, axis)
 
-fun HandlingAxis.publish() = selfOrDescendant().notify()
+val HandlingAxis.publish get() = selfOrDescendant.notify
 
-fun HandlingAxis.self() = TraversingHandler(this, TraversingAxis.SELF)
+val HandlingAxis.self get() =
+    TraversingHandler(this, TraversingAxis.SELF)
 
-fun HandlingAxis.root() = TraversingHandler(this, TraversingAxis.ROOT)
+val HandlingAxis.root get() =
+    TraversingHandler(this, TraversingAxis.ROOT)
 
-fun HandlingAxis.child() = TraversingHandler(this, TraversingAxis.CHILD)
+val HandlingAxis.child get() =
+    TraversingHandler(this, TraversingAxis.CHILD)
 
-fun HandlingAxis.sibling() = TraversingHandler(this, TraversingAxis.SIBLING)
+val HandlingAxis.sibling get() =
+    TraversingHandler(this, TraversingAxis.SIBLING)
 
-fun HandlingAxis.ancestor() = TraversingHandler(this, TraversingAxis.ANCESTOR)
+val HandlingAxis.ancestor get() =
+    TraversingHandler(this, TraversingAxis.ANCESTOR)
 
-fun HandlingAxis.descendant() = TraversingHandler(this, TraversingAxis.DESCENDANT)
+val HandlingAxis.descendant get() =
+    TraversingHandler(this, TraversingAxis.DESCENDANT)
 
-fun HandlingAxis.descendantReverse() = TraversingHandler(this, TraversingAxis.DESCENDANT_REVERSE)
+val HandlingAxis.descendantReverse get() =
+    TraversingHandler(this, TraversingAxis.DESCENDANT_REVERSE)
 
-fun HandlingAxis.selfOrChild() = TraversingHandler(this, TraversingAxis.SELF_CHILD)
+val HandlingAxis.selfOrChild get() =
+    TraversingHandler(this, TraversingAxis.SELF_CHILD)
 
-fun HandlingAxis.selfOrSibling() = TraversingHandler(this, TraversingAxis.SELF_SIBLING)
+val HandlingAxis.selfOrSibling get() =
+    TraversingHandler(this, TraversingAxis.SELF_SIBLING)
 
-fun HandlingAxis.selfOrAncestor() = TraversingHandler(this, TraversingAxis.SELF_ANCESTOR)
+val HandlingAxis.selfOrAncestor get() =
+    TraversingHandler(this, TraversingAxis.SELF_ANCESTOR)
 
-fun HandlingAxis.selfOrDescendant() = TraversingHandler(this, TraversingAxis.SELF_DESCENDANT)
+val HandlingAxis.selfOrDescendant get() =
+    TraversingHandler(this, TraversingAxis.SELF_DESCENDANT)
 
-fun HandlingAxis.selfOrDescendantReverse() = TraversingHandler(this, TraversingAxis.SELF_DESCENDANT_REVERSE)
+val HandlingAxis.selfOrDescendantReverse get() =
+    TraversingHandler(this, TraversingAxis.SELF_DESCENDANT_REVERSE)
 
-fun HandlingAxis.selfSiblingOrAncestor() = TraversingHandler(this, TraversingAxis.SELF_SIBLING_ANCESTOR)
+val HandlingAxis.selfSiblingOrAncestor get() =
+    TraversingHandler(this, TraversingAxis.SELF_SIBLING_ANCESTOR)
 
 

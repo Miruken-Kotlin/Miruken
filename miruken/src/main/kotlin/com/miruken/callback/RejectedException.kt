@@ -1,4 +1,4 @@
 package com.miruken.callback
 
 class RejectedException(val callback: Any)
-    : Exception("Callback has been rejected")
+    : Exception("Callback '$callback' has been rejected")
