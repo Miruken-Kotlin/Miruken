@@ -29,8 +29,7 @@ open class ContravariantPolicy(
             key:    Any,
             output: Collection<Any>
     ): Collection<Any> =
-            output.filter { key != it && isAssignableTo(it, key)
-    }
+            output.filter { key != it && isAssignableTo(it, key) }
 
     override fun acceptResult(result: Any?, binding: MethodBinding) =
             when (result) {

@@ -1,6 +1,5 @@
 package com.miruken.callback.policy
 
-import com.miruken.runtime.filterIsAssignableTo
 import com.miruken.runtime.isAssignableTo
 
 open class CovariantPolicy(
@@ -23,7 +22,9 @@ open class CovariantPolicy(
             key:    Any,
             output: Collection<Any>
     ): Collection<Any> =
-            output.filterIsAssignableTo(key)
+         output.filter {
+             key != it && isAssignableTo(key, it)
+         }
 
     override fun compare(o1: Any?, o2: Any?): Int {
         return when {

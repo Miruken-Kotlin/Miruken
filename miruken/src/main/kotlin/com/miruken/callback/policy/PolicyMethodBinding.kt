@@ -63,8 +63,8 @@ class PolicyMethodBinding(
                 when {
                     argumentClass == Handling::class ->
                         resolved[i] = composer
-                    argumentClass.isInstance(this) ->
-                        resolved[i] = this
+                    argumentClass.isInstance(this@PolicyMethodBinding) ->
+                        resolved[i] = this@PolicyMethodBinding
                     else -> {
                         val resolver = argument.resolver
                         val optional = argument.flags has TypeFlags.OPTIONAL

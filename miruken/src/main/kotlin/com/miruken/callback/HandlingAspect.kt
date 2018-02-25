@@ -33,7 +33,7 @@ fun Handling.aspect(
                 cb?.result = state.then {
                     if (it != false) {
                         aspectProceed(callback, composer, proceed, after, state)
-                        cb?.result?.let { Promise.resolve(it) } ?: Promise.Empty
+                        cb?.result?.let { Promise.resolve(it) } ?: Promise.EMPTY
                     } else {
                         Promise.reject(RejectedException(callback))
                     }

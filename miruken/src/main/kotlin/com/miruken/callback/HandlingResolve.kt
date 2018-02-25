@@ -29,7 +29,7 @@ fun Handling.resolveAsync(key: Any) : Promise<Any?> {
     inquiry.wantsAsync = true
     return handle(inquiry) success {
         inquiry.result as? Promise<Any>
-    } ?: Promise.Empty
+    } ?: Promise.EMPTY
 }
 
 inline fun <reified T: Any> Handling.resolve() : T? =
@@ -62,10 +62,10 @@ fun Handling.resolveAllAsync(key: Any) : Promise<List<Any>> {
                     (it as? List<Any>)?.coerceList(key)
                     ?: emptyList()
                 }
-                else -> Promise.EmptyList
+                else -> Promise.EMPTY_LIST
             }
         }
-    } ?: Promise.EmptyList
+    } ?: Promise.EMPTY_LIST
 }
 
 inline fun <reified T: Any> Handling.resolveAll() : List<T> =

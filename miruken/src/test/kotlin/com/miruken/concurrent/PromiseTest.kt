@@ -98,32 +98,32 @@ class PromiseTest {
 
     @Test fun `Returns canonical true promise`() {
         var called = false
-        Promise.True then {
+        Promise.TRUE then {
             assertTrue(it)
             called = true
         }
         assertTrue(called)
-        assertSame(Promise.True, Promise.True)
+        assertSame(Promise.TRUE, Promise.TRUE)
     }
 
     @Test fun `Returns canonical false promise`() {
         var called = false
-        Promise.False then {
+        Promise.FALSE then {
             assertFalse(it)
             called = true
         }
         assertTrue(called)
-        assertSame(Promise.False, Promise.False)
+        assertSame(Promise.FALSE, Promise.FALSE)
     }
 
     @Test fun `Returns canonical empty promise`() {
         var called = false
-        Promise.Empty then {
+        Promise.EMPTY then {
             assertNull(it)
             called = true
         }
         assertTrue(called)
-        assertSame(Promise.Empty, Promise.Empty)
+        assertSame(Promise.EMPTY, Promise.EMPTY)
     }
 
     @Test fun `Fulfills promise only once`() {

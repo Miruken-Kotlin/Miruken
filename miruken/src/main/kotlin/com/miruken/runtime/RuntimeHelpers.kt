@@ -13,22 +13,28 @@ fun isAssignableTo(leftSide: Any, rightSide: Any?): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
             null -> false
-            is KType -> {
-                leftSide == rightSide ||
-                rightSide.isSubtypeOf(leftSide)
+            is KType -> when {
+                leftSide == rightSide -> true
+                rightSide.isOpenGenericDefinition ->
+                        leftSide.arguments.isNotEmpty() &&
+                                rightSide.isSubtypeOf(leftSide)
+                else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
                 leftSide.jvmErasure.isSuperclassOf(rightSide) &&
-                        leftSide.isOpenGenericDefinition
+                        (leftSide.arguments.isEmpty() ||
+                        leftSide.isOpenGenericDefinition)
             }
             is Class<*> -> {
                 leftSide.jvmErasure.java.isAssignableFrom(rightSide) &&
-                        leftSide.isOpenGenericDefinition
+                        (leftSide.arguments.isEmpty() ||
+                        leftSide.isOpenGenericDefinition)
             }
             else -> {
                 val rightClass = rightSide::class
                 leftSide.jvmErasure.isSuperclassOf(rightClass) &&
-                        leftSide.isOpenGenericDefinition
+                        (leftSide.arguments.isEmpty() ||
+                        leftSide.isOpenGenericDefinition)
             }
         }
         is KClass<*> -> when (rightSide) {
@@ -77,21 +83,10 @@ fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
     return filterIsAssignableTo(ArrayList(), key)
 }
 
-fun Iterable<*>.filterIsAssignableFrom(key: Any): List<Any> {
-    return filterIsAssignableFrom(ArrayList(), key)
-}
-
 fun Iterable<*>.filterIsAssignableTo(
         destination: ArrayList<Any>, key: Any
 ): MutableList<Any> {
     filter { isAssignableTo(key, it) }.mapTo(destination) { it!! }
-    return destination
-}
-
-fun Iterable<*>.filterIsAssignableFrom(
-        destination: ArrayList<Any>, key: Any
-): MutableList<Any> {
-    filter { isAssignableTo(it!!, key) }.mapTo(destination) { it!! }
     return destination
 }
 
@@ -109,7 +104,7 @@ val KType.isOpenGeneric: Boolean
                 arguments.any { it.type?.isOpenGeneric == true }
 
 val KType.isOpenGenericDefinition: Boolean
-    get() = arguments.all {
+    get() = arguments.isNotEmpty() && arguments.all {
         (it.type?.classifier as? KTypeParameter)
             ?.upperBounds?.all { it == ANY_TYPE } == true }
 

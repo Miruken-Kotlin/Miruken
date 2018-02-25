@@ -34,7 +34,7 @@ class Bundle(private val all: Boolean = true) :
 
     fun complete(): Promise<*>? {
         if (isEmpty) {
-            return if (wantsAsync) Promise.Empty else null
+            return if (wantsAsync) Promise.EMPTY else null
         }
         if (all || _operations.any { it.result.handled }) {
             _operations.forEach {
@@ -45,8 +45,8 @@ class Bundle(private val all: Boolean = true) :
             }
         }
         return if (isAsync) {
-            Promise.all(_promises) then { Promise.Empty }
-        } else { if (wantsAsync) Promise.Empty else null }
+            Promise.all(_promises) then { Promise.EMPTY }
+        } else { if (wantsAsync) Promise.EMPTY else null }
     }
 
     fun add(action: BundleActionBlock,

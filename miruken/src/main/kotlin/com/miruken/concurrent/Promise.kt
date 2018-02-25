@@ -251,8 +251,7 @@ open class Promise<out T>
                     throw TimeoutException()
             }
         }
-        if (_throwable != null)
-            throw _throwable!!
+        if (_throwable != null) throw _throwable!!
         @Suppress("UNCHECKED_CAST")
         return _result as T
     }
@@ -317,10 +316,10 @@ open class Promise<out T>
     }
 
     companion object {
-        val True      = resolve(true)
-        val False     = resolve(false)
-        val Empty     = resolve(null as Any?)
-        val EmptyList = resolve(emptyList<Any>())
+        val TRUE       = resolve(true)
+        val FALSE      = resolve(false)
+        val EMPTY      = resolve(null as Any?)
+        val EMPTY_LIST = resolve(emptyList<Any>())
 
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }
@@ -329,7 +328,7 @@ open class Promise<out T>
         inline fun <reified S: Any?> resolve(result: S): Promise<S> =
                 if (S::class === Any::class && result is Promise<*>) {
                     Promise<Any?> { suc, fail ->
-                        result.then({ suc(it ?: null)}, fail) } as Promise<S>
+                        result.then({ suc(it)}, fail) } as Promise<S>
                 } else {
                     Promise { success, _ -> success(result) }
                 }

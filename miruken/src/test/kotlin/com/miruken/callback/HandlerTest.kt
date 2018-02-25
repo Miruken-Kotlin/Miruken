@@ -3,8 +3,10 @@
 package com.miruken.callback
 
 import com.miruken.assertAsync
+import com.miruken.callback.policy.PolicyMethodBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
+import com.miruken.runtime.getKType
 import org.junit.Test
 import kotlin.test.*
 
@@ -131,17 +133,33 @@ class HandlerTest {
     @Test fun `Provides callbacks implicitly`() {
         val handler = SimpleHandler()
         val bar     = handler.resolve<Bar>()
-        assertNotNull(bar)
-        assertFalse(bar!!.hasComposer)
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides callbacks implicitly using adapter`() {
+        val handler = HandlerAdapter(Controller())
+        val bar     = handler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides callbacks implicitly with composer`() {
+        val handler = SimpleHandler()
+        val boo     = handler.resolve<Boo>()
+        assertNotNull(boo!!)
+        assertEquals(Boo::class, boo::class)
+        assertTrue(boo.hasComposer)
     }
 
     @Test fun `Provides callbacks implicitly async`() {
         val handler = SimpleAsyncHandler()
         assertAsync { done ->
             handler.resolveAsync<Bar>() then {
-                assertNotNull(it)
-                assertFalse(it!!.hasComposer)
+                assertNotNull(it!!)
+                assertFalse(it.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -152,12 +170,21 @@ class HandlerTest {
         val handler = SimpleHandler()
         assertAsync { done ->
             handler.resolveAsync<Bar>() then {
-                assertNotNull(it)
-                assertFalse(it!!.hasComposer)
+                assertNotNull(it!!)
+                assertFalse(it.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
         }
+    }
+
+    @Test fun `Provides callbacks covariantly`() {
+        val handler = SimpleHandler()
+        val bar     = handler.resolve<SuperBar>()
+        assertNotNull(bar!!)
+        assertEquals(SuperBar::class, bar::class)
+        assertTrue(bar.hasComposer)
+        assertEquals(1, bar.handled)
     }
 
     @Test fun `Provides null if not handled`() {
@@ -184,6 +211,58 @@ class HandlerTest {
                 done()
             }
         }
+    }
+
+    @Test fun `Provides callbacks implicitly waiting async`() {
+        val handler = SimpleAsyncHandler()
+        val bar     = handler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides many callbacks implicitly`() {
+        val handler = SpecialHandler()
+        val bar     = handler.resolve<Bar>()
+        assertNotNull(bar)
+        val bars    = handler.resolveAll<Bar>()
+        assertEquals(3, bars.size)
+        assertTrue(bars.map { it.handled to it.hasComposer }
+                .containsAll(listOf(1 to false, 2 to false, 3 to false)))
+    }
+
+    @Test fun `Provides many callbacks implicitly async`() {
+        val handler = SpecialHandler()
+        assertAsync { done ->
+            handler.resolveAsync<Bar>() then {
+                assertNotNull(it)
+                done()
+            }
+        }
+        assertAsync { done ->
+            handler.resolveAllAsync<Bar>() then {
+                assertEquals(3, it.size)
+                assertTrue(it.map { it.handled to it.hasComposer }
+                        .containsAll(listOf(1 to false, 2 to false, 3 to false)))
+                done()
+            }
+        }
+    }
+
+    @Test fun `Provides callbacks greedily`() {
+        val handler = SimpleHandler() + SimpleHandler()
+        var bars    = handler.resolveAll<Bar>()
+        assertEquals(4, bars.size)
+        bars = handler.resolveAll<SuperBar>()
+        assertEquals(2, bars.size)
+    }
+
+    @Test fun `Provides callbacks explicitly`() {
+        val handler = SimpleHandler()
+        var baz     = handler.resolve<Baz>()
+        assertNotNull(baz!!)
+        assertEquals(SuperBaz::class, baz::class)
+        assertFalse(baz.hasComposer)
     }
 
     /** Callbacks */
@@ -215,14 +294,14 @@ class HandlerTest {
     class SuperBaz : Baz()
 
     open class BazT<T>(
-            var stuff: T,
+            var stuff: T?    = null,
             var tag: String? = null
     ) : Baz()
 
     class BazTR<T, R>(
-            stuff: T,
-            var otherStuff: R,
-            tag: String? = null
+            stuff: T?    =       null,
+            var otherStuff: R? = null,
+            tag: String? =       null
     ) : BazT<T>(stuff, tag)
 
     class Bee
@@ -283,6 +362,47 @@ class HandlerTest {
         fun provideBarImplicitly() : Bar  {
             return Bar().apply { handled = 1 }
         }
+
+        @Provides
+        fun provideBooImplicitly(composer: Handling) : Boo  {
+            return Boo().apply { hasComposer = true }
+        }
+
+        @Provides
+        fun provideSuperBarImplicitly(composer: Handling) : SuperBar  {
+            return SuperBar().apply {
+                handled     = 1
+                hasComposer = true
+            }
+        }
+
+        @Provides
+        fun notProvideBazImplicitly() : Baz? = null
+
+        @Provides
+        fun <T> provideBazGenerically() : BazT<T> {
+            return BazT(tag = "provideBazGenerically")
+        }
+
+        @Provides
+        fun <T,R> provideBazGenericallyWithArity() : BazTR<T,R> {
+            return BazTR(tag = "provideBazGenerically")
+        }
+
+        @Provides
+        fun provideBazExplicitly(inquiry: Inquiry, composer: Handling) {
+            if (inquiry.key == getKType<Baz>())
+                inquiry.resolve(SuperBaz(), composer)
+        }
+
+        @Provides
+        fun providesByName(inquiry: Inquiry): Any? {
+            return when (inquiry.key) {
+                "Foo" -> Foo()
+                "Bar" -> Bar()
+                else -> Promise.EMPTY
+            }
+        }
     }
 
     class SimpleAsyncHandler : Handler() {
@@ -291,14 +411,120 @@ class HandlerTest {
         @Provides
         fun provideBarImplicitly() : Promise<Bar>
         {
-            return Promise.resolve(Bar().apply { handled = 1 });
+            return Promise.resolve(Bar().apply { handled = 1 })
+        }
+
+
+        @Provides
+        fun provideBooImplicitly(composer: Handling) : Promise<Boo>
+        {
+            return Promise.resolve(Boo().apply {
+                hasComposer = true
+            })
+        }
+
+        @Provides
+        fun provideSuperBarImplicitly() : Promise<SuperBar>
+        {
+            return Promise.resolve(SuperBar().apply {
+                handled     = 1
+                hasComposer = true
+            })
+        }
+
+        @Suppress("RemoveExplicitTypeArguments")
+        @Provides
+        fun notProvideBazImplicitly() : Promise<Baz?> =
+                Promise.resolve<Baz?>(null)
+
+        @Provides
+        fun <T> provideBazGenerically() : Promise<BazT<T>> {
+            return Promise.resolve(BazT(tag = "provideBazGenerically"))
+        }
+
+        @Provides
+        fun <T,R> provideBazGenericallyWithArity() : Promise<BazTR<T,R>> {
+            return Promise.resolve(BazTR(tag = "provideBazGenerically"))
+        }
+
+        @Provides
+        fun provideBazExplicitly(inquiry: Inquiry, composer: Handling) {
+            if (inquiry.key == getKType<Baz>())
+                inquiry.resolve(Promise.resolve(SuperBaz()), composer)
+        }
+
+        @Provides
+        fun providesByName(inquiry: Inquiry): Promise<Any?> {
+            return when (inquiry.key) {
+                "Foo" -> Promise.resolve(Foo())
+                "Bar" -> Promise.resolve(Bar())
+                else -> Promise.EMPTY
+            }
         }
     }
 
     class SpecialHandler : Handler() {
         @Handles
-        fun handleAnything(cb: Any?) {
+        fun handleAnything(cb: Any?) {}
 
+        @Provides
+        fun providesManyBars(): List<Bar> {
+            return listOf(
+                    Bar().apply { handled = 1 },
+                    Bar().apply { handled = 2 })
+        }
+
+        @Provides
+        val providesPropertyBar : Bar
+            get() = Bar().apply { handled = 3 }
+
+        @Provides
+        fun providesBazExplicitly(
+                inquiry:  Inquiry,
+                composer: Handling,
+                binding:  PolicyMethodBinding
+        ) {
+            if (inquiry.key == getKType<Baz>()) {
+                inquiry.resolve(SuperBaz(), composer)
+                inquiry.resolve(Baz(), composer)
+            }
+        }
+
+        @Provides
+        inline fun <reified T: Foo> providesNewFoo(): T
+        {
+            return T::class.java.newInstance()
+        }
+    }
+
+    class SpecialAsyncHandler : Handler() {
+        @Provides
+        fun providesManyBars(): Promise<List<Bar>> {
+            return Promise.resolve(listOf(
+                    Bar().apply { handled = 1 },
+                    Bar().apply { handled = 2 }))
+        }
+
+        @Provides
+        val providesPropertyBar : Promise<Bar>
+            get() = Promise.resolve(Bar().apply { handled = 3 })
+
+        @Provides
+        fun providesBazExplicitly(
+                inquiry:  Inquiry,
+                composer: Handling,
+                binding:  PolicyMethodBinding
+        ) {
+            if (inquiry.key == getKType<Baz>()) {
+                inquiry.resolve(Promise.resolve(SuperBaz()), composer)
+                inquiry.resolve(Promise.resolve(Baz()), composer)
+            }
+        }
+
+        @Provides
+        inline fun <reified T: Foo> providesNewFoo(): T
+        {
+            return T::class.java.newInstance()
         }
     }
 
@@ -333,13 +559,17 @@ class HandlerTest {
 
     class Controller {
         @Handles
-        fun handleFooImplicitly(foo: Foo)
-        {
+        fun handleFooImplicitly(foo: Foo) {
             ++foo.handled
         }
 
         @Handles
         fun notHandleBeeExplicitly(bam: Bam) =
                 HandleResult.NOT_HANDLED_AND_STOP
+
+        @Provides
+        fun provideBarImplicitly() : Bar {
+            return Bar().apply { handled = 1 }
+        }
     }
 }
