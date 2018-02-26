@@ -8,12 +8,12 @@ import kotlin.reflect.full.isSubtypeOf
 typealias AspectBeforeBlock = (Any, Handling) -> Any?
 typealias AspectAfterBlock  = (Any, Handling, Any?) -> Unit
 
-fun Handling.aspect(
+fun Handling.aspectBefore(
         before:    AspectBeforeBlock?,
         reentrant: Boolean = false
 ) : Handling = aspect(before, null, reentrant)
 
-fun Handling.aspect(
+fun Handling.aspectAfter(
         after:     AspectAfterBlock?,
         reentrant: Boolean = false
 ) : Handling = aspect(null, after, reentrant)

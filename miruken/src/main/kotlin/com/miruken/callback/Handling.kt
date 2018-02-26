@@ -1,15 +1,10 @@
 package com.miruken.callback
 
+@FunctionalInterface
 interface Handling {
     fun handle(
             callback: Any,
             greedy:   Boolean = false,
             composer: Handling? = null
     ) : HandleResult
-
-    operator fun plus(other: Handling) =
-            CascadeHandler(this, other)
-
-    operator fun plus(others: Collection<Any>) =
-            CompositeHandler(others.toMutableList().add(0, this))
 }

@@ -13,7 +13,7 @@ class TraversingHandler(
             composer: Handling?
     ): HandleResult {
         return when (callback) {
-            is Composition ->
+            !is Composition ->
                 handler.handle(axis, callback, greedy, composer)
             else -> handler.handle(callback, greedy, composer)
         } otherwise {

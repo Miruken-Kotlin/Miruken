@@ -11,25 +11,18 @@ interface Context :
         CompositeHandling, HandlingAxis,
         Traversing, AutoCloseable {
 
-    val state: ContextState
-
-    val contextEnding: Event<ContextEvent>
-
-    val contextEnded: Event<ContextEvent>
-
+    val state:              ContextState
+    val root:               Context
+    val hasChildren:        Boolean
+    val contextEnding:      Event<ContextEvent>
+    val contextEnded:       Event<ContextEvent>
     val childContextEnding: Event<ContextEvent>
+    val childContextEnded:  Event<ContextEvent>
 
-    val childContextEnded: Event<ContextEvent>
-
-    override val parent: Context?
-
-    val root: Context
-
-    val hisChildren: Boolean
+    override val parent:   Context?
+    override val children: List<Context>
 
     fun createChild(): Context
-
-    override val children: List<Context>
 
     fun store(data: Any)
 

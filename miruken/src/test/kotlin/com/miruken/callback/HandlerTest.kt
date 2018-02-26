@@ -342,7 +342,7 @@ class HandlerTest {
     @Test fun `Filters async provides`() {
         val handler = SimpleHandler()
         assertAsync(testName) { done ->
-            handler.aspect({ _, _ -> true })
+            handler.aspectBefore({ _, _ -> true })
                     .resolveAsync<Bar>() then {
                 assertNotNull(it)
                 assertFalse(it!!.hasComposer)
@@ -354,7 +354,7 @@ class HandlerTest {
 
     @Test fun `Filters provides async`() {
         val handler = SimpleHandler()
-        val bar     = handler.aspect({ _, _ -> Promise.TRUE })
+        val bar     = handler.aspectBefore({ _, _ -> Promise.TRUE })
                 .resolve<Bar>()
         assertNotNull(bar)
         assertFalse(bar!!.hasComposer)
@@ -364,7 +364,7 @@ class HandlerTest {
     @Test fun `Filters async provides async`() {
         val handler = SimpleHandler()
         assertAsync(testName) { done ->
-            handler.aspect({ _, _ -> Promise.TRUE })
+            handler.aspectBefore({ _, _ -> Promise.TRUE })
                     .resolveAsync<Bar>() then {
                 assertNotNull(it)
                 assertFalse(it!!.hasComposer)
@@ -377,7 +377,7 @@ class HandlerTest {
     @Test fun `Cancels provides async`() {
         val handler = SimpleHandler()
         assertFailsWith(RejectedException::class) {
-            handler.aspect({ _, _ -> Promise.FALSE })
+            handler.aspectBefore({ _, _ -> Promise.FALSE })
                     .resolve<Bar>()
         }
     }
@@ -385,7 +385,7 @@ class HandlerTest {
     @Test fun `Cancels async provides`() {
         val handler = SimpleHandler()
         assertFailsWith(RejectedException::class) {
-            handler.aspect({ _, _ -> false })
+            handler.aspectBefore({ _, _ -> false })
                     .resolveAsync<Bar>().get()
         }
     }
@@ -393,7 +393,7 @@ class HandlerTest {
     @Test fun `Cancels async provides async`() {
         val handler = SimpleHandler()
         assertFailsWith(RejectedException::class) {
-            handler.aspect({ _, _ -> Promise.FALSE })
+            handler.aspectBefore({ _, _ -> Promise.FALSE })
                     .resolveAsync<Bar>().get()
         }
     }

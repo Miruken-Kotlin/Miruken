@@ -5,45 +5,45 @@ import com.miruken.graph.TraversingAxis
 fun HandlingAxis.axis(axis: TraversingAxis) : HandlingAxis =
         TraversingHandler(this, axis)
 
-val HandlingAxis.publish get() = selfOrDescendant.notify
+val HandlingAxis.xpublish get() = xselfOrDescendant.notify
 
-val HandlingAxis.self get() =
+val HandlingAxis.xself get() =
     TraversingHandler(this, TraversingAxis.SELF)
 
-val HandlingAxis.root get() =
+val HandlingAxis.xroot get() =
     TraversingHandler(this, TraversingAxis.ROOT)
 
-val HandlingAxis.child get() =
+val HandlingAxis.xchild get() =
     TraversingHandler(this, TraversingAxis.CHILD)
 
-val HandlingAxis.sibling get() =
+val HandlingAxis.xsibling get() =
     TraversingHandler(this, TraversingAxis.SIBLING)
 
-val HandlingAxis.ancestor get() =
+val HandlingAxis.xancestor get() =
     TraversingHandler(this, TraversingAxis.ANCESTOR)
 
-val HandlingAxis.descendant get() =
+val HandlingAxis.xdescendant get() =
     TraversingHandler(this, TraversingAxis.DESCENDANT)
 
-val HandlingAxis.descendantReverse get() =
+val HandlingAxis.xdescendantReverse get() =
     TraversingHandler(this, TraversingAxis.DESCENDANT_REVERSE)
 
-val HandlingAxis.selfOrChild get() =
+val HandlingAxis.xselfOrChild get() =
     TraversingHandler(this, TraversingAxis.SELF_CHILD)
 
-val HandlingAxis.selfOrSibling get() =
+val HandlingAxis.xselfOrSibling get() =
     TraversingHandler(this, TraversingAxis.SELF_SIBLING)
 
-val HandlingAxis.selfOrAncestor get() =
+val HandlingAxis.xselfOrAncestor get() =
     TraversingHandler(this, TraversingAxis.SELF_ANCESTOR)
 
-val HandlingAxis.selfOrDescendant get() =
+val HandlingAxis.xselfOrDescendant get() =
     TraversingHandler(this, TraversingAxis.SELF_DESCENDANT)
 
-val HandlingAxis.selfOrDescendantReverse get() =
+val HandlingAxis.xselfOrDescendantReverse get() =
     TraversingHandler(this, TraversingAxis.SELF_DESCENDANT_REVERSE)
 
-val HandlingAxis.selfSiblingOrAncestor get() =
+val HandlingAxis.xselfSiblingOrAncestor get() =
     TraversingHandler(this, TraversingAxis.SELF_SIBLING_ANCESTOR)
 
 

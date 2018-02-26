@@ -6,7 +6,7 @@ open class CompositeHandler(vararg handlers: Any)
     private val _handlers = mutableListOf<Handling>()
 
     init {
-        addHandlers(handlers)
+        addHandlers(*handlers)
     }
 
     val handlers = _handlers.toList()

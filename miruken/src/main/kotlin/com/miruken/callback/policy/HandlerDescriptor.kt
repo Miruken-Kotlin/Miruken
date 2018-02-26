@@ -8,6 +8,7 @@ import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.jvm.isAccessible
 
 class HandlerDescriptor(val handlerClass: KClass<*>) {
 
@@ -64,10 +65,10 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     val rule = it.match(dispatch.value) ?:
                         throw PolicyRejectedException(it, member,
                                 "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
-
                     val binding    = rule.bind(dispatch.value, annotation)
                     val descriptor = _policies.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
+                    member.isAccessible = true
                     descriptor.add(binding)
                 }
             }
@@ -131,8 +132,9 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             check(handlerClass.javaPrimitiveType == null) {
                 "Handlers cannot be primitive types: ${handlerClass.qualifiedName}"
             }
-            check(!handlerClass.isSubclassOf(Collection::class)) {
-                "Handlers cannot be collection classes: ${handlerClass.qualifiedName}"
+            check(!javaClass.isArray &&
+                  !handlerClass.isSubclassOf(Collection::class)) {
+                "Handlers cannot be collections or arrays: ${handlerClass.qualifiedName}"
             }
         }
 

@@ -1,35 +1,34 @@
 package com.miruken.context
 
 import com.miruken.callback.CompositeHandler
+import com.miruken.callback.CompositionScope
 import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
 import com.miruken.event.Event
 import com.miruken.graph.TraversingAxis
 
-/**
-open class ContextImpl : CompositeHandler(), Context {
+open class ContextImpl() : CompositeHandler(), Context {
+    private val _children = mutableListOf<ContextImpl>()
 
-    private val _contextEnding       = lazy { Event<ContextEvent>() }
-    private val _contextEnded        = lazy { Event<ContextEvent>() }
-    private val _childContextEnding  = lazy { Event<ContextEvent>() }
-    private val _childContextEnded   = lazy { Event<ContextEvent>() }
-    private val _children            = mutableListOf<ContextImpl>()
-
-    private constructor(parent: ContextImpl) {
+    private constructor(parent: ContextImpl) : this() {
         this.parent = parent
     }
 
-    final override val state: ContextState  = ContextState.ACTIVE
+    final override var state:  ContextState = ContextState.ACTIVE
+        private set
     final override var parent: ContextImpl? = null
         private set
-    final override val children: List<ContextImpl> = _children
 
-    final override val contextEnding      get() = _contextEnding.value
-    final override val contextEnded       get() = _contextEnded.value
-    final override val childContextEnding get() = _childContextEnding.value
-    final override val childContextEnded  get() = _childContextEnded.value
+    final override val children: List<ContextImpl>
+        get() = _children.toList()
 
-    final override val hisChildren: Boolean get() = children.isNotEmpty()
+    final override val hasChildren: Boolean
+        get()  = children.isNotEmpty()
+
+    final override val contextEnding       = Event<ContextEvent>()
+    final override val contextEnded        = Event<ContextEvent>()
+    final override val childContextEnding  = Event<ContextEvent>()
+    final override val childContextEnded   = Event<ContextEvent>()
 
     final override val root: ContextImpl get() {
         var root = this
@@ -38,9 +37,50 @@ open class ContextImpl : CompositeHandler(), Context {
         return root
     }
 
+    override fun handleCallback(
+            callback: Any,
+            greedy:   Boolean,
+            composer: Handling
+    ): HandleResult {
+        return super.handleCallback(callback, greedy, composer)
+                .otherwise(greedy) {
+                    parent?.handle(callback, greedy, composer)
+                        ?: HandleResult.NOT_HANDLED
+                }
+    }
+
+    override fun handle(
+            axis:     TraversingAxis,
+            callback: Any,
+            greedy:   Boolean,
+            composer: Handling?
+    ): HandleResult {
+        val scope = composer ?: CompositionScope(this)
+
+        if (axis == TraversingAxis.SELF)
+            return super.handleCallback(callback, greedy, scope)
+
+        var result = HandleResult.NOT_HANDLED
+        traverse(axis) {
+            result = result or when {
+                it === this ->
+                    super.handleCallback(callback, greedy, scope)
+                it is Context ->
+                    it.handle(TraversingAxis.SELF, callback, greedy, scope)
+                else -> result
+            }
+            result.stop || (result.handled && !greedy)
+        }
+        return result
+    }
+
+    override fun store(data: Any) {
+        addHandlers(data)
+    }
+
     override fun createChild(): Context {
-        assertActive()
-        val child = internalCreateChild()
+        requireActive()
+        val child = ContextImpl(this)
         child.contextEnding += { (ctx) ->
             childContextEnding(ContextEvent(ctx))
         }
@@ -52,11 +92,45 @@ open class ContextImpl : CompositeHandler(), Context {
         return child
     }
 
-    protected open fun internalCreateChild(): ContextImpl = ContextImpl()
+    final override fun unwindToRoot(): ContextImpl {
+        var current: ContextImpl? = this
+        while (current != null) {
+            val parent = current.parent
+            if (parent == null)  {
+                current.unwind()
+                return current
+            }
+            current = parent
+        }
+        return this
+    }
 
-    private fun assertActive() {
+    final override fun unwind(): ContextImpl {
+        for (child in children) child.end()
+        return this
+    }
+
+    final override fun end() {
+        if (state != ContextState.ACTIVE) return
+        state = ContextState.ENDING
+        val event = ContextEvent(this)
+        contextEnding(event)
+        try {
+            unwind()
+        } finally {
+            state = ContextState.ENDED
+            contextEnded(event)
+            contextEnding.clear()
+            contextEnded.clear()
+            childContextEnding.clear()
+            childContextEnded.clear()
+        }
+    }
+
+    override fun close() = end()
+
+    private fun requireActive() {
         if (state !== ContextState.ACTIVE)
             throw IllegalStateException("The context has already ended")
     }
 }
-        */
