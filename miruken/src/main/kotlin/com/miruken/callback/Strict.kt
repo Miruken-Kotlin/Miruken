@@ -1,4 +1,4 @@
 package com.miruken.callback
 
-@Target(AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.FUNCTION,AnnotationTarget.CLASS)
 annotation class Strict

@@ -1,6 +1,8 @@
 package com.miruken.callback.policy
 
 import com.miruken.Flags
+import com.miruken.callback.Key
+import com.miruken.callback.StringKey
 import com.miruken.runtime.getFirstTaggedAnnotation
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
@@ -24,8 +26,14 @@ class Argument(val parameter: KParameter) {
         logicalType   = typeFlags.second
         flags         = typeFlags.first
 
-        key = if (flags has TypeFlags.PRIMITIVE)
-            parameter.name else logicalType
+        key = parameter.annotations
+                .firstOrNull { it is Key }
+                ?.let {
+                    val key = it as Key
+                    StringKey(key.key, key.caseSensitive)
+                } ?: parameter.name?.takeIf {
+                    flags has TypeFlags.PRIMITIVE
+                } ?: logicalType
 
         useResolver = parameter
                 .getFirstTaggedAnnotation<UseArgumentResolver<*>>()

@@ -14,6 +14,8 @@ class PolicyMethodBinding(
     val callbackArgument = bindingInfo.callbackArgument
     val key              = policy.createKey(bindingInfo)
 
+    inline val strict get() = dispatcher.strict
+
     fun approves(callback: Any) =
             policy.approve(callback, annotation)
 
@@ -39,7 +41,7 @@ class PolicyMethodBinding(
             val accepted = policy.acceptResult(result, this)
             if (accepted.handled && result != null &&
                     result !is HandleResult) {
-                results?.invoke(result, false)
+                results?.invoke(result, strict)
             }
             accepted
         } ?: HandleResult.NOT_HANDLED

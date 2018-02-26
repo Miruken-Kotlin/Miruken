@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.StringKey
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -43,6 +44,7 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
         policy.getKey(callback)?.let {
             when (it) {
                 is KType -> _typed[it]
+                is String -> _indexed[it] ?: _indexed[StringKey(it)]
                 else -> _indexed[it]
             }?.filter { it.approves(callback) }
         } ?: emptyList()

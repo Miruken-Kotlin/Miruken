@@ -456,6 +456,18 @@ class HandlerTest {
         assertTrue(foos.containsAll(listOf(foo1, foo2)))
     }
 
+    @Test fun `Can override key with string`() {
+        val handler  = SpecialHandler()
+        val password = handler.resolve("password")
+        assertEquals("ABC123!", password)
+    }
+
+    @Test fun `Uses method name when providing primitives`() {
+        val handler = SpecialHandler()
+        val config  = handler.resolve("providesTimeout")
+        assertEquals(5000L, config)
+    }
+
     @Test fun `Ignores providers that don't match`() {
         val handler = Handler()
         val foo     = handler.provide(Bar()).resolve<Foo>()
@@ -696,6 +708,13 @@ class HandlerTest {
                 it.java.newInstance() as T
             }
         }
+
+        @Provides
+        fun providesTimeout() : Long = 5000
+
+        @Provides
+        @Key("password")
+        fun providesPassword() : String = "ABC123!"
     }
 
     class SpecialAsyncHandler : Handler() {

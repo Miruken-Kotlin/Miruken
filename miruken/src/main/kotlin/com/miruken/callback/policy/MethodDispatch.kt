@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.Flags
+import com.miruken.callback.Strict
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
@@ -15,6 +16,7 @@ class MethodDispatch(val callable: KCallable<*>) {
     val arguments: List<Argument> =
             callable.valueParameters.map { Argument(it) }
 
+    val strict:            Boolean
     val logicalReturnType: KType
     val returnFlags:       Flags<TypeFlags>
     val owningClass:       KClass<*> =
@@ -27,6 +29,7 @@ class MethodDispatch(val callable: KCallable<*>) {
         val typeFlags = TypeFlags.parse(returnType)
         logicalReturnType   = typeFlags.second
         returnFlags         = typeFlags.first
+        strict              = annotations.any { it is Strict }
     }
 
     inline val returnType  get() = callable.returnType

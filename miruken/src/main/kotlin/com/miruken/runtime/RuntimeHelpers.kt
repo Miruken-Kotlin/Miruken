@@ -102,8 +102,17 @@ val KType.isUnit get() = classifier == Unit::class
 val KType.isNothing get() = classifier == Nothing::class
 
 val KType.componentType: KType?
-    get() = if (isSubtypeOf(COLLECTION_TYPE))
-        arguments.single().type else this
+    get() = when {
+        isSubtypeOf(COLLECTION_TYPE) -> /* Nothing??? */
+            arguments.singleOrNull()?.type ?: this
+        classifier is KClass<*> -> {
+            val javaClass = (classifier as KClass<*>).javaObjectType
+            if (javaClass.isArray)
+                javaClass.componentType.toKType()
+            else this
+        }
+        else -> this
+    }
 
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||

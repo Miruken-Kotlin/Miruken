@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.Flags
 import com.miruken.concurrent.Promise
+import com.miruken.runtime.componentType
 import com.miruken.runtime.isOpenGeneric
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -12,11 +13,12 @@ import kotlin.reflect.full.withNullability
 sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object NONE       : TypeFlags(0)
     object LAZY       : TypeFlags(1 shl 0)
-    object COLLECTION : TypeFlags(1 shl 1)
-    object PROMISE    : TypeFlags(1 shl 2)
-    object OPTIONAL   : TypeFlags(1 shl 3)
-    object PRIMITIVE  : TypeFlags(1 shl 4)
-    object OPEN       : TypeFlags(1 shl 5)
+    object ARRAY      : TypeFlags(1 shl 1)
+    object COLLECTION : TypeFlags(1 shl 2)
+    object PROMISE    : TypeFlags(1 shl 3)
+    object OPTIONAL   : TypeFlags(1 shl 4)
+    object PRIMITIVE  : TypeFlags(1 shl 5)
+    object OPEN       : TypeFlags(1 shl 6)
 
     companion object {
         fun parse(type: KType) : Pair<Flags<TypeFlags>, KType> {
@@ -40,12 +42,11 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             logicalType = extractType(type, Collection::class)?.let {
                 flags += TypeFlags.COLLECTION; it } ?: logicalType
 
-            /*
-            logicalType = logicalType.takeIf { it.arguments.isEmpty() }
-                    ?.let { it.classifier as? KTypeParameter }
-                    ?.upperBounds?.firstOrNull()?.withNullability(false)
-                    ?: logicalType
-*/
+            if (!(flags has TypeFlags.COLLECTION)) {
+                logicalType = logicalType.componentType.takeIf {
+                    it != logicalType
+                }?.also { flags += TypeFlags.ARRAY } ?: logicalType
+            }
 
             (logicalType.classifier as? KClass<*>)?.also {
                 if (it.javaPrimitiveType != null || it == String::class) {
