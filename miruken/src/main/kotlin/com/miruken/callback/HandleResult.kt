@@ -9,20 +9,22 @@ enum class HandleResult(
     NOT_HANDLED(false, false),
     NOT_HANDLED_AND_STOP(false, true);
 
-    infix fun then(
-            block: HandleResult.() -> HandleResult) =
+    inline infix fun then(
+            crossinline block: HandleResult.() -> HandleResult) =
             if (stop) this else this or block()
 
-    fun then(
-            condition: Boolean,
-            block:     HandleResult.() -> HandleResult) =
+    inline fun then(
+            condition:         Boolean,
+            crossinline block: HandleResult.() -> HandleResult) =
             if (stop || !condition) this else this or block()
 
-    infix fun <T> success(block: HandleResult.() -> T) : T? {
+    inline infix fun <T> success(
+            crossinline block: HandleResult.() -> T) : T? {
         return if (handled) block() else null
     }
 
-    infix fun <T> failure(block: HandleResult.() -> T) : T? {
+    inline infix fun <T> failure(
+            crossinline block: HandleResult.() -> T) : T? {
         return if (!handled) block() else null
     }
 
@@ -38,13 +40,13 @@ enum class HandleResult(
                 }
             }
 
-    infix fun otherwise(
-            block: HandleResult.() -> HandleResult) =
+    inline infix fun otherwise(
+            crossinline block: HandleResult.() -> HandleResult) =
             if (handled || stop) this else block()
 
-    fun otherwise(
-            condition: Boolean,
-            block:     HandleResult.() -> HandleResult) =
+    inline fun otherwise(
+            condition:         Boolean,
+            crossinline block: HandleResult.() -> HandleResult) =
             if ((handled || stop) && !condition) this
             else this or block()
 

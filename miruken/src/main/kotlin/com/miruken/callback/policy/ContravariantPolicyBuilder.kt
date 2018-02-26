@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
 
@@ -23,7 +23,7 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
             TargetArgument(callbackType, targetType, targetFunctor)
 
     inline fun <reified E: Any> extract(noinline block: (C) -> E) =
-            ExtractArgument(getKType<E>(), block)
+            ExtractArgument(typeOf<E>(), block)
 }
 
 class ContravariantTargetBuilder(val policy: ContravariantPolicy
@@ -31,7 +31,7 @@ class ContravariantTargetBuilder(val policy: ContravariantPolicy
     inline fun <reified C: Any, reified S: Any> target(
             noinline targetFunctor: (C) -> S
     ) = ContravariantWithTargetBuilder(policy,
-            targetFunctor, getKType<C>(), getKType<S>())
+            targetFunctor, typeOf<C>(), typeOf<S>())
 }
 
 @Suppress("MemberVisibilityCanBePrivate")

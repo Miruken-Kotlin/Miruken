@@ -600,15 +600,15 @@ class PromiseTest {
     @Test fun `Waits synchronously for promise to fulfill`() {
         val promise = Promise.delay(50) flatMap  {
             Promise.resolve("Hello") }
-        val result = promise.get()
+        val result = promise.get(5000)
         assertEquals("Hello", result)
     }
 
     @Test fun `Waits synchronously for promise to fail`() {
         val promise = Promise.delay(50) then  {
-            throw Exception("Bad date") }
-        assertFailsWith(Exception::class, "Bad date") {
-            promise.get()
+            throw IllegalArgumentException("Bad date") }
+        assertFailsWith(IllegalArgumentException::class, "Bad date") {
+            promise.get(5000)
         }
     }
 

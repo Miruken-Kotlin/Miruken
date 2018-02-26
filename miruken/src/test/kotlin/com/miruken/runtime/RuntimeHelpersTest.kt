@@ -6,14 +6,14 @@ import kotlin.test.assertTrue
 
 class RuntimeHelpersTest {
     @Test fun `Can check KType for Unit`() {
-        assertTrue(getKType<Unit>().isUnit)
+        assertTrue(typeOf<Unit>().isUnit)
     }
 
     @Test fun `Non generic types are closed`() {
-        assertFalse(getKType<String>().isOpenGeneric)
+        assertFalse(typeOf<String>().isOpenGeneric)
     }
 
     @Test fun `Determines if generic type is closed`() {
-        assertFalse(getKType<List<String>>().isOpenGeneric)
+        assertFalse(typeOf<List<String>>().isOpenGeneric)
     }
 }

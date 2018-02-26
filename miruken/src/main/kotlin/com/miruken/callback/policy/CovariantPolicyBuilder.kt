@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
 
@@ -22,13 +22,13 @@ class CovariantPolicyBuilder<C: Any>(
     val unit = ReturnsUnit
 
     inline fun <reified E: Any> extract (noinline block: (C) -> E) =
-            ExtractArgument(getKType<E>(), block)
+            ExtractArgument(typeOf<E>(), block)
 }
 
 class CovariantKeyBuilder(val policy: CovariantPolicy) {
     inline fun <reified C: Any> key(
             noinline keyFunctor: (C) -> Any
-    ) = CovariantWithKeyBuilder(policy, keyFunctor,  getKType<C>())
+    ) = CovariantWithKeyBuilder(policy, keyFunctor,  typeOf<C>())
 }
 
 @Suppress("MemberVisibilityCanBePrivate")

@@ -6,7 +6,7 @@ import com.miruken.assertAsync
 import com.miruken.callback.policy.PolicyMethodBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -462,7 +462,6 @@ class HandlerTest {
         assertNull(foo)
     }
 
-
     /** Callbacks */
 
     open class Foo {
@@ -589,7 +588,7 @@ class HandlerTest {
 
         @Provides
         fun provideBazExplicitly(inquiry: Inquiry, composer: Handling) {
-            if (inquiry.key == getKType<Baz>())
+            if (inquiry.key == typeOf<Baz>())
                 inquiry.resolve(SuperBaz(), composer)
         }
 
@@ -647,7 +646,7 @@ class HandlerTest {
 
         @Provides
         fun provideBazExplicitly(inquiry: Inquiry, composer: Handling) {
-            if (inquiry.key == getKType<Baz>())
+            if (inquiry.key == typeOf<Baz>())
                 inquiry.resolve(Promise.resolve(SuperBaz()), composer)
         }
 
@@ -682,7 +681,7 @@ class HandlerTest {
                 composer: Handling,
                 binding:  PolicyMethodBinding
         ) {
-            if (inquiry.key == getKType<Baz>()) {
+            if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(SuperBaz(), composer)
                 inquiry.resolve(Baz(), composer)
             }
@@ -717,7 +716,7 @@ class HandlerTest {
                 composer: Handling,
                 binding:  PolicyMethodBinding
         ) {
-            if (inquiry.key == getKType<Baz>()) {
+            if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(Promise.resolve(SuperBaz()), composer)
                 inquiry.resolve(Promise.resolve(Baz()), composer)
             }

@@ -128,6 +128,6 @@ inline fun <reified T: Annotation> KAnnotatedElement
         .firstOrNull()?.second?.firstOrNull()
 
 val ANY_STAR        = Any::class.starProjectedType
-val ANY_TYPE        = getKType<Any>().withNullability(true)
-val COLLECTION_TYPE = getKType<Collection<Any>>().withNullability(true)
-val PROMISE_TYPE    = getKType<Promise<Any>>().withNullability(true)
+val ANY_TYPE        = typeOf<Any>().withNullability(true)
+val COLLECTION_TYPE = typeOf<Collection<Any>>().withNullability(true)
+val PROMISE_TYPE    = typeOf<Promise<Any>>().withNullability(true)

@@ -1,12 +1,12 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R: Any> Handling.command(callback: Any) =
-    command(callback, getKType<R>()) as R
+    command(callback, typeOf<R>()) as R
 
 fun Handling.command(
         callback:   Any,
@@ -26,7 +26,7 @@ fun Handling.command(
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R: Any> Handling.commandAsync(callback: Any) =
-        commandAsync(callback, getKType<R>()) as Promise<R>
+        commandAsync(callback, typeOf<R>()) as Promise<R>
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAsync(
@@ -44,7 +44,7 @@ fun Handling.commandAsync(
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R: Any> Handling.commandAll(callback: Any) =
-        commandAll(callback, getKType<R>()) as List<R>
+        commandAll(callback, typeOf<R>()) as List<R>
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAll(
@@ -65,7 +65,7 @@ fun Handling.commandAll(
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R: Any> Handling.commandAllAsync(callback: Any) =
-        commandAllAsync(callback, getKType<R>()) as Promise<List<R>>
+        commandAllAsync(callback, typeOf<R>()) as Promise<List<R>>
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAllAsync(

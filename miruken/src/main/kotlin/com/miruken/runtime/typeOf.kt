@@ -6,13 +6,13 @@ import kotlin.reflect.*
 //
 import kotlin.reflect.full.createType
 
-inline fun <reified T : Any> getKType(): KType =
-        object : SuperTypeTokenHolder<T>() {}.getKTypeImpl()
+inline fun <reified T : Any> typeOf(): KType =
+        object : SuperTypeTokenHolder<T>() {}.typeOfImpl()
 
 @Suppress("unused")
 open class SuperTypeTokenHolder<T>
 
-fun SuperTypeTokenHolder<*>.getKTypeImpl(): KType =
+fun SuperTypeTokenHolder<*>.typeOfImpl(): KType =
         javaClass.genericSuperclass.toKType()
                 .arguments.single().type!!
 

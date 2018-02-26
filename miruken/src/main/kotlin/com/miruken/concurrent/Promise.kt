@@ -1,6 +1,7 @@
 package com.miruken.concurrent
 
 import com.miruken.*
+import com.miruken.event.Event
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CancellationException
@@ -31,8 +32,8 @@ typealias PromiseCancelledBlock     = (CancellationException) -> Unit
 open class Promise<out T>
     private constructor(val cancelMode: ChildCancelMode) {
 
-    private var _fulfilled  : ((T) -> Unit) = {}
-    private var _rejected   : ((Throwable) -> Unit) = {}
+    private var _fulfilled  = Event<T>()
+    private var _rejected   = Event<Throwable>()
     private var _onCancel   : (() -> Unit) = {}
     private var _result     : Any? = null
     private var _throwable  : Throwable? = null
@@ -282,11 +283,10 @@ open class Promise<out T>
             _result = result
             synchronized (_guard) {
                 state = PromiseState.FULFILLED
-                val fulfilled = _fulfilled
-                _fulfilled = {}
-                _rejected  = {}
+                _rejected.clear()
                 _guard.notifyAll()
-                fulfilled(result)
+                _fulfilled(result)
+                _fulfilled.clear()
             }
         }
     }
@@ -306,11 +306,10 @@ open class Promise<out T>
             synchronized (_guard) {
                 state = if (isCancellation) PromiseState.CANCELLED
                         else PromiseState.REJECTED
-                val rejected = _rejected
-                _fulfilled = {}
-                _rejected  = {}
+                _fulfilled.clear()
                 _guard.notifyAll()
-                rejected(e)
+                _rejected(e)
+                _rejected.clear()
             }
         }
     }
@@ -344,19 +343,5 @@ fun <T> Promise<Promise<T>>.unwrap() : Promise<T> {
         then({ inner -> inner.then(resolve, reject)
             .cancelled(reject)}, reject)
             .cancelled(reject)
-    })
-}
-
-private operator fun <R> (() -> R)?.plus(other: (() -> R)) : (() -> R) {
-    return if (this == null) other else ({
-        this()
-        other()
-    })
-}
-
-private operator fun <T, R> ((T) -> R)?.plus(other: ((T) -> R)) : ((T) -> R) {
-    return if (this == null) other else ({
-        this(it)
-        other(it)
     })
 }

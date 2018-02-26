@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,45 +13,45 @@ class CommandTest {
 
     @Test
     fun `Creates Command of String`() {
-        val command = Command(Foo(), getKType<String>())
+        val command = Command(Foo(), typeOf<String>())
         assertFalse(command.many)
         assertFalse(command.wantsAsync)
-        assertEquals(getKType<String>(), command.resultType)
+        assertEquals(typeOf<String>(), command.resultType)
         assertSame(HandlesPolicy, command.policy)
     }
 
     @Test
     fun `Creates Command of KClass`() {
-        val command = Command(Foo(), getKType<Foo>())
-        assertEquals(getKType<Foo>(), command.resultType)
+        val command = Command(Foo(), typeOf<Foo>())
+        assertEquals(typeOf<Foo>(), command.resultType)
     }
 
     @Test
     fun `Creates Command of generic KClass`() {
-        val command = Command(Bar<Int>(), getKType<Bar<Int>>())
-        assertEquals(getKType<Bar<Int>>(), command.resultType)
+        val command = Command(Bar<Int>(), typeOf<Bar<Int>>())
+        assertEquals(typeOf<Bar<Int>>(), command.resultType)
     }
 
     @Test
     fun `Creates many Command of KType`() {
-        val command = Command(Bar<String>(), getKType<Bar<String>>(), true)
-        assertEquals(getKType<List<Bar<String>>>(), command.resultType)
+        val command = Command(Bar<String>(), typeOf<Bar<String>>(), true)
+        assertEquals(typeOf<List<Bar<String>>>(), command.resultType)
     }
 
     @Test
     fun `Creates async Command of KType`() {
-        val command = Command(Bar<String>(), getKType<Bar<String>>()).apply {
+        val command = Command(Bar<String>(), typeOf<Bar<String>>()).apply {
             wantsAsync = true
         }
-        assertEquals(getKType<Promise<Bar<String>>>(), command.resultType)
+        assertEquals(typeOf<Promise<Bar<String>>>(), command.resultType)
     }
 
     @Test
     fun `Creates many async Command of KType`() {
-        val command = Command(Bar<Int>(), getKType<Bar<Int>>(), true).apply {
+        val command = Command(Bar<Int>(), typeOf<Bar<Int>>(), true).apply {
             wantsAsync = true
         }
-        assertEquals(getKType<Promise<List<Bar<Int>>>>(), command.resultType)
+        assertEquals(typeOf<Promise<List<Bar<Int>>>>(), command.resultType)
     }
 }
     

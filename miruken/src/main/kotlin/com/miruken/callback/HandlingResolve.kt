@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.filterIsAssignableTo
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -33,10 +33,10 @@ fun Handling.resolveAsync(key: Any) : Promise<Any?> {
 }
 
 inline fun <reified T: Any> Handling.resolve() : T? =
-        resolve(getKType<T>()) as? T
+        resolve(typeOf<T>()) as? T
 
 inline fun <reified T: Any> Handling.resolveAsync() : Promise<T?> =
-        resolveAsync(getKType<T>()) then { it as? T }
+        resolveAsync(typeOf<T>()) then { it as? T }
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAll(key: Any) : List<Any> {
@@ -69,13 +69,13 @@ fun Handling.resolveAllAsync(key: Any) : Promise<List<Any>> {
 }
 
 inline fun <reified T: Any> Handling.resolveAll() : List<T> =
-    resolveAll(getKType<T>()).filterIsInstance<T>()
+    resolveAll(typeOf<T>()).filterIsInstance<T>()
 
 inline fun <reified T: Any> Handling.resolveAllAsync() : Promise<List<T>> =
-        resolveAllAsync(getKType<T>()) then { it.filterIsInstance<T>() }
+        resolveAllAsync(typeOf<T>()) then { it.filterIsInstance<T>() }
 
 inline fun <reified T: Any> Handling.provide(value: T) =
-        Provider(value, getKType<T>()) + this
+        Provider(value, typeOf<T>()) + this
 
 private fun List<Any>.coerceList(key: Any) : List<Any> {
     return when (key) {

@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.runtime.getKType
+import com.miruken.runtime.typeOf
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -17,13 +17,13 @@ class CompositionTest {
         assertNull(Composition.get<Bar<String>>(Composition(Bar<String>())))
         assertNull(Composition.get<Bar<Int>>(Composition(Bar<String>())))
         assertNotNull(Composition.get<Bar<String>>(
-                Composition(Bar<String>(getKType<Bar<String>>()))))
+                Composition(Bar<String>(typeOf<Bar<String>>()))))
     }
 
     @Test fun `Extracts the composed value dynamically`() {
         assertNotNull(Composition.get(Composition(Foo()), Foo::class))
-        assertNotNull(Composition.get(Composition(Foo()), getKType<Foo>()))
-        assertNull(Composition.get(Composition(Bar<String>()), getKType<Bar<String>>()))
+        assertNotNull(Composition.get(Composition(Foo()), typeOf<Foo>()))
+        assertNull(Composition.get(Composition(Bar<String>()), typeOf<Bar<String>>()))
         assertNull(Composition.get(Composition(Bar<String>()), Bar::class))
         assertNull(Composition.get(Composition(Foo()), Int::class))
     }
