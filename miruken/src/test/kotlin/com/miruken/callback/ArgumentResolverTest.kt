@@ -1,15 +1,19 @@
 package com.miruken.callback
 
+import com.miruken.assertAsync
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestName
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
+@Suppress("UNUSED_PARAMETER")
 class ArgumentResolverTest {
+    @Rule
+    @JvmField val testName = TestName()
 
     @Before
     fun setup() {
@@ -17,14 +21,70 @@ class ArgumentResolverTest {
     }
 
     @Test fun `Resolves single dependency`() {
-        val handler = InventoryHandler() + RepositoryImpl<Order>()
+        val handler = (InventoryHandler()
+                    + RepositoryImpl<Order>())
         val order   = Order().apply {
             lineItems = listOf(LineItem("1234", 1))
         }
-
         val confirmation = handler.command<UUID>(NewOrder(order))
         assertNotNull(confirmation)
         assertEquals(1, order.id)
+    }
+
+    @Test fun `Fails if unresolved dependency`() {
+        assertFailsWith(NotHandledException::class) {
+            val handler = InventoryHandler()
+            handler.command<UUID>(NewOrder(Order()))
+        }
+    }
+
+    @Test fun `Resolves promise dependency`() {
+        val handler = (InventoryHandler()
+                    + RepositoryImpl<Order>())
+        val order   = Order().apply { id = 1 }
+        assertAsync(testName) { done ->
+            handler.commandAsync<Any>(CancelOrder(order)) then {
+                done()
+            }
+        }
+    }
+
+    @Test fun `Fails if unresolved promise dependency`() {
+        assertFailsWith(NotHandledException::class) {
+            val handler = InventoryHandler()
+            handler.command<UUID>(CancelOrder(Order()))
+        }
+    }
+
+    @Test fun `Resolves list dependency`() {
+        val handler = (InventoryHandler()
+                    + CustomerSupport()
+                    + RepositoryImpl<Order>())
+        handler.command<Any>(NewOrder(Order()))
+        handler.command<Any>(NewOrder(Order()))
+        handler.command<Any>(NewOrder(Order()))
+        assertAsync(testName) { done ->
+            handler.commandAsync<Order>(RefundOrder(orderId = 2)) then {
+                assertNotNull(it!!)
+                assertEquals(2, it.id)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Resolves promise list dependency`() {
+        val handler = (InventoryHandler()
+                    + CustomerSupport()
+                    + RepositoryImpl<Order>())
+        handler.command<Any>(NewOrder(Order()))
+        handler.command<Any>(NewOrder(Order()))
+        assertAsync(testName) { done ->
+            handler.commandAsync<List<Order>>(ClockOut()) then {
+                assertNotNull(it!!)
+                assertEquals(2, it.size)
+                done()
+            }
+        }
     }
 
     interface Entity {
@@ -126,46 +186,52 @@ class ArgumentResolverTest {
                 repository then {
                     it.save(cancel.order)
                 }
-            }
+            }.unwrap()
         }
     }
 
-    /*
-    private class CustomerSupport : Handler
-    {
-        [Handles]
-        public Order RefundOrder(RefundOrder refund, Order[] orders,
-        Func<IRepository<Order>> getRepository)
+    class CustomerSupport : Handler() {
+        @Handles
+        fun refundOrder(
+                refund:        RefundOrder,
+                orders:        List<Order>,
+                getRepository: Lazy<Repository<Order>>
+        ): Order?
         {
-            var order = orders.FirstOrDefault(o => o.Id == refund.OrderId);
-            if (order != null)
-            {
-                order.Status = OrderStatus.Refunded;
-                getRepository().Save(order);
-            }
-            return order;
+            return orders.firstOrNull { it.id == refund.orderId }
+                    ?.also {
+                        it.status = OrderStatus.REFUNDED
+                        getRepository.value.save(it)
+                    }
         }
 
-        [Handles]
-        public Promise<Order[]> ClockIn(ClockIn clockIn, Task<Order[]> orders,
-        IRepository<Order> repository)
+        @Handles
+        fun clockIn(
+                clockIn:    ClockIn,
+                orders:     Promise<List<Order>>,
+                repository: Repository<Order>
+        ): Promise<List<Order>>
         {
-            return orders;
+            return orders
         }
 
-        [Handles]
-        public Task<Order[]> ClockOut(ClockOut clockOut, Promise<Order[]> orders,
-        IRepository<Order> repository)
+        @Handles
+        fun clockOut(
+                clockOut:   ClockOut,
+                orders:     Promise<List<Order>>,
+                repository: Repository<Order>
+        ): Promise<List<Order>>
         {
-            return orders;
+            return orders
         }
 
-        [Handles]
-        public void ValidateOrder(NewOrder place, [Optional]IRepository<Order> repository)
+        @Handles
+        fun validateOrder(
+                place: NewOrder,
+                repository: Repository<Order>?)
         {
-            Assert.IsNotNull(place);
-            Assert.IsNull(repository);
+            assertNotNull(place)
+            assertNull(repository)
         }
     }
-    */
 }

@@ -15,7 +15,8 @@ import kotlin.reflect.KType
 import kotlin.test.*
 
 class HandlerTest {
-    @Rule @JvmField val testName = TestName()
+    @Rule
+    @JvmField val testName = TestName()
 
     @Test fun `Indicates not handled`() {
         val handler = SimpleHandler()

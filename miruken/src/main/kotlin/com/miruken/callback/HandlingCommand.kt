@@ -6,7 +6,7 @@ import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R: Any> Handling.command(callback: Any) =
-    command(callback, typeOf<R>()) as R
+    command(callback, typeOf<R>()) as R?
 
 fun Handling.command(
         callback:   Any,
@@ -14,8 +14,7 @@ fun Handling.command(
 ) : Any? {
     val command = Command(callback, resultType)
     handle(command) failure {
-        throw NotHandledException(
-                "${callback::class.qualifiedName} not handled")
+        throw NotHandledException(callback)
     }
     val result = command.result
     return when (result) {
@@ -26,7 +25,7 @@ fun Handling.command(
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R: Any> Handling.commandAsync(callback: Any) =
-        commandAsync(callback, typeOf<R>()) as Promise<R>
+        commandAsync(callback, typeOf<R>()) as Promise<R?>
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAsync(
@@ -37,8 +36,7 @@ fun Handling.commandAsync(
         wantsAsync = true
     }
     return handle(command) failure {
-            Promise.reject(NotHandledException(
-                    "${callback::class.qualifiedName} not handled"))
+            Promise.reject(NotHandledException(callback))
     } ?: command.result as Promise<Any>
 }
 
@@ -53,8 +51,7 @@ fun Handling.commandAll(
 ) : List<Any> {
     val command = Command(callback, resultType, true)
     handle(command) failure {
-        throw NotHandledException(
-                "${callback::class.qualifiedName} not handled")
+        throw NotHandledException(callback)
     }
     val result = command.result
     return when (result) {
@@ -76,7 +73,6 @@ fun Handling.commandAllAsync(
         wantsAsync = true
     }
     return handle(command) failure {
-        Promise.reject(NotHandledException(
-                "${callback::class.qualifiedName} not handled"))
+        Promise.reject(NotHandledException(callback))
     } ?: (command.result as Promise<*>) then { it as List<Any> }
 }

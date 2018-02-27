@@ -1,6 +1,8 @@
 package com.miruken.concurrent
 
 import com.miruken.*
+import org.junit.Rule
+import org.junit.rules.TestName
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CancellationException
@@ -8,6 +10,9 @@ import java.util.concurrent.TimeoutException
 import kotlin.test.*
 
 class PromiseTest {
+    @Rule
+    @JvmField val testName = TestName()
+
     @Test fun `Starts in pending state`() {
         val promise = Promise<String> { _, _ -> }
         assertTrue(promise.state === PromiseState.PENDING)
@@ -559,7 +564,7 @@ class PromiseTest {
     }
 
     @Test fun `Resolves new promise after delay`() {
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             val start = Instant.now()
             Promise.delay(50) then {
                 val elapsed = Duration.between(start, Instant.now())
@@ -570,7 +575,7 @@ class PromiseTest {
     }
 
     @Test fun `Resolves promise if before timeout`() {
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             Promise.delay(50).timeout(100) then {
                 done()
             }
@@ -578,7 +583,7 @@ class PromiseTest {
     }
 
     @Test fun `Rejects promise if after timeout`() {
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             Promise.delay(100).timeout(50) catch {
                 assertTrue(it is TimeoutException)
                 done()
@@ -587,7 +592,7 @@ class PromiseTest {
     }
 
     @Test fun `Cancels timeout when promise cancelled`() {
-        assertAsync { done ->
+        assertAsync(testName) { done ->
             val promise = Promise.delay(100).timeout(50) then {
                 fail("Should skip")
             } cancelled {
