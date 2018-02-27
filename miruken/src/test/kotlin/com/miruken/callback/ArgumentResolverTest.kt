@@ -124,6 +124,15 @@ class ArgumentResolverTest {
                 "www.help.com", "www.help2.com", "www.help3.com")))
     }
 
+    @Test fun `Ignores optional missing dependency`() {
+        val handler = CustomerSupport()
+        assertAsync { done ->
+            handler.commandAsync<Any>(NewOrder(Order())) then {
+                done()
+            }
+        }
+    }
+
     interface Entity {
         var id: Int
     }
@@ -261,7 +270,7 @@ class ArgumentResolverTest {
 
         @Handles
         fun validateOrder(
-                place: NewOrder,
+                place:      NewOrder,
                 repository: Repository<Order>?) {
             assertNotNull(place)
             assertNull(repository)

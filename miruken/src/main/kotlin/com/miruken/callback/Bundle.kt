@@ -22,7 +22,7 @@ class Bundle(private val all: Boolean = true) :
 
     val isEmpty get() = _operations.isEmpty()
     val handled get() = _operations.fold(
-            HandleResult.NOT_HANDLED, { result, operation ->
+            HandleResult.HANDLED, { result, operation ->
                 result and operation.result })
 
     override var wantsAsync: Boolean = false
