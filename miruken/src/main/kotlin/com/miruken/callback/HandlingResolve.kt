@@ -1,10 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.filterIsAssignableTo
 import com.miruken.runtime.typeOf
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
 
 fun Handling.resolving() = ResolvingHandler(this)
 
@@ -47,7 +44,7 @@ fun Handling.resolveAll(key: Any) : List<Any> {
                 is Promise<*> -> it.get()
                 else -> it
             } as? List<Any>
-        }?.coerceList(key)
+        }
     } ?: emptyList()
 }
 
@@ -59,8 +56,7 @@ fun Handling.resolveAllAsync(key: Any) : Promise<List<Any>> {
         inquiry.result?.let {
             when (it) {
                 is Promise<*> -> it.then {
-                    (it as? List<Any>)?.coerceList(key)
-                    ?: emptyList()
+                    it as? List<Any> ?: emptyList()
                 }
                 else -> Promise.EMPTY_LIST
             }
@@ -73,10 +69,3 @@ inline fun <reified T: Any> Handling.resolveAll() : List<T> =
 
 inline fun <reified T: Any> Handling.resolveAllAsync() : Promise<List<T>> =
         resolveAllAsync(typeOf<T>()) then { it.filterIsInstance<T>() }
-
-private fun List<Any>.coerceList(key: Any) : List<Any> {
-    return when (key) {
-        is KType, is KClass<*>, is Class<*> -> filterIsAssignableTo(key)
-        else -> this
-    }
-}

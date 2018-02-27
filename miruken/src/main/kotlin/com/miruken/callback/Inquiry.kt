@@ -51,9 +51,8 @@ open class Inquiry(val key: Any, val many: Boolean = false)
         get() {
             if (_result != null) return _result
             _result = if (isAsync) {
-                val resolutions = _resolutions
                 Promise.all(_promises) then {
-                    val flat = flatten(listOf(resolutions, it))
+                    val flat = flatten(_resolutions, it)
                     if (many) flat else flat.firstOrNull()
                 }
             } else {
@@ -140,13 +139,16 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     ) = isAssignableTo(key, item) &&
                 resolve(item, false, greedy, composer)
 
-    private fun flatten(list: List<*>): List<*> {
-        return list.flatMap {
-            when (it) {
-                is Iterable<Any?> -> it
-                else -> listOf(it)
-            }
-        }.filterNotNull().distinct()
+    private fun flatten(vararg lists: List<*>): List<Any> {
+        val flat = mutableSetOf<Any>()
+        lists.flatMap { it }
+             .forEach {
+                 if (it is Iterable<*>)
+                     flat.addAll(it.filterNotNull())
+                 else if (it != null)
+                     flat.add(it)
+             }
+        return flat.toList()
     }
 }
 

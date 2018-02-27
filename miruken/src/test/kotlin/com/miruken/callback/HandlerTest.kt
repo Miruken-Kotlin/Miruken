@@ -246,7 +246,7 @@ class HandlerTest {
     }
 
     @Test fun `Provides many callbacks implicitly async`() {
-        val handler = SpecialHandler()
+        val handler = SpecialAsyncHandler()
         assertAsync(testName) { done ->
             handler.resolveAsync<Bar>() then {
                 assertNotNull(it)
@@ -720,11 +720,10 @@ class HandlerTest {
 
     class SpecialAsyncHandler : Handler() {
         @Provides
-        fun providesManyBars(): Promise<List<Bar>> {
-            return Promise.resolve(listOf(
+        fun providesManyBars(): Promise<List<Bar>> =
+                Promise.resolve(listOf(
                     Bar().apply { handled = 1 },
                     Bar().apply { handled = 2 }))
-        }
 
         @Provides
         val providesPropertyBar : Promise<Bar>
