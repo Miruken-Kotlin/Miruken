@@ -13,7 +13,7 @@ class typeOfTest {
     class Foo
     class Bar<T>
 
-    @Test fun `Can obtain KType from reified T`() {
+    @Test fun `Can obtain KType of T`() {
         assertEquals(typeOf<Set<String>>(), typeOf<Set<String>>())
         assertNotEquals(typeOf<Set<String>>(), typeOf<Set<Int>>())
         assertEquals(typeOf<List<*>>(), typeOf<List<Any>>())

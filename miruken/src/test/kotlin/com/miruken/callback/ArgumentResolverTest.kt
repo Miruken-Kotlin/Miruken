@@ -65,8 +65,23 @@ class ArgumentResolverTest {
         handler.command<Any>(NewOrder(Order()))
         assertAsync(testName) { done ->
             handler.commandAsync<Order>(RefundOrder(orderId = 2)) then {
-                assertNotNull(it!!)
+                assertNotNull(it)
                 assertEquals(2, it.id)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Rejects command if result is null`() {
+        val handler = (InventoryHandler()
+                + CustomerSupport()
+                + RepositoryImpl<Order>())
+        handler.command<Any>(NewOrder(Order()))
+        handler.command<Any>(NewOrder(Order()))
+        handler.command<Any>(NewOrder(Order()))
+        assertAsync(testName) { done ->
+            handler.commandAsync<Order>(RefundOrder(orderId = 5)) catch {
+                assertTrue(it is NotHandledException)
                 done()
             }
         }
@@ -80,11 +95,33 @@ class ArgumentResolverTest {
         handler.command<Any>(NewOrder(Order()))
         assertAsync(testName) { done ->
             handler.commandAsync<List<Order>>(ClockOut()) then {
-                assertNotNull(it!!)
+                assertNotNull(it)
                 assertEquals(2, it.size)
                 done()
             }
         }
+    }
+
+    @Test fun `Resolves simple dependency`() {
+        val handler    = (SimpleDependencyHandler()
+                       + ConfigurationHandler())
+        val maxRetries = handler.command<Int>(NewOrder(Order()))
+        assertEquals(2, maxRetries)
+    }
+
+    @Test fun `Resolves promise simple dependency`() {
+        val handler    = (SimpleDependencyHandler()
+                       + ConfigurationHandler())
+        val maxRetries = handler.command<Int>(ChangeOrder(Order()))
+        assertEquals(2, maxRetries)
+    }
+
+    @Test fun `Resolves simple array dependency`() {
+        val handler = (SimpleDependencyHandler()
+                    + ConfigurationHandler())
+        val help    = handler.command<List<String>>(RefundOrder(1))
+        assertTrue(help.containsAll(listOf(
+                "www.help.com", "www.help2.com", "www.help3.com")))
     }
 
     interface Entity {
@@ -196,8 +233,7 @@ class ArgumentResolverTest {
                 refund:        RefundOrder,
                 orders:        List<Order>,
                 getRepository: Lazy<Repository<Order>>
-        ): Order?
-        {
+        ): Order? {
             return orders.firstOrNull { it.id == refund.orderId }
                     ?.also {
                         it.status = OrderStatus.REFUNDED
@@ -210,8 +246,7 @@ class ArgumentResolverTest {
                 clockIn:    ClockIn,
                 orders:     Promise<List<Order>>,
                 repository: Repository<Order>
-        ): Promise<List<Order>>
-        {
+        ): Promise<List<Order>> {
             return orders
         }
 
@@ -220,18 +255,93 @@ class ArgumentResolverTest {
                 clockOut:   ClockOut,
                 orders:     Promise<List<Order>>,
                 repository: Repository<Order>
-        ): Promise<List<Order>>
-        {
+        ): Promise<List<Order>> {
             return orders
         }
 
         @Handles
         fun validateOrder(
                 place: NewOrder,
-                repository: Repository<Order>?)
-        {
+                repository: Repository<Order>?) {
             assertNotNull(place)
             assertNull(repository)
         }
+    }
+
+    enum class LogLevel {
+        TRACE,
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR,
+        FATAL,
+        OFF
+    }
+
+    class ConfigurationHandler : Handler() {
+        @Provides
+        val maxRetries: Int = 2
+
+        @Provides
+        @Key("logLevel")
+        val logLevelInt = LogLevel.INFO
+
+        @Provides
+        @Key("logLevelStr")
+        val logLevelStr = LogLevel.FATAL.name
+
+        @Provides
+        @Key("help")
+        val primaryHelp = "www.help.com"
+
+        @Provides
+        @Key("help")
+        val secondaryHelp = "www.help2.com"
+
+        @Provides
+        @Key("help")
+        val criticalHelp = "www.help3.com"
+    }
+
+    class SimpleDependencyHandler : Handler() {
+        @Handles
+        fun place(
+                newOrder:   NewOrder,
+                maxRetries: Int,
+                @Key("logLevel") logLevel: LogLevel
+        ): Int {
+            assertEquals(LogLevel.INFO, logLevel)
+            return maxRetries
+        }
+
+        @Handles
+        fun change(
+                changeOrder: ChangeOrder,
+                maxRetries:  Promise<Int>,
+                @Key("logLevel") logLevel: Promise<LogLevel>
+        ): Promise<Int> {
+            return (logLevel then {
+                assertEquals(LogLevel.INFO, it)
+                maxRetries
+            }).unwrap()
+        }
+
+        @Handles
+        fun cancel(
+                cancelOrder: CancelOrder,
+                maxRetries:  Promise<Int>,
+                @Key("logLevelStr") logLevel: Promise<LogLevel>
+        ): Promise<Int> {
+            return (logLevel then {
+                assertEquals(LogLevel.FATAL, it)
+                maxRetries
+            }).unwrap()
+        }
+
+        @Handles
+        fun refund(
+                refundOrder: RefundOrder,
+                help: List<String>
+        ): List<String> = help
     }
 }
