@@ -245,6 +245,12 @@ class HandlerTest {
                 .containsAll(listOf(1 to false, 2 to false, 3 to false)))
     }
 
+    @Test fun `Provides array of callbacks implicitly`() {
+        val handler = SpecialHandler()
+        val bams    = handler.resolveAll<Bam>()
+        assertEquals(3, bams.size)
+    }
+
     @Test fun `Provides many callbacks implicitly async`() {
         val handler = SpecialAsyncHandler()
         assertAsync(testName) { done ->
@@ -430,7 +436,7 @@ class HandlerTest {
         val special = SpecialHandler()
         val handler = simple + special
         val all     = handler.resolveAll<Any>()
-        assertEquals(8, all.size)
+        assertEquals(11, all.size)
         assertTrue(all.contains(simple))
         assertTrue(all.contains(special))
     }
@@ -687,6 +693,11 @@ class HandlerTest {
         @Provides
         val providesPropertyBar : Bar
             get() = Bar().apply { handled = 3 }
+
+        @Provides
+        fun providesArrayOfBams(): Array<Bam> {
+            return arrayOf(Bam(), Bam(), Bam())
+        }
 
         @Provides
         fun providesBazExplicitly(

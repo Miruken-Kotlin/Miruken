@@ -83,6 +83,10 @@ open class Inquiry(val key: Any, val many: Boolean = false)
                 resolution.filterNotNull().fold(false, { s, res ->
                     include(res, greedy, composer) || s
                 })
+            !strict && resolution is Array<*> ->
+                resolution.filterNotNull().fold(false, { s, res ->
+                    include(res, greedy, composer) || s
+                })
             else -> include(resolution, greedy, composer)
         }
         if (resolved) _result = null
@@ -137,17 +141,17 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             greedy:    Boolean,
             composer:  Handling
     ) = isAssignableTo(key, item) &&
-                resolve(item, false, greedy, composer)
+            resolve(item, false, greedy, composer)
 
     private fun flatten(vararg lists: List<*>): List<Any> {
         val flat = mutableSetOf<Any>()
         lists.flatMap { it }
-             .forEach {
-                 if (it is Iterable<*>)
-                     flat.addAll(it.filterNotNull())
-                 else if (it != null)
-                     flat.add(it)
-             }
+             .forEach { when (it) {
+                 null -> {}
+                 is Iterable<*> -> flat.addAll(it.filterNotNull())
+                 is Array<*> -> flat.addAll(it.filterNotNull())
+                 else -> flat.add(it)
+             } }
         return flat.toList()
     }
 }
