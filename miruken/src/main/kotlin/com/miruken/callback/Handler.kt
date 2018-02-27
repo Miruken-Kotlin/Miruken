@@ -32,9 +32,6 @@ open class Handler : Handling {
                     HandlesPolicy.dispatch(handler, callback, greedy, composer)
         }
 
-        fun toHandler(target: Any) : Handling =
-                target as? Handling ?: HandlerAdapter(target)
-
         private val ExcludeTypes = setOf(Handler::class,
                 CascadeHandler::class, CompositeHandler::class,
                 CompositionScope::class)

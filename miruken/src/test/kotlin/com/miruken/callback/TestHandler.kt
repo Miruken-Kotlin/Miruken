@@ -40,7 +40,7 @@ sealed class TestHandler {
         fun handleLazy(cb: Lazy<Foo>) {}
 
         @Handles
-        fun handleLazy2(cb: () -> Foo) {}
+        fun handleFunc(cb: () -> Foo) {}
 
         @Handles
         fun handleCallback(cb: Command) {}
@@ -67,7 +67,7 @@ sealed class TestHandler {
         fun <T : Foo> handleBoundedGenericLazy(cb: Lazy<T>) {}
 
         @Handles
-        fun <T : Foo> handleBoundedGenericLazy2(cb: () -> T) {
+        fun <T : Foo> handleBoundedGenericFunc(cb: () -> T) {
         }
 
         @Handles
@@ -104,7 +104,7 @@ sealed class TestHandler {
         fun <T> handleOpenGenericLazy(cb: Lazy<T>) {}
 
         @Handles
-        fun <T> handleOpenGenericLazy2(cb: () -> T) {}
+        fun <T> handleOpenGenericFunc(cb: () -> T) {}
 
         @Handles
         fun <T> handleOpenGenericPartial(cb: Bar<T>) {}

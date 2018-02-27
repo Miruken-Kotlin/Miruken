@@ -6,7 +6,8 @@ import kotlin.reflect.KType
 
 class Provider(
         private val value: Any,
-        type: KType? = null) : Handler() {
+        type: KType? = null
+) : Handler() {
 
     private var _key: Any = type?.componentType ?: value::class
 

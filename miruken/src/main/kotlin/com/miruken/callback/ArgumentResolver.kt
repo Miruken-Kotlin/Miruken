@@ -14,6 +14,8 @@ open class ArgumentResolver : ArgumentResolving {
         return when {
             argument.flags has TypeFlags.LAZY ->
                     resolveArgumentLazy(argument, handler, composer)
+            argument.flags has TypeFlags.FUNC ->
+                resolveArgumentFunc(argument, handler, composer)
             else -> resolveArgument(argument, handler, composer)
         }
     }
@@ -46,7 +48,16 @@ open class ArgumentResolver : ArgumentResolving {
             argument: Argument,
             handler:  Handling,
             composer: Handling
-    ): () -> Any? = { resolveArgument(argument, handler, composer) }
+    ): Lazy<Any?> =
+        lazy { resolveArgument(argument, handler, composer) }
+
+    private fun resolveArgumentFunc(
+            argument: Argument,
+            handler:  Handling,
+            composer: Handling
+    ): () -> Any? = {
+        resolveArgument(argument, handler, composer)
+    }
 
     private fun resolveArgument(
             argument: Argument,

@@ -9,7 +9,10 @@ import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
 
-fun isAssignableTo(leftSide: Any, rightSide: Any?): Boolean {
+fun isAssignableTo(
+        leftSide:  Any,
+        rightSide: Any?
+): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
             null -> false
@@ -122,6 +125,8 @@ val KType.isOpenGenericDefinition: Boolean
     get() = arguments.isNotEmpty() && arguments.all {
         (it.type?.classifier as? KTypeParameter)
             ?.upperBounds?.all { it == ANY_TYPE } == true }
+
+inline val KClass<*>.isGeneric get() = typeParameters.isNotEmpty()
 
 fun KTypeParameter.satisfies(proposedType: KType) =
         upperBounds.any { proposedType.isSubtypeOf(it) }

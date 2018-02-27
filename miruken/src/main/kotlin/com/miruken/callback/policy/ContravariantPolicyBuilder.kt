@@ -14,7 +14,7 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
     init {
         policy.targetFunctor = {
             @Suppress("UNCHECKED_CAST")
-            if (isAssignableTo(targetFunctor, it))
+            if (isAssignableTo(callbackType, it))
                 targetFunctor(it as C) else null
         }
     }

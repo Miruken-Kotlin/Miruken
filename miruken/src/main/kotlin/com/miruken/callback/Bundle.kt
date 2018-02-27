@@ -52,8 +52,9 @@ class Bundle(private val all: Boolean = true) :
     fun add(action: BundleActionBlock,
             notify: BundleNotifyBlock? = null
     ) : Bundle {
+        var act = action
         if (wantsAsync) {
-            val act: BundleActionBlock = { handler ->
+            act = { handler ->
                 try {
                     action(handler)?.run {
                         if (this is Promise<*>)
@@ -65,8 +66,8 @@ class Bundle(private val all: Boolean = true) :
                     } else throw e
                 }
             }
-            _operations.add(Operation(act, notify))
         }
+        _operations.add(Operation(act, notify))
         return this
     }
 

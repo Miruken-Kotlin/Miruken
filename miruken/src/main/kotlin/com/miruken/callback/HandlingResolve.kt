@@ -74,9 +74,6 @@ inline fun <reified T: Any> Handling.resolveAll() : List<T> =
 inline fun <reified T: Any> Handling.resolveAllAsync() : Promise<List<T>> =
         resolveAllAsync(typeOf<T>()) then { it.filterIsInstance<T>() }
 
-inline fun <reified T: Any> Handling.provide(value: T) =
-        Provider(value, typeOf<T>()) + this
-
 private fun List<Any>.coerceList(key: Any) : List<Any> {
     return when (key) {
         is KType, is KClass<*>, is Class<*> -> filterIsAssignableTo(key)

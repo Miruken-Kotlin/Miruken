@@ -9,7 +9,7 @@ open class CompositeHandler(vararg handlers: Any)
         addHandlers(*handlers)
     }
 
-    val handlers = _handlers.toList()
+    val handlers get() = _handlers.toList()
 
     override fun handleCallback(
             callback: Any,
@@ -25,19 +25,22 @@ open class CompositeHandler(vararg handlers: Any)
         })
     }
 
-    final override fun addHandlers(vararg handlers: Any): CompositeHandler {
+    final override fun addHandlers(
+            vararg handlers: Any): CompositeHandler {
         _handlers.addAll(handlers.filter {
-            find(it) == null }.map(::toHandler))
+            find(it) == null }.map { it.toHandler() })
         return this
     }
 
-    final override fun insertHandlers(atIndex: Int, vararg handlers: Any): CompositeHandler {
+    final override fun insertHandlers(
+            atIndex: Int, vararg handlers: Any): CompositeHandler {
         _handlers.addAll(atIndex, handlers.filter {
-            find(it) == null }.map(::toHandler))
+            find(it) == null }.map { it.toHandler() })
         return this
     }
 
-    final override fun removeHandlers(vararg handlers: Any): CompositeHandler {
+    final override fun removeHandlers(
+            vararg handlers: Any): CompositeHandler {
         _handlers.removeAll(handlers.mapNotNull(::find))
         return this
     }

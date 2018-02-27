@@ -168,14 +168,14 @@ class ArgumentTest {
     }
 
     @Test fun `Extracts bounded generic lazy func parameter information`() {
-        val handle   = getMethod<TestHandler.Good>("handleBoundedGenericLazy2")
+        val handle   = getMethod<TestHandler.Good>("handleBoundedGenericFunc")
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         assertTrue(argument.parameterType
                 .isSubtypeOf(typeOf<Function0<Foo>>()))
         assertTrue(argument.logicalType.isSubtypeOf(typeOf<Foo>()))
         assertFalse(argument.flags.has(TypeFlags.COLLECTION))
-        assertTrue(argument.flags.has(TypeFlags.LAZY))
+        assertTrue(argument.flags.has(TypeFlags.FUNC))
         assertFalse(argument.flags.has(TypeFlags.PROMISE))
         assertFalse(argument.flags.has(TypeFlags.OPTIONAL))
         assertTrue(argument.flags.has(TypeFlags.OPEN))

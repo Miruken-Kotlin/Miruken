@@ -40,7 +40,7 @@ sealed class TestProvider {
         fun provideLazy(): Lazy<Foo> = lazy { Foo() }
 
         @Provides
-        fun provideLazy2(): () -> Foo = { Foo() }
+        fun provideFunc(): () -> Foo = { Foo() }
 
         @Provides
         fun provideLazy3(): () -> Foo = fun(): Foo { return Foo() }
