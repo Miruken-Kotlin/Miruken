@@ -44,7 +44,7 @@ class MethodDispatch(val callable: KCallable<*>) {
                 callable.call(receiver, *arguments)
             } catch (e: Throwable) {
                 if (e is InvocationTargetException)
-                    Promise.reject(e.targetException)
+                    Promise.reject(e.cause ?: e)
                 else Promise.reject(e)
             }
         } else {

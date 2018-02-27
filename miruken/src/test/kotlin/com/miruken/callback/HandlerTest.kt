@@ -12,6 +12,7 @@ import org.junit.Test
 import org.junit.rules.TestName
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.createInstance
 import kotlin.test.*
 
 class HandlerTest {
@@ -717,7 +718,7 @@ class HandlerTest {
             @Suppress("UNCHECKED_CAST")
             return ((inquiry.key as? KType)
                     ?.classifier as? KClass<*>)?.let {
-                it.java.newInstance() as T
+                it.createInstance() as T
             }
         }
 
@@ -755,7 +756,7 @@ class HandlerTest {
         @Provides
         inline fun <reified T: Foo> providesNewFoo(): T
         {
-            return T::class.java.newInstance()
+            return T::class.createInstance()
         }
     }
 
