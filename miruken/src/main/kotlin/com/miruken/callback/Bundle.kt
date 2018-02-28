@@ -4,8 +4,9 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 
-typealias BundleActionBlock = (Handling) -> Any?
-typealias BundleNotifyBlock = (HandleResult) -> HandleResult
+typealias BundleActionBlock      = (Handling) -> Unit
+typealias BundleActionAsyncBlock = (Handling) -> Promise<*>
+typealias BundleNotifyBlock      = (HandleResult) -> HandleResult
 
 class Bundle(private val all: Boolean = true) :
         AsyncCallback, ResolvingCallback, DispatchingCallback {
@@ -49,6 +50,9 @@ class Bundle(private val all: Boolean = true) :
         } else { if (wantsAsync) Promise.EMPTY else null }
     }
 
+    fun add(action: BundleActionBlock) =
+            add(action, null)
+
     fun add(action: BundleActionBlock,
             notify: BundleNotifyBlock? = null
     ) : Bundle {
@@ -56,10 +60,7 @@ class Bundle(private val all: Boolean = true) :
         if (wantsAsync) {
             act = { handler ->
                 try {
-                    action(handler)?.run {
-                        if (this is Promise<*>)
-                            _promises.add(this)
-                    }
+                    action(handler)
                 } catch (e: Throwable) {
                     if (e !is RejectedException) {
                         _promises.add(Promise.reject(e))
@@ -71,8 +72,16 @@ class Bundle(private val all: Boolean = true) :
         return this
     }
 
-    infix operator fun plus(action: BundleActionBlock) =
-            add(action)
+    fun addAsync(action: BundleActionAsyncBlock,
+                 notify: BundleNotifyBlock? = null
+    ) : Bundle {
+        return add({ handler ->
+            _promises.add(action(handler))
+        }, notify)
+    }
+
+    fun addAsync(action: BundleActionAsyncBlock) =
+            addAsync(action, null)
 
     override fun getResolveCallback(): Any {
         return if (_resolving) this

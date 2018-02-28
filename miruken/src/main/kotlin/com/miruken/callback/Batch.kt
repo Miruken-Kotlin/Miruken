@@ -1,6 +1,8 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.all
+import com.miruken.protocol.proxy
 
 class Batch(vararg tags: Any) :
         CompositeHandler(), BatchingComplete {
@@ -11,7 +13,7 @@ class Batch(vararg tags: Any) :
         return _tags.isEmpty() || _tags.contains(tag)
     }
 
-    override fun complete(composer: Handling): Promise<List<Any>> {
-        TODO("not implemented")
-    }
+    override fun complete(composer: Handling): Promise<List<Any?>> =
+        Promise.all(handlers.map {
+            it.proxy<Batching>().complete(composer) })
 }

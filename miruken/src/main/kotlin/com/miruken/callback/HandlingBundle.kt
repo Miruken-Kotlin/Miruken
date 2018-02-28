@@ -12,7 +12,8 @@ fun Handling.bundle(
         return HandleResult.HANDLED
     val handled = handle(bundle)
     bundle.complete()
-            ?.takeUnless { bundle.wantsAsync }
+            ?.takeUnless {
+                bundle.wantsAsync || !bundle.isAsync }
             ?.get()
     return handled or bundle.handled
 }
@@ -34,3 +35,9 @@ fun Handling.bundleAsync(
     val handled = handle(bundle)
     return bundle.complete()!!.then { handled }
 }
+
+fun Handling.allAsync(prepare:Bundle.() -> Unit) =
+        bundleAsync(true, prepare)
+
+fun Handling.anyAsync(prepare:Bundle.() -> Unit) =
+        bundleAsync(false, prepare)

@@ -13,7 +13,6 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaMethod
 
-@Suppress("JoinDeclarationAndAssignment")
 class CallableDispatch(val callable: KCallable<*>){
     val arguments: List<Argument> =
             callable.valueParameters.map { Argument(it) }
@@ -21,30 +20,27 @@ class CallableDispatch(val callable: KCallable<*>){
     val strict:            Boolean
     val logicalReturnType: KType
     val returnFlags:       Flags<TypeFlags>
-    val owningClass:       KClass<*>
-    val javaMethod:        Method
+    val owningClass:       KClass<*> =
+            callable.instanceParameter?.let {
+                it.type.classifier as? KClass<*>
+            } ?: throw IllegalArgumentException(
+                    "Only class bindings are supported: $callable")
 
     init {
-        owningClass = callable.instanceParameter?.let {
-            it.type.classifier as? KClass<*>
-        } ?: throw IllegalArgumentException(
-                "Only class bindings are supported: $callable")
-
-        javaMethod = when (callable) {
-            is KFunction<*> -> callable.javaMethod!!
-            is KProperty<*> -> callable.javaGetter!!
-            else -> throw IllegalArgumentException(
-                    "Only functions and properties are supported: $callable")
-        }
-
-        val typeFlags = TypeFlags.parse(returnType)
-        logicalReturnType   = typeFlags.second
-        returnFlags         = typeFlags.first
-        strict              = annotations.any { it is Strict }
+        val typeFlags     = TypeFlags.parse(returnType)
+        logicalReturnType = typeFlags.second
+        returnFlags       = typeFlags.first
+        strict            = annotations.any { it is Strict }
     }
 
     inline val returnType  get() = callable.returnType
     inline val annotations get() = callable.annotations
+
+    val javaMethod = when (callable) {
+        is KFunction<*> -> callable.javaMethod!!
+        is KProperty<*> -> callable.javaGetter!!
+        else -> throw IllegalStateException()
+    }
 
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing

@@ -18,13 +18,20 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object PROMISE    : TypeFlags(1 shl 4)
     object OPTIONAL   : TypeFlags(1 shl 5)
     object PRIMITIVE  : TypeFlags(1 shl 6)
-    object OPEN       : TypeFlags(1 shl 7)
+    object INTERFACE  : TypeFlags(1 shl 7)
+    object OPEN       : TypeFlags(1 shl 8)
 
     companion object {
         fun parse(type: KType) : Pair<Flags<TypeFlags>, KType> {
             var logicalType = type
+
             var flags = if (type.isOpenGeneric)
                 -TypeFlags.OPEN else -TypeFlags.NONE
+
+            (type.classifier as? KClass<*>)?.also {
+                if (it.java.isInterface)
+                    flags += TypeFlags.INTERFACE
+            }
 
             logicalType = logicalType.takeIf { it.isMarkedNullable }?.let {
                 flags += TypeFlags.OPTIONAL
@@ -49,9 +56,8 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             }
 
             (logicalType.classifier as? KClass<*>)?.also {
-                if (it.javaPrimitiveType != null || it == String::class) {
+                if (it.javaPrimitiveType != null || it == String::class)
                     flags += TypeFlags.PRIMITIVE
-                }
             }
 
             return flags to logicalType

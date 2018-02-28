@@ -17,24 +17,22 @@ open class HandleMethod(
 ) : Callback, ResolvingCallback, DispatchingCallback {
 
     override var result:     Any?   = null
-    override val resultType: KType? = method.returnType.toKType()
+    override val resultType: KType? = method.genericReturnType.toKType()
     override val policy:     CallbackPolicy? get() = null
-    var exception: Throwable? = null
+    var          exception:  Throwable? = null
 
     override fun getResolveCallback() = Resolution(protocol, this)
-
-    fun invokeOn(target: Any, composer: Handling): HandleResult {
-        return if (isAcceptableTarget(target)) {
-            BINDINGS.getOrPut(method) { HandleMethodBinding(method) }
-                    .dispatch(target, this, composer)
-        } else HandleResult.NOT_HANDLED
-    }
 
     override fun dispatch(
             handler:  Any,
             greedy:   Boolean,
             composer: Handling
-    ) = invokeOn(handler, composer)
+    ): HandleResult {
+        return if (isAcceptableTarget(handler)) {
+            BINDINGS.getOrPut(method) { HandleMethodBinding(method) }
+                    .dispatch(handler, this, composer)
+        } else HandleResult.NOT_HANDLED
+    }
 
     private fun isAcceptableTarget(target: Any): Boolean {
         return when {

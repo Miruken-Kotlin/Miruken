@@ -7,5 +7,5 @@ interface Batching {
 }
 
 interface BatchingComplete {
-    fun complete(composer: Handling): Promise<List<Any>>
+    fun complete(composer: Handling): Promise<List<Any?>>
 }

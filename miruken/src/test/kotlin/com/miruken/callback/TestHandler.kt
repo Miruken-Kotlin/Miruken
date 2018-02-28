@@ -4,6 +4,7 @@ import com.miruken.concurrent.Promise
 
 @Suppress("UNUSED_PARAMETER")
 sealed class TestHandler {
+    interface Boo
     open class Foo
     open class Bar<T>
     open class Baz<T, R>
@@ -17,6 +18,9 @@ sealed class TestHandler {
 
         @Handles
         fun handlePrimitive(cb: Int) {}
+
+        @Handles
+        fun handleInterface(cb: Boo) {}
 
         @Handles
         fun handle(cb: Foo) {}

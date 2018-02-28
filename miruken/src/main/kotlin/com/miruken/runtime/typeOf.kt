@@ -6,7 +6,7 @@ import kotlin.reflect.*
 //
 import kotlin.reflect.full.createType
 
-inline fun <reified T : Any> typeOf(): KType =
+inline fun <reified T : Any?> typeOf(): KType =
         object : SuperTypeTokenHolder<T>() {}.typeOfImpl()
 
 @Suppress("unused")

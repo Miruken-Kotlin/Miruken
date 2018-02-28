@@ -5,7 +5,7 @@ import com.miruken.runtime.typeOf
 import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified R: Any> Handling.command(callback: Any) =
+inline fun <reified R: Any?> Handling.command(callback: Any) =
     command(callback, typeOf<R>()) as R
 
 fun Handling.command(
@@ -24,7 +24,7 @@ fun Handling.command(
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified R: Any> Handling.commandAsync(callback: Any) =
+inline fun <reified R: Any?> Handling.commandAsync(callback: Any) =
         commandAsync(callback, typeOf<R>()) as Promise<R>
 
 @Suppress("UNCHECKED_CAST")

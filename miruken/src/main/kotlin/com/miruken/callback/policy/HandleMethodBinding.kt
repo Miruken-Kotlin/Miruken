@@ -39,15 +39,16 @@ class HandleMethodBinding(method: Method): MethodBinding(method) {
             composer:     Handling
     ): HandleResult {
         val returnValue = handleMethod
-                .method.invoke(target, handleMethod.arguments)
+                .method.invoke(target, *handleMethod.arguments)
         val result = HANDLE_RESULT.get() ?: HandleResult.HANDLED
-        if (result.handled) handleMethod.result = returnValue
+        if (result.handled)
+            handleMethod.result = returnValue
         return result
     }
 
     companion object {
         @PublishedApi
-        internal val COMPOSER      = ThreadLocal<Handling?>()
+        internal val COMPOSER = ThreadLocal<Handling?>()
 
         @PublishedApi
         internal val HANDLE_RESULT = ThreadLocal<HandleResult?>()

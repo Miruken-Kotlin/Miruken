@@ -48,9 +48,9 @@ interface Handling : ProtocolAdapter {
         }
 
         val handleMethod = HandleMethod(protocol, method, args, semantics)
-        return handler.handle(handleMethod) success {
-            handleMethod.result
-        } ?: throw IllegalStateException(
-                "Method '$method' on $protocol not handled")
+        return handler.handle(handleMethod) failure  {
+            throw IllegalStateException(
+                    "Method '$method' on $protocol not handled")
+        } ?: handleMethod.result
     }
 }

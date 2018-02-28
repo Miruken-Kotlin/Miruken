@@ -9,6 +9,7 @@ import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.withNullability
 import kotlin.test.*
 
+typealias Boo    = TestHandler.Boo
 typealias Foo    = TestHandler.Foo
 typealias Bar<T> = TestHandler.Bar<T>
 
@@ -25,6 +26,7 @@ class ArgumentTest {
         assertFalse(argument.flags.has(TypeFlags.PROMISE))
         assertFalse(argument.flags.has(TypeFlags.OPTIONAL))
         assertFalse(argument.flags.has(TypeFlags.PRIMITIVE))
+        assertFalse(argument.flags.has(TypeFlags.INTERFACE))
         assertFalse(argument.flags.has(TypeFlags.OPEN))
     }
 
@@ -39,6 +41,21 @@ class ArgumentTest {
         assertFalse(argument.flags.has(TypeFlags.PROMISE))
         assertFalse(argument.flags.has(TypeFlags.OPTIONAL))
         assertTrue(argument.flags.has(TypeFlags.PRIMITIVE))
+        assertFalse(argument.flags.has(TypeFlags.INTERFACE))
+        assertFalse(argument.flags.has(TypeFlags.OPEN))
+    }
+
+    @Test fun `Extracts interface parameter information`() {
+        val handle   = getMethod<TestHandler.Good>("handleInterface")
+        val callback = handle!!.parameters.component2()
+        val argument = Argument(callback)
+        assertEquals(typeOf<Boo>(), argument.parameterType)
+        assertEquals(argument.parameterType, argument.logicalType)
+        assertFalse(argument.flags.has(TypeFlags.COLLECTION))
+        assertFalse(argument.flags.has(TypeFlags.LAZY))
+        assertFalse(argument.flags.has(TypeFlags.PROMISE))
+        assertFalse(argument.flags.has(TypeFlags.OPTIONAL))
+        assertTrue(argument.flags.has(TypeFlags.INTERFACE))
         assertFalse(argument.flags.has(TypeFlags.OPEN))
     }
 

@@ -63,6 +63,14 @@ class HandlerTest {
         assertEquals(2, bar.handled)
     }
 
+    @Test fun `Handles interface callbacks`() {
+        val foo     = SuperFoo()
+        val handler = InterfaceHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(foo))
+        assertEquals(1, foo.handled)
+        assertTrue { foo.hasComposer }
+    }
+
     @Test fun `Handles callbacks covariantly`() {
         val foo     = SuperFoo()
         val handler = SimpleHandler()
@@ -151,6 +159,15 @@ class HandlerTest {
         assertNotNull(bar!!)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides interface callbacks`() {
+        val handler = InterfaceHandler()
+        val testing = handler.resolve<Testing>()
+        assertNotNull(testing!!)
+        assertTrue(testing is Bar)
+        assertFalse(testing.hasComposer)
+        assertEquals(3, testing.handled)
     }
 
     @Test fun `Provides callbacks implicitly using adapter`() {
@@ -484,18 +501,23 @@ class HandlerTest {
 
     /** Callbacks */
 
-    open class Foo {
-        var handled:     Int     = 0
-        var hasComposer: Boolean = false
+    interface Testing {
+        var handled:     Int
+        var hasComposer: Boolean
+    }
+
+    open class Foo: Testing {
+        override var handled:     Int     = 0
+        override var hasComposer: Boolean = false
     }
 
     class SuperFoo : Foo()
 
     class FooDecorator(foo: Foo) : Foo()
 
-    open class Bar {
-        var handled:     Int     = 0
-        var hasComposer: Boolean = false
+    open class Bar: Testing {
+        override var handled:     Int     = 0
+        override var hasComposer: Boolean = false
     }
 
     class SuperBar : Bar()
@@ -619,6 +641,23 @@ class HandlerTest {
                 "Bar" -> Bar()
                 else -> Promise.EMPTY
             }
+        }
+    }
+
+    class InterfaceHandler : Handler() {
+        // Handles
+
+        @Handles
+        fun handleTestingImplicitly(t: Testing, composer: Handling) {
+            ++t.handled
+            t.hasComposer = true
+        }
+
+        // Provides
+
+        @Provides
+        fun provideTestingImplicitly(): Testing = Bar().apply {
+            handled = 3
         }
     }
 
