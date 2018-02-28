@@ -9,7 +9,7 @@ class MethodRule(
     var returnRule: ReturnRule? = null
         private set
 
-    fun matches(method: MethodDispatch) : Boolean {
+    fun matches(method: CallableDispatch) : Boolean {
         val arguments = method.arguments
         if (arguments.size < argumentRules.size ||
                 !arguments.zip(argumentRules) { arg, argRule ->
@@ -22,7 +22,7 @@ class MethodRule(
         this.returnRule = returnRule
     }
 
-    fun bind(dispatch: MethodDispatch,
+    fun bind(dispatch: CallableDispatch,
              annotation: Annotation): PolicyMethodBinding {
         val bindingInfo = PolicyMethodBindingInfo(this, dispatch, annotation)
         returnRule?.configure(bindingInfo)

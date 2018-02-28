@@ -6,26 +6,37 @@ import com.miruken.concurrent.Promise
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import java.lang.reflect.InvocationTargetException
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
+import java.lang.reflect.Method
+import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.javaGetter
+import kotlin.reflect.jvm.javaMethod
 
-class MethodDispatch(val callable: KCallable<*>) {
+@Suppress("JoinDeclarationAndAssignment")
+class CallableDispatch(val callable: KCallable<*>){
     val arguments: List<Argument> =
             callable.valueParameters.map { Argument(it) }
 
     val strict:            Boolean
     val logicalReturnType: KType
     val returnFlags:       Flags<TypeFlags>
-    val owningClass:       KClass<*> =
-            callable.instanceParameter?.let {
-                it.type.classifier as? KClass<*>
-            } ?: throw IllegalArgumentException(
-                    "Only instance methods are currently supported: $callable")
+    val owningClass:       KClass<*>
+    val javaMethod:        Method
 
     init {
+        owningClass = callable.instanceParameter?.let {
+            it.type.classifier as? KClass<*>
+        } ?: throw IllegalArgumentException(
+                "Only class bindings are supported: $callable")
+
+        javaMethod = when (callable) {
+            is KFunction<*> -> callable.javaMethod!!
+            is KProperty<*> -> callable.javaGetter!!
+            else -> throw IllegalArgumentException(
+                    "Only functions and properties are supported: $callable")
+        }
+
         val typeFlags = TypeFlags.parse(returnType)
         logicalReturnType   = typeFlags.second
         returnFlags         = typeFlags.first

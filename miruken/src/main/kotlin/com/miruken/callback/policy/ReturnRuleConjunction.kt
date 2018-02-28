@@ -4,7 +4,7 @@ class ReturnRuleConjunction(
         private val leftSide:  ReturnRule,
         private val rightSide: ReturnRule
 ): ReturnRule {
-    override fun matches(method: MethodDispatch): Boolean =
+    override fun matches(method: CallableDispatch): Boolean =
         leftSide.matches(method) && rightSide.matches(method)
 
     override fun configure(bindingInfo: PolicyMethodBindingInfo) {

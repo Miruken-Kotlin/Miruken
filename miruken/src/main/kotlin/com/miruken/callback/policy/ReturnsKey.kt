@@ -4,7 +4,7 @@ import com.miruken.callback.Key
 import com.miruken.callback.StringKey
 
 object ReturnsKey : ReturnRule {
-    override fun matches(method: MethodDispatch) =
+    override fun matches(method: CallableDispatch) =
             method.returnsSomething
 
     override fun configure(bindingInfo: PolicyMethodBindingInfo) {

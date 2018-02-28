@@ -1,6 +1,9 @@
 package com.miruken.runtime
 
 import org.junit.Test
+import kotlin.reflect.KClass
+import kotlin.reflect.full.allSuperclasses
+import kotlin.reflect.full.allSupertypes
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -27,4 +30,47 @@ class RuntimeHelpersTest {
         val componentType = typeOf<Array<String>>().componentType
         assertEquals(typeOf<String>(), componentType)
     }
+
+    @Test fun `gets all interfaces of type`() {
+        val allInterfaces = typeOf<BazImpl>().allInterfaces
+        assertEquals(7, allInterfaces.size)
+        assertTrue(allInterfaces.containsAll(listOf(
+                typeOf<Baz>(), typeOf<Foo>(), typeOf<Bar>(),
+                typeOf<Boo>(), typeOf<List<String>>(),
+                typeOf<Collection<String>>(), typeOf<Iterable<String>>()
+        )))
+    }
+
+    @Test fun `gets all top-level interfaces of type`() {
+        var topLevelInterfaces = typeOf<Baz>().allTopLevelInterfaces
+        assertEquals(2, topLevelInterfaces.size)
+        assertTrue(topLevelInterfaces.containsAll(listOf(
+                typeOf<Bar>(), typeOf<Foo>()
+        )))
+        topLevelInterfaces = typeOf<BazImpl>().allTopLevelInterfaces
+        assertEquals(3, topLevelInterfaces.size)
+        assertTrue(topLevelInterfaces.containsAll(listOf(
+                typeOf<Baz>(), typeOf<Boo>(), typeOf<List<String>>()
+        )))
+    }
+
+    @Test fun `Determines if top-level interface`() {
+        assertFalse(typeOf<Bar>().isTopLevelInterfaceOf<Bar>())
+        assertTrue(typeOf<Bar>().isTopLevelInterfaceOf<BarImpl>())
+        assertTrue(typeOf<Baz>().isTopLevelInterfaceOf<BazImpl>())
+        assertTrue(typeOf<Boo>().isTopLevelInterfaceOf<BazImpl>())
+        assertFalse(typeOf<Bar>().isTopLevelInterfaceOf<BazImpl>())
+        assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BarImpl>())
+        assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BazImpl>())
+        //assertTrue(typeOf<Bam<Int>>().isTopLevelInterfaceOf<BamImpl<Int>>())
+    }
+
+    interface Foo
+    interface Bar
+    interface Boo : Bar
+    interface Baz : Foo, Bar
+    interface Bam<T> : Foo
+    open class BarImpl : Bar
+    abstract class BazImpl : Baz, Boo, List<String>
+    abstract class BamImpl<T> : BazImpl(), Foo, Bam<T>
 }

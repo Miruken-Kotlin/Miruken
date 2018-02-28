@@ -15,7 +15,7 @@ interface Protocol {
 
             return Proxy.newProxyInstance(
                     protocol.javaClass.classLoader,
-                    arrayOf(protocolClass!!.java),
+                    arrayOf(protocolClass.java),
                     Interceptor(adapter, protocol))
         }
 

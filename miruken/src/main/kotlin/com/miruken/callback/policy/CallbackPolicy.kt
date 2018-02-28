@@ -19,7 +19,7 @@ abstract class CallbackPolicy : Comparator<Any> {
     fun addFilters(vararg filters: FilteringProvider) =
             _filters.addAll(filters)
 
-    fun match(method: MethodDispatch) =
+    fun match(method: CallableDispatch) =
             _rules.firstOrNull { rule -> rule.matches(method) }
 
     open fun bindMethod(
@@ -37,7 +37,7 @@ abstract class CallbackPolicy : Comparator<Any> {
             output: Collection<Any>
     ): Collection<Any>
 
-    open fun acceptResult(result: Any?, binding: MethodBinding) =
+    open fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
          when (result) {
              null, Unit -> HandleResult.NOT_HANDLED
              is HandleResult -> result

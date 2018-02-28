@@ -58,7 +58,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     private fun findCompatibleMembers() {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->
             val dispatch = lazy(LazyThreadSafetyMode.NONE,
-                    { MethodDispatch(member)})
+                    { CallableDispatch(member)})
             for ((annotation, usePolicies) in member
                     .getTaggedAnnotations<UsePolicy<*>>()) {
                 usePolicies.single().policy?.also {

@@ -1,11 +1,13 @@
 package com.miruken.callback
 
+import com.miruken.Flags
+
 fun Handling.getSemantics(): CallbackSemantics? {
     val semantics = CallbackSemantics()
     return handle(semantics, true) success { semantics }
 }
 
-fun Handling.semantics(options: CallbackOptions) =
+fun Handling.semantics(options: Flags<CallbackOptions>) =
         CallbackSemanticsHandler(this, options)
 
 val Handling.duck get() = semantics(CallbackOptions.DUCK)

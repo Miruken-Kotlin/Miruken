@@ -31,7 +31,7 @@ open class ContravariantPolicy(
     ): Collection<Any> =
             output.filter { key != it && isAssignableTo(it, key) }
 
-    override fun acceptResult(result: Any?, binding: MethodBinding) =
+    override fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
             when (result) {
                 null, Unit ->
                     if (binding.dispatcher.returnType.isUnit)

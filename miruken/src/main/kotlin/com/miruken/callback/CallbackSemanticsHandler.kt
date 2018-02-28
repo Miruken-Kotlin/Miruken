@@ -1,8 +1,10 @@
 package com.miruken.callback
 
+import com.miruken.Flags
+
 class CallbackSemanticsHandler(
         handler: Handling,
-        options: CallbackOptions
+        options: Flags<CallbackOptions>
 ) : DecoratedHandler(handler) {
 
     private val semantics = CallbackSemantics(options)

@@ -1,43 +1,46 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.*
+import com.miruken.runtime.normalize
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
 class PolicyMethodBinding(
         val policy:  CallbackPolicy,
         bindingInfo: PolicyMethodBindingInfo
-) : MethodBinding(bindingInfo.dispatcher) {
+) : MethodBinding(bindingInfo.dispatcher.javaMethod) {
 
     val rule             = bindingInfo.rule
     val annotation       = bindingInfo.annotation
     val callbackArgument = bindingInfo.callbackArgument
+    val dispatcher       = bindingInfo.dispatcher
     val key              = policy.createKey(bindingInfo)
+
+    private val _filters: MutableList<FilteringProvider> =
+            dispatcher.annotations
+                    .filterIsInstance<FilteringProvider>()
+                    .normalize().toMutableList()
+
+    val filters: Collection<FilteringProvider> = _filters
 
     inline val strict get() = dispatcher.strict
 
     fun approves(callback: Any) =
             policy.approve(callback, annotation)
 
-    override fun dispatch(
+    fun addFilters(vararg providers: FilteringProvider) =
+            _filters.addAll(providers)
+
+    fun dispatch(
             handler:  Any,
             callback: Any,
             composer: Handling,
             results:  CollectResultsBlock?
     ): HandleResult {
-        return invoke(handler, callback, composer, results)
-    }
-
-    private fun invoke(
-            receiver: Any,
-            callback: Any,
-            composer: Handling,
-            results:  CollectResultsBlock?
-    ) : HandleResult {
         val ruleArgs  = rule.resolveArguments(callback)
         val arguments = resolveArguments(ruleArgs, composer)
         return arguments?.let {
-            val result   = dispatcher.invoke(receiver, arguments)
+            val result   = dispatcher.invoke(handler, arguments)
             val accepted = policy.acceptResult(result, this)
             if (accepted.handled && result != null &&
                     result !is HandleResult) {

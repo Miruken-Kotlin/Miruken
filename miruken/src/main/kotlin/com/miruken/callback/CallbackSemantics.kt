@@ -42,4 +42,8 @@ class CallbackSemantics(
         if (isSpecified(option) && !semantics.isSpecified(options))
             semantics.setOption(option, hasOption(options))
     }
+
+    companion object {
+        val NONE = CallbackSemantics(CallbackOptions.NONE)
+    }
 }

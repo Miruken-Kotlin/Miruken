@@ -17,10 +17,18 @@ class ProtocolTest {
         assertEquals("This is a test!", msg)
     }
 
-    @Test  fun `Rejects proxy if not protocol interface `() {
+    @Test  fun `Rejects proxy if not protocol interface`() {
         assertFailsWith(IllegalArgumentException::class) {
             Protocol.proxy<EmailFeatureImpl>(
                     PassThroughAdapter(EmailFeatureImpl()))
+        }
+    }
+
+    @Test  fun `Protocol proxies will propagate exceptions`() {
+        assertFailsWith(IllegalArgumentException::class) {
+            val email = Protocol.proxy<EmailFeature>(
+                    PassThroughAdapter(EmailFeatureImpl()))
+            email.send("")
         }
     }
 
@@ -32,6 +40,7 @@ class ProtocolTest {
         private var _count = 0
 
         override fun send(message: String): Pair<Int, String> {
+            require(message.isNotEmpty(), { "Message cannot be blank" })
             return ++_count to message
         }
     }
@@ -41,8 +50,6 @@ class ProtocolTest {
                 protocol: KType,
                 method:   Method,
                 args:     Array<Any?>
-        ): Any? {
-            return method.invoke(target, *args)
-        }
+        ): Any? = method.invoke(target, *args)
     }
 }

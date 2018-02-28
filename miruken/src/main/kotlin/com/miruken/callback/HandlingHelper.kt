@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.HandleMethodBinding
 import com.miruken.runtime.isGeneric
 import com.miruken.runtime.typeOf
 
@@ -15,4 +16,9 @@ inline fun <reified T: Any> T.toHandler() : Handling {
     return if (this::class.isGeneric)
         CascadeHandler(Provider(this, typeOf<T>()), handler)
     else handler
+}
+
+inline val composer get() = HandleMethodBinding.COMPOSER.get()
+fun setResult(result: HandleResult) {
+    HandleMethodBinding.HANDLE_RESULT.set(result)
 }

@@ -8,11 +8,7 @@ import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
-
-fun isAssignableTo(
-        leftSide:  Any,
-        rightSide: Any?
-): Boolean {
+fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
             null -> false
@@ -127,6 +123,37 @@ val KType.isOpenGenericDefinition: Boolean
             ?.upperBounds?.all { it == ANY_TYPE } == true }
 
 inline val KClass<*>.isGeneric get() = typeParameters.isNotEmpty()
+
+val KType.allInterfaces: Set<KType> get() =
+    (classifier as? KClass<*>)?.allInterfaces
+            ?: throw IllegalArgumentException(
+                    "KType does not represent a class or interface")
+
+val KClass<*>.allInterfaces: Set<KType> get() =
+    allSupertypes.filter {
+            (it.classifier as KClass<*>).java.isInterface }
+            .toHashSet()
+
+val KType.allTopLevelInterfaces : Set<KType> get() =
+    (classifier as? KClass<*>)?.allTopLevelInterfaces
+            ?: throw IllegalArgumentException(
+                    "KType does not represent a class or interface")
+
+val KClass<*>.allTopLevelInterfaces : Set<KType> get() {
+    val allInterfaces = allInterfaces
+    return allInterfaces.filter { iface ->
+        allInterfaces.all { iface === it || !it.isSubtypeOf(iface) }
+    }.toHashSet()
+}
+
+fun KType.isTopLevelInterfaceOf(type: KType): Boolean =
+        type.allTopLevelInterfaces.contains(this)
+
+inline fun <reified T: Any> KType.isTopLevelInterfaceOf(): Boolean =
+        typeOf<T>().allTopLevelInterfaces.contains(this)
+
+fun KType.isTopLevelInterfaceOf(clazz: KClass<*>): Boolean =
+        clazz.allTopLevelInterfaces.contains(this)
 
 fun KTypeParameter.satisfies(proposedType: KType) =
         upperBounds.any { proposedType.isSubtypeOf(it) }
