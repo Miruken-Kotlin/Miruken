@@ -436,6 +436,55 @@ class BundleTest {
         assertEquals(10.0, ball!!.weight)
     }
 
+    @Test fun `Can short-circuit all bundle`() {
+        var opResult = HandleResult.NOT_HANDLED
+        val result   =_bowling.all {
+            add { opResult = it.handle(ResetPins()) }
+            HandleResult.NOT_HANDLED
+        }
+        assertEquals(HandleResult.NOT_HANDLED, opResult)
+        assertEquals(HandleResult.NOT_HANDLED, result)
+    }
+
+    @Test fun `Can short-circuit all bundle async`() {
+        var opResult = HandleResult.NOT_HANDLED
+        assertAsync(testName) { done ->
+            _bowling.allAsync {
+                addAsync {
+                    opResult = it.handle(ResetPins())
+                    Promise.EMPTY
+                }
+                HandleResult.NOT_HANDLED
+            } then {
+                assertEquals(HandleResult.NOT_HANDLED, it)
+                done()
+            }
+        }
+        assertEquals(HandleResult.NOT_HANDLED, opResult)
+    }
+
+    @Test fun `Can short-circuit any bundle`() {
+        val result =_bowling.any {
+            add { it.handle(FindBowlingBall(30.0)) }
+            add { it.resolveAll<Pin>() }
+            HandleResult.HANDLED_AND_STOP
+        }
+        assertEquals(HandleResult.HANDLED_AND_STOP, result)
+    }
+
+    @Test fun `Can short-circuit any bundle async`() {
+        assertAsync(testName) { done ->
+            _bowling.anyAsync {
+                add { it.handle(FindBowlingBall(30.0)) }
+                add { it.resolveAll<Pin>() }
+                HandleResult.NOT_HANDLED_AND_STOP
+            } then {
+                assertEquals(HandleResult.NOT_HANDLED_AND_STOP, it)
+                done()
+            }
+        }
+    }
+
     class BowlingProvider : Handler() {
         @Provides
         val bowling = BowlingGame()

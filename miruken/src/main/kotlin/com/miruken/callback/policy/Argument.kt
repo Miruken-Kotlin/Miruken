@@ -3,6 +3,7 @@ package com.miruken.callback.policy
 import com.miruken.Flags
 import com.miruken.callback.Key
 import com.miruken.callback.StringKey
+import com.miruken.callback.UseArgumentResolver
 import com.miruken.runtime.getFirstTaggedAnnotation
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter

@@ -50,7 +50,7 @@ class Bundle(private val all: Boolean = true) :
         } else { if (wantsAsync) Promise.EMPTY else null }
     }
 
-    fun add(action: BundleActionBlock) =
+    infix fun add(action: BundleActionBlock) =
             add(action, null)
 
     fun add(action: BundleActionBlock,
@@ -80,7 +80,7 @@ class Bundle(private val all: Boolean = true) :
         }, notify)
     }
 
-    fun addAsync(action: BundleActionAsyncBlock) =
+    infix fun addAsync(action: BundleActionAsyncBlock) =
             addAsync(action, null)
 
     override fun getResolveCallback(): Any {

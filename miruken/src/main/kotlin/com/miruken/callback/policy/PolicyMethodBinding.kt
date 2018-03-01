@@ -61,7 +61,7 @@ class PolicyMethodBinding(
         val resolved = ruleArguments.copyOf(arguments.size)
 
         return composer.all {
-            for (i in ruleArguments.size until arguments.size) {
+            loop@ for (i in ruleArguments.size until arguments.size) {
                 val argument      = arguments[i]
                 val argumentClass = argument.logicalType.jvmErasure
                 when {
@@ -70,8 +70,12 @@ class PolicyMethodBinding(
                     argumentClass.isInstance(this@PolicyMethodBinding) ->
                         resolved[i] = this@PolicyMethodBinding
                     else -> {
-                        val resolver = getResolver(argument.useResolver, composer)
                         val optional = argument.flags has TypeFlags.OPTIONAL
+                        val resolver = getResolver(argument.useResolver, composer)
+                        if (resolver == null) {
+                            if (optional) continue@loop
+                            return@all HandleResult.NOT_HANDLED
+                        }
                         add({
                             val arg = resolver.resolve(argument, it, composer)
                             resolved[i] = arg
@@ -87,10 +91,10 @@ class PolicyMethodBinding(
     private fun getResolver(
             resolverClass: KClass<out ArgumentResolving>?,
             composer:      Handling
-    ) : ArgumentResolving {
-        return resolverClass?.let {
-            composer.resolve(it) as? ArgumentResolving
-        } ?: DefaultResolver
+    ) : ArgumentResolving? {
+        return if (resolverClass == null)
+            DefaultResolver else resolverClass.objectInstance ?:
+                composer.resolve(resolverClass) as? ArgumentResolving
     }
 
     companion object {
