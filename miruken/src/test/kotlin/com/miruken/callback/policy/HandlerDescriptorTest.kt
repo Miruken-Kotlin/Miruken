@@ -11,80 +11,80 @@ import kotlin.test.assertSame
 class HandlerDescriptorTest {
     @Test fun `Cannot create descriptors for interfaces`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<Handling>()
+            HandlerDescriptor.getDescriptorFor<Handling>()
         }
     }
 
     @Test fun `Cannot create descriptors for abstract classes`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<CallbackPolicy>()
+            HandlerDescriptor.getDescriptorFor<CallbackPolicy>()
         }
     }
 
     @Test fun `Cannot create descriptors for primitive types`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<Int>()
+            HandlerDescriptor.getDescriptorFor<Int>()
         }
     }
 
     @Test fun `Cannot create descriptors for collection classes`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<List<Foo>>()
+            HandlerDescriptor.getDescriptorFor<List<Foo>>()
         }
     }
 
     @Test fun `Obtains same descriptor per Handler class`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestHandler.Good>()
-        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestHandler.Good>())
+        val descriptor = HandlerDescriptor.getDescriptorFor<TestHandler.Good>()
+        assertSame(descriptor, HandlerDescriptor.getDescriptorFor<TestHandler.Good>())
     }
 
     @Test fun `Obtains descriptor with Handles method using open generics`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestHandler.OpenGenerics>()
+        val descriptor = HandlerDescriptor.getDescriptorFor<TestHandler.OpenGenerics>()
         assertNotNull(descriptor)
     }
 
     @Test fun `Rejects descriptor with Handles method with no parameters`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestHandler.NoParameters>()
+            HandlerDescriptor.getDescriptorFor<TestHandler.NoParameters>()
         }
     }
 
     @Test fun `Rejects descriptor with Handles method with Nothing parameter`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestHandler.NothingParameter>()
+            HandlerDescriptor.getDescriptorFor<TestHandler.NothingParameter>()
         }
     }
 
     @Test fun `Obtains same descriptor per Provider class`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.Good>()
-        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestProvider.Good>())
+        val descriptor = HandlerDescriptor.getDescriptorFor<TestProvider.Good>()
+        assertSame(descriptor, HandlerDescriptor.getDescriptorFor<TestProvider.Good>())
     }
 
     @Test fun `Obtains descriptor for Provider with properties`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.Properties>()
+        val descriptor = HandlerDescriptor.getDescriptorFor<TestProvider.Properties>()
         assertNotNull(descriptor)
     }
 
     @Test fun `Obtains descriptor for Provider with generic properties`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.GenericProperties<TestProvider.Foo>>()
+        val descriptor = HandlerDescriptor.getDescriptorFor<TestProvider.GenericProperties<TestProvider.Foo>>()
         assertNotNull(descriptor)
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothing>()
+            HandlerDescriptor.getDescriptorFor<TestProvider.ReturnsNothing>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing taking callback`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothingWithCallback>()
+            HandlerDescriptor.getDescriptorFor<TestProvider.ReturnsNothingWithCallback>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Unit`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
+            HandlerDescriptor.getDescriptorFor<TestProvider.ReturnsUnit>()
         }
     }
 }

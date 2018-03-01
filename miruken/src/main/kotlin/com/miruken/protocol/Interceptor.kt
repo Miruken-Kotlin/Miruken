@@ -1,5 +1,6 @@
 package com.miruken.protocol
 
+import com.miruken.callback.NotHandledException
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -17,7 +18,8 @@ class Interceptor(
         try {
             return adapter.dispatch(protocol, method, args ?: NO_ARGS)
                 ?: getDefaultPrimitiveValueOf(method.returnType)
-        } catch (e: InvocationTargetException) {
+        }
+        catch (e: InvocationTargetException) {
             throw e.cause ?: e
         }
     }

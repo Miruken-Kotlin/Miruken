@@ -56,7 +56,7 @@ abstract class CallbackPolicy : Comparator<Any> {
             greedy:   Boolean,
             composer: Handling,
             results:  CollectResultsBlock? = null
-    ) = HandlerDescriptor.getDescriptor(handler::class)
+    ) = HandlerDescriptor.getDescriptorFor(handler::class)
             .dispatch(this, handler, callback, greedy, composer, results)
 
     companion object {

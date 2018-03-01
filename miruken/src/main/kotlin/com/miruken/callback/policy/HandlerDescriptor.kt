@@ -84,9 +84,9 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     companion object {
-        inline fun <reified T> getDescriptor() = getDescriptor(T::class)
+        inline fun <reified T> getDescriptorFor() = getDescriptorFor(T::class)
 
-        fun getDescriptor(handlerClass: KClass<*>) : HandlerDescriptor {
+        fun getDescriptorFor(handlerClass: KClass<*>) : HandlerDescriptor {
             try {
                 return DESCRIPTORS.getOrPut(handlerClass) {
                     lazy { HandlerDescriptor(handlerClass) }

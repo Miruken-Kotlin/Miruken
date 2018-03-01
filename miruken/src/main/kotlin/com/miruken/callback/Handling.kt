@@ -2,9 +2,9 @@ package com.miruken.callback
 
 import com.miruken.protocol.ProtocolAdapter
 import java.lang.reflect.Method
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.jvm.jvmErasure
 
 @FunctionalInterface
 interface Handling : ProtocolAdapter {
@@ -24,7 +24,7 @@ interface Handling : ProtocolAdapter {
         val semantics = CallbackSemantics()
         handler.handle(semantics, true)
 
-        val clazz = protocol.classifier as KClass<*>
+        val clazz = protocol.jvmErasure
 
         if (!semantics.isSpecified(CallbackOptions.DUCK) &&
                 clazz.findAnnotation<Duck>() != null) {
@@ -37,9 +37,10 @@ interface Handling : ProtocolAdapter {
         }
 
         if (clazz.findAnnotation<Resolving>() != null) {
-            if (!semantics.isSpecified(CallbackOptions.BROADCAST)) {
+            if (semantics.isSpecified(CallbackOptions.BROADCAST)) {
                 options += CallbackOptions.BROADCAST
             }
+            handler = handler.resolving
         }
 
         if (options != CallbackOptions.NONE) {
@@ -49,7 +50,7 @@ interface Handling : ProtocolAdapter {
 
         val handleMethod = HandleMethod(protocol, method, args, semantics)
         return handler.handle(handleMethod) failure  {
-            throw IllegalStateException(
+            throw NotHandledException(
                     "Method '$method' on $protocol not handled")
         } ?: handleMethod.result
     }

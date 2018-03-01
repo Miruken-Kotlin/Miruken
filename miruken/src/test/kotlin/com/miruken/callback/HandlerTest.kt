@@ -13,6 +13,7 @@ import org.junit.rules.TestName
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.jvm.jvmErasure
 import kotlin.test.*
 
 class HandlerTest {
@@ -755,8 +756,7 @@ class HandlerTest {
         fun <T: Foo> providesNewFoo(inquiry: Inquiry): T?
         {
             @Suppress("UNCHECKED_CAST")
-            return ((inquiry.key as? KType)
-                    ?.classifier as? KClass<*>)?.let {
+            return ((inquiry.key as? KType)?.jvmErasure)?.let {
                 it.createInstance() as T
             }
         }
@@ -790,12 +790,6 @@ class HandlerTest {
                 inquiry.resolve(Promise.resolve(SuperBaz()), composer)
                 inquiry.resolve(Promise.resolve(Baz()), composer)
             }
-        }
-
-        @Provides
-        inline fun <reified T: Foo> providesNewFoo(): T
-        {
-            return T::class.createInstance()
         }
     }
 

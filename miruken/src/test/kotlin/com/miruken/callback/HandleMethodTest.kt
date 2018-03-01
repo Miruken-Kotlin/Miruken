@@ -40,7 +40,7 @@ class HandleMethodTest {
 
     @Test fun `Handles method strictly`() {
         val handler = OfflineHandler()
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             handler.strict.proxy<EmailFeature>().email("22")
         }
     }
@@ -53,14 +53,14 @@ class HandleMethodTest {
 
     @Test fun `Requires protocol conformance`() {
         val handler = DemoHandler()
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             handler.proxy<EmailFeature>().email("22")
         }
     }
 
     @Test fun `Requires protocol invariance`() {
         val handler = DemoHandler()
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             handler.proxy<Offline>().email("22")
         }
     }
@@ -80,7 +80,7 @@ class HandleMethodTest {
 
     @Test fun `Should not propagate best effort calls`() {
         val handler = EmailHandler()
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             handler.bestEffort.proxy<EmailFeature>().cancelEmail(1)
         }
     }
@@ -106,13 +106,13 @@ class HandleMethodTest {
     }
 
     @Test fun `Rejects unhandled method calls`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             Handler().proxy<EmailFeature>().email("Hello")
         }
     }
 
     @Test fun `Rejects unhandled method calls broadcast`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             Handler().broadcast.proxy<EmailFeature>().email("Hello")
         }
     }
@@ -131,7 +131,7 @@ class HandleMethodTest {
 
     @Test fun `Does not resolve methods calls implicitly`() {
         val handler = DemoHandler()
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith(NotHandledException::class) {
             handler.proxy<Billing>().bill(15.toBigDecimal())
         }
     }
@@ -203,8 +203,7 @@ class HandleMethodTest {
             return Integer.parseInt(message)
         }
 
-        fun bill(amount: BigDecimal): BigDecimal
-        {
+        fun bill(amount: BigDecimal): BigDecimal {
             return amount * 2.toBigDecimal()
         }
     }

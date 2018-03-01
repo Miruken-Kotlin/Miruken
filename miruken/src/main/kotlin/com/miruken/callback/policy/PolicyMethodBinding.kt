@@ -44,7 +44,11 @@ class PolicyMethodBinding(
             val accepted = policy.acceptResult(result, this)
             if (accepted.handled && result != null &&
                     result !is HandleResult) {
-                results?.invoke(result, strict)
+                if (results?.invoke(result, strict) == false) {
+                    return@let if (accepted.stop)
+                        HandleResult.NOT_HANDLED_AND_STOP
+                    else HandleResult.NOT_HANDLED
+                }
             }
             accepted
         } ?: HandleResult.NOT_HANDLED

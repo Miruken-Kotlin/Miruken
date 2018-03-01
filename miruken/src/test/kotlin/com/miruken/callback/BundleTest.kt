@@ -423,8 +423,8 @@ class BundleTest {
         var handled = HandleResult.NOT_HANDLED
         val pins    = mutableListOf<Pin>()
         var ball: BowlingBall? = null
-        HandlerDescriptor.getDescriptor<BowlingGame>()
-        HandlerDescriptor.getDescriptor<Lane>()
+        HandlerDescriptor.getDescriptorFor<BowlingGame>()
+        HandlerDescriptor.getDescriptorFor<Lane>()
         val result = BowlingProvider().resolving.all {
             add { handled = it.handle(ResetPins()) }
             add { pins.addAll(it.resolveAll()) }
