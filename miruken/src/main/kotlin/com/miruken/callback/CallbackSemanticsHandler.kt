@@ -18,7 +18,7 @@ class CallbackSemanticsHandler(
             return HandleResult.NOT_HANDLED
 
         if (callback is CallbackSemantics) {
-            callback.mergeInto(semantics)
+            semantics.mergeInto(callback)
             val result = HandleResult.HANDLED
             return if (greedy) result or
                 handler.handle(callback, greedy, composer)

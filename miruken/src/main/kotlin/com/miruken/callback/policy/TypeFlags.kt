@@ -3,6 +3,7 @@ package com.miruken.callback.policy
 import com.miruken.Flags
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.componentType
+import com.miruken.runtime.isGeneric
 import com.miruken.runtime.isOpenGeneric
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -19,14 +20,18 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object OPTIONAL   : TypeFlags(1 shl 5)
     object PRIMITIVE  : TypeFlags(1 shl 6)
     object INTERFACE  : TypeFlags(1 shl 7)
-    object OPEN       : TypeFlags(1 shl 8)
+    object GENERIC    : TypeFlags(1 shl 8)
+    object OPEN       : TypeFlags(1 shl 9)
 
     companion object {
         fun parse(type: KType) : Pair<Flags<TypeFlags>, KType> {
             var logicalType = type
 
-            var flags = if (type.isOpenGeneric)
-                -TypeFlags.OPEN else -TypeFlags.NONE
+            var flags = when {
+                type.isOpenGeneric -> TypeFlags.GENERIC + TypeFlags.OPEN
+                type.isGeneric -> TypeFlags.GENERIC
+                else -> -TypeFlags.NONE
+            }
 
             (type.classifier as? KClass<*>)?.also {
                 if (it.java.isInterface)

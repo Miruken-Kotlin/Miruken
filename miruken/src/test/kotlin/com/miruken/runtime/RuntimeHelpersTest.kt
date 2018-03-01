@@ -4,6 +4,8 @@ import org.junit.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.full.allSuperclasses
 import kotlin.reflect.full.allSupertypes
+import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.isSupertypeOf
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -62,6 +64,7 @@ class RuntimeHelpersTest {
         assertFalse(typeOf<Bar>().isTopLevelInterfaceOf<BazImpl>())
         assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BarImpl>())
         assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BazImpl>())
+        var x = typeOf<BamImpl<Int>>().allTopLevelInterfaces
         //assertTrue(typeOf<Bam<Int>>().isTopLevelInterfaceOf<BamImpl<Int>>())
     }
 

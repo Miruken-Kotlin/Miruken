@@ -113,6 +113,10 @@ val KType.componentType: KType?
         else -> this
     }
 
+
+val KType.isGeneric: Boolean
+    get() = classifier is KTypeParameter || arguments.isNotEmpty()
+
 val KType.isOpenGeneric: Boolean
     get() = classifier is KTypeParameter ||
                 arguments.any { it.type?.isOpenGeneric == true }

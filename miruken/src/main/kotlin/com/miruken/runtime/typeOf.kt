@@ -5,6 +5,7 @@ import kotlin.reflect.*
 
 //
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.starProjectedType
 
 inline fun <reified T : Any?> typeOf(): KType =
         object : SuperTypeTokenHolder<T>() {}.typeOfImpl()
@@ -55,4 +56,7 @@ fun Type.toKTypeProjection(): KTypeProjection = when (this) {
     else -> throw IllegalArgumentException("Unsupported type: $this")
 }
 
-fun Type.toKType(): KType = toKTypeProjection().type!!
+fun Type.toKType(): KType =
+        if (this == Void.TYPE) UNIT_TYPE else toKTypeProjection().type!!
+
+val UNIT_TYPE = Unit::class.starProjectedType

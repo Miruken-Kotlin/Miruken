@@ -19,6 +19,16 @@ class typeOfTest {
         assertEquals(typeOf<List<*>>(), typeOf<List<Any>>())
     }
 
+    @Test fun `Can obtain component KType of Unit`() {
+        val unitType = typeOf<Unit>()
+        assertTrue(unitType.isSubtypeOf(UNIT_TYPE))
+    }
+
+    @Test fun `Can obtain component KType of Any`() {
+        val anyType = typeOf<Any>()
+        assertTrue(anyType.isSubtypeOf(ANY_TYPE))
+    }
+
     @Test fun `Can obtain component KType of List`() {
         val listType = typeOf<List<String>>()
         assertTrue(listType.isSubtypeOf(typeOf<List<*>>()))
