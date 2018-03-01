@@ -425,7 +425,7 @@ class BundleTest {
         var ball: BowlingBall? = null
         HandlerDescriptor.getDescriptor<BowlingGame>()
         HandlerDescriptor.getDescriptor<Lane>()
-        val result = BowlingProvider().resolving().all {
+        val result = BowlingProvider().resolving.all {
             add { handled = it.handle(ResetPins()) }
             add { pins.addAll(it.resolveAll()) }
             add { ball = it.command(FindBowlingBall(10.0)) }
@@ -467,7 +467,7 @@ class BundleTest {
         fun reset(reset: ResetPins, composer: Handling) {
             assertNotNull(composer)
             for (pin in pins) pin.up = true
-            (composer.takeUnless { resolve } ?: composer.resolving())
+            (composer.takeUnless { resolve } ?: composer.resolving)
                     .command<BowlingBall>(FindBowlingBall(5.0))
         }
     }

@@ -3,9 +3,9 @@ package com.miruken.callback
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.typeOf
 
-fun Handling.resolving() = ResolvingHandler(this)
+val Handling.resolving get() = ResolvingHandler(this)
 
-fun Handling.resolvingAll() = CallbackSemanticsHandler(
+val Handling.resolvingAll get() = CallbackSemanticsHandler(
         ResolvingHandler(this), CallbackOptions.BROADCAST)
 
 fun Handling.resolve(key: Any) : Any? {

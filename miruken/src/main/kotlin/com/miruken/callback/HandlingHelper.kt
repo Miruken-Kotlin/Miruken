@@ -18,7 +18,7 @@ inline fun <reified T: Any> T.toHandler() : Handling {
     else handler
 }
 
-inline val composer get() = HandleMethodBinding.COMPOSER.get()
+inline val COMPOSER get() = HandleMethodBinding.COMPOSER.get()
 fun setResult(result: HandleResult) {
     HandleMethodBinding.HANDLE_RESULT.set(result)
 }

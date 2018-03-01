@@ -100,7 +100,7 @@ class Bundle(private val all: Boolean = true) :
             return HandleResult.NOT_HANDLED
 
         var proxy : Handling = ProxyHandler(handler, composer)
-        if (_resolving) proxy = proxy.resolving()
+        if (_resolving) proxy = proxy.resolving
 
         var handled = HandleResult.HANDLED
         for (operation in _operations) {
