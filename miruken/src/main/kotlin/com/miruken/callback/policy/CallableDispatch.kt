@@ -46,16 +46,15 @@ class CallableDispatch(val callable: KCallable<*>){
         !returnType.isUnit && !returnType.isNothing
 
     fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
-        return if (returnFlags has TypeFlags.PROMISE) {
-            try {
-                callable.call(receiver, *arguments)
-            } catch (e: Throwable) {
-                if (e is InvocationTargetException)
-                    Promise.reject(e.cause ?: e)
-                else Promise.reject(e)
-            }
-        } else {
+        return try {
             callable.call(receiver, *arguments)
+        } catch (e: Throwable) {
+            val cause = (e as? InvocationTargetException)?.cause ?: e
+            if (returnFlags has TypeFlags.PROMISE) {
+                Promise.reject(cause)
+            } else {
+                throw cause
+            }
         }
     }
 }

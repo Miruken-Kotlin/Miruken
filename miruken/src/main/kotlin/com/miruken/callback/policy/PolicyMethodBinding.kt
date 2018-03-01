@@ -75,7 +75,6 @@ class PolicyMethodBinding(
                         add({
                             val arg = resolver.resolve(argument, it, composer)
                             resolved[i] = arg
-                            arg
                         }) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }

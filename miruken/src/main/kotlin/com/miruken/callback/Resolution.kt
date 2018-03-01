@@ -27,8 +27,11 @@ open class Resolution(key: Any, val callback: Any)
             if (handlers.isEmpty()) return callback
             val bundle = Bundle(false)
                     .add({ it.handle(NoResolving(callback)) }) { it }
-            handlers.forEach {
-                bundle.add({ it.handle(Resolution(it, callback))}) }
+            handlers.forEach { handler ->
+                bundle.add {
+                    it.handle(Resolution(handler, callback))
+                }
+            }
             return bundle
         }
     }

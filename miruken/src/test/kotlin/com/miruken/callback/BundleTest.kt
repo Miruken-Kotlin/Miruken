@@ -437,14 +437,11 @@ class BundleTest {
     }
 
     class BowlingProvider : Handler() {
-        private val _bowling = BowlingGame()
-        private val _lanes = (1..5).map { Lane(true) }
+        @Provides
+        val bowling = BowlingGame()
 
         @Provides
-        val bowling: Bowling = _bowling
-
-        @Provides
-        val lanes = _lanes
+        val lanes = (1..5).map { Lane(true) }
     }
 
     class Pin(val number: Int) {
@@ -470,7 +467,7 @@ class BundleTest {
         fun reset(reset: ResetPins, composer: Handling) {
             assertNotNull(composer)
             for (pin in pins) pin.up = true
-            (composer.takeUnless { resolve } ?: composer)
+            (composer.takeUnless { resolve } ?: composer.resolving())
                     .command<BowlingBall>(FindBowlingBall(5.0))
         }
     }
@@ -486,7 +483,7 @@ class BundleTest {
         fun getScore(bowler: Bowler): Int
     }
 
-    private class BowlingGame : CompositeHandler(), Bowling {
+    class BowlingGame : CompositeHandler(), Bowling {
         @Handles
         fun findBall(findBall: FindBowlingBall): BowlingBall? =
                 findBall.takeIf { it.weight < 20.0 }

@@ -107,12 +107,10 @@ class Bundle(private val all: Boolean = true) :
             if (all || greedy) {
                 var opResult = operation.result
                 if (!opResult.handled || greedy) {
-                    dispatch(proxy, operation).success({
-                        operation.notify?.let { it(this) } ?: this
-                    })?.let {
-                        opResult = opResult or it
-                        operation.result = opResult
-                        opResult
+                    dispatch(proxy, operation) success {
+                        val result = operation.notify?.invoke(this) ?: this
+                        operation.result = operation.result or result
+                        opResult = operation.result or opResult
                     }
                 }
                 handled = when (all) {
@@ -121,12 +119,11 @@ class Bundle(private val all: Boolean = true) :
                 }
                 if (handled.stop) break
             } else {
-                dispatch(proxy, operation).success({
-                    operation.notify?.let { it(this) } ?: this
-                })?.let {
-                    operation.result = operation.result or it
-                    handled = it
+                dispatch(proxy, operation) success {
+                    val result = operation.notify?.invoke(this) ?: this
+                    operation.result = operation.result or result
                 }
+                handled = operation.result
                 if (handled.handled || handled.stop) break
             }
         }
