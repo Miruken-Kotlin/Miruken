@@ -74,7 +74,7 @@ class HandleMethodTest {
         val handler = EmailHandler()
         val id      = handler.bestEffort.proxy<Offline>().email("Hello")
         assertEquals(0, id)
-        var billing = handler.bestEffort.proxy<Offline>().billing
+        val billing = handler.bestEffort.proxy<Offline>().billing
         assertNull(billing)
     }
 
@@ -83,6 +83,63 @@ class HandleMethodTest {
         assertFailsWith(IllegalStateException::class) {
             handler.bestEffort.proxy<EmailFeature>().cancelEmail(1)
         }
+    }
+
+    @Test fun `Applies nested best effort`() {
+        val handler = EmailHandler()
+        handler.bestEffort.proxy<EmailFeature>().cancelEmail(6)
+    }
+
+    @Test fun `Broadcasts method calls`() {
+        val master = EmailHandler()
+        val mirror = EmailHandler()
+        val backup = EmailHandler()
+        assertEquals(0, master.count)
+        assertEquals(0, mirror.count)
+        assertEquals(0, backup.count)
+        val email  = master + mirror + backup
+        val id     = email.broadcast.proxy<EmailFeature>().email("Hello")
+        assertEquals(1, id)
+        assertEquals(1, master.count)
+        assertEquals(1, mirror.count)
+        assertEquals(1, backup.count)
+    }
+
+    @Test fun `Rejects unhandled method calls`() {
+        assertFailsWith(IllegalStateException::class) {
+            Handler().proxy<EmailFeature>().email("Hello")
+        }
+    }
+
+    @Test fun `Rejects unhandled method calls broadcast`() {
+        assertFailsWith(IllegalStateException::class) {
+            Handler().broadcast.proxy<EmailFeature>().email("Hello")
+        }
+    }
+
+    @Test fun `Resolves methods calls inferred`() {
+        val handler = EmailHandler()
+        val id      = handler.resolving.proxy<EmailFeature>().email("Hello")
+        assertEquals(1, id)
+    }
+
+    @Test fun `Resolves methods calls implicitly`() {
+        val handler = BillingImpl().toHandler()
+        val total   = handler.proxy<Billing>().bill(7.5.toBigDecimal())
+        assertEquals(9.5.toBigDecimal(), total)
+    }
+
+    @Test fun `Does not resolve methods calls implicitly`() {
+        val handler = DemoHandler()
+        assertFailsWith(IllegalStateException::class) {
+            handler.proxy<Billing>().bill(15.toBigDecimal())
+        }
+    }
+
+    @Test fun `Handles methods calls using protocol`() {
+        val handler = BillingImpl(4.toBigDecimal()).toHandler()
+        val total   = handler.proxy<Billing>().bill(3.toBigDecimal())
+        assertEquals(7.toBigDecimal(), total)
     }
 
     interface EmailFeature {
@@ -112,7 +169,7 @@ class HandleMethodTest {
 
         override fun cancelEmail(id: Int) {
             val composer = COMPOSER!!
-                    .takeUnless { id <= 4 } ?: COMPOSER!!
+                    .takeIf { id <= 4 } ?: COMPOSER!!.bestEffort
             composer.proxy<Billing>().bill(4.toBigDecimal())
         }
     }
