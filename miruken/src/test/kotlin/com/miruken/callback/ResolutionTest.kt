@@ -4,9 +4,6 @@ import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
-import kotlin.reflect.KType
-import kotlin.reflect.full.createInstance
-import kotlin.reflect.jvm.jvmErasure
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
@@ -360,14 +357,12 @@ class ResolutionTest {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     class RepositoryProvider : Handler() {
         @Provides
         fun <T: Entity> createRepository(inquiry: Inquiry): T?
         {
-            @Suppress("UNCHECKED_CAST")
-            return ((inquiry.key as? KType)?.jvmErasure)?.let {
-                it.createInstance() as T
-            }
+            return inquiry.createKeyInstance() as? T
         }
     }
 }

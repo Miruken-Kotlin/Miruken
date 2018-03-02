@@ -8,8 +8,10 @@ import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.jvm.jvmErasure
 
 open class Inquiry(val key: Any, val many: Boolean = false)
     : Callback, AsyncCallback, DispatchingCallback {
@@ -32,6 +34,18 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     final override val policy: CallbackPolicy? = ProvidesPolicy
 
     val resolutions: List<Any> get() = _resolutions.toList()
+
+    val keyClass: KClass<*>?
+        get() = (key as? KType)?.jvmErasure
+
+    open fun createKeyInstance(): Any? {
+        return when (key) {
+            is KType -> key.jvmErasure.createInstance()
+            is KClass<*> -> key.createInstance()
+            is Class<*> -> key.newInstance()
+            else -> null
+        }
+    }
 
     override val resultType: KType?
         get() = _keyType.let {

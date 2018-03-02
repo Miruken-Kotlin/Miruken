@@ -10,10 +10,6 @@ import com.miruken.runtime.typeOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.full.createInstance
-import kotlin.reflect.jvm.jvmErasure
 import kotlin.test.*
 
 class HandlerTest {
@@ -604,7 +600,7 @@ class HandlerTest {
         }
 
         @Provides
-        fun provideBooImplicitly(composer: Handling) : Boo  {
+        fun provideBooImplicitly(composer: Handling) : Boo?  {
             return Boo().apply { hasComposer = true }
         }
 
@@ -753,12 +749,9 @@ class HandlerTest {
         }
 
         @Provides
-        fun <T: Foo> providesNewFoo(inquiry: Inquiry): T?
-        {
-            @Suppress("UNCHECKED_CAST")
-            return ((inquiry.key as? KType)?.jvmErasure)?.let {
-                it.createInstance() as T
-            }
+        @Suppress("UNCHECKED_CAST")
+        fun <T: Foo> providesNewFoo(inquiry: Inquiry): T? {
+            return inquiry.createKeyInstance() as? T
         }
 
         @Provides
