@@ -1,4 +1,6 @@
 package com.miruken.callback
 
-class RejectedException(val callback: Any)
-    : RuntimeException("Callback '$callback' has been rejected")
+import java.util.concurrent.CancellationException
+
+class RejectedException(val callback: Any?)
+    : CancellationException("Callback '$callback' has been rejected")

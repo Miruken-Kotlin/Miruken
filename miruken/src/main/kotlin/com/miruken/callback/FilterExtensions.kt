@@ -5,13 +5,9 @@ fun Handling.getFilterOptions() : FilterOptions? {
     return handle(options, true) success { options }
 }
 
-fun Handling.withFilters(vararg filters: Filtering<*,*>): Handling {
-    return FilterOptions(
-            listOf(FilterInstanceProvider(filters.toList())))
+fun Handling.withFilters(vararg filters: Filtering<*,*>) =
+        FilterOptions(FilterInstanceProvider(*filters))
             .decorate(this)
-}
 
-fun Handling.withFilterProviders(vararg providers: FilteringProvider): Handling {
-    return FilterOptions(providers.toList())
-            .decorate(this)
-}
+fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
+        FilterOptions(*providers).decorate(this)

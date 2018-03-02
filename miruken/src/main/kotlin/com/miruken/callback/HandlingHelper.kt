@@ -21,7 +21,7 @@ inline fun <reified T: Any> T.toHandler() : Handling {
 inline val COMPOSER get() = HandleMethodBinding.COMPOSER.get()
 
 fun notHandled(): Nothing =
-    throw HandleResultException(HandleResult.NOT_HANDLED)
+        throw HandleResultException(HandleResult.NOT_HANDLED)
 
 fun notHandledAndStop(): Nothing =
         throw HandleResultException(HandleResult.NOT_HANDLED_AND_STOP)

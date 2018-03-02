@@ -11,7 +11,7 @@ open class CallbackPolicyBuilder(
     val callback: CallbackArgument = CallbackArgument(callbackType)
 
     fun filters(vararg filters: Filtering<*,*>) =
-        policy.addFilters(FilterInstanceProvider(filters.toList()))
+        policy.addFilters(FilterInstanceProvider(*filters))
 
     fun pipeline(vararg providers: FilteringProvider) =
         policy.addFilters(*providers)
