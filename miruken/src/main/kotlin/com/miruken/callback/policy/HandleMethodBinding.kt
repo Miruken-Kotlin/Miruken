@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.HandleMethod
 import com.miruken.callback.HandleResult
+import com.miruken.callback.HandleResultException
 import com.miruken.callback.Handling
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -22,11 +23,22 @@ class HandleMethodBinding(method: Method): MethodBinding(method) {
             HANDLE_RESULT.set(HandleResult.HANDLED)
             return invoke(handleMethod, target, composer)
         } catch (e: Throwable) {
-            handleMethod.exception = when (e) {
-                is InvocationTargetException -> e.cause ?: e
-                else -> e
+            when (e) {
+                is HandleResultException -> return e.result
+                is InvocationTargetException -> {
+                    val cause = e.cause ?: e
+                    if (cause is HandleResultException) {
+                        return cause.result
+                    } else {
+                        handleMethod.exception = cause
+                        throw cause
+                    }
+                }
+                else -> {
+                    handleMethod.exception = e
+                    throw e
+                }
             }
-            throw e
         } finally {
             HANDLE_RESULT.set(oldUnhandled)
             COMPOSER.set(oldComposer)

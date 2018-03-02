@@ -20,22 +20,8 @@ inline fun <reified T: Any> T.toHandler() : Handling {
 
 inline val COMPOSER get() = HandleMethodBinding.COMPOSER.get()
 
-fun setHandled() {
-    HandleMethodBinding.HANDLE_RESULT.set(HandleResult.HANDLED)
-}
+fun notHandled(): Nothing =
+    throw HandleResultException(HandleResult.NOT_HANDLED)
 
-fun setHandledAndStop() {
-    HandleMethodBinding.HANDLE_RESULT.set(HandleResult.HANDLED_AND_STOP)
-}
-
-fun setNotHandled() {
-    HandleMethodBinding.HANDLE_RESULT.set(HandleResult.NOT_HANDLED)
-}
-
-fun setNotHandledAndStop() {
-    HandleMethodBinding.HANDLE_RESULT.set(HandleResult.NOT_HANDLED_AND_STOP)
-}
-
-fun setResult(result: HandleResult) {
-    HandleMethodBinding.HANDLE_RESULT.set(result)
-}
+fun notHandledAndStop(): Nothing =
+        throw HandleResultException(HandleResult.NOT_HANDLED_AND_STOP)

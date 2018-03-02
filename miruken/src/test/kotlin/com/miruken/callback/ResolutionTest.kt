@@ -286,7 +286,7 @@ class ResolutionTest {
 
         override fun cancelEmail(id: Int) {
             if (id == 13)
-                setNotHandled()
+                notHandled()
         }
 
         override fun bill(amount: BigDecimal): BigDecimal {

@@ -8,7 +8,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class BatchTest {
@@ -182,8 +181,7 @@ class BatchTest {
         }
 
         override fun fail(message: Any): Any? {
-            setNotHandled()
-            return null
+            notHandled()
         }
 
         override fun failConfirm(message: Any): Promise<*> {
