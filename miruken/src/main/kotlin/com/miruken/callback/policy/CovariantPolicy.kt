@@ -2,14 +2,14 @@ package com.miruken.callback.policy
 
 import com.miruken.runtime.isAssignableTo
 
-open class CovariantPolicy(
-        build:  CovariantKeyBuilder.() -> Unit
-) : CallbackPolicy() {
+open class CovariantPolicy internal constructor() : CallbackPolicy() {
 
     lateinit var keyFunctor: (Any) -> Any?
         internal set
 
-    init {
+    constructor(
+            build: CovariantKeyBuilder.() -> CallbackPolicyBuilder.Completed
+    ) : this() {
         @Suppress("LeakingThis")
         val builder = CovariantKeyBuilder(this)
         builder.build()
@@ -19,12 +19,11 @@ open class CovariantPolicy(
             keyFunctor(callback)
 
     override fun getCompatibleKeys(
-            key:    Any,
-            output: Collection<Any>
-    ): Collection<Any> =
-         output.filter {
-             key != it && isAssignableTo(key, it)
-         }
+            key:       Any,
+            available: Collection<Any>
+    ): Collection<Any> = available.filter {
+        key != it && isAssignableTo(key, it)
+    }
 
     override fun compare(o1: Any?, o2: Any?): Int {
         return when {

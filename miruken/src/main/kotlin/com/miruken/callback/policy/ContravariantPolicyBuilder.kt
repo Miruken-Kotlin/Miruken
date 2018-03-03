@@ -41,9 +41,12 @@ class ContravariantWithTargetBuilder<C: Any, out S: Any>(
         val callbackType:  KType,
         val targetType:    KType
 ) {
-    inline infix fun rules(build: ContravariantPolicyBuilder<C, S>.() -> Unit) {
+    inline infix fun rules(
+            build: ContravariantPolicyBuilder<C,S>.() -> Unit
+    ): CallbackPolicyBuilder.Completed {
         val builder = ContravariantPolicyBuilder(policy,
                 targetFunctor, callbackType, targetType)
         builder.build()
+        return CallbackPolicyBuilder.Completed
     }
 }

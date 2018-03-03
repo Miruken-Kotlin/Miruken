@@ -21,7 +21,7 @@ class CovariantPolicyBuilder<C: Any>(
     val key  = ReturnsKey
     val unit = ReturnsUnit
 
-    inline fun <reified E: Any> extract (noinline block: (C) -> E) =
+    inline fun <reified E: Any> extract(noinline block: (C) -> E) =
             ExtractArgument(typeOf<E>(), block)
 }
 
@@ -37,8 +37,11 @@ class CovariantWithKeyBuilder<C: Any>(
         val keyFunctor:   (C) -> Any,
         val callbackType: KType
 ) {
-    inline infix fun rules(build: CovariantPolicyBuilder<C>.() -> Unit) {
+    inline infix fun rules(
+            build: CovariantPolicyBuilder<C>.() -> Unit
+    ): CallbackPolicyBuilder.Completed {
         val builder = CovariantPolicyBuilder(policy, keyFunctor, callbackType)
         builder.build()
+        return CallbackPolicyBuilder.Completed
     }
 }

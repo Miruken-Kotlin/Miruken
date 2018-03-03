@@ -21,4 +21,6 @@ open class CallbackPolicyBuilder(
         policy.addRule(rule)
         return rule
     }
+
+    object Completed
 }

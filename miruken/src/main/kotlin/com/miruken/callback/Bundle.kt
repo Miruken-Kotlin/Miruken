@@ -87,6 +87,7 @@ class Bundle(private val all: Boolean = true) :
         return if (_resolving) this
         else Bundle(all).also {
             it._operations.addAll(_operations)
+            it.wantsAsync = wantsAsync
             it._resolving = true
         }
     }

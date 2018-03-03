@@ -6,14 +6,14 @@ import com.miruken.runtime.isUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-open class ContravariantPolicy(
-        build: ContravariantTargetBuilder.() -> Unit
-) : CallbackPolicy() {
+open class ContravariantPolicy internal constructor() : CallbackPolicy() {
 
     lateinit var targetFunctor: (Any) -> Any?
         internal set
 
-    init {
+    constructor(
+            build: ContravariantTargetBuilder.() -> CallbackPolicyBuilder.Completed
+    ) : this() {
         @Suppress("LeakingThis")
         val builder = ContravariantTargetBuilder(this)
         builder.build()
@@ -26,10 +26,10 @@ open class ContravariantPolicy(
     }
 
     override fun getCompatibleKeys(
-            key:    Any,
-            output: Collection<Any>
+            key:       Any,
+            available: Collection<Any>
     ): Collection<Any> =
-            output.filter { key != it && isAssignableTo(it, key) }
+            available.filter { key != it && isAssignableTo(it, key) }
 
     override fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
             when (result) {

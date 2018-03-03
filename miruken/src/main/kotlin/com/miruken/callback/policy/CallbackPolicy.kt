@@ -33,8 +33,8 @@ abstract class CallbackPolicy : Comparator<Any> {
     abstract fun getKey(callback: Any) : Any?
 
     abstract fun getCompatibleKeys(
-            key:    Any,
-            output: Collection<Any>
+            key:       Any,
+            available: Collection<Any>
     ): Collection<Any>
 
     open fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
