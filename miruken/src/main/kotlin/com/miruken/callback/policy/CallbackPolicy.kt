@@ -13,6 +13,9 @@ abstract class CallbackPolicy(
     val methodBindingComparator : Comparator<PolicyMethodBinding> =
             Comparator { a, b -> compare(a.key, b.key) }
 
+    fun match(method: CallableDispatch) =
+            rules.firstOrNull { rule -> rule.matches(method) }
+
     open fun bindMethod(
             bindingInfo: PolicyMethodBindingInfo
     ): PolicyMethodBinding =

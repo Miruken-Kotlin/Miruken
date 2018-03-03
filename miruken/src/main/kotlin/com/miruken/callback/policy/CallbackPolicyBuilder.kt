@@ -17,8 +17,11 @@ abstract class CallbackPolicyBuilder(val callbackType: KType) {
     fun pipeline(vararg providers: FilteringProvider) =
             filters.addAll(providers)
 
-    fun matches(vararg arguments: ArgumentRule) =
-        rules.add(MethodRule(*arguments))
+    fun matches(vararg arguments: ArgumentRule): MethodRule {
+        val rule = MethodRule(*arguments)
+        rules.add(rule)
+        return rule
+    }
 
     abstract fun build(): CallbackPolicy
 }

@@ -66,7 +66,8 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     val rule = it.match(dispatch) ?:
                         throw PolicyRejectedException(it, member,
                                 "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
-                    val binding    = rule.bind(dispatch, annotation)
+                    val binding = rule.bind(
+                            dispatch, it::bindMethod, annotation)
                     val descriptor = _policies.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
                     member.isAccessible = true
