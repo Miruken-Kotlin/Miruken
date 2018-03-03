@@ -13,7 +13,7 @@ open class CovariantPolicy(
             build: CovariantKeyBuilder.() -> CovariantPolicy
     ) : this(CovariantKeyBuilder().build())
 
-    private constructor(prototype: CovariantPolicy) : this(
+    constructor(prototype: CovariantPolicy) : this(
             prototype.rules, prototype.filters, prototype.keyFunctor
     )
 

@@ -17,15 +17,17 @@ open class ContravariantPolicy(
             build: ContravariantTargetBuilder.() -> ContravariantPolicy
     ) : this(ContravariantTargetBuilder().build())
 
-    private constructor(prototype: ContravariantPolicy) : this(
+    constructor(prototype: ContravariantPolicy) : this(
             prototype.rules, prototype.filters, prototype.targetFunctor
     )
 
-    override fun getKey(callback: Any): Any? {
-        return targetFunctor(callback)?.let {
-            it as? KClass<*> ?: it::class
-        } ?: callback::class
-    }
+    override fun getKey(callback: Any): Any? =
+            targetFunctor(callback)?.let {
+                when (it) {
+                    is KType, is KClass<*> -> it
+                    else -> it::class
+                }
+            } ?: callback::class
 
     override fun getCompatibleKeys(
             key:       Any,

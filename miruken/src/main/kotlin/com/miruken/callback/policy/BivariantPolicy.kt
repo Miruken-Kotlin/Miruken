@@ -13,7 +13,7 @@ open class BivariantPolicy(
             build: BivariantKeyBuilder.() -> BivariantPolicy
     ) : this(BivariantKeyBuilder().build())
 
-    private constructor(prototype: BivariantPolicy) : this(
+    constructor(prototype: BivariantPolicy) : this(
             prototype.rules, prototype.filters,
             prototype.output, prototype.input)
 

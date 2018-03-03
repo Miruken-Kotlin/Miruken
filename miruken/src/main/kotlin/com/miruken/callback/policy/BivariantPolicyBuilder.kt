@@ -32,14 +32,14 @@ class BivariantKeyBuilder {
     ) = BivariantWithKeyBuilder(keyFunctor,  typeOf<C>())
 }
 
-class BivariantWithKeyBuilder<in C: Any>(
+class BivariantWithKeyBuilder<C: Any>(
         val keyFunctor:   (C) -> Any,
         val callbackType: KType
 ) {
-    inline fun <reified D: C, reified S: Any> target(
-            noinline targetFunctor: (D) -> S
+    inline infix fun <reified S: Any> target(
+            noinline targetFunctor: (C) -> S
     ) = BivariantWithKeyTargetBuilder(keyFunctor,
-            targetFunctor, typeOf<D>(), typeOf<S>())
+            targetFunctor, callbackType, typeOf<S>())
 }
 
 class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
