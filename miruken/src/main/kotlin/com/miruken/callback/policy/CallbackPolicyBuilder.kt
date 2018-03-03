@@ -6,10 +6,13 @@ import com.miruken.callback.FilteringProvider
 import kotlin.reflect.KType
 
 abstract class CallbackPolicyBuilder(val callbackType: KType) {
-    val rules   = mutableListOf<MethodRule>()
+    private val _rules = mutableListOf<MethodRuleBuilder>()
+
     val filters = mutableListOf<FilteringProvider>()
 
     val callback: CallbackArgument = CallbackArgument(callbackType)
+
+    val rules get() = _rules.map { it.build() }
 
     fun filters(vararg filter: Filtering<*,*>) =
             filters.add(FilterInstanceProvider(*filter))
@@ -17,9 +20,9 @@ abstract class CallbackPolicyBuilder(val callbackType: KType) {
     fun pipeline(vararg providers: FilteringProvider) =
             filters.addAll(providers)
 
-    fun matches(vararg arguments: ArgumentRule): MethodRule {
-        val rule = MethodRule(*arguments)
-        rules.add(rule)
+    fun matches(vararg arguments: ArgumentRule): MethodRuleBuilder {
+        val rule = MethodRuleBuilder(*arguments)
+        _rules.add(rule)
         return rule
     }
 

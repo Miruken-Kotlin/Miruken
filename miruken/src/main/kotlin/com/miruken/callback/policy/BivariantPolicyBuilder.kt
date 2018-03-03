@@ -32,7 +32,6 @@ class BivariantKeyBuilder {
     ) = BivariantWithKeyBuilder(keyFunctor,  typeOf<C>())
 }
 
-@Suppress("MemberVisibilityCanBePrivate")
 class BivariantWithKeyBuilder<in C: Any>(
         val keyFunctor:   (C) -> Any,
         val callbackType: KType
@@ -43,7 +42,6 @@ class BivariantWithKeyBuilder<in C: Any>(
             targetFunctor, typeOf<D>(), typeOf<S>())
 }
 
-@Suppress("MemberVisibilityCanBePrivate")
 class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
         private val keyFunctor:    (C) -> Any,
         private val targetFunctor: (C) -> S,
