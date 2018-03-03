@@ -2,9 +2,7 @@ package com.miruken.callback.policy
 
 typealias MethodBinderBlock = (PolicyMethodBindingInfo) -> PolicyMethodBinding
 
-class MethodRule(
-        val methodBinder: MethodBinderBlock,
-        vararg val argumentRules: ArgumentRule) {
+class MethodRule(vararg val argumentRules: ArgumentRule) {
 
     var returnRule: ReturnRule? = null
         private set
@@ -22,8 +20,9 @@ class MethodRule(
         this.returnRule = returnRule
     }
 
-    fun bind(dispatch: CallableDispatch,
-             annotation: Annotation): PolicyMethodBinding {
+    fun bind(dispatch:     CallableDispatch,
+             methodBinder: MethodBinderBlock,
+             annotation:   Annotation): PolicyMethodBinding {
         val bindingInfo = PolicyMethodBindingInfo(this, dispatch, annotation)
         returnRule?.configure(bindingInfo)
         argumentRules.zip(dispatch.arguments) { argRule, arg ->

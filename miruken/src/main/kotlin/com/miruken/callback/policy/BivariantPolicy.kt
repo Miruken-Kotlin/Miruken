@@ -1,20 +1,21 @@
 package com.miruken.callback.policy
 
-open class BivariantPolicy internal constructor() : CallbackPolicy() {
+import com.miruken.callback.FilteringProvider
 
-    lateinit var output: CovariantPolicy
-        internal set
-
-    lateinit var input:  ContravariantPolicy
-        internal set
+open class BivariantPolicy(
+        rules:   List<MethodRule>,
+        filters: List<FilteringProvider>,
+        private val output: CovariantPolicy,
+        private val input:  ContravariantPolicy
+) : CallbackPolicy(rules, filters) {
 
     constructor(
-            build: BivariantKeyBuilder.() -> CallbackPolicyBuilder.Completed
-    ) : this() {
-        @Suppress("LeakingThis")
-        val builder = BivariantKeyBuilder(this)
-        builder.build()
-    }
+            build: BivariantKeyBuilder.() -> BivariantPolicy
+    ) : this(BivariantKeyBuilder().build())
+
+    private constructor(prototype: BivariantPolicy) : this(
+            prototype.rules, prototype.filters,
+            prototype.output, prototype.input)
 
     override fun getKey(callback: Any): Any? =
             output.getKey(callback) to input.getKey(callback)

@@ -1,23 +1,25 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.FilteringProvider
 import com.miruken.callback.HandleResult
 import com.miruken.runtime.isAssignableTo
 import com.miruken.runtime.isUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-open class ContravariantPolicy internal constructor() : CallbackPolicy() {
-
-    lateinit var targetFunctor: (Any) -> Any?
-        internal set
+open class ContravariantPolicy(
+        rules:   List<MethodRule>,
+        filters: List<FilteringProvider>,
+        private val targetFunctor: (Any) -> Any?
+): CallbackPolicy(rules, filters) {
 
     constructor(
-            build: ContravariantTargetBuilder.() -> CallbackPolicyBuilder.Completed
-    ) : this() {
-        @Suppress("LeakingThis")
-        val builder = ContravariantTargetBuilder(this)
-        builder.build()
-    }
+            build: ContravariantTargetBuilder.() -> ContravariantPolicy
+    ) : this(ContravariantTargetBuilder().build())
+
+    private constructor(prototype: ContravariantPolicy) : this(
+            prototype.rules, prototype.filters, prototype.targetFunctor
+    )
 
     override fun getKey(callback: Any): Any? {
         return targetFunctor(callback)?.let {

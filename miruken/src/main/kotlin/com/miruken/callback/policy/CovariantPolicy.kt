@@ -1,19 +1,21 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.FilteringProvider
 import com.miruken.runtime.isAssignableTo
 
-open class CovariantPolicy internal constructor() : CallbackPolicy() {
-
-    lateinit var keyFunctor: (Any) -> Any?
-        internal set
+open class CovariantPolicy(
+        rules:   List<MethodRule>,
+        filters: List<FilteringProvider>,
+        private val keyFunctor: (Any) -> Any?
+) : CallbackPolicy(rules, filters) {
 
     constructor(
-            build: CovariantKeyBuilder.() -> CallbackPolicyBuilder.Completed
-    ) : this() {
-        @Suppress("LeakingThis")
-        val builder = CovariantKeyBuilder(this)
-        builder.build()
-    }
+            build: CovariantKeyBuilder.() -> CovariantPolicy
+    ) : this(CovariantKeyBuilder().build())
+
+    private constructor(prototype: CovariantPolicy) : this(
+            prototype.rules, prototype.filters, prototype.keyFunctor
+    )
 
     override fun getKey(callback: Any): Any? =
             keyFunctor(callback)

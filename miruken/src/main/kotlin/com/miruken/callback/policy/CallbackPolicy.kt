@@ -6,21 +6,12 @@ import kotlin.reflect.KClass
 typealias AcceptsResultBlock  = (Any, PolicyMethodBinding) -> Boolean
 typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
-abstract class CallbackPolicy : Comparator<Any> {
-    private val _rules   = mutableListOf<MethodRule>()
-    private val _filters = mutableListOf<FilteringProvider>()
-
+abstract class CallbackPolicy(
+        val rules:   List<MethodRule>,
+        val filters: List<FilteringProvider>
+) : Comparator<Any> {
     val methodBindingComparator : Comparator<PolicyMethodBinding> =
             Comparator { a, b -> compare(a.key, b.key) }
-
-    fun addRule(vararg rules: MethodRule) =
-            _rules.addAll(rules)
-
-    fun addFilters(vararg filters: FilteringProvider) =
-            _filters.addAll(filters)
-
-    fun match(method: CallableDispatch) =
-            _rules.firstOrNull { rule -> rule.matches(method) }
 
     open fun bindMethod(
             bindingInfo: PolicyMethodBindingInfo
