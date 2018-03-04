@@ -10,9 +10,9 @@ open class Flags<T: Flags<T>>(val value: Long) {
 
     operator fun unaryPlus() = value
 
-    operator fun unaryMinus() : Flags<T> = toFlag()
+    operator fun unaryMinus(): Flags<T> = toFlag()
 
-    fun toFlag() : Flags<T> = this as? Flags<T> ?: Flags(value)
+    fun toFlag(): Flags<T> = this as? Flags<T> ?: Flags(value)
 
     infix fun has(flag: Flags<T>): Boolean {
         if (value == 0L || (value > 0L && flag.value == 0L))
@@ -45,7 +45,7 @@ open class Flags<T: Flags<T>>(val value: Long) {
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T: Flags<T>> valuesOf() : List<T> {
+        inline fun <reified T: Flags<T>> valuesOf(): List<T> {
             return T::class.nestedClasses.mapNotNull {
                 it.objectInstance } as List<T>
         }

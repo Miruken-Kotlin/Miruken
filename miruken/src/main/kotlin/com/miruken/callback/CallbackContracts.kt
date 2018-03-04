@@ -19,7 +19,7 @@ interface BoundingCallback {
 }
 
 interface ResolvingCallback {
-    fun getResolveCallback() : Any
+    fun getResolveCallback(): Any
 }
 
 interface BatchingCallback {

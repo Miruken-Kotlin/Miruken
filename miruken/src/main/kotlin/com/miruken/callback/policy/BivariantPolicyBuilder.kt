@@ -63,7 +63,7 @@ class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
         })
         val builder = BivariantPolicyBuilder(callbackType, targetType,
                 targetFunctor, co, contra)
-        builder.define()
+        define(builder)
         return builder.build()
     }
 }

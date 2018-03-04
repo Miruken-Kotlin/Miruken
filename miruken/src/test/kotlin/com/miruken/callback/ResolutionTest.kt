@@ -2,6 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.protocol.proxy
+import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -53,7 +54,7 @@ class ResolutionTest {
         assertEquals(1, id)
     }
 
-    /**
+    @Ignore("Not matching open generics")
     @Test fun `Resolves implied open-generic handlers`() {
         HandlerDescriptor.getDescriptorFor<Repository<*>>()
         val handler = Repository<Message>()
@@ -61,7 +62,6 @@ class ResolutionTest {
         val result  = handler.resolving.handle(Create(message))
         assertEquals(HandleResult.HANDLED, result)
     }
-    */
 
     @Test fun `Fails if no handlers resolved`() {
         val handler = BillingImpl().toHandler()

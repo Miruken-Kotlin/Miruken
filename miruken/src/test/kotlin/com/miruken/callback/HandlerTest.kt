@@ -595,7 +595,7 @@ class HandlerTest {
         // Provides
 
         @Provides
-        fun provideBarImplicitly() : Bar  {
+        fun provideBarImplicitly(): Bar  {
             return Bar().apply { handled = 1 }
         }
 
@@ -613,15 +613,15 @@ class HandlerTest {
         }
 
         @Provides
-        fun notProvideBazImplicitly() : Baz? = null
+        fun notProvideBazImplicitly(): Baz? = null
 
         @Provides
-        fun <T> provideBazGenerically() : BazT<T> {
+        fun <T> provideBazGenerically(): BazT<T> {
             return BazT(tag = "providesGenericBaz")
         }
 
         @Provides
-        fun <T,R> provideGenericBazWithArity() : BazTR<T,R> {
+        fun <T,R> provideGenericBazWithArity(): BazTR<T,R> {
             return BazTR(tag = "providesGenericBazArity")
         }
 
@@ -662,7 +662,7 @@ class HandlerTest {
         // Providers
 
         @Provides
-        fun provideBarImplicitly() : Promise<Bar>
+        fun provideBarImplicitly(): Promise<Bar>
         {
             return Promise.resolve(Bar().apply { handled = 1 })
         }
@@ -677,7 +677,7 @@ class HandlerTest {
         }
 
         @Provides
-        fun provideSuperBarImplicitly() : Promise<SuperBar>
+        fun provideSuperBarImplicitly(): Promise<SuperBar>
         {
             return Promise.resolve(SuperBar().apply {
                 handled     = 1
@@ -687,16 +687,16 @@ class HandlerTest {
 
         @Suppress("RemoveExplicitTypeArguments")
         @Provides
-        fun notProvideBazImplicitly() : Promise<Baz?> =
+        fun notProvideBazImplicitly(): Promise<Baz?> =
                 Promise.resolve<Baz?>(null)
 
         @Provides
-        fun <T> provideGenericBaz() : Promise<BazT<T>> {
+        fun <T> provideGenericBaz(): Promise<BazT<T>> {
             return Promise.resolve(BazT(tag = "providesGenericBaz"))
         }
 
         @Provides
-        fun <T,R> provideGenericBazWithArity() : Promise<BazTR<T,R>> {
+        fun <T,R> provideGenericBazWithArity(): Promise<BazTR<T,R>> {
             return Promise.resolve(BazTR(tag = "providesGenericBazArity"))
         }
 
@@ -755,14 +755,14 @@ class HandlerTest {
         }
 
         @Provides
-        fun providesTimeout() : Long = 5000
+        fun providesTimeout(): Long = 5000
 
         @Provides
         @Key("password")
-        fun providesPassword() : String = "ABC123!"
+        fun providesPassword(): String = "ABC123!"
     }
 
-    class SpecialAsyncHandler : Handler() {
+    class SpecialAsyncHandler: Handler() {
         @Provides
         fun providesManyBars(): Promise<List<Bar>> =
                 Promise.resolve(listOf(
@@ -770,7 +770,7 @@ class HandlerTest {
                     Bar().apply { handled = 2 }))
 
         @Provides
-        val providesPropertyBar : Promise<Bar>
+        val providesPropertyBar: Promise<Bar>
             get() = Promise.resolve(Bar().apply { handled = 3 })
 
         @Provides

@@ -42,7 +42,7 @@ class ContravariantWithTargetBuilder<C: Any, out S: Any>(
     ): ContravariantPolicy {
         val builder = ContravariantPolicyBuilder(
                 callbackType, targetType, targetFunctor)
-        builder.define()
+        define(builder)
         return builder.build()
     }
 }

@@ -11,7 +11,7 @@ inline operator fun <reified T: Handling,
 inline fun <reified T: Any> Handling.provide(value: T) =
         CascadeHandler(Provider(value, typeOf<T>()), this)
 
-inline fun <reified T: Any> T.toHandler() : Handling {
+inline fun <reified T: Any> T.toHandler(): Handling {
     val handler = this as? Handling ?: HandlerAdapter(this)
     return if (this::class.isGeneric)
         CascadeHandler(Provider(this, typeOf<T>()), handler)

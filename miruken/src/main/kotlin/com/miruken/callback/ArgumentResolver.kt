@@ -24,30 +24,30 @@ open class ArgumentResolver : ArgumentResolving {
             key:      Any,
             handler:  Handling,
             composer: Handling
-    ) : Any? = handler.resolve(key)
+    ) = handler.resolve(key)
 
     open fun resolveKeyAsync(
             key:      Any,
             handler:  Handling,
             composer: Handling
-    ) : Promise<Any?> = handler.resolveAsync(key)
+    ) = handler.resolveAsync(key)
 
     open fun resolveKeyAll(
             key:      Any,
             handler:  Handling,
             composer: Handling
-    ) : List<Any> = handler.resolveAll(key)
+    ) = handler.resolveAll(key)
 
     open fun resolveKeyAllAsync(
             key:      Any,
             handler:  Handling,
             composer: Handling
-    ) : Promise<List<Any>> = handler.resolveAllAsync(key)
+    ) = handler.resolveAllAsync(key)
 
     private fun resolveArgumentLazy(
             argument: Argument,
             composer: Handling
-    ): Lazy<Any?> =
+    ) =
         lazy(LazyThreadSafetyMode.NONE) {
             // ** MUST ** use composer, composer since
             // handler may be invalidated at this point

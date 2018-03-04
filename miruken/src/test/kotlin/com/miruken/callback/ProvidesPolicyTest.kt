@@ -12,7 +12,7 @@ class ProvidesPolicyTest {
     @Suppress("UNUSED_PARAMETER")
     class MyProvider {
         @Provides
-        fun provideFoo() : Foo { return Foo() }
+        fun provideFoo(): Foo { return Foo() }
     }
 
     @Test

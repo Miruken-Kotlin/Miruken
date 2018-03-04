@@ -117,5 +117,5 @@ class typeOfTest {
         assertEquals(typeOf<Bar<Int>>(), something<Bar<Int>>())
     }
 
-    private inline fun <reified T: Any> something() : KType = typeOf<T>()
+    private inline fun <reified T: Any> something(): KType = typeOf<T>()
 }

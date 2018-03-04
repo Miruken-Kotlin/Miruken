@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-fun Handling.getFilterOptions() : FilterOptions? {
+fun Handling.getFilterOptions(): FilterOptions? {
     val options = FilterOptions()
     return handle(options, true) success { options }
 }

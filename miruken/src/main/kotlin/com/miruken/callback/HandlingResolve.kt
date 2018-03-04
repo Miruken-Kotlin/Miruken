@@ -8,7 +8,7 @@ val Handling.resolving get() = ResolvingHandler(this)
 val Handling.resolvingAll get() = CallbackSemanticsHandler(
         ResolvingHandler(this), CallbackOptions.BROADCAST)
 
-fun Handling.resolve(key: Any) : Any? {
+fun Handling.resolve(key: Any): Any? {
     val inquiry = key as? Inquiry ?: Inquiry(key)
     return handle(inquiry) success {
         inquiry.result?.let {
@@ -29,10 +29,10 @@ fun Handling.resolveAsync(key: Any) : Promise<Any?> {
     } ?: Promise.EMPTY
 }
 
-inline fun <reified T: Any> Handling.resolve() : T? =
+inline fun <reified T: Any> Handling.resolve(): T? =
         resolve(typeOf<T>()) as? T
 
-inline fun <reified T: Any> Handling.resolveAsync() : Promise<T?> =
+inline fun <reified T: Any> Handling.resolveAsync(): Promise<T?> =
         resolveAsync(typeOf<T>()) then { it as? T }
 
 @Suppress("UNCHECKED_CAST")
@@ -49,7 +49,7 @@ fun Handling.resolveAll(key: Any) : List<Any> {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun Handling.resolveAllAsync(key: Any) : Promise<List<Any>> {
+fun Handling.resolveAllAsync(key: Any): Promise<List<Any>> {
     val inquiry = key as? Inquiry ?: Inquiry(key, true)
     inquiry.wantsAsync = true
     return handle(inquiry, true) success  {
@@ -64,8 +64,8 @@ fun Handling.resolveAllAsync(key: Any) : Promise<List<Any>> {
     } ?: Promise.EMPTY_LIST
 }
 
-inline fun <reified T: Any> Handling.resolveAll() : List<T> =
+inline fun <reified T: Any> Handling.resolveAll(): List<T> =
     resolveAll(typeOf<T>()).filterIsInstance<T>()
 
-inline fun <reified T: Any> Handling.resolveAllAsync() : Promise<List<T>> =
+inline fun <reified T: Any> Handling.resolveAllAsync(): Promise<List<T>> =
         resolveAllAsync(typeOf<T>()) then { it.filterIsInstance<T>() }

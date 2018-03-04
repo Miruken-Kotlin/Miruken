@@ -37,7 +37,7 @@ class CovariantWithKeyBuilder<C: Any>(
             define: CovariantPolicyBuilder<C>.() -> Unit
     ): CovariantPolicy {
         val builder = CovariantPolicyBuilder(callbackType, keyFunctor)
-        builder.define()
+        define(builder)
         return builder.build()
     }
 }

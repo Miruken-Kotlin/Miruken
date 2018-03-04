@@ -336,7 +336,7 @@ open class Promise<out T>
     }
 }
 
-fun <T> Promise<Promise<T>>.unwrap() : Promise<T> {
+fun <T> Promise<Promise<T>>.unwrap(): Promise<T> {
     return Promise(this.cancelMode, {
         resolve, reject, onCancel ->
             onCancel { this.cancel() }

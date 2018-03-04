@@ -91,7 +91,7 @@ fun Iterable<*>.filterIsAssignableTo(
     return destination
 }
 
-fun <T> List<T>.normalize() : List<T> =
+fun <T> List<T>.normalize(): List<T> =
         if (isEmpty()) emptyList() else this
 
 val KType.isAny get() = classifier == Any::class
