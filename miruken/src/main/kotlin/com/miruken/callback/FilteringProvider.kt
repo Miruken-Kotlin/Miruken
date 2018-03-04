@@ -9,5 +9,5 @@ interface FilteringProvider {
             callbackType:      KType,
             logicalResultType: KType,
             composer:          Handling
-    ) : List<Filtering<*,*>>
+    ): List<Filtering<*,*>>
 }

@@ -24,7 +24,8 @@ abstract class CallbackPolicy(
     open fun createKey(bindingInfo: PolicyMethodBindingInfo): Any? =
             bindingInfo.inKey ?: bindingInfo.outKey
 
-    abstract fun getKey(callback: Any) : Any?
+    open fun getKey(callback: Any): Any? =
+            (callback as? Callback)?.getCallbackKey()
 
     abstract fun getCompatibleKeys(
             key:       Any,

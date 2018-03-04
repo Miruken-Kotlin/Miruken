@@ -24,11 +24,11 @@ open class BivariantPolicy(
         val inKey  = bindingInfo.inKey
         val outKey = bindingInfo.outKey
         return if (inKey != null && outKey != null)
-            outKey to inKey
-        else null
+            outKey to inKey else null
     }
 
     override fun getKey(callback: Any): Any? =
+            super.getKey(callback) ?:
             output.getKey(callback) to input.getKey(callback)
 
     override fun getCompatibleKeys(

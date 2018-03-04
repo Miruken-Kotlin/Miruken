@@ -19,6 +19,9 @@ open class Composition(callback: Any) : Trampoline(callback),
             (callback as? Callback)?.result = value
         }
 
+    override fun getCallbackKey(): Any? =
+            (callback as? Callback)?.getCallbackKey()
+
     override val allowFiltering: Boolean
         get() = (callback as? FilteringCallback)?.allowFiltering != false
 

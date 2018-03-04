@@ -26,7 +26,7 @@ class CovariantPolicyBuilder<C: Any>(
 class CovariantKeyBuilder {
     inline fun <reified C: Any> key(
             noinline keyFunctor: (C) -> Any
-    ) = CovariantWithKeyBuilder(keyFunctor,  typeOf<C>())
+    ) = CovariantWithKeyBuilder(keyFunctor, typeOf<C>())
 }
 
 class CovariantWithKeyBuilder<C: Any>(

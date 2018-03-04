@@ -22,6 +22,7 @@ open class ContravariantPolicy(
     )
 
     override fun getKey(callback: Any): Any? =
+            super.getKey(callback) ?:
             targetFunctor(callback)?.let {
                 when (it) {
                     is KType, is KClass<*> -> it

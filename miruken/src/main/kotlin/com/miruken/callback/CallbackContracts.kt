@@ -6,6 +6,7 @@ import kotlin.reflect.KType
 interface Callback {
     val resultType: KType?
     var result:     Any?
+    fun getCallbackKey(): Any? = null
 }
 
 interface AsyncCallback {

@@ -142,10 +142,18 @@ class HandleMethodTest {
         assertEquals(7.toBigDecimal(), total)
     }
 
+    @Test fun `Handles default method calls`() {
+        val handler = EmailHandler()
+        var id      = handler.proxy<EmailFeature>().email(19)
+        assertEquals(1, id)
+    }
+
     interface EmailFeature {
         val count: Int
         fun email(message: String): Int
         fun cancelEmail(id: Int)
+        fun <T: Any> email(message: T) =
+                email(message.toString())
     }
 
     @Resolving

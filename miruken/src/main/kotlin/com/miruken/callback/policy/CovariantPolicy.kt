@@ -18,7 +18,7 @@ open class CovariantPolicy(
     )
 
     override fun getKey(callback: Any): Any? =
-            keyFunctor(callback)
+            super.getKey(callback) ?: keyFunctor(callback)
 
     override fun getCompatibleKeys(
             key:       Any,

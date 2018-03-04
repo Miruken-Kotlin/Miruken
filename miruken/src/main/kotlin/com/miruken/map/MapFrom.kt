@@ -40,6 +40,10 @@ class MapFrom(
             isAsync = _result is Promise<*>
         }
 
+    override fun getCallbackKey() =
+            sourceType?.let { targetType to it }
+                    ?: super.getCallbackKey()
+
     @Suppress("UNUSED_PARAMETER")
     fun mapped(mapping: Any, strict: Boolean) : Boolean {
         result = mapping
