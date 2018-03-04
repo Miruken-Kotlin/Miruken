@@ -4,7 +4,6 @@ import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
 import com.miruken.fold
-import com.miruken.protocol.proxy
 import java.util.concurrent.CancellationException
 
 val Handling.recover get() = recover()
@@ -17,7 +16,7 @@ fun Handling.recover(context: Any? = null): Handling {
                 return when (e) {
                     is CancellationException ->
                         Promise.reject(e)
-                    else -> composer.proxy<Errors>()
+                    else -> Errors(composer)
                             .handleException(e, callback, context)
                 }
             }
@@ -37,8 +36,7 @@ fun Handling.recover(context: Any? = null): Handling {
                     cb.result = promisify(e)
                     HandleResult.NOT_HANDLED
                 } else if (e !is CancellationException) {
-                    composer.proxy<Errors>()
-                            .handleException(e, callback, context)
+                    Errors(composer).handleException(e, callback, context)
                 }
                 HandleResult.HANDLED
             }

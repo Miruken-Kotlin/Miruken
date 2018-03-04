@@ -21,7 +21,7 @@ class ErrorsHandlerTest {
         var handled = false
         val handler = ErrorsHandler()
         assertAsync(testName) { done ->
-            handler.proxy<Errors>().handleException(
+            Errors(handler).handleException(
                     IllegalArgumentException("This is bad")
             ).then  { handled = true }
              .catch { handled = true}

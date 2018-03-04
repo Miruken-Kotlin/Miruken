@@ -21,17 +21,22 @@ class MappingTest {
     @Rule
     @JvmField val testName = TestName()
 
-    private lateinit var _handler: Handling
+    private lateinit var _handler:   Handling
+    private lateinit var _explicit:  Handling
+    private lateinit var _entity:    Handling
+    private lateinit var _exception: Handling
 
     @Before
     fun setup() {
-        _handler = MappingHandler()
+        _handler   = MappingHandler()
+        _entity    = EntityMapping() + _handler
+        _explicit  = ExplicitMapping() + _handler
+        _exception = ExceptionMapping() + _handler
     }
 
     @Test fun `Performs mapping implicitly`() {
-        val entity = PlayerEntity(1, "Tim Howard")
-        val data   = (EntityMapping() + _handler)
-                .proxy<Mapping>().map<PlayerData>(entity)
+        val entity  = PlayerEntity(1, "Tim Howard")
+        val data    = Mapping(_entity).map<PlayerData>(entity)
         assertEquals(entity.id, data!!.id)
         assertEquals(entity.name, data.name)
     }
@@ -39,8 +44,7 @@ class MappingTest {
     @Test fun `Performs mapping implicitly async`() {
         val entity = PlayerEntity(1, "Tim Howard")
         assertAsync(testName) { done ->
-            (EntityMapping() + _handler).proxy<Mapping>()
-                    .mapAsync<PlayerData>(entity) then {
+            Mapping(_entity).mapAsync<PlayerData>(entity) then {
                 assertEquals(entity.id, it!!.id)
                 assertEquals(entity.name, it.name)
                 done()
@@ -49,25 +53,23 @@ class MappingTest {
     }
 
     @Test fun `Performs mapping explicitly`() {
-        val handler = ExplicitMapping() + _handler
         val player  = PlayerData(3, "Franz Beckenbauer")
-        val json    = handler.proxy<Mapping>().map<String>(
+        val json    = Mapping(_explicit).map<String>(
                 player, "application/json")
         assertEquals("{id:3,name:'Franz Beckenbauer'}", json)
-        val data    = handler.proxy<Mapping>().map<PlayerData>(
+        val data    = Mapping(_explicit).map<PlayerData>(
                 json!!, "application/json")
         assertEquals(3, data!!.id)
         assertEquals("Franz Beckenbauer", player.name)
     }
 
     @Test fun `Performs mapping explicitly async`() {
-        val handler = ExplicitMapping() + _handler
         val player  = PlayerData(3, "Franz Beckenbauer")
         assertAsync(testName) { done ->
-            handler.proxy<Mapping>().mapAsync<String>(
+            Mapping(_explicit).mapAsync<String>(
                     player, "application/json") then {
                 assertEquals("{id:3,name:'Franz Beckenbauer'}", it)
-                val data = handler.proxy<Mapping>().map<PlayerData>(
+                val data = Mapping(_explicit).map<PlayerData>(
                         it!!, "application/json")
                 assertEquals(3, data!!.id)
                 assertEquals("Franz Beckenbauer", player.name)
@@ -79,8 +81,7 @@ class MappingTest {
     @Test fun `Performs mapping on existing instance`() {
         val entity = PlayerEntity(9, "Diego Maradona")
         val player = PlayerData(9, "")
-        val data   = (EntityMapping() + _handler)
-                .proxy<Mapping>().mapInto(entity, player)
+        val data   = Mapping(_entity).mapInto(entity, player)
         assertSame(player, data)
         assertEquals(entity.id, data!!.id)
         assertEquals(entity.name, data.name)
@@ -89,21 +90,20 @@ class MappingTest {
     @Test fun `Rejects missing mapping`() {
         val entity = PlayerEntity(1, "Tim Howard")
         assertFailsWith(NotHandledException::class) {
-            _handler.proxy<Mapping>().map<PlayerData>(entity)
+            Mapping(_handler).map<PlayerData>(entity)
         }
     }
 
     @Test fun `Rejects missing mapping async`() {
         val entity = PlayerEntity(1, "Tim Howard")
         assertFailsWith(NotHandledException::class) {
-            _handler.proxy<Mapping>().mapAsync<PlayerData>(entity)
+            Mapping(_handler).mapAsync<PlayerData>(entity)
         }
     }
 
     @Test fun `Performs mapping to map of key values`() {
         val entity = PlayerEntity(1, "Marco Royce")
-        val data   = (EntityMapping() + _handler)
-                .proxy<Mapping>().map<Map<String, Any>>(entity)
+        val data   = Mapping(_entity).map<Map<String, Any>>(entity)
         assertEquals(2, data!!.size)
         assertEquals(1, data["id"])
         assertEquals("Marco Royce", data["name"])
@@ -112,8 +112,7 @@ class MappingTest {
     @Ignore("Type erasure prevent check")
     @Test fun `Performs mapping from map of key values`() {
         val data   = mapOf("id" to 1, "name" to "Geroge Best")
-        val entity = (EntityMapping() + _handler)
-                .proxy<Mapping>().map<PlayerEntity>(data)
+        val entity = Mapping(_entity).map<PlayerEntity>(data)
         assertEquals(1, entity!!.id)
         assertEquals("Marco Royce", entity.name)
     }
@@ -121,40 +120,61 @@ class MappingTest {
     @Test fun `Performs mapping resolving`() {
         HandlerDescriptor.getDescriptorFor<ExplicitMapping>()
         val exception = IllegalArgumentException("Value is bad")
-        val value     = (ExceptionMapping() + _handler).resolving
-                .proxy<Mapping>().map<Any>(exception)
+        val value     = Mapping(_exception.resolving).map<Any>(exception)
         assertEquals("java.lang.IllegalArgumentException: Value is bad", value)
     }
 
     @Test fun `Performs mapping on simple results`() {
         HandlerDescriptor.getDescriptorFor<ExplicitMapping>()
         val exception = IllegalStateException("Close not found")
-        var value     = (ExceptionMapping() + _handler).resolving
-                .proxy<Mapping>().map<Any>(exception)
+        var value     = Mapping(_exception.resolving).map<Any>(exception)
         assertEquals(500, value)
-        value     = (ExceptionMapping() + _handler).resolving
-                .proxy<Mapping>().map(IllegalAccessException(
-                        "Operation not allowed"))
+        value = Mapping(_exception.resolving)
+                .map(IllegalAccessException("Operation not allowed"))
         assertEquals("Operation not allowed", value)
     }
 
     @Test fun `Maps to null if best effort`() {
         HandlerDescriptor.getDescriptorFor<ExplicitMapping>()
-        val value     = (ExceptionMapping() + _handler).resolving.bestEffort
-                .proxy<Mapping>().map<Int>(InvalidClassException(""))
+        val value = Mapping(_exception.resolving.bestEffort)
+                .map<Int>(InvalidClassException(""))
         assertNull(value)
     }
 
     @Test fun `Maps to null if best effort async`() {
         HandlerDescriptor.getDescriptorFor<ExplicitMapping>()
         assertAsync { done ->
-            (ExceptionMapping() + _handler).resolving.bestEffort
-                    .proxy<Mapping>()
+            Mapping(_exception.resolving.bestEffort)
                     .mapAsync<Int>(InvalidClassException("")) then {
                 assertNull(it)
                 done()
             }
         }
+    }
+
+    @Test fun `Performs open mapping`() {
+        val entity = PlayerEntity(1, "Tim Howard")
+        val data   = Mapping(OpenMapping() + _handler)
+            .map<PlayerData>(entity)
+        assertEquals(entity.id, data!!.id)
+        assertEquals(entity.name, data.name)
+    }
+
+    @Test fun `Performs bundled mapping`() {
+        val entity  = PlayerEntity(4, "Michel Platini")
+        val player  = PlayerData(12, "Roberto Carlose")
+        val result  = (ExplicitMapping() + EntityMapping() + _handler).all {
+            add {
+                val data = Mapping(it).map<PlayerData>(entity)
+                assertEquals(entity.id, data!!.id)
+                assertEquals(entity.name, data.name)
+            }
+            add {
+                val json = Mapping(it).map<String>(player, "application/json")
+                assertEquals("{id:12,name:'Roberto Carlose'}", json)
+            }
+        }
+        assertEquals(HandleResult.HANDLED, result)
     }
 
     open class Entity(var id: Int)
@@ -225,7 +245,7 @@ class MappingTest {
 
     class OpenMapping : Handler() {
         @Maps
-        fun map(mapping: MapFrom) =
+        fun map(mapping: MapFrom): Any =
                 (mapping.source as? PlayerEntity)?.takeIf {
                     mapping.targetType == typeOf<PlayerData>()
                 }?.let { PlayerData(it.id, it.name) } ?: notHandled()

@@ -16,6 +16,8 @@ class MapFrom(
 
     private var _result: Any? = null
 
+    val sourceType: KType? = null
+
     override var wantsAsync: Boolean = false
 
     override var isAsync: Boolean = false

@@ -10,7 +10,8 @@ class TargetArgument<in C, out R: Any>(
 ) : ArgumentRule {
 
     override fun matches(argument: Argument) =
-            argument.satisfies(targetType)
+            !argument.satisfies(callbackType) &&  //CallbackArgument matches
+                    argument.satisfies(targetType)
 
     override fun configure(
             argument:    Argument,
