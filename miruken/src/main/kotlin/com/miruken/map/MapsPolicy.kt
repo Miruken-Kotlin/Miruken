@@ -17,10 +17,12 @@ object MapsPolicy : BivariantPolicy({
         matches (callback) returns (key or unit)
     }
 }) {
-    override fun getKey(callback: Any): Any? =
-            (callback as? MapFrom)?.sourceType?.let {
-                output.getKey(callback) to it
-            } ?: output.getKey(callback) to input.getKey(callback)
+    override fun getKey(callback: Any): Any? {
+        val outKey = output.getKey(callback)
+        return (callback as? MapFrom)?.sourceType
+                ?.let { outKey to it }
+                ?: outKey to input.getKey(callback)
+    }
 
     override fun approve(
             callback: Any,

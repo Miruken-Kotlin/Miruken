@@ -64,7 +64,7 @@ class RuntimeHelpersTest {
         assertFalse(typeOf<Bar>().isTopLevelInterfaceOf<BazImpl>())
         assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BarImpl>())
         assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BazImpl>())
-        var x = typeOf<BamImpl<Int>>().allTopLevelInterfaces
+        //var x = typeOf<BamImpl<Int>>().allTopLevelInterfaces
         //assertTrue(typeOf<Bam<Int>>().isTopLevelInterfaceOf<BamImpl<Int>>())
     }
 
