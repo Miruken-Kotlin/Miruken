@@ -11,8 +11,7 @@ class CommandTest {
     class Foo
     class Bar<out T>
 
-    @Test
-    fun `Creates Command of String`() {
+    @Test fun `Creates Command of String`() {
         val command = Command(Foo(), typeOf<String>())
         assertFalse(command.many)
         assertFalse(command.wantsAsync)
@@ -20,34 +19,29 @@ class CommandTest {
         assertSame(HandlesPolicy, command.policy)
     }
 
-    @Test
-    fun `Creates Command of KClass`() {
+    @Test fun `Creates Command of KClass`() {
         val command = Command(Foo(), typeOf<Foo>())
         assertEquals(typeOf<Foo>(), command.resultType)
     }
 
-    @Test
-    fun `Creates Command of generic KClass`() {
+    @Test fun `Creates Command of generic KClass`() {
         val command = Command(Bar<Int>(), typeOf<Bar<Int>>())
         assertEquals(typeOf<Bar<Int>>(), command.resultType)
     }
 
-    @Test
-    fun `Creates many Command of KType`() {
+    @Test fun `Creates many Command of KType`() {
         val command = Command(Bar<String>(), typeOf<Bar<String>>(), true)
         assertEquals(typeOf<List<Bar<String>>>(), command.resultType)
     }
 
-    @Test
-    fun `Creates async Command of KType`() {
+    @Test fun `Creates async Command of KType`() {
         val command = Command(Bar<String>(), typeOf<Bar<String>>()).apply {
             wantsAsync = true
         }
         assertEquals(typeOf<Promise<Bar<String>>>(), command.resultType)
     }
 
-    @Test
-    fun `Creates many async Command of KType`() {
+    @Test fun `Creates many async Command of KType`() {
         val command = Command(Bar<Int>(), typeOf<Bar<Int>>(), true).apply {
             wantsAsync = true
         }

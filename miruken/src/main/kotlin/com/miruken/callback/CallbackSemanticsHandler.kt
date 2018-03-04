@@ -36,7 +36,7 @@ class CallbackSemanticsHandler(
             return try {
                 HandleResult.HANDLED or
                         handler.handle(callback, greed, composer)
-            } catch (ex: RejectedException) {
+            } catch (e: RejectedException) {
                 HandleResult.HANDLED
             }
         }

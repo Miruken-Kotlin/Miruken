@@ -49,33 +49,31 @@ open class ContravariantPolicy(
             o1 == o2 -> 0
             o1 == null -> 1
             o2 == null -> -1
-            else -> compareGenericArity(o1, o2)?.let { it }
+            else -> compareGenericArity(o1, o2).takeIf { it != 0 }
                 ?: if (isAssignableTo(o2, o1)) -1 else 1
         }
     }
     
-    private fun compareGenericArity(o1: Any?, o2: Any?): Int? {
+    private fun compareGenericArity(o1: Any?, o2: Any?): Int {
         return when (o1) {
             is KType -> when (o2) {
-                is KType -> o2.arguments.size - o1.arguments.size
-                is KClass<*> ->
-                    o2.typeParameters.size - o1.arguments.size
-                is Class<*> ->
-                    o2.typeParameters.size - o1.arguments.size
-                else -> null
+                is KType -> o2.arguments.size -  o1.arguments.size
+                is KClass<*> -> o2.typeParameters.size - o1.arguments.size
+                is Class<*> -> o2.typeParameters.size - o1.arguments.size
+                else -> 0
             }
             is KClass<*> -> when (o2) {
                 is KType -> o2.arguments.size - o1.typeParameters.size
                 is KClass<*> -> o2.typeParameters.size - o1.typeParameters.size
-                is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
-                else -> null
+                is Class<*> -> o2.typeParameters.size -o1.typeParameters.size
+                else -> 0
             }
             is Class<*> -> when (o2) {
                 is KType -> o2.arguments.size - o1.typeParameters.size
                 is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
-                else -> null
+                else -> 0
             }
-            else -> null
+            else -> 0
         }
     }
 }

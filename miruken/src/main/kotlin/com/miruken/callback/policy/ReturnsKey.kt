@@ -16,7 +16,7 @@ object ReturnsKey : ReturnRule {
                         val key = it as Key
                         StringKey(key.key, key.caseSensitive)
                     } ?: dispatch.logicalReturnType.takeUnless {
-                        !dispatch.strict &&
+                        !bindingInfo.strict &&
                             (dispatch.returnFlags has TypeFlags.PRIMITIVE)
                     } ?: StringKey(dispatch.callable.name)
         }

@@ -1,7 +1,5 @@
 package com.miruken.callback.policy
 
-typealias MethodBinderBlock = (PolicyMethodBindingInfo) -> PolicyMethodBinding
-
 class MethodRule(vararg val argumentRules: ArgumentRule) {
 
     var returnRule: ReturnRule? = null
@@ -23,15 +21,17 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
         return returnRule?.matches(method) ?: true
     }
 
-    fun bind(dispatch:     CallableDispatch,
-             methodBinder: MethodBinderBlock,
-             annotation:   Annotation): PolicyMethodBinding {
-        val bindingInfo = PolicyMethodBindingInfo(this, dispatch, annotation)
+    fun bind(policy:     CallbackPolicy,
+             dispatch:   CallableDispatch,
+             annotation: Annotation): PolicyMethodBinding {
+        val strict      = policy.strict || dispatch.strict
+        val bindingInfo = PolicyMethodBindingInfo(
+                this, dispatch, annotation, strict)
         returnRule?.configure(bindingInfo)
         argumentRules.zip(dispatch.arguments) { argRule, arg ->
             argRule.configure(arg, bindingInfo)
         }
-        return methodBinder(bindingInfo)
+        return policy.bindMethod(bindingInfo)
     }
 
     fun resolveArguments(callback: Any) : Array<Any?> =

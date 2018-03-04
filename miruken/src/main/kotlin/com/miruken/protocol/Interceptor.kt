@@ -1,5 +1,6 @@
 package com.miruken.protocol
 
+import com.miruken.concurrent.Promise
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -25,8 +26,8 @@ class Interceptor(
 
     companion object {
         private fun getDefaultPrimitiveValueOf(clazz: Class<*>): Any? {
-            return if (clazz.isPrimitive)
-                when (clazz.name) {
+            return when {
+                clazz.isPrimitive -> when (clazz.name) {
                     "boolean" -> false
                     "char"    -> '\u0000'
                     "byte"    -> 0
@@ -35,8 +36,11 @@ class Interceptor(
                     "float"   -> 0.0f
                     "long"    -> 0L
                     "double"  -> 0.0
+                    else -> null
+                }
+                clazz.kotlin == Promise::class -> Promise.EMPTY
                 else -> null
-            } else null
+            }
         }
 
         private val NO_ARGS = arrayOfNulls<Any>(0)

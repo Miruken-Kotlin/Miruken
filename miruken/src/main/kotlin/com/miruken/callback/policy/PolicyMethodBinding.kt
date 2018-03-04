@@ -14,6 +14,7 @@ class PolicyMethodBinding(
     val annotation       = bindingInfo.annotation
     val callbackArgument = bindingInfo.callbackArgument
     val dispatcher       = bindingInfo.dispatcher
+    val strict           = bindingInfo.strict
     val key              = policy.createKey(bindingInfo)
 
     private val _filters: MutableList<FilteringProvider> =
@@ -23,10 +24,7 @@ class PolicyMethodBinding(
 
     val filters: Collection<FilteringProvider> = _filters
 
-    inline val strict get() = dispatcher.strict
-
-    fun approves(callback: Any) =
-            policy.approve(callback, annotation)
+    fun approves(callback: Any) = policy.approve(callback, this)
 
     fun addFilters(vararg providers: FilteringProvider) =
             _filters.addAll(providers)

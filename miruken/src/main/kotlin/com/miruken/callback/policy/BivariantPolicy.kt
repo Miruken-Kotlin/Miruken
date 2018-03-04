@@ -1,13 +1,14 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.FilteringProvider
+import com.miruken.runtime.isAssignableTo
 
 open class BivariantPolicy(
         rules:   List<MethodRule>,
         filters: List<FilteringProvider>,
         private val output: CovariantPolicy,
         private val input:  ContravariantPolicy
-) : CallbackPolicy(rules, filters) {
+) : CallbackPolicy(rules, filters, true) {
 
     constructor(
             build: BivariantKeyBuilder.() -> BivariantPolicy
@@ -16,6 +17,16 @@ open class BivariantPolicy(
     constructor(prototype: BivariantPolicy) : this(
             prototype.rules, prototype.filters,
             prototype.output, prototype.input)
+
+    override fun createKey(
+            bindingInfo: PolicyMethodBindingInfo
+    ): Pair<Any, Any>? {
+        val inKey  = bindingInfo.inKey
+        val outKey = bindingInfo.outKey
+        return if (inKey != null && outKey != null)
+            outKey to inKey
+        else null
+    }
 
     override fun getKey(callback: Any): Any? =
             output.getKey(callback) to input.getKey(callback)
@@ -27,16 +38,16 @@ open class BivariantPolicy(
         if (key !is Pair<*,*>) return emptyList()
         val (outputKey, inputKey) = key
         val compatible = mutableListOf<Pair<*,*>>()
-        available.filterIsInstance<Pair<*,*>>().forEach {
+        available.filterIsInstance<Pair<Any,Any>>().forEach {
             val (testOutKey, testInKey) = it
-            val inEqual  = inputKey  == testInKey
-            val outEqual = outputKey == testOutKey
+            val inEqual  = isAssignableTo(testInKey, inputKey!!)
+            val outEqual = isAssignableTo(testOutKey, outputKey!!)
             if (!outEqual && output.getCompatibleKeys(
-                 outputKey!!, listOf(testOutKey!!)).isEmpty()) {
+                 outputKey, listOf(testOutKey)).isEmpty()) {
                 return@forEach
             }
             if (!inEqual && input.getCompatibleKeys(
-                 inputKey!!, listOf(testInKey!!)).isEmpty()) {
+                 inputKey, listOf(testInKey)).isEmpty()) {
                 return@forEach
             }
             compatible.add(it)

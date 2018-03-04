@@ -8,7 +8,8 @@ typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
 abstract class CallbackPolicy(
         val rules:   List<MethodRule>,
-        val filters: List<FilteringProvider>
+        val filters: List<FilteringProvider>,
+        val strict:  Boolean = false
 ) : Comparator<Any> {
     val methodBindingComparator : Comparator<PolicyMethodBinding> =
             Comparator { a, b -> compare(a.key, b.key) }
@@ -38,7 +39,7 @@ abstract class CallbackPolicy(
              else -> HandleResult.HANDLED
          }
 
-    open fun approve(callback: Any, annotation: Annotation) = true
+    open fun approve(callback: Any, binding: PolicyMethodBinding) = true
 
     fun getMethods() = HandlerDescriptor.getPolicyMethods(this)
 

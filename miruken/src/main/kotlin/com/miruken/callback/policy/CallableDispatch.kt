@@ -6,14 +6,13 @@ import com.miruken.concurrent.Promise
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Method
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaMethod
 
-class CallableDispatch(val callable: KCallable<*>){
+class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val arguments: List<Argument> =
             callable.valueParameters.map { Argument(it) }
 
@@ -33,8 +32,8 @@ class CallableDispatch(val callable: KCallable<*>){
         strict            = annotations.any { it is Strict }
     }
 
-    inline val returnType  get() = callable.returnType
-    inline val annotations get() = callable.annotations
+    inline   val returnType  get() = callable.returnType
+    override val annotations get() = callable.annotations
 
     val javaMethod = when (callable) {
         is KFunction<*> -> callable.javaMethod!!
