@@ -6,8 +6,8 @@ import com.miruken.runtime.isAssignableTo
 open class BivariantPolicy(
         rules:   List<MethodRule>,
         filters: List<FilteringProvider>,
-        private val output: CovariantPolicy,
-        private val input:  ContravariantPolicy
+        val output: CovariantPolicy,
+        val input:  ContravariantPolicy
 ) : CallbackPolicy(rules, filters, true) {
 
     constructor(

@@ -3,7 +3,6 @@ package com.miruken.callback.policy
 import com.miruken.callback.*
 import kotlin.reflect.KClass
 
-typealias AcceptsResultBlock  = (Any, PolicyMethodBinding) -> Boolean
 typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
 abstract class CallbackPolicy(

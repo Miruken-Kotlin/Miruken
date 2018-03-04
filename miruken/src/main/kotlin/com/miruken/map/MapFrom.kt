@@ -10,13 +10,12 @@ import kotlin.reflect.full.createType
 class MapFrom(
         val source:     Any,
         val targetType: KType,
-        val target:     Any? = null,
-        val format:     Any? = null
+        val sourceType: KType? = null,
+        val target:     Any?   = null,
+        val format:     Any?   = null
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
-
-    val sourceType: KType? = null
 
     override var wantsAsync: Boolean = false
 
@@ -51,7 +50,6 @@ class MapFrom(
             handler:  Any,
             greedy:   Boolean,
             composer: Handling
-    ): HandleResult =
-        policy!!.dispatch(handler, this, greedy,
+    ) = MapsPolicy.dispatch(handler, this, greedy,
             composer, ::mapped).otherwise(_result != null)
 }

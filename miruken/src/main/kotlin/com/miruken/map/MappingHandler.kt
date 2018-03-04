@@ -10,10 +10,12 @@ class MappingHandler : Handler(), Mapping {
     override fun map(
             source:     Any,
             targetType: KType,
+            sourceType: KType?,
             target:     Any?,
             format:     Any?
     ): Any? {
-        val mapFrom = MapFrom(source, targetType, target, format)
+        val mapFrom = MapFrom(source, targetType,
+                sourceType, target, format)
         return COMPOSER!!.handle(mapFrom) success { mapFrom.result }
                 ?: notHandled()
     }
@@ -21,10 +23,12 @@ class MappingHandler : Handler(), Mapping {
     override fun mapAsync(
             source:     Any,
             targetType: KType,
+            sourceType: KType?,
             target:     Any?,
             format:     Any?
     ): Promise<Any?> {
-        val mapFrom = MapFrom(source, targetType, target, format).apply {
+        val mapFrom = MapFrom(source, targetType,
+                sourceType, target, format).apply {
             wantsAsync = true
         }
         return COMPOSER!!.handle(mapFrom) success {

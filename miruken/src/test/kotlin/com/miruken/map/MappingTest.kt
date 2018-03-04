@@ -3,10 +3,8 @@ package com.miruken.map
 import com.miruken.assertAsync
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptor
-import com.miruken.protocol.proxy
 import com.miruken.runtime.typeOf
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -109,12 +107,20 @@ class MappingTest {
         assertEquals("Marco Royce", data["name"])
     }
 
-    @Ignore("Type erasure prevent check")
     @Test fun `Performs mapping from map of key values`() {
         val data   = mapOf("id" to 1, "name" to "Geroge Best")
-        val entity = Mapping(_entity).map<PlayerEntity>(data)
+        val entity = Mapping(_entity).map<PlayerEntity>(
+                data, sourceType = typeOf<Map<String, Any>>())
         assertEquals(1, entity!!.id)
-        assertEquals("Marco Royce", entity.name)
+        assertEquals("Geroge Best", entity.name)
+    }
+
+    @Test fun `Performs mapping from list of key values`() {
+        val data   = mapOf("id" to 1, "name" to "Geroge Best")
+        val entity = Mapping(_entity).map<PlayerEntity>(
+                data.toList(), sourceType = typeOf<List<Pair<String, Any>>>())
+        assertEquals(1, entity!!.id)
+        assertEquals("Geroge Best", entity.name)
     }
 
     @Test fun `Performs mapping resolving`() {
@@ -216,14 +222,14 @@ class MappingTest {
 
         @Maps
         fun mapFromPlayerKeyValues(
-                keyValues: List<Map.Entry<String, Any>>
+                keyValues: List<Pair<String, Any>>
         ): PlayerEntity {
-            var id: Int? = null
+            var id:   Int? = null
             var name: String? = null
             for (keyValue in keyValues) {
-                when (keyValue.key) {
-                    "id" -> id = keyValue.value as? Int
-                    "name" -> name = keyValue.value as String?
+                when (keyValue.first) {
+                    "id" -> id = keyValue.second as? Int
+                    "name" -> name = keyValue.second as String?
                 }
             }
             return if (id != null && name != null)

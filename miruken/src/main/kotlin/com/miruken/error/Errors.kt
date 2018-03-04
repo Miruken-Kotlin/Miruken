@@ -13,7 +13,7 @@ interface Errors {
     ): Promise<*>
 
     companion object {
-        private val PROTOCOL = typeOf<Errors>()
+        val PROTOCOL = typeOf<Errors>()
         operator fun invoke(adapter: ProtocolAdapter) =
                 Protocol.proxy(adapter, PROTOCOL) as Errors
     }
