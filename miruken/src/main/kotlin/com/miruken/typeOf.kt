@@ -1,4 +1,4 @@
-package com.miruken.runtime
+package com.miruken
 
 import java.lang.reflect.*
 import kotlin.reflect.*

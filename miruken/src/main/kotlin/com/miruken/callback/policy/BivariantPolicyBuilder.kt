@@ -1,7 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.runtime.isAssignableTo
-import com.miruken.runtime.typeOf
+import com.miruken.typeOf
 import kotlin.reflect.KType
 
 class BivariantPolicyBuilder<C: Any, out S: Any>(
@@ -29,7 +29,7 @@ class BivariantPolicyBuilder<C: Any, out S: Any>(
 class BivariantKeyBuilder {
     inline fun <reified C: Any> key(
             noinline keyFunctor: (C) -> Any
-    ) = BivariantWithKeyBuilder(keyFunctor,  typeOf<C>())
+    ) = BivariantWithKeyBuilder(keyFunctor, typeOf<C>())
 }
 
 class BivariantWithKeyBuilder<C: Any>(

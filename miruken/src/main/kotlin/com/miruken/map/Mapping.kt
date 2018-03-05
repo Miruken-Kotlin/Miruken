@@ -3,7 +3,7 @@ package com.miruken.map
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.Protocol
 import com.miruken.protocol.ProtocolAdapter
-import com.miruken.runtime.typeOf
+import com.miruken.typeOf
 import kotlin.reflect.KType
 
 interface Mapping {

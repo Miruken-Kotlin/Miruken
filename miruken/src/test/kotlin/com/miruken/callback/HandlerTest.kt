@@ -6,7 +6,7 @@ import com.miruken.assertAsync
 import com.miruken.callback.policy.PolicyMethodBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.typeOf
+import com.miruken.typeOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName

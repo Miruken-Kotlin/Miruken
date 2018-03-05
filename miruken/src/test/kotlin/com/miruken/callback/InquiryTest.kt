@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.typeOf
+import com.miruken.typeOf
 import org.junit.Test
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.test.*

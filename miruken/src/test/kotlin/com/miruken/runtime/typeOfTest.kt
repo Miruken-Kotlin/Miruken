@@ -1,5 +1,7 @@
 package com.miruken.runtime
 
+import com.miruken.UNIT_TYPE
+import com.miruken.typeOf
 import org.junit.Test
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSubtypeOf
@@ -37,7 +39,7 @@ class typeOfTest {
     }
 
     @Test fun `Can obtain KType of Function`() {
-        val listType = typeOf<(String)->Int>()
+        val listType = typeOf<(String) -> Int>()
         assertEquals(Function1::class, listType.classifier)
         assertEquals(typeOf<String>(), listType.arguments[0].type)
         assertEquals(typeOf<Int>(), listType.arguments[1].type)

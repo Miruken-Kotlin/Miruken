@@ -10,14 +10,12 @@ open class ArgumentResolver : ArgumentResolving {
             argument: Argument,
             handler:  Handling,
             composer: Handling
-    ): Any? {
-        return when {
-            argument.flags has TypeFlags.LAZY ->
-                    resolveArgumentLazy(argument, composer)
-            argument.flags has TypeFlags.FUNC ->
-                resolveArgumentFunc(argument, composer)
-            else -> resolveArgument(argument, handler, composer)
-        }
+    ) = when {
+        argument.flags has TypeFlags.LAZY ->
+                resolveArgumentLazy(argument, composer)
+        argument.flags has TypeFlags.FUNC ->
+            resolveArgumentFunc(argument, composer)
+        else -> resolveArgument(argument, handler, composer)
     }
 
     open fun resolveKey(

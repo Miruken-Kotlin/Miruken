@@ -1,10 +1,11 @@
 package com.miruken.callback
 
+import com.miruken.TypedValue
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.HandleMethodBinding
 import com.miruken.runtime.isAssignableTo
 import com.miruken.runtime.isTopLevelInterfaceOf
-import com.miruken.runtime.toKType
+import com.miruken.toKType
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KType
@@ -27,19 +28,31 @@ open class HandleMethod(
             handler:  Any,
             greedy:   Boolean,
             composer: Handling
-    ): HandleResult {
-        return if (isAcceptableTarget(handler)) {
-            BINDINGS.getOrPut(method) { HandleMethodBinding(method) }
-                    .dispatch(handler, this, composer)
-        } else HandleResult.NOT_HANDLED
-    }
+    ) = getTarget(handler)?.let {
+        BINDINGS.getOrPut(method) { HandleMethodBinding(method) }
+                .dispatch(it, this, composer)
+    } ?: HandleResult.NOT_HANDLED
 
-    private fun isAcceptableTarget(target: Any): Boolean {
+    private fun getTarget(target: Any): Any? {
+        val typedTarget = target as? TypedValue
         return when {
-            semantics.hasOption(CallbackOptions.STRICT) ->
+            semantics.hasOption(CallbackOptions.STRICT) -> {
+                typedTarget?.takeIf {
+                    protocol.isTopLevelInterfaceOf(it.type)
+                }?.value ?: target.takeIf {
                     protocol.isTopLevelInterfaceOf(target::class)
-            semantics.hasOption(CallbackOptions.DUCK) -> true
-            else -> isAssignableTo(protocol, target)
+                }
+            }
+            semantics.hasOption(CallbackOptions.DUCK) -> {
+                typedTarget?.value ?: target
+            }
+            else -> {
+                typedTarget?.takeIf {
+                    isAssignableTo(protocol, it.type)
+                }?.value ?: target.takeIf {
+                    isAssignableTo(protocol, target)
+                }
+            }
         }
     }
 

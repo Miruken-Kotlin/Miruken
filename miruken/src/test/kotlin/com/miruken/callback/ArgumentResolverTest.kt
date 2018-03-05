@@ -74,8 +74,8 @@ class ArgumentResolverTest {
 
     @Test fun `Rejects command if result is null`() {
         val handler = (InventoryHandler()
-                + CustomerSupport()
-                + RepositoryImpl<Order>())
+                    + CustomerSupport()
+                    + RepositoryImpl<Order>())
         handler.command<Any>(NewOrder(Order()))
         handler.command<Any>(NewOrder(Order()))
         handler.command<Any>(NewOrder(Order()))
@@ -122,6 +122,12 @@ class ArgumentResolverTest {
         val help    = handler.command<List<String>>(RefundOrder(1))
         assertTrue(help.containsAll(listOf(
                 "www.help.com", "www.help2.com", "www.help3.com")))
+    }
+
+    @Test fun `Resolves proxy dependencies`() {
+        val handler = CustomerSupport() + RepositoryImpl<Order>()
+        var valid   = handler.command<Boolean>(ChangeOrder(Order()))
+        assertTrue(valid)
     }
 
     @Test fun `Ignores optional missing dependency`() {
@@ -182,8 +188,8 @@ class ArgumentResolverTest {
             var nextId: Int = 0
         }
     }
-    class InventoryHandler : Handler() {
 
+    class InventoryHandler : Handler() {
         private val _orders = mutableListOf<Order>()
 
         @Provides
@@ -269,11 +275,24 @@ class ArgumentResolverTest {
         }
 
         @Handles
+        fun validateChange(
+                change: ChangeOrder,
+                @Proxy repository: Repository<Order>
+        ): Boolean {
+            assertNotNull(change)
+            assertNotNull(repository)
+            repository.save(change.order)
+            return true
+        }
+
+        @Handles
         fun validateOrder(
-                place:      NewOrder,
-                repository: Repository<Order>?) {
+                place: NewOrder,
+                repository: Repository<Order>?
+        ): Boolean {
             assertNotNull(place)
             assertNull(repository)
+            return true
         }
     }
 

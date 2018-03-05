@@ -78,6 +78,7 @@ class PolicyMethodBinding(
                             if (optional) continue@loop
                             return@all HandleResult.NOT_HANDLED
                         }
+                        resolver.validate(argument)
                         add({
                             val arg = resolver.resolve(argument, it, composer)
                             resolved[i] = arg

@@ -1,6 +1,8 @@
 package com.miruken.runtime
 
 import com.miruken.concurrent.Promise
+import com.miruken.toKType
+import com.miruken.typeOf
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType

@@ -1,11 +1,7 @@
 package com.miruken.runtime
 
+import com.miruken.typeOf
 import org.junit.Test
-import kotlin.reflect.KClass
-import kotlin.reflect.full.allSuperclasses
-import kotlin.reflect.full.allSupertypes
-import kotlin.reflect.full.isSubtypeOf
-import kotlin.reflect.full.isSupertypeOf
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

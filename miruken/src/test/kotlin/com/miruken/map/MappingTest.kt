@@ -3,7 +3,7 @@ package com.miruken.map
 import com.miruken.assertAsync
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptor
-import com.miruken.runtime.typeOf
+import com.miruken.typeOf
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

@@ -1,6 +1,6 @@
 package com.miruken.protocol
 
-import com.miruken.runtime.typeOf
+import com.miruken.typeOf
 import java.lang.reflect.Method
 import kotlin.reflect.KType
 
