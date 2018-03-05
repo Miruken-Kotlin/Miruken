@@ -1,21 +1,19 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.Argument
-import com.miruken.callback.policy.ArgumentResolving
-import com.miruken.callback.policy.TypeFlags
-import com.miruken.concurrent.Promise
+import com.miruken.Flags
 
-open class ArgumentResolver : ArgumentResolving {
+open class KeyResolver : KeyResolving {
     override fun resolve(
-            argument: Argument,
+            key:      Any,
+            flags:    Flags<TypeFlags>,
             handler:  Handling,
             composer: Handling
     ) = when {
-        argument.flags has TypeFlags.LAZY ->
-                resolveArgumentLazy(argument, composer)
-        argument.flags has TypeFlags.FUNC ->
-            resolveArgumentFunc(argument, composer)
-        else -> resolveArgument(argument, handler, composer)
+        flags has TypeFlags.LAZY ->
+                resolveArgumentLazy(key, flags, composer)
+        flags has TypeFlags.FUNC ->
+            resolveArgumentFunc(key, flags, composer)
+        else -> resolveArgument(key, flags, handler, composer)
     }
 
     open fun resolveKey(
@@ -43,43 +41,41 @@ open class ArgumentResolver : ArgumentResolving {
     ) = handler.resolveAllAsync(key)
 
     private fun resolveArgumentLazy(
-            argument: Argument,
+            key:      Any,
+            flags:    Flags<TypeFlags>,
             composer: Handling
     ) =
         lazy(LazyThreadSafetyMode.NONE) {
             // ** MUST ** use composer, composer since
             // handler may be invalidated at this point
-            resolveArgument(argument, composer, composer)
+            resolveArgument(key, flags, composer, composer)
         }
 
     private fun resolveArgumentFunc(
-            argument: Argument,
+            key:      Any,
+            flags:    Flags<TypeFlags>,
             composer: Handling
     ): () -> Any? = {
         // ** MUST ** use composer, composer since
         // handler may be invalidated at this point
-        resolveArgument(argument, composer, composer)
+        resolveArgument(key, flags, composer, composer)
     }
 
     private fun resolveArgument(
-            argument: Argument,
+            key:      Any,
+            flags:    Flags<TypeFlags>,
             handler:  Handling,
             composer: Handling
     ): Any? {
-        val key   = argument.key ?: return null
-        val flags = argument.flags
-
         return when {
             flags has TypeFlags.COLLECTION ->
                 when {
-                    flags has TypeFlags.PROMISE -> {
+                    flags has TypeFlags.PROMISE ->
                         resolveKeyAllAsync(key, handler, composer)
-                    }
                     else -> resolveKeyAll(key, handler, composer)
                 }
-            flags has TypeFlags.PROMISE -> {
+            flags has TypeFlags.PROMISE ->
                 resolveKeyAsync(key, handler, composer)
-            }
             else -> resolveKey(key, handler, composer)
         }
     }

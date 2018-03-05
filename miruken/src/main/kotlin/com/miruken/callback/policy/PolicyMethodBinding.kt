@@ -72,15 +72,17 @@ class PolicyMethodBinding(
                     argumentClass.isInstance(this@PolicyMethodBinding) ->
                         resolved[i] = this@PolicyMethodBinding
                     else -> {
-                        val optional = argument.flags has TypeFlags.OPTIONAL
+                        val key      = argument.key
+                        val flags    = argument.flags
+                        val optional = flags has TypeFlags.OPTIONAL
                         val resolver = getResolver(argument.useResolver, composer)
                         if (resolver == null) {
                             if (optional) continue@loop
                             return@all HandleResult.NOT_HANDLED
                         }
-                        resolver.validate(argument)
+                        resolver.validate(key, flags)
                         add({
-                            val arg = resolver.resolve(argument, it, composer)
+                            val arg = resolver.resolve(key, flags, it, composer)
                             resolved[i] = arg
                         }) { result ->
                             if (optional) HandleResult.HANDLED else result
@@ -92,15 +94,15 @@ class PolicyMethodBinding(
     }
 
     private fun getResolver(
-            resolverClass: KClass<out ArgumentResolving>?,
+            resolverClass: KClass<out KeyResolving>?,
             composer:      Handling
-    ) : ArgumentResolving? {
+    ) : KeyResolving? {
         return if (resolverClass == null)
-            DefaultResolver else resolverClass.objectInstance ?:
-                composer.resolve(resolverClass) as? ArgumentResolving
+            DefaultKeyResolver else resolverClass.objectInstance ?:
+                composer.resolve(resolverClass) as? KeyResolving
     }
 
     companion object {
-        object DefaultResolver : ArgumentResolver()
+        object DefaultKeyResolver : KeyResolver()
     }
 }

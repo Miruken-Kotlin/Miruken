@@ -1,5 +1,5 @@
 package com.miruken.callback
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
-@UseArgumentResolver<ProxyArgumentResolver>(ProxyArgumentResolver::class)
+@UseArgumentResolver<ProxyKeyResolver>(ProxyKeyResolver::class)
 annotation class Proxy

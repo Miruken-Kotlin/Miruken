@@ -24,19 +24,19 @@ interface Handling : ProtocolAdapter {
         val semantics = CallbackSemantics()
         handler.handle(semantics, true)
 
-        val clazz = protocol.jvmErasure
+        val protocolClass = protocol.jvmErasure
 
         if (!semantics.isSpecified(CallbackOptions.DUCK) &&
-                clazz.findAnnotation<Duck>() != null) {
+                protocolClass.findAnnotation<Duck>() != null) {
             options += CallbackOptions.DUCK
         }
 
         if (!semantics.isSpecified(CallbackOptions.STRICT) &&
-                clazz.findAnnotation<Strict>() != null) {
+                protocolClass.findAnnotation<Strict>() != null) {
             options += CallbackOptions.STRICT
         }
 
-        if (clazz.findAnnotation<Resolving>() != null) {
+        if (protocolClass.findAnnotation<Resolving>() != null) {
             if (semantics.isSpecified(CallbackOptions.BROADCAST)) {
                 options += CallbackOptions.BROADCAST
             }

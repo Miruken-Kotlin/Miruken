@@ -1,9 +1,8 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.ArgumentResolving
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)
-annotation class UseArgumentResolver<R: ArgumentResolving>(
+annotation class UseArgumentResolver<R: KeyResolving>(
         val argumentResolverClass: KClass<R>
 )

@@ -1,9 +1,9 @@
 package com.miruken.container
 
-import com.miruken.callback.ArgumentResolver
+import com.miruken.callback.KeyResolver
 import com.miruken.callback.Handling
 
-object ContainerArgumentResolver : ArgumentResolver() {
+object ContainerKeyResolver : KeyResolver() {
     override fun resolveKey(
             key:      Any,
             handler:  Handling,

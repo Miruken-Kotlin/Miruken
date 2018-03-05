@@ -11,7 +11,7 @@ import java.util.*
 import kotlin.test.*
 
 @Suppress("UNUSED_PARAMETER")
-class ArgumentResolverTest {
+class KeyResolverTest {
     @Rule
     @JvmField val testName = TestName()
 
@@ -126,7 +126,7 @@ class ArgumentResolverTest {
 
     @Test fun `Resolves proxy dependencies`() {
         val handler = CustomerSupport() + RepositoryImpl<Order>()
-        var valid   = handler.command<Boolean>(ChangeOrder(Order()))
+        val valid   = handler.command<Boolean>(ChangeOrder(Order()))
         assertTrue(valid)
     }
 

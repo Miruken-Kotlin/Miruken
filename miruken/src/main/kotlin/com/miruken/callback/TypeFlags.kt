@@ -1,4 +1,4 @@
-package com.miruken.callback.policy
+package com.miruken.callback
 
 import com.miruken.Flags
 import com.miruken.concurrent.Promise
@@ -28,41 +28,43 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             var logicalType = type
 
             var flags = when {
-                type.isOpenGeneric -> TypeFlags.GENERIC + TypeFlags.OPEN
-                type.isGeneric -> TypeFlags.GENERIC
-                else -> -TypeFlags.NONE
+                type.isOpenGeneric -> GENERIC + OPEN
+                type.isGeneric -> GENERIC
+                else -> -NONE
             }
 
             (type.classifier as? KClass<*>)?.also {
                 if (it.java.isInterface)
-                    flags += TypeFlags.INTERFACE
+                    flags += INTERFACE
             }
 
+            // TODO:  Check for @Strict when KType is KAnnotatedElement
+
             logicalType = logicalType.takeIf { it.isMarkedNullable }?.let {
-                flags += TypeFlags.OPTIONAL
+                flags += OPTIONAL
                 type.withNullability(false)
             } ?: logicalType
 
             logicalType = unwrapType(type, Lazy::class)?.let {
-                flags += TypeFlags.LAZY; it }
+                flags += LAZY; it }
                     ?: unwrapType(type, Function0::class)?.let {
-                flags += TypeFlags.FUNC; it } ?: logicalType
+                flags += FUNC; it } ?: logicalType
 
             logicalType = unwrapType(logicalType, Promise::class)?.let {
-                flags += TypeFlags.PROMISE; it } ?: logicalType
+                flags += PROMISE; it } ?: logicalType
 
             logicalType = unwrapType(logicalType, Collection::class)?.let {
-                flags += TypeFlags.COLLECTION; it } ?: logicalType
+                flags += COLLECTION; it } ?: logicalType
 
-            if (!(flags has TypeFlags.COLLECTION)) {
+            if (!(flags has COLLECTION)) {
                 logicalType = logicalType.componentType.takeIf {
                     it != logicalType
-                }?.also { flags += TypeFlags.ARRAY } ?: logicalType
+                }?.also { flags += ARRAY } ?: logicalType
             }
 
             (logicalType.classifier as? KClass<*>)?.also {
                 if (it.javaPrimitiveType != null || it == String::class)
-                    flags += TypeFlags.PRIMITIVE
+                    flags += PRIMITIVE
             }
 
             return flags to logicalType

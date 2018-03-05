@@ -1,9 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.Flags
-import com.miruken.callback.Key
-import com.miruken.callback.StringKey
-import com.miruken.callback.UseArgumentResolver
+import com.miruken.callback.*
 import com.miruken.runtime.getFirstTaggedAnnotation
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
@@ -13,10 +11,10 @@ import kotlin.reflect.full.withNullability
 
 class Argument(val parameter: KParameter) {
 
-    val key:         Any?
+    val key:         Any
     val logicalType: KType
     val flags:       Flags<TypeFlags>
-    val useResolver: KClass<out ArgumentResolving>?
+    val useResolver: KClass<out KeyResolving>?
 
     inline val parameterType get() = parameter.type
     inline val annotations   get() = parameter.annotations

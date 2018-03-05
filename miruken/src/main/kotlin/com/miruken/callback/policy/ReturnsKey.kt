@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.Key
 import com.miruken.callback.StringKey
+import com.miruken.callback.TypeFlags
 
 object ReturnsKey : ReturnRule {
     override fun matches(method: CallableDispatch) =

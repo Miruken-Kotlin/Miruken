@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.TypeFlags
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
 
