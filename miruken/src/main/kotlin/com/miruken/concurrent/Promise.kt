@@ -76,7 +76,7 @@ open class Promise<out T>
         }
     }
 
-    infix fun <R> then(success: PromiseSuccessBlock<T, R>) : Promise<R> {
+    infix fun <R> then(success: PromiseSuccessBlock<T, R>): Promise<R> {
         return createChild { resolveChild, rejectChild ->
             val res: ((T) -> Unit) = {
                 try {
@@ -104,7 +104,7 @@ open class Promise<out T>
     fun <R, S> then(
             success: PromiseSuccessBlock<T, R>,
             fail:    PromiseFailureBlock<S>
-    ) : Promise<Either<S, R>> {
+    ): Promise<Either<S, R>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((T) -> Unit) = {
                 try {
@@ -142,7 +142,7 @@ open class Promise<out T>
 
     infix fun <R> catch(
             fail: PromiseFailureBlock<R>
-    ) : Promise<Either<R, T>> {
+    ): Promise<Either<R, T>> {
         return createChild { resolveChild, rejectChild ->
             val res: ((T) -> Unit) =  {
                 resolveChild(Either.Right(it))
@@ -176,7 +176,7 @@ open class Promise<out T>
         }
     }
 
-    infix fun <R> finally(final: PromiseFinalBlock<R>) : Promise<T> {
+    infix fun <R> finally(final: PromiseFinalBlock<R>): Promise<T> {
         return createChild { resolveChild, rejectChild ->
             val res: ((T) -> Unit) = {
                 try {
@@ -221,7 +221,7 @@ open class Promise<out T>
         reject(CancellationException())
     }
 
-    infix fun cancelled(cancelled: PromiseCancelledBlock) : Promise<T> {
+    infix fun cancelled(cancelled: PromiseCancelledBlock): Promise<T> {
         synchronized (_guard) {
             if (isCompleted) {
                 if (state == PromiseState.CANCELLED) {
@@ -237,7 +237,7 @@ open class Promise<out T>
         return this
     }
 
-    fun get(timeoutMs: Long? = null) : T {
+    fun get(timeoutMs: Long? = null): T {
         val deadline = timeoutMs?.let {
             Instant.now().plusMillis(timeoutMs) }
         synchronized (_guard) {
@@ -276,7 +276,7 @@ open class Promise<out T>
     protected open fun <R> createChild(
         mode:     ChildCancelMode,
         executor: PromiseExecutorCancelBlock<R>
-    ) : Promise<R> = Promise(mode, executor)
+    ): Promise<R> = Promise(mode, executor)
 
     private fun resolve(result: T) {
         if (_completed.compareAndSet(false, true)) {

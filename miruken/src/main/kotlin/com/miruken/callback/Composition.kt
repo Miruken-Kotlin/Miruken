@@ -4,7 +4,7 @@ import com.miruken.typeOf
 import com.miruken.runtime.isAssignableTo
 import kotlin.reflect.KType
 
-open class Composition(callback: Any) : Trampoline(callback),
+open class Composition(callback: Any): Trampoline(callback),
         Callback, ResolvingCallback,
         FilteringCallback, BatchingCallback {
 
@@ -36,10 +36,10 @@ open class Composition(callback: Any) : Trampoline(callback),
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T: Any> get(callback: Any) : T? =
+        inline fun <reified T: Any> get(callback: Any): T? =
                 get(callback, typeOf<T>()) as? T
 
-        fun get(callback: Any, key: Any) : Any? {
+        fun get(callback: Any, key: Any): Any? {
             return (callback as? Composition)?.let {
                 if (isAssignableTo(key, it.resultType ?: it.callback))
                     it.callback else null

@@ -8,7 +8,7 @@ import kotlin.reflect.KType
 
 class CompositionTest {
     class Foo
-    class Bar<T>(override val resultType: KType? = null) : Callback {
+    class Bar<T>(override val resultType: KType? = null): Callback {
         override var result: Any? = null
     }
 

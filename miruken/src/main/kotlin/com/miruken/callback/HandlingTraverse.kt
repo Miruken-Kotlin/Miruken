@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.graph.TraversingAxis
 
-fun HandlingAxis.axis(axis: TraversingAxis) : HandlingAxis =
+fun HandlingAxis.axis(axis: TraversingAxis): HandlingAxis =
         TraversingHandler(this, axis)
 
 val HandlingAxis.xpublish get() = xselfOrDescendant.notify

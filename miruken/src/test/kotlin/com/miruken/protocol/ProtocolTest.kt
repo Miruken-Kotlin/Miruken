@@ -45,7 +45,7 @@ class ProtocolTest {
         }
     }
 
-    class PassThroughAdapter(private val target: Any) : ProtocolAdapter {
+    class PassThroughAdapter(private val target: Any): ProtocolAdapter {
         override fun dispatch(
                 protocol: KType,
                 method:   Method,

@@ -11,7 +11,7 @@ inline fun <reified R: Any?> Handling.command(callback: Any) =
 fun Handling.command(
         callback:   Any,
         resultType: KType? = null
-) : Any? {
+): Any? {
     val command = Command(callback, resultType)
     handle(command) failure {
         throw NotHandledException(callback)
@@ -48,7 +48,7 @@ inline fun <reified R: Any> Handling.commandAll(callback: Any) =
 fun Handling.commandAll(
         callback:   Any,
         resultType: KType? = null
-) : List<Any> {
+): List<Any> {
     val command = Command(callback, resultType, true)
     handle(command) failure {
         throw NotHandledException(callback)

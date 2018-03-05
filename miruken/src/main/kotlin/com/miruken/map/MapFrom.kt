@@ -45,7 +45,7 @@ class MapFrom(
                     ?: super.getCallbackKey()
 
     @Suppress("UNUSED_PARAMETER")
-    fun mapped(mapping: Any, strict: Boolean) : Boolean {
+    fun mapped(mapping: Any, strict: Boolean): Boolean {
         result = mapping
         return true
     }

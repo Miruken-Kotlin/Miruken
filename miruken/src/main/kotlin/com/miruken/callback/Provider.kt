@@ -12,6 +12,6 @@ class Provider(
     private var _key: Any = type?.componentType ?: value::class
 
     @Provides
-    fun provide(inquiry: Inquiry) : Any? =
+    fun provide(inquiry: Inquiry): Any? =
             if (isAssignableTo(inquiry.key, _key)) value else null
 }

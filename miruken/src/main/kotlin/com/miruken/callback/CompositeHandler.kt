@@ -45,7 +45,7 @@ open class CompositeHandler(vararg handlers: Any)
         return this
     }
 
-    private fun find(target: Any) : Handling? {
+    private fun find(target: Any): Handling? {
         for (handler in _handlers) {
             if (handler === target) return handler
             if (handler is HandlerAdapter && handler.handler === target)

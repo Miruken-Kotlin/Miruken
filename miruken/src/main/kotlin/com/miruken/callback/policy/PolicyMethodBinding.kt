@@ -17,17 +17,11 @@ class PolicyMethodBinding(
     val strict           = bindingInfo.strict
     val key              = policy.createKey(bindingInfo)
 
-    private val _filters: MutableList<FilteringProvider> =
-            dispatcher.annotations
-                    .filterIsInstance<FilteringProvider>()
-                    .normalize().toMutableList()
+    val filters = dispatcher.annotations
+            .filterIsInstance<FilteringProvider>()
+            .normalize()
 
-    val filters: Collection<FilteringProvider> = _filters
-
-    fun approves(callback: Any) = policy.approve(callback, this)
-
-    fun addFilters(vararg providers: FilteringProvider) =
-            _filters.addAll(providers)
+    fun approve(callback: Any) = policy.approve(callback, this)
 
     fun dispatch(
             handler:  Any,
@@ -55,7 +49,7 @@ class PolicyMethodBinding(
     private fun resolveArguments(
             ruleArguments: Array<Any?>,
             composer:      Handling
-    ) : Array<Any?>? {
+    ): Array<Any?>? {
         val arguments = dispatcher.arguments
         if (arguments.size == ruleArguments.size)
             return ruleArguments
@@ -96,7 +90,7 @@ class PolicyMethodBinding(
     private fun getResolver(
             resolverClass: KClass<out KeyResolving>?,
             composer:      Handling
-    ) : KeyResolving? {
+    ): KeyResolving? {
         return if (resolverClass == null)
             DefaultKeyResolver else resolverClass.objectInstance ?:
                 composer.resolve(resolverClass) as? KeyResolving

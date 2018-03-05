@@ -12,7 +12,7 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
         this.returnRule = returnRule
     }
 
-    fun matches(method: CallableDispatch) : Boolean {
+    fun matches(method: CallableDispatch): Boolean {
         val arguments = method.arguments
         if (arguments.size < argumentRules.size ||
                 !arguments.zip(argumentRules) { arg, argRule ->
@@ -34,7 +34,7 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
         return policy.bindMethod(bindingInfo)
     }
 
-    fun resolveArguments(callback: Any) : Array<Any?> =
+    fun resolveArguments(callback: Any): Array<Any?> =
             argumentRules.map { it.resolve(callback) }
                     .toTypedArray()
 }

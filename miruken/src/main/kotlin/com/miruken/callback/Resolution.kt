@@ -22,7 +22,7 @@ open class Resolution(key: Any, val callback: Any)
     }
 
     companion object {
-        fun getDefaultResolvingCallback(callback: Any) : Any {
+        fun getDefaultResolvingCallback(callback: Any): Any {
             val handlers = CallbackPolicy.getCallbackHandlerClasses(callback)
             if (handlers.isEmpty()) return callback
             val bundle = Bundle(false)

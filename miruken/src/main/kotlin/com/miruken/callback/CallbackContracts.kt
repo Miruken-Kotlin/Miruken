@@ -37,5 +37,5 @@ interface DispatchingCallback {
             handler:  Any,
             greedy:   Boolean,
             composer: Handling
-    ) : HandleResult
+    ): HandleResult
 }

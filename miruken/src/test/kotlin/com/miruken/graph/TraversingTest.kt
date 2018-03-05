@@ -155,7 +155,7 @@ class TraversingTest {
         assertEquals(listOf(child3, child1, child2, parent, root), _visited)
     }
 
-    private fun visit(node: Traversing) : Boolean {
+    private fun visit(node: Traversing): Boolean {
         _visited.add(node as TreeNode)
         return false
     }

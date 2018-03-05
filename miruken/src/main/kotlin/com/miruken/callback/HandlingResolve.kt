@@ -21,7 +21,7 @@ fun Handling.resolve(key: Any): Any? {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun Handling.resolveAsync(key: Any) : Promise<Any?> {
+fun Handling.resolveAsync(key: Any): Promise<Any?> {
     val inquiry = key as? Inquiry ?: Inquiry(key)
     inquiry.wantsAsync = true
     return handle(inquiry) success {
@@ -36,7 +36,7 @@ inline fun <reified T: Any> Handling.resolveAsync(): Promise<T?> =
         resolveAsync(typeOf<T>()) then { it as? T }
 
 @Suppress("UNCHECKED_CAST")
-fun Handling.resolveAll(key: Any) : List<Any> {
+fun Handling.resolveAll(key: Any): List<Any> {
     val inquiry = key as? Inquiry ?: Inquiry(key, true)
     return handle(inquiry, true) success  {
         inquiry.result?.let {

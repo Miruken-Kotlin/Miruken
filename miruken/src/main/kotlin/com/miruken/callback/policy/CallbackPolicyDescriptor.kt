@@ -46,13 +46,13 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
                 is KType -> _typed[it]
                 is String -> _indexed[it] ?: _indexed[StringKey(it)]
                 else -> _indexed[it]
-            }?.filter { it.approves(callback) }
+            }?.filter { it.approve(callback) }
         } ?: emptyList()
 
     internal fun getCompatibleMethods(callback: Any) =
         policy.getKey(callback)?.let {
             _compatible.getOrPut(it) { inferCompatibleMethods(it) }
-        }?.filter { it.approves(callback) } ?: emptyList()
+        }?.filter { it.approve(callback) } ?: emptyList()
 
     private fun inferCompatibleMethods(key: Any): List<PolicyMethodBinding> {
         return when (key) {

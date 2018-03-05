@@ -11,7 +11,7 @@ class ResolvingHandler(handler: Handling) : DecoratedHandler(handler) {
         return handler.handle(resolving, greedy, composer)
     }
 
-    private fun getResolvingCallback(callback: Any) : Any {
+    private fun getResolvingCallback(callback: Any): Any {
         return if (callback is ResolvingCallback)
             callback.getResolveCallback()
         else

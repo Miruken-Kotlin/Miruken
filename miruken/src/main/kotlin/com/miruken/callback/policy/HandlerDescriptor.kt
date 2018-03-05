@@ -46,7 +46,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             greedy:   Boolean,
             composer: Handling,
             results:  CollectResultsBlock?
-    ) : HandleResult =
+    ): HandleResult =
             methods.fold(HandleResult.NOT_HANDLED, { result, method ->
                 if ((result.handled && !greedy) || result.stop) {
                     return result
@@ -76,7 +76,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
         }
     }
 
-    private fun isInstanceMethod(member: KCallable<*>) : Boolean
+    private fun isInstanceMethod(member: KCallable<*>): Boolean
     {
         val parameters = member.parameters
         return parameters.isNotEmpty() &&

@@ -24,7 +24,7 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object OPEN       : TypeFlags(1 shl 9)
 
     companion object {
-        fun parse(type: KType) : Pair<Flags<TypeFlags>, KType> {
+        fun parse(type: KType): Pair<Flags<TypeFlags>, KType> {
             var logicalType = type
 
             var flags = when {
@@ -70,7 +70,7 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             return flags to logicalType
         }
 
-        private fun unwrapType(type: KType, criteria: KClass<*>) : KType? {
+        private fun unwrapType(type: KType, criteria: KClass<*>): KType? {
             return (type.classifier as? KClass<*>)
                     ?.takeIf { it.isSubclassOf(criteria) }
                     ?.let { type.arguments[0].type}
