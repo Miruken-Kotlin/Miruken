@@ -26,18 +26,18 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
             is KClass<*> -> {
                 leftSide.jvmErasure.isSuperclassOf(rightSide) &&
                         (leftSide.arguments.isEmpty() ||
-                        leftSide.isOpenGenericDefinition)
+                        leftSide.isOpenGeneric)
             }
             is Class<*> -> {
                 leftSide.jvmErasure.java.isAssignableFrom(rightSide) &&
                         (leftSide.arguments.isEmpty() ||
-                        leftSide.isOpenGenericDefinition)
+                        leftSide.isOpenGeneric)
             }
             else -> {
                 val rightClass = rightSide::class
                 leftSide.jvmErasure.isSuperclassOf(rightClass) &&
                         (leftSide.arguments.isEmpty() ||
-                        leftSide.isOpenGenericDefinition)
+                        leftSide.isOpenGeneric)
             }
         }
         is KClass<*> -> when (rightSide) {
