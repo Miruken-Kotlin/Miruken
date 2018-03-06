@@ -19,5 +19,7 @@ class BoundingHandler(
     }
 }
 
+val Handling.stop get() = BoundingHandler(this, null)
+
 fun Handling.stop(bounds: Any?) : Handling =
         BoundingHandler(this, bounds)

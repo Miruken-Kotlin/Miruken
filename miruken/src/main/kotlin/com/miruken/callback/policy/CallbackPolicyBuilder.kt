@@ -1,9 +1,6 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.FilterInstanceProvider
-import com.miruken.callback.Filtering
 import com.miruken.callback.FilteringProvider
-import java.lang.invoke.MethodHandle
 import kotlin.reflect.KType
 
 abstract class CallbackPolicyBuilder(val callbackType: KType) {
@@ -18,9 +15,6 @@ abstract class CallbackPolicyBuilder(val callbackType: KType) {
         _rules.sortByDescending { it.weight }
         return _rules.map { it.build() }
     }
-
-    fun filters(vararg filter: Filtering<*,*>) =
-            filters.add(FilterInstanceProvider(*filter))
 
     fun pipeline(vararg providers: FilteringProvider) =
             filters.addAll(providers)

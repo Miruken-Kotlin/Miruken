@@ -78,13 +78,6 @@ class typeOfTest {
         assertTrue(isAssignableTo(typeOf<Int>(), 2::class.java))
     }
 
-    @Test fun `Can check assignability to null`() {
-        assertFalse(isAssignableTo(Foo::class, null))
-        assertFalse(isAssignableTo(String::class, null))
-        assertFalse(isAssignableTo(Bar::class, null))
-        assertFalse(isAssignableTo(typeOf<Foo>(), null))
-    }
-
     @Test fun `Can determine KType covariance`() {
         assertTrue(typeOf<MutableList<Int>>()
                 .isSubtypeOf(typeOf<MutableList<Any>>()))

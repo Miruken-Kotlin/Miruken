@@ -23,17 +23,13 @@ open class CovariantPolicy(
     override fun getCompatibleKeys(
             key:       Any,
             available: Collection<Any>
-    ): Collection<Any> = available.filter {
-        key != it && isAssignableTo(key, it)
-    }
+    ) = available.filter { key != it && isAssignableTo(key, it) }
 
-    override fun compare(o1: Any?, o2: Any?): Int {
-        return when {
-            o1 == o2 -> 0
-            o1 == null -> 1
-            o2 == null -> -1
-            isAssignableTo(o1, o2) -> -1
-            else -> 1
-        }
+    override fun compare(o1: Any?, o2: Any?) = when {
+        o1 == o2 -> 0
+        o1 == null -> 1
+        o2 == null -> -1
+        isAssignableTo(o1, o2) -> -1
+        else -> 1
     }
 }

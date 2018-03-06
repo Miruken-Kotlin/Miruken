@@ -35,8 +35,8 @@ class Argument(val parameter: KParameter) {
                 } ?: logicalType
 
         useResolver = parameter
-                .getFirstTaggedAnnotation<UseArgumentResolver<*>>()
-                ?.argumentResolverClass
+                .getFirstTaggedAnnotation<UseKeyResolver<*>>()
+                ?.keyResolverClass
     }
 
     fun satisfies(type: KType): Boolean {

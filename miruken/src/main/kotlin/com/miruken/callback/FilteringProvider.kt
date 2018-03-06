@@ -5,9 +5,8 @@ import kotlin.reflect.KType
 
 interface FilteringProvider {
     fun getFilters(
-            binding:           MethodBinding,
-            callbackType:      KType,
-            logicalResultType: KType,
-            composer:          Handling
+            binding:    MethodBinding,
+            filterType: KType,
+            composer:   Handling
     ): List<Filtering<*,*>>
 }

@@ -3,24 +3,23 @@ package com.miruken.runtime
 import com.miruken.concurrent.Promise
 import com.miruken.toKType
 import com.miruken.typeOf
-import kotlin.reflect.KAnnotatedElement
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.KTypeParameter
+import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
-fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
+fun isAssignableTo(leftSide:  Any, rightSide: Any): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
-            null -> false
             is KType -> when {
                 leftSide == rightSide -> true
-                rightSide.isOpenGenericDefinition ->
-                        leftSide.arguments.isNotEmpty() &&
-                                leftSide.classifier == rightSide.classifier
                 rightSide.classifier is KTypeParameter ->
-                    (rightSide.classifier as KTypeParameter).satisfies(leftSide)
+                    (rightSide.classifier as KTypeParameter).let {
+                        it.upperBounds.any { isAssignableTo(it, leftSide) }
+                }
+                rightSide.isOpenGeneric ->
+                    checkOpenConformance(rightSide, leftSide)
+                leftSide.isOpenGeneric ->
+                    checkOpenConformance(leftSide, rightSide)
                 else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
@@ -31,7 +30,7 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
             is Class<*> -> {
                 leftSide.jvmErasure.java.isAssignableFrom(rightSide) &&
                         (leftSide.arguments.isEmpty() ||
-                        leftSide.isOpenGeneric)
+                                leftSide.isOpenGeneric)
             }
             else -> {
                 val rightClass = rightSide::class
@@ -41,7 +40,6 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
             }
         }
         is KClass<*> -> when (rightSide) {
-            null -> false
             is KType -> {
                 rightSide.jvmErasure.isSubclassOf(leftSide)
             }
@@ -51,8 +49,8 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
             }
             is Class<*> -> {
                 leftSide.typeParameters.isEmpty() &&
-                rightSide.typeParameters.isEmpty() &&
-                leftSide.java.isAssignableFrom(rightSide)
+                        rightSide.typeParameters.isEmpty() &&
+                        leftSide.java.isAssignableFrom(rightSide)
             }
             else -> {
                 val rightClass = rightSide::class
@@ -62,7 +60,6 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
             }
         }
         is Class<*> -> when (rightSide) {
-            null -> false
             is KType -> {
                 leftSide.isAssignableFrom(rightSide.jvmErasure.java)
             }
@@ -71,7 +68,7 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
             }
             is Class<*> -> {
                 leftSide == rightSide ||
-                leftSide.isAssignableFrom(rightSide)
+                        leftSide.isAssignableFrom(rightSide)
             }
             else -> {
                 val rightClass = rightSide::class
@@ -82,6 +79,29 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any?): Boolean {
     }
 }
 
+private fun checkOpenConformance(
+        openType:   KType,
+        closedType: KType
+): Boolean {
+    return (openType.classifier as? KClass<*>)?.let { openClass ->
+        openClass == closedType.classifier &&
+                closedType.arguments.isNotEmpty() &&
+                closedType.arguments.zip(openType.arguments
+                        .zip(openClass.typeParameters)) { ls, rs ->
+                    when {
+                        ls.type == null -> true /* Star */
+                        rs.first.type == null -> true /* Star */
+                        rs.first.type!!.isOpenGeneric ->
+                            isAssignableTo(ls.type!!, rs.first.type!!)
+                        rs.second.variance == KVariance.IN ->
+                            ls.type!!.isSubtypeOf(rs.first.type!!)
+                        else ->
+                            rs.first.type!!.isSubtypeOf(ls.type!!)
+                    }
+                }.all { it }
+    } ?: false
+}
+
 fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
     return filterIsAssignableTo(ArrayList(), key)
 }
@@ -89,7 +109,7 @@ fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
 fun Iterable<*>.filterIsAssignableTo(
         destination: ArrayList<Any>, key: Any
 ): MutableList<Any> {
-    filter { isAssignableTo(key, it) }.mapTo(destination) { it!! }
+    filter { isAssignableTo(key, it!!) }.mapTo(destination) { it!! }
     return destination
 }
 
@@ -160,9 +180,6 @@ inline fun <reified T: Any> KType.isTopLevelInterfaceOf(): Boolean =
 
 fun KType.isTopLevelInterfaceOf(clazz: KClass<*>): Boolean =
         clazz.allTopLevelInterfaces.contains(this)
-
-fun KTypeParameter.satisfies(proposedType: KType) =
-        upperBounds.any { proposedType.isSubtypeOf(it) }
 
 inline fun <reified T: Annotation> KAnnotatedElement
         .getTaggedAnnotations() = annotations.mapNotNull {

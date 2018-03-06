@@ -17,7 +17,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     init {
-        validateHandlerClass(handlerClass)
+        validate(handlerClass)
         findCompatibleMembers()
     }
 
@@ -122,7 +122,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             ?: emptyList()
                 }
 
-        private fun validateHandlerClass(handlerClass: KClass<*>) {
+        private fun validate(handlerClass: KClass<*>) {
             val javaClass = handlerClass.java
             check(!javaClass.isInterface) {
                 "Handlers cannot be interfaces: ${handlerClass.qualifiedName}"

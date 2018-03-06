@@ -1,7 +1,7 @@
 package com.miruken.container
 
-import com.miruken.callback.UseArgumentResolver
+import com.miruken.callback.UseKeyResolver
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
-@UseArgumentResolver<ContainerKeyResolver>(ContainerKeyResolver::class)
+@UseKeyResolver<ContainerKeyResolver>(ContainerKeyResolver::class)
 annotation class Managed

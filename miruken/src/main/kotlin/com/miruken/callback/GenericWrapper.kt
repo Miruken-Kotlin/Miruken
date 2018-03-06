@@ -20,9 +20,8 @@ class GenericWrapper(
             callback: Any,
             greedy:   Boolean,
             composer: Handling
-    ): HandleResult =
-            super.handleCallback(callback, greedy, composer)
-                    .otherwise(greedy) {
-                        _handler.handle(callback, greedy, composer)
-                    }
+    ) = super.handleCallback(callback, greedy, composer)
+            .otherwise(greedy) {
+                _handler.handle(callback, greedy, composer)
+            }
 }
