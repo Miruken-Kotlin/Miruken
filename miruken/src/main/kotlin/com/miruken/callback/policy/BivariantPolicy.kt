@@ -1,7 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.FilteringProvider
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 
 open class BivariantPolicy(
         rules:   List<MethodRule>,
@@ -40,8 +40,8 @@ open class BivariantPolicy(
         val compatible = mutableListOf<Pair<*,*>>()
         available.filterIsInstance<Pair<Any,Any>>().forEach {
             val (testOutKey, testInKey) = it
-            val inEqual  = isAssignableTo(testInKey, inputKey!!)
-            val outEqual = isAssignableTo(testOutKey, outputKey!!)
+            val inEqual  = isCompatibleWith(testInKey, inputKey!!)
+            val outEqual = isCompatibleWith(testOutKey, outputKey!!)
             if (!outEqual && output.getCompatibleKeys(
                  outputKey, listOf(testOutKey)).isEmpty()) {
                 return@forEach

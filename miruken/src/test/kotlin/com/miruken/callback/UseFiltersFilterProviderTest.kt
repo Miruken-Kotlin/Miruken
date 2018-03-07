@@ -1,87 +1,108 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.MethodBinding
-import com.miruken.runtime.allInterfaces
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
+import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
 
 class UseFiltersFilterProviderTest {
+    private lateinit var _parameters:
+            MutableMap<KTypeParameter, KType>
+
+    @Before
+    fun setup() {
+        _parameters = mutableMapOf()
+    }
+
     @Test fun `Creates closed filter instance`() {
-        val x = RequestFilterClosed::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterClosed::class) {
+            assertCompatible<Filtering<SuperFoo, Int>>(this)
+            assertNotCompatible<Filtering<Foo, String>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<SuperFoo, Int>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Foo, String>>(), x))
     }
 
     @Test fun `Creates open filter instance`() {
-        val x = RequestFilter::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilter::class) {
+            assertCompatible<Filtering<Foo, Int>>(this)
+            assertCompatible<Filtering<Bar, String>>(this)
+            assertCompatible<Filtering<String, Any>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, Int>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<Bar, String>>(), x))
     }
 
     @Test fun `Creates open bounded filter instance`() {
-        val x = RequestFilterBounded::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterBounded::class) {
+            assertCompatible<Filtering<Foo, Int>>(this)
+            assertCompatible<Filtering<SuperFoo, Number>>(this)
+            assertNotCompatible<Filtering<Bar, Float>>(this)
+            assertNotCompatible<Filtering<Foo, String>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, Int>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Bar, Float>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Foo, String>>(), x))
     }
 
     @Test fun `Creates open bounded partial filter instance`() {
-        val x = RequestFilterBoundedPartial::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterBoundedPartial::class) {
+            assertCompatible<Filtering<List<Foo>, Map<String, Foo>>>(this)
+            assertCompatible<Filtering<List<SuperFoo>, Map<String, Foo>>>(this)
+            assertNotCompatible<Filtering<List<Bar>, Map<String, Foo>>>(this)
+            assertNotCompatible<Filtering<List<Foo>, Map<String, Bar>>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<List<Foo>, Map<String,Foo>>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<List<SuperFoo>, Map<String,Foo>>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<List<Bar>, Map<String,Foo>>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<List<Foo>, Map<String,Bar>>>(), x))
     }
 
     @Test fun `Creates open callback filter instance`() {
-        val x = RequestFilterCb::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterCb::class) {
+            assertCompatible<Filtering<Foo, String>>(this)
+            assertCompatible<Filtering<Bar, String>>(this)
+            assertNotCompatible<Filtering<Bar, Float>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, String>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<Bar, String>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Bar, Float>>(), x))
     }
 
     @Test fun `Creates open bounded callback filter instance`() {
-        val x = RequestFilterBoundedCb::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterCb::class) {
+            assertCompatible<Filtering<Foo, Number>>(this)
+            assertCompatible<Filtering<SuperFoo, Number>>(this)
+            assertNotCompatible<Filtering<Bar, Number>>(this)
+            assertNotCompatible<Filtering<Foo, Int>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, Number>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<SuperFoo, Number>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Bar, Number>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Foo, Int>>(), x))
     }
 
     @Test fun `Creates open result filter instance`() {
-        val x = RequestFilterRes::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterCb::class) {
+            assertCompatible<Filtering<Foo, Number>>(this)
+            assertCompatible<Filtering<SuperFoo, Any>>(this)
+            assertNotCompatible<Filtering<Bar, Any>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, Number>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<SuperFoo, Any>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Bar, Any>>(), x))
     }
 
     @Test fun `Creates open bounded result filter instance`() {
-        val x = RequestFilterBoundedRes::class.allInterfaces.single {
-            it.classifier == Filtering::class
+        with(RequestFilterCb::class) {
+            assertCompatible<Filtering<Foo, Number>>(this)
+            assertCompatible<Filtering<Foo, Int>>(this)
+            assertCompatible<Filtering<SuperFoo, Int>>(this)
+            assertNotCompatible<Filtering<Bar, Int>>(this)
+            assertNotCompatible<Filtering<Any, Int>>(this)
         }
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, Number>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<Foo, Int>>(), x))
-        assertTrue(isAssignableTo(typeOf<Filtering<SuperFoo, Int>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Bar, Int>>(), x))
-        assertFalse(isAssignableTo(typeOf<Filtering<Any, Int>>(), x))
     }
+
+    private inline fun <reified T: Filtering<*,*>> assertCompatible(
+            fc: KClass<*>
+    ): Boolean {
+        _parameters.clear()
+        val filterType = typeOf<T>()
+        return getFilterInterface(fc)?.let {
+            isCompatibleWith(filterType, it, _parameters) &&
+                    filterType.arguments.zip(fc.typeParameters) {
+                        typeProjection, typeParameter ->
+                        _parameters[typeParameter] == typeProjection.type
+                    }.all { it }
+        } ?: false
+    }
+
+    private inline fun <reified T: Filtering<*,*>> assertNotCompatible(
+            fc: KClass<*>
+    ) = !isCompatibleWith(typeOf<T>(), fc)
 
     open class Foo
     open class SuperFoo: Foo()

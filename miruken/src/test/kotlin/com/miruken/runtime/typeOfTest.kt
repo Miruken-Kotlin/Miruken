@@ -46,36 +46,36 @@ class typeOfTest {
     }
 
     @Test fun `Can check KType assignability`() {
-        assertTrue(isAssignableTo(
+        assertTrue(isCompatibleWith(
                 typeOf<List<*>>(), typeOf<List<String>>()))
-        assertFalse(isAssignableTo(
+        assertFalse(isCompatibleWith(
                 typeOf<List<Foo>>(), typeOf<List<*>>()))
-        assertFalse(isAssignableTo(
+        assertFalse(isCompatibleWith(
                 typeOf<List<Int>>(), typeOf<List<String>>()))
     }
 
     @Test fun `Can check KClass assignability`() {
-        assertTrue(isAssignableTo(Foo::class, Foo()))
-        assertTrue(isAssignableTo(Foo::class, Foo()::class))
-        assertTrue(isAssignableTo(Foo::class, Foo().javaClass))
-        assertFalse(isAssignableTo(Foo(), Foo::class))
-        assertFalse(isAssignableTo(String::class, Foo()::class))
-        assertTrue(isAssignableTo(Bar::class, Bar<Int>()::class))
+        assertTrue(isCompatibleWith(Foo::class, Foo()))
+        assertTrue(isCompatibleWith(Foo::class, Foo()::class))
+        assertTrue(isCompatibleWith(Foo::class, Foo().javaClass))
+        assertFalse(isCompatibleWith(Foo(), Foo::class))
+        assertFalse(isCompatibleWith(String::class, Foo()::class))
+        assertTrue(isCompatibleWith(Bar::class, Bar<Int>()::class))
     }
 
     @Test fun `Can check mixed assignability`() {
-        assertTrue(isAssignableTo(typeOf<Foo>(), Foo()))
-        assertTrue(isAssignableTo(Foo::class, typeOf<Foo>()))
-        assertTrue(isAssignableTo(typeOf<Foo>(), Foo::class))
-        assertFalse(isAssignableTo(Foo(), typeOf<Foo>()))
-        assertFalse(isAssignableTo(typeOf<Bar<String>>(), Bar<String>()))
+        assertTrue(isCompatibleWith(typeOf<Foo>(), Foo()))
+        assertTrue(isCompatibleWith(Foo::class, typeOf<Foo>()))
+        assertTrue(isCompatibleWith(typeOf<Foo>(), Foo::class))
+        assertFalse(isCompatibleWith(Foo(), typeOf<Foo>()))
+        assertFalse(isCompatibleWith(typeOf<Bar<String>>(), Bar<String>()))
     }
 
     @Test fun `Can check primitive assignability`() {
-        assertTrue(isAssignableTo(typeOf<Int>(), 2))
-        assertTrue(isAssignableTo(typeOf<Int>(), Int::class))
-        assertTrue(isAssignableTo(Int::class, 2))
-        assertTrue(isAssignableTo(typeOf<Int>(), 2::class.java))
+        assertTrue(isCompatibleWith(typeOf<Int>(), 2))
+        assertTrue(isCompatibleWith(typeOf<Int>(), Int::class))
+        assertTrue(isCompatibleWith(Int::class, 2))
+        assertTrue(isCompatibleWith(typeOf<Int>(), 2::class.java))
     }
 
     @Test fun `Can determine KType covariance`() {

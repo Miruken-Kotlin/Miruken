@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.runtime.componentType
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 class Provider(
@@ -13,5 +13,5 @@ class Provider(
 
     @Provides
     fun provide(inquiry: Inquiry): Any? =
-            if (isAssignableTo(inquiry.key, _key)) value else null
+            if (isCompatibleWith(inquiry.key, _key)) value else null
 }

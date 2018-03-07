@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
@@ -53,12 +53,12 @@ class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
     ): BivariantPolicy {
         val co = CovariantPolicy(emptyList(), emptyList(), {
             @Suppress("UNCHECKED_CAST")
-            if (isAssignableTo(callbackType, it))
+            if (isCompatibleWith(callbackType, it))
                 keyFunctor(it as C) else null
         })
         val contra = ContravariantPolicy(emptyList(), emptyList(), {
             @Suppress("UNCHECKED_CAST")
-            if (isAssignableTo(callbackType, it))
+            if (isCompatibleWith(callbackType, it))
                 targetFunctor(it as C) else null
         })
         val builder = BivariantPolicyBuilder(callbackType, targetType,

@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
@@ -17,7 +17,7 @@ class CovariantPolicyBuilder<C: Any>(
     override fun build(): CovariantPolicy {
         return CovariantPolicy(rules, filters, {
             @Suppress("UNCHECKED_CAST")
-            if (isAssignableTo(callbackType, it))
+            if (isCompatibleWith(callbackType, it))
                 keyFunctor(it as C) else null
         })
     }

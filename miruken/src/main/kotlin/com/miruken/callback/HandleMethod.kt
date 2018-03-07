@@ -3,7 +3,7 @@ package com.miruken.callback
 import com.miruken.TypedValue
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.HandleMethodBinding
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isTopLevelInterfaceOf
 import com.miruken.toKType
 import java.lang.reflect.Method
@@ -48,9 +48,9 @@ open class HandleMethod(
             }
             else -> {
                 typedTarget?.takeIf {
-                    isAssignableTo(protocol, it.type)
+                    isCompatibleWith(protocol, it.type)
                 }?.value ?: target.takeIf {
-                    isAssignableTo(protocol, target)
+                    isCompatibleWith(protocol, target)
                 }
             }
         }

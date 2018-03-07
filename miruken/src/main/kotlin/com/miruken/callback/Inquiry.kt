@@ -4,7 +4,7 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_STAR
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -154,7 +154,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             item:      Any,
             greedy:    Boolean,
             composer:  Handling
-    ) = isAssignableTo(key, item) &&
+    ) = isCompatibleWith(key, item) &&
             resolve(item, false, greedy, composer)
 
     private fun flatten(vararg lists: List<*>): List<Any> {

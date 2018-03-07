@@ -16,6 +16,8 @@ class UseFiltersFilterProvider(
             filterType: KType,
             composer:   Handling
     ): List<Filtering<*,*>> {
+        if (filterType.isOpenGeneric)
+            return emptyList()
         return emptyList()
     }
 

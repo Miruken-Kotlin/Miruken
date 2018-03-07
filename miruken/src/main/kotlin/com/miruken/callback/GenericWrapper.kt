@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.TypedValue
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 class GenericWrapper(
@@ -13,7 +13,7 @@ class GenericWrapper(
 
     @Provides
     fun provide(inquiry: Inquiry) : Any? =
-            if (isAssignableTo(inquiry.key, type))
+            if (isCompatibleWith(inquiry.key, type))
                 value else null
 
     override fun handleCallback(

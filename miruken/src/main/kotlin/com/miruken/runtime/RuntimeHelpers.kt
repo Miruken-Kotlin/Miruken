@@ -7,19 +7,29 @@ import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
-fun isAssignableTo(leftSide:  Any, rightSide: Any): Boolean {
+fun isCompatibleWith(
+        leftSide:   Any,
+        rightSide:  Any,
+        parameters: MutableMap<KTypeParameter, KType>? = null
+): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
             is KType -> when {
                 leftSide == rightSide -> true
-                rightSide.classifier is KTypeParameter ->
-                    (rightSide.classifier as KTypeParameter).let {
-                        it.upperBounds.any { isAssignableTo(it, leftSide) }
+                rightSide.classifier is KTypeParameter -> {
+                    val typeParam = rightSide.classifier as KTypeParameter
+                    typeParam.upperBounds.any {
+                        isCompatibleWith(it, leftSide, parameters).also {
+                            if (parameters != null &&
+                                    !parameters.containsKey(typeParam))
+                            parameters[typeParam] = leftSide
+                        }
+                    }
                 }
                 rightSide.isOpenGeneric ->
-                    checkOpenConformance(rightSide, leftSide)
+                    checkOpenConformance(rightSide, leftSide, parameters)
                 leftSide.isOpenGeneric ->
-                    checkOpenConformance(leftSide, rightSide)
+                    checkOpenConformance(leftSide, rightSide, parameters)
                 else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
@@ -81,7 +91,8 @@ fun isAssignableTo(leftSide:  Any, rightSide: Any): Boolean {
 
 private fun checkOpenConformance(
         openType:   KType,
-        closedType: KType
+        closedType: KType,
+        parameters: MutableMap<KTypeParameter, KType>?
 ): Boolean {
     return (openType.classifier as? KClass<*>)?.let { openClass ->
         openClass == closedType.classifier &&
@@ -92,7 +103,8 @@ private fun checkOpenConformance(
                         ls.type == null -> true /* Star */
                         rs.first.type == null -> true /* Star */
                         rs.first.type!!.isOpenGeneric ->
-                            isAssignableTo(ls.type!!, rs.first.type!!)
+                            isCompatibleWith(ls.type!!, rs.first.type!!,
+                                    parameters)
                         rs.second.variance == KVariance.IN ->
                             ls.type!!.isSubtypeOf(rs.first.type!!)
                         else ->
@@ -109,7 +121,7 @@ fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
 fun Iterable<*>.filterIsAssignableTo(
         destination: ArrayList<Any>, key: Any
 ): MutableList<Any> {
-    filter { isAssignableTo(key, it!!) }.mapTo(destination) { it!! }
+    filter { isCompatibleWith(key, it!!) }.mapTo(destination) { it!! }
     return destination
 }
 

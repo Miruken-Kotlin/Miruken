@@ -1,7 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.TypeFlags
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 class TargetArgument<in C, out R: Any>(
@@ -29,6 +29,6 @@ class TargetArgument<in C, out R: Any>(
 
     @Suppress("UNCHECKED_CAST")
     override fun resolve(callback: Any) =
-            if (isAssignableTo(callbackType, callback))
+            if (isCompatibleWith(callbackType, callback))
                 target(callback as C) else callback
 }

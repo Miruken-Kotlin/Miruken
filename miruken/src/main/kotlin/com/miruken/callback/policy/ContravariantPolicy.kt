@@ -2,7 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.HandleResult
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isUnit
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -33,7 +33,7 @@ open class ContravariantPolicy(
     override fun getCompatibleKeys(
             key:       Any,
             available: Collection<Any>
-    ) = available.filter { key != it && isAssignableTo(it, key) }
+    ) = available.filter { key != it && isCompatibleWith(it, key) }
 
     override fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
             when (result) {
@@ -49,7 +49,7 @@ open class ContravariantPolicy(
         o1 == null -> 1
         o2 == null -> -1
         else -> compareGenericArity(o1, o2).takeIf { it != 0 }
-                ?: if (isAssignableTo(o2, o1)) -1 else 1
+                ?: if (isCompatibleWith(o2, o1)) -1 else 1
     }
     
     private fun compareGenericArity(o1: Any?, o2: Any?) = when (o1) {

@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.typeOf
-import com.miruken.runtime.isAssignableTo
+import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 open class Composition(callback: Any): Trampoline(callback),
@@ -41,7 +41,7 @@ open class Composition(callback: Any): Trampoline(callback),
 
         fun get(callback: Any, key: Any): Any? {
             return (callback as? Composition)?.let {
-                if (isAssignableTo(key, it.resultType ?: it.callback))
+                if (isCompatibleWith(key, it.resultType ?: it.callback))
                     it.callback else null
             }
         }
