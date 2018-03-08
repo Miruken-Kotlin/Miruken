@@ -3,7 +3,8 @@ package com.miruken.callback
 import com.miruken.Flags
 
 interface KeyResolving {
-    fun validate(key: Any, flags: Flags<TypeFlags>) {}
+    fun validate(key: Any, flags: Flags<TypeFlags>) {
+    }
 
     fun resolve(
             key:      Any,

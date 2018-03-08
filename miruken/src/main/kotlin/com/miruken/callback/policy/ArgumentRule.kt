@@ -6,7 +6,8 @@ interface ArgumentRule {
     fun configure(
             argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo
-    ) {}
+    ) {
+    }
 
     fun resolve(callback: Any): Any?
 }

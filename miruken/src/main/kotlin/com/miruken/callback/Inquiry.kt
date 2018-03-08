@@ -161,7 +161,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
         val flat = mutableSetOf<Any>()
         lists.flatMap { it }
              .forEach { when (it) {
-                 null -> {}
+                 null -> return@forEach
                  is Iterable<*> -> flat.addAll(it.filterNotNull())
                  is Array<*> -> flat.addAll(it.filterNotNull())
                  else -> flat.add(it)

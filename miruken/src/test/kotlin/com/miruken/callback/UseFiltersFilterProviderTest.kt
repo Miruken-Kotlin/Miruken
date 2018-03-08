@@ -10,12 +10,12 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 
 class UseFiltersFilterProviderTest {
-    private lateinit var _parameters:
+    private lateinit var _typeBindings:
             MutableMap<KTypeParameter, KType>
 
     @Before
     fun setup() {
-        _parameters = mutableMapOf()
+        _typeBindings = mutableMapOf()
     }
 
     @Test fun `Creates closed filter instance`() {
@@ -89,13 +89,13 @@ class UseFiltersFilterProviderTest {
     private inline fun <reified T: Filtering<*,*>> assertCompatible(
             fc: KClass<*>
     ): Boolean {
-        _parameters.clear()
+        _typeBindings.clear()
         val filterType = typeOf<T>()
         return getFilterInterface(fc)?.let {
-            isCompatibleWith(filterType, it, _parameters) &&
+            isCompatibleWith(filterType, it, _typeBindings) &&
                     filterType.arguments.zip(fc.typeParameters) {
                         typeProjection, typeParameter ->
-                        _parameters[typeParameter] == typeProjection.type
+                        _typeBindings[typeParameter] == typeProjection.type
                     }.all { it }
         } ?: false
     }

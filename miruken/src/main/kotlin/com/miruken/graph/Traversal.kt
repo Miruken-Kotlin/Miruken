@@ -63,6 +63,7 @@ object Traversal {
             next.traverse { child -> level.addFirst(child); false }
             queue.addAll(level)
         }
-        while (stack.isNotEmpty() && !visitor(stack.pop())) {}
+        while (stack.isNotEmpty() && !visitor(stack.pop())) {
+        }
     }
 }

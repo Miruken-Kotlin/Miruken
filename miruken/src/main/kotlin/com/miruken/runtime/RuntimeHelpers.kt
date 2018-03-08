@@ -8,9 +8,9 @@ import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
 
 fun isCompatibleWith(
-        leftSide:   Any,
-        rightSide:  Any,
-        parameters: MutableMap<KTypeParameter, KType>? = null
+        leftSide:     Any,
+        rightSide:    Any,
+        typeBindings: MutableMap<KTypeParameter, KType>? = null
 ): Boolean {
     return when (leftSide) {
         is KType -> when (rightSide) {
@@ -19,17 +19,17 @@ fun isCompatibleWith(
                 rightSide.classifier is KTypeParameter -> {
                     val typeParam = rightSide.classifier as KTypeParameter
                     typeParam.upperBounds.any {
-                        isCompatibleWith(it, leftSide, parameters).also {
-                            if (parameters != null &&
-                                    !parameters.containsKey(typeParam))
-                            parameters[typeParam] = leftSide
+                        typeBindings?.containsKey(typeParam) == true ||
+                        isCompatibleWith(it, leftSide, typeBindings).also {
+                            if (it && typeBindings?.containsKey(typeParam) == false)
+                                typeBindings[typeParam] = leftSide
                         }
                     }
                 }
                 rightSide.isOpenGeneric ->
-                    checkOpenConformance(rightSide, leftSide, parameters)
+                    verifyOpenConformance(rightSide, leftSide, typeBindings)
                 leftSide.isOpenGeneric ->
-                    checkOpenConformance(leftSide, rightSide, parameters)
+                    verifyOpenConformance(leftSide, rightSide, typeBindings)
                 else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
@@ -89,7 +89,7 @@ fun isCompatibleWith(
     }
 }
 
-private fun checkOpenConformance(
+private fun verifyOpenConformance(
         openType:   KType,
         closedType: KType,
         parameters: MutableMap<KTypeParameter, KType>?
