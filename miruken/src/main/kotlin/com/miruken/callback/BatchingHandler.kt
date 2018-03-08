@@ -4,9 +4,6 @@ import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
 import com.miruken.protocol.proxy
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.reflect.KType
-import kotlin.reflect.full.createInstance
-import kotlin.reflect.jvm.jvmErasure
 
 class BatchingHandler(
         handler: Handling,

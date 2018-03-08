@@ -7,6 +7,7 @@ import kotlin.reflect.KClass
 
 typealias Next<Res> = (Handling?) -> Res
 
+@FunctionalInterface
 interface Filtering<in Cb, out Res> : Ordered {
     fun next(
             callback: Cb,
@@ -18,5 +19,5 @@ interface Filtering<in Cb, out Res> : Ordered {
 
 interface GlobalFiltering<in Cb, out Res> : Filtering<Cb, Res>
 
-fun getFilterInterface(clazz: KClass<*>) =
-        clazz.allInterfaces.singleOrNull{ it.classifier == Filtering::class }
+fun KClass<out Filtering<*,*>>.getFilteringInterface() =
+        allInterfaces.single { it.classifier == Filtering::class }

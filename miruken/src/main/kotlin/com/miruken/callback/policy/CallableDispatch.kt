@@ -3,9 +3,13 @@ package com.miruken.callback.policy
 import com.miruken.Flags
 import com.miruken.callback.Strict
 import com.miruken.callback.TypeFlags
+import com.miruken.callback.UseFilter
+import com.miruken.callback.UseFilterProvider
 import com.miruken.concurrent.Promise
+import com.miruken.runtime.getTaggedAnnotations
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
+import com.miruken.runtime.normalize
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
@@ -43,6 +47,19 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
 
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing
+
+
+    val useFilters by lazy {
+        callable.getTaggedAnnotations<UseFilter<*>>()
+                .flatMap { it.second }
+                .normalize()
+    }
+
+    val useFilterProviders by lazy {
+        callable.getTaggedAnnotations<UseFilterProvider<*>>()
+                .flatMap { it.second }
+                .normalize()
+    }
 
     fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
         return try {

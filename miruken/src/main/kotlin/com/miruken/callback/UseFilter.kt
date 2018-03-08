@@ -6,4 +6,4 @@ import kotlin.reflect.KClass
 @Repeatable annotation class UseFilter<F: Filtering<*,*>>(
         val filterClass: KClass<F>,
         val many:        Boolean = false,
-        val order:       Int = Int.MAX_VALUE)
+        val order:       Int = -1)

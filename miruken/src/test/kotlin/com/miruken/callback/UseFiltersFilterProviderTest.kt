@@ -3,116 +3,106 @@ package com.miruken.callback
 import com.miruken.callback.policy.MethodBinding
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
-import org.junit.Before
 import org.junit.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 
 class UseFiltersFilterProviderTest {
-    private lateinit var _typeBindings:
-            MutableMap<KTypeParameter, KType>
-
-    @Before
-    fun setup() {
-        _typeBindings = mutableMapOf()
-    }
-
     @Test fun `Creates closed filter instance`() {
         with(RequestFilterClosed::class) {
-            assertCompatible<Filtering<SuperFoo, Int>>(this)
-            assertNotCompatible<Filtering<Foo, String>>(this)
+            assertCompatible<Filtering<SpecialFoo, Int>>()
+            assertNotCompatible<Filtering<Foo, String>>()
         }
     }
 
     @Test fun `Creates open filter instance`() {
         with(RequestFilter::class) {
-            assertCompatible<Filtering<Foo, Int>>(this)
-            assertCompatible<Filtering<Bar, String>>(this)
-            assertCompatible<Filtering<String, Any>>(this)
+            assertCompatible<Filtering<Foo, Int>>()
+            assertCompatible<Filtering<Bar, String>>()
+            assertCompatible<Filtering<String, Any>>()
         }
     }
 
     @Test fun `Creates open bounded filter instance`() {
         with(RequestFilterBounded::class) {
-            assertCompatible<Filtering<Foo, Int>>(this)
-            assertCompatible<Filtering<SuperFoo, Number>>(this)
-            assertNotCompatible<Filtering<Bar, Float>>(this)
-            assertNotCompatible<Filtering<Foo, String>>(this)
+            assertCompatible<Filtering<Foo, Int>>()
+            assertCompatible<Filtering<SpecialFoo, Number>>()
+            assertNotCompatible<Filtering<Bar, Float>>()
+            assertNotCompatible<Filtering<Foo, String>>()
         }
     }
 
     @Test fun `Creates open bounded partial filter instance`() {
         with(RequestFilterBoundedPartial::class) {
-            assertCompatible<Filtering<List<Foo>, Map<String, Foo>>>(this)
-            assertCompatible<Filtering<List<SuperFoo>, Map<String, Foo>>>(this)
-            assertNotCompatible<Filtering<List<Bar>, Map<String, Foo>>>(this)
-            assertNotCompatible<Filtering<List<Foo>, Map<String, Bar>>>(this)
+            assertCompatible<Filtering<List<Foo>, Map<String, Foo>>>()
+            assertCompatible<Filtering<List<SpecialFoo>, Map<String, Foo>>>()
+            assertNotCompatible<Filtering<List<Bar>, Map<String, Foo>>>()
+            assertNotCompatible<Filtering<List<Foo>, Map<String, Bar>>>()
         }
     }
 
     @Test fun `Creates open callback filter instance`() {
         with(RequestFilterCb::class) {
-            assertCompatible<Filtering<Foo, String>>(this)
-            assertCompatible<Filtering<Bar, String>>(this)
-            assertNotCompatible<Filtering<Bar, Float>>(this)
+            assertCompatible<Filtering<Foo, String>>()
+            assertCompatible<Filtering<Bar, String>>()
+            assertNotCompatible<Filtering<Bar, Float>>()
         }
     }
 
     @Test fun `Creates open bounded callback filter instance`() {
         with(RequestFilterCb::class) {
-            assertCompatible<Filtering<Foo, Number>>(this)
-            assertCompatible<Filtering<SuperFoo, Number>>(this)
-            assertNotCompatible<Filtering<Bar, Number>>(this)
-            assertNotCompatible<Filtering<Foo, Int>>(this)
+            assertCompatible<Filtering<Foo, Number>>()
+            assertCompatible<Filtering<SpecialFoo, Number>>()
+            assertNotCompatible<Filtering<Bar, Number>>()
+            assertNotCompatible<Filtering<Foo, Int>>()
         }
     }
 
     @Test fun `Creates open result filter instance`() {
         with(RequestFilterCb::class) {
-            assertCompatible<Filtering<Foo, Number>>(this)
-            assertCompatible<Filtering<SuperFoo, Any>>(this)
-            assertNotCompatible<Filtering<Bar, Any>>(this)
+            assertCompatible<Filtering<Foo, Number>>()
+            assertCompatible<Filtering<SpecialFoo, Any>>()
+            assertNotCompatible<Filtering<Bar, Any>>()
         }
     }
 
     @Test fun `Creates open bounded result filter instance`() {
         with(RequestFilterCb::class) {
-            assertCompatible<Filtering<Foo, Number>>(this)
-            assertCompatible<Filtering<Foo, Int>>(this)
-            assertCompatible<Filtering<SuperFoo, Int>>(this)
-            assertNotCompatible<Filtering<Bar, Int>>(this)
-            assertNotCompatible<Filtering<Any, Int>>(this)
+            assertCompatible<Filtering<Foo, Number>>()
+            assertCompatible<Filtering<Foo, Int>>()
+            assertCompatible<Filtering<SpecialFoo, Int>>()
+            assertNotCompatible<Filtering<Bar, Int>>()
+            assertNotCompatible<Filtering<Any, Int>>()
         }
     }
 
-    private inline fun <reified T: Filtering<*,*>> assertCompatible(
-            fc: KClass<*>
-    ): Boolean {
-        _typeBindings.clear()
-        val filterType = typeOf<T>()
-        return getFilterInterface(fc)?.let {
-            isCompatibleWith(filterType, it, _typeBindings) &&
-                    filterType.arguments.zip(fc.typeParameters) {
+    private inline fun <reified T: Filtering<*,*>>
+            KClass<out Filtering<*,*>>.assertCompatible(): Boolean {
+        val filterType   = typeOf<T>()
+        val typeBindings = mutableMapOf<KTypeParameter, KType>()
+        return getFilteringInterface().let {
+            isCompatibleWith(filterType, it, typeBindings) &&
+                    filterType.arguments.zip(this.typeParameters) {
                         typeProjection, typeParameter ->
-                        _typeBindings[typeParameter] == typeProjection.type
+                        typeBindings[typeParameter] == typeProjection.type
                     }.all { it }
-        } ?: false
+        }
     }
 
-    private inline fun <reified T: Filtering<*,*>> assertNotCompatible(
-            fc: KClass<*>
-    ) = !isCompatibleWith(typeOf<T>(), fc)
+    private inline fun <reified T: Filtering<*,*>>
+            KClass<*>.assertNotCompatible() =
+            !isCompatibleWith(typeOf<T>(), this)
 
     open class Foo
-    open class SuperFoo: Foo()
+    open class SpecialFoo: Foo()
     open class Bar
 
-    class RequestFilterClosed: Filtering<SuperFoo, Int>{
+    class RequestFilterClosed: Filtering<SpecialFoo, Int>{
         override var order: Int? = null
 
         override fun next(
-                callback: SuperFoo,
+                callback: SpecialFoo,
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<Int>

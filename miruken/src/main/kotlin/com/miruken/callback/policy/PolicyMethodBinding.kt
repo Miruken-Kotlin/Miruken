@@ -1,7 +1,6 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.*
-import com.miruken.runtime.normalize
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmErasure
 
@@ -16,10 +15,6 @@ class PolicyMethodBinding(
     val dispatcher       = bindingInfo.dispatcher
     val strict           = bindingInfo.strict
     val key              = policy.createKey(bindingInfo)
-
-    val filters = dispatcher.annotations
-            .filterIsInstance<FilteringProvider>()
-            .normalize()
 
     fun approve(callback: Any) = policy.approve(callback, this)
 
@@ -92,8 +87,8 @@ class PolicyMethodBinding(
             composer:      Handling
     ): KeyResolving? {
         return if (resolverClass == null)
-            DefaultKeyResolver else resolverClass.objectInstance ?:
-                composer.resolve(resolverClass) as? KeyResolving
+            DefaultKeyResolver else resolverClass.objectInstance
+                ?: composer.resolve(resolverClass) as? KeyResolving
     }
 
     companion object {

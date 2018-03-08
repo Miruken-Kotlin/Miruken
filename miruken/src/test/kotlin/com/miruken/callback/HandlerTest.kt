@@ -61,7 +61,7 @@ class HandlerTest {
     }
 
     @Test fun `Handles interface callbacks`() {
-        val foo     = SuperFoo()
+        val foo     = SpecialFoo()
         val handler = InterfaceHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(1, foo.handled)
@@ -69,7 +69,7 @@ class HandlerTest {
     }
 
     @Test fun `Handles callbacks covariantly`() {
-        val foo     = SuperFoo()
+        val foo     = SpecialFoo()
         val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(2, foo.handled)
@@ -125,7 +125,7 @@ class HandlerTest {
     @Test fun `Rejects bounded callbacks generically`() {
         val handler = BoundedGenericHandler()
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bar()))
-        assertEquals(HandleResult.NOT_HANDLED, handler.handle(SuperBar()))
+        assertEquals(HandleResult.NOT_HANDLED, handler.handle(SpecialBar()))
     }
 
     @Test fun `Rejects @Handles that do not satisfy policy`() {
@@ -209,9 +209,9 @@ class HandlerTest {
 
     @Test fun `Provides callbacks covariantly`() {
         val handler = SimpleHandler()
-        val bar     = handler.resolve<SuperBar>()
+        val bar     = handler.resolve<SpecialBar>()
         assertNotNull(bar!!)
-        assertEquals(SuperBar::class, bar::class)
+        assertEquals(SpecialBar::class, bar::class)
         assertTrue(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
@@ -288,7 +288,7 @@ class HandlerTest {
         val handler = SimpleHandler() + SimpleHandler()
         var bars    = handler.resolveAll<Bar>()
         assertEquals(4, bars.size)
-        bars = handler.resolveAll<SuperBar>()
+        bars = handler.resolveAll<SpecialBar>()
         assertEquals(2, bars.size)
     }
 
@@ -296,7 +296,7 @@ class HandlerTest {
         val handler = SimpleHandler()
         val baz     = handler.resolve<Baz>()
         assertNotNull(baz!!)
-        assertEquals(SuperBaz::class, baz::class)
+        assertEquals(SpecialBaz::class, baz::class)
         assertFalse(baz.hasComposer)
     }
 
@@ -304,12 +304,12 @@ class HandlerTest {
         val handler = SpecialHandler()
         val baz     = handler.resolve<Baz>()
         assertNotNull(baz!!)
-        assertEquals(SuperBaz::class, baz::class)
+        assertEquals(SpecialBaz::class, baz::class)
         assertFalse(baz.hasComposer)
         val bazs    = handler.resolveAll<Baz>()
         assertEquals(2, bazs.size)
         assertTrue(bazs.map { it::class to it.hasComposer }
-                .containsAll(listOf(SuperBaz::class to false,
+                .containsAll(listOf(SpecialBaz::class to false,
                         Baz::class to false)))
     }
 
@@ -348,7 +348,7 @@ class HandlerTest {
     @Test fun `Provides callbacks using constraints`() {
         val handler = SpecialHandler()
         assertNotNull(handler.resolve<Foo>())
-        assertNotNull(handler.resolve<SuperFoo>())
+        assertNotNull(handler.resolve<SpecialFoo>())
     }
 
     @Test fun `Rejects @Provides that do not satisfy policy`() {
@@ -508,7 +508,7 @@ class HandlerTest {
         override var hasComposer: Boolean = false
     }
 
-    class SuperFoo : Foo()
+    class SpecialFoo : Foo()
 
     class FooDecorator(foo: Foo) : Foo()
 
@@ -517,7 +517,7 @@ class HandlerTest {
         override var hasComposer: Boolean = false
     }
 
-    class SuperBar : Bar()
+    class SpecialBar : Bar()
 
     open class Boo {
         var hasComposer: Boolean = false
@@ -527,7 +527,7 @@ class HandlerTest {
         var hasComposer: Boolean = false
     }
 
-    class SuperBaz : Baz()
+    class SpecialBaz : Baz()
 
     open class BazT<T>(
             var stuff: T?    = null,
@@ -556,7 +556,7 @@ class HandlerTest {
         }
 
         @Handles
-        fun handleSuperFooImplicitly(foo: SuperFoo) : HandleResult?
+        fun handleSpecialFooImplicitly(foo: SpecialFoo) : HandleResult?
         {
             ++foo.handled
             foo.hasComposer = true
@@ -605,8 +605,8 @@ class HandlerTest {
         }
 
         @Provides
-        fun provideSuperBarImplicitly(composer: Handling) : SuperBar  {
-            return SuperBar().apply {
+        fun provideSpecialBarImplicitly(composer: Handling) : SpecialBar  {
+            return SpecialBar().apply {
                 handled     = 1
                 hasComposer = true
             }
@@ -628,7 +628,7 @@ class HandlerTest {
         @Provides
         fun provideBazExplicitly(inquiry: Inquiry, composer: Handling) {
             if (inquiry.key == typeOf<Baz>())
-                inquiry.resolve(SuperBaz(), composer)
+                inquiry.resolve(SpecialBaz(), composer)
         }
 
         @Provides
@@ -677,9 +677,9 @@ class HandlerTest {
         }
 
         @Provides
-        fun provideSuperBarImplicitly(): Promise<SuperBar>
+        fun provideSpecialBarImplicitly(): Promise<SpecialBar>
         {
-            return Promise.resolve(SuperBar().apply {
+            return Promise.resolve(SpecialBar().apply {
                 handled     = 1
                 hasComposer = true
             })
@@ -703,7 +703,7 @@ class HandlerTest {
         @Provides
         fun provideBazExplicitly(inquiry: Inquiry, composer: Handling) {
             if (inquiry.key == typeOf<Baz>())
-                inquiry.resolve(Promise.resolve(SuperBaz()), composer)
+                inquiry.resolve(Promise.resolve(SpecialBaz()), composer)
         }
 
         @Provides
@@ -743,7 +743,7 @@ class HandlerTest {
                 binding:  PolicyMethodBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
-                inquiry.resolve(SuperBaz(), composer)
+                inquiry.resolve(SpecialBaz(), composer)
                 inquiry.resolve(Baz(), composer)
             }
         }
@@ -780,7 +780,7 @@ class HandlerTest {
                 binding:  PolicyMethodBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
-                inquiry.resolve(Promise.resolve(SuperBaz()), composer)
+                inquiry.resolve(Promise.resolve(SpecialBaz()), composer)
                 inquiry.resolve(Promise.resolve(Baz()), composer)
             }
         }

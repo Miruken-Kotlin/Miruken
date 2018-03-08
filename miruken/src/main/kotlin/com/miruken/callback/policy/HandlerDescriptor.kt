@@ -1,8 +1,8 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.HandleResult
-import com.miruken.callback.Handling
+import com.miruken.callback.*
 import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.normalize
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
@@ -19,6 +19,18 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     init {
         validate(handlerClass)
         findCompatibleMembers()
+    }
+
+    val useFilters by lazy {
+        handlerClass.getTaggedAnnotations<UseFilter<*>>()
+                .flatMap { it.second }
+                .normalize()
+    }
+
+    val useFilterProviders by lazy {
+        handlerClass.getTaggedAnnotations<UseFilterProvider<*>>()
+                .flatMap { it.second }
+                .normalize()
     }
 
     internal fun dispatch(

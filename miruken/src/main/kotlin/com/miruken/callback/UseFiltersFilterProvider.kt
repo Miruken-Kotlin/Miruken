@@ -1,14 +1,14 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.MethodBinding
-import com.miruken.runtime.allInterfaces
+import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isOpenGeneric
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 
-class UseFiltersFilterProvider(
+open class UseFiltersFilterProvider(
         val useFilters: List<UseFilter<*>>
 ): FilteringProvider {
     override fun getFilters(
@@ -16,38 +16,52 @@ class UseFiltersFilterProvider(
             filterType: KType,
             composer:   Handling
     ): List<Filtering<*,*>> {
-        if (filterType.isOpenGeneric)
-            return emptyList()
-        return emptyList()
+        return if (filterType.isOpenGeneric) {
+            emptyList()
+        } else {
+            useFilters.flatMap {
+                getFilters(filterType, it, binding, composer)
+            }.filter { useFilterInstance(it, binding) }
+        }
     }
 
-    /*
-    private fun getFilterKey(
-            filterType:          KType,
-            proposedFilterClass: KClass<*>
-    ):Any? {
-        val typeParams = proposedFilterClass.typeParameters
-        if (typeParams.isEmpty()) return proposedFilterClass
-        if (typeParams.size > 2) return null
-        if (proposedFilterClass == Filtering::class)
-            return proposedFilterClass.createType(
-                    listOf(KTypeProjection.invariant(callbackType),
-                           KTypeProjection.invariant(logicalResultType)))
-        return proposedFilterClass.allInterfaces
-                .firstOrNull { it.classifier == Filtering::class }?.let {
-                    val cbOpen  = it.arguments[0].type!!.isOpenGeneric
-                    val resOpen = it.arguments[1].type!!.isOpenGeneric
-                    val typeArgs = when {
-                        cbOpen && resOpen ->
-                            listOf(callbackType, logicalResultType)
-                        cbOpen -> listOf(callbackType)
-                        resOpen -> listOf(logicalResultType)
-                        else -> emptyList()
-                    }
-                    return proposedFilterClass.createType(
-                            typeArgs.map(KTypeProjection.Companion::invariant)
-                    )
+    protected open fun acceptFilterType(
+            filterType: KType, binding: MethodBinding) = true
+
+    protected open fun useFilterInstance(
+            filter: Filtering<*,*>, binding: MethodBinding) = true
+
+    private fun getFilters(
+            filterType: KType,
+            useFilter:  UseFilter<*>,
+            binding:    MethodBinding,
+            composer:   Handling
+    ):List<Filtering<*,*>> {
+        val filterClass       = useFilter.filterClass
+        val filterConformance = filterClass.getFilteringInterface()
+        val typeBindings      = mutableMapOf<KTypeParameter, KType>()
+        if (isCompatibleWith(filterType, filterConformance, typeBindings)) {
+            val closedFilterType = filterClass.createType(
+                    filterClass.typeParameters.map {
+                            KTypeProjection.invariant(typeBindings[it]!!)
+                    })
+            if (acceptFilterType(closedFilterType, binding)) {
+                @Suppress("UNCHECKED_CAST")
+                val filters = if (useFilter.many) {
+                    composer.stop.resolveAll(closedFilterType)
+                            as List<Filtering<*,*>>
+                } else {
+                    (composer.stop.resolve(closedFilterType)
+                            as? Filtering<*,*>)?.let { listOf(it) }
+                            ?: emptyList()
                 }
+                val order = useFilter.order
+                if (order >= 0) {
+                    for (filter in filters) filter.order = order
+                }
+                return filters
+            }
+        }
+        return emptyList()
     }
-    */
 }
