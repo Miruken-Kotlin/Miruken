@@ -14,11 +14,11 @@ fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
         FilterOptions(*providers).decorate(this)
 
 fun Handling.getOrderedFilters(
-        binding:      MethodBinding,
         filterType:   KType,
+        binding:      MethodBinding,
         useProviders: List<UseFilterProvider<*>>,
         useFilters:   List<UseFilter<*>>? = null
-): Collection<Filtering<*,*>> {
+): List<Filtering<Any,Any?>> {
     val providers = useProviders.mapNotNull {
         getFilterProvider(it.filterProviderClasses, this)
     }.toMutableList()

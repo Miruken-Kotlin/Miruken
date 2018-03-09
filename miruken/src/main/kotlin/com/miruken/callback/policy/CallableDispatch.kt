@@ -1,8 +1,7 @@
 package com.miruken.callback.policy
 
-import com.miruken.Flags
+import com.miruken.TypeFlags
 import com.miruken.callback.Strict
-import com.miruken.callback.TypeFlags
 import com.miruken.callback.UseFilter
 import com.miruken.callback.UseFilterProvider
 import com.miruken.concurrent.Promise
@@ -18,23 +17,14 @@ import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaMethod
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
-    val arguments: List<Argument> =
-            callable.valueParameters.map { Argument(it) }
+    val strict      = annotations.any { it is Strict }
+    val returnInfo  = TypeFlags.parse(callable.returnType)
+    val arguments   = callable.valueParameters.map { Argument(it) }
 
-    val logicalReturnType: KType
-    val returnFlags:       Flags<TypeFlags>
-    val owningClass:       KClass<*> =
-            callable.instanceParameter?.let {
-                it.type.classifier as? KClass<*>
-            } ?: throw IllegalArgumentException(
-                    "Only class bindings are supported: $callable")
-    val strict = annotations.any { it is Strict }
-
-    init {
-        val typeFlags     = TypeFlags.parse(returnType)
-        logicalReturnType = typeFlags.second
-        returnFlags       = typeFlags.first
-    }
+    val owningClass = callable.instanceParameter?.let {
+        it.type.classifier as? KClass<*>
+    } ?: throw IllegalArgumentException(
+            "Only class bindings are supported: $callable")
 
     inline   val returnType  get() = callable.returnType
     override val annotations get() = callable.annotations
@@ -50,14 +40,14 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
 
 
     val useFilters by lazy {
-        callable.getTaggedAnnotations<UseFilter<*>>()
-                .flatMap { it.second }
+        (callable.getTaggedAnnotations<UseFilter<*>>() +
+         owningClass.getTaggedAnnotations()).flatMap { it.second }
                 .normalize()
     }
 
     val useFilterProviders by lazy {
-        callable.getTaggedAnnotations<UseFilterProvider<*>>()
-                .flatMap { it.second }
+        (callable.getTaggedAnnotations<UseFilterProvider<*>>() +
+         owningClass.getTaggedAnnotations()).flatMap { it.second }
                 .normalize()
     }
 
@@ -66,7 +56,7 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
             callable.call(receiver, *arguments)
         } catch (e: Throwable) {
             val cause = (e as? InvocationTargetException)?.cause ?: e
-            if (returnFlags has TypeFlags.PROMISE) {
+            if (returnInfo.flags has TypeFlags.PROMISE) {
                 Promise.reject(cause)
             } else {
                 throw cause

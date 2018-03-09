@@ -8,5 +8,5 @@ interface FilteringProvider {
             binding:    MethodBinding,
             filterType: KType,
             composer:   Handling
-    ): List<Filtering<*,*>>
+    ): List<Filtering<Any,Any?>>
 }

@@ -106,10 +106,10 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<Int>
-        ) = next(composer)
+        ) = next()
     }
 
-    class RequestFilter<in T, R> : Filtering<T, R> {
+    class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
 
         override fun next(
@@ -117,7 +117,7 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<R>
-        ) = next(composer)
+        ) = next()
     }
 
     class RequestFilterBounded<in T: Foo, R: Number> : Filtering<T, R> {
@@ -128,7 +128,7 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<R>
-        ) = next(composer)
+        ) = next()
     }
 
     class RequestFilterBoundedPartial<
@@ -141,10 +141,10 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<R>
-        ) = next(composer)
+        ) = next()
     }
 
-    class RequestFilterCb<in T> : Filtering<T, String> {
+    class RequestFilterCb<in T: Any> : Filtering<T, String> {
         override var order: Int? = null
 
         override fun next(
@@ -152,7 +152,7 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<String>
-        ) = next(composer)
+        ) = next()
     }
 
     class RequestFilterBoundedCb<in T: Foo> : Filtering<T, Number> {
@@ -163,7 +163,7 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<Number>
-        ) = next(composer)
+        ) = next()
     }
 
     class RequestFilterRes<T> : Filtering<Foo, T> {
@@ -174,7 +174,7 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<T>
-        ) = next(composer)
+        ) = next()
     }
 
     class RequestFilterBoundedRes<T: Number> : Filtering<Foo, T> {
@@ -185,7 +185,7 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<T>
-        ) = next(composer)
+        ) = next()
     }
 
     class RequestFilterBad<in T> : Filtering<Any, Any> {
@@ -196,6 +196,6 @@ class UseFiltersFilterProviderTest {
                 binding:  MethodBinding,
                 composer: Handling,
                 next:     Next<Any>
-        ) = next(composer)
+        ) = next()
     }
 }

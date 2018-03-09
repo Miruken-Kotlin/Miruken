@@ -23,11 +23,11 @@ interface ResolvingCallback {
 }
 
 interface BatchingCallback {
-    val allowBatching: Boolean
+    val canBatch: Boolean
 }
 
 interface FilteringCallback {
-    val allowFiltering: Boolean
+    val canFilter: Boolean
 }
 
 interface DispatchingCallback {

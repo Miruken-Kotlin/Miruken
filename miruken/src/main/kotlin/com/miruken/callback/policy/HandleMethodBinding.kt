@@ -8,6 +8,10 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
 class HandleMethodBinding(method: Method): MethodBinding(method) {
+    init {
+        method.isAccessible = true
+    }
+
     fun dispatch(
             target:   Any,
             callback: Any,
@@ -15,13 +19,13 @@ class HandleMethodBinding(method: Method): MethodBinding(method) {
     ): HandleResult {
 
         val oldComposer  = COMPOSER.get()
-        val oldUnhandled = HANDLE_RESULT.get()
         val handleMethod = callback as HandleMethod
 
         try {
             COMPOSER.set(composer)
-            HANDLE_RESULT.set(HandleResult.HANDLED)
-            return invoke(handleMethod, target, composer)
+            handleMethod.result =  handleMethod
+                    .method.invoke(target, *handleMethod.arguments)
+            return HandleResult.HANDLED
         } catch (e: Throwable) {
             when (e) {
                 is HandleResultException -> return e.result
@@ -40,29 +44,12 @@ class HandleMethodBinding(method: Method): MethodBinding(method) {
                 }
             }
         } finally {
-            HANDLE_RESULT.set(oldUnhandled)
             COMPOSER.set(oldComposer)
         }
-    }
-
-    private fun invoke(
-            handleMethod: HandleMethod,
-            target:       Any,
-            composer:     Handling
-    ): HandleResult {
-        val returnValue = handleMethod
-                .method.invoke(target, *handleMethod.arguments)
-        val result = HANDLE_RESULT.get() ?: HandleResult.HANDLED
-        if (result.handled)
-            handleMethod.result = returnValue
-        return result
     }
 
     companion object {
         @PublishedApi
         internal val COMPOSER = ThreadLocal<Handling?>()
-
-        @PublishedApi
-        internal val HANDLE_RESULT = ThreadLocal<HandleResult?>()
     }
 }

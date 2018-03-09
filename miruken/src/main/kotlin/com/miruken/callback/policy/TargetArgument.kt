@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.TypeFlags
+import com.miruken.TypeFlags
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
@@ -11,7 +11,7 @@ class TargetArgument<in C, out R: Any>(
 ) : ArgumentRule {
 
     override fun matches(argument: Argument) =
-            !argument.satisfies(callbackType) &&  //CallbackArgument matches
+            !argument.satisfies(callbackType) &&  // CallbackArgument matches
                     argument.satisfies(targetType)
 
     override fun configure(
@@ -20,10 +20,9 @@ class TargetArgument<in C, out R: Any>(
     {
         if (bindingInfo.callbackArgument == null) {
             bindingInfo.callbackArgument = argument
-            bindingInfo.inKey =
-                    if ((argument.flags - TypeFlags.OPTIONAL) == TypeFlags.OPEN)
-                        argument.logicalType
-                    else argument.parameterType
+            bindingInfo.inKey = argument.parameterType.takeUnless {
+                (argument.typeInfo.flags - TypeFlags.OPTIONAL) == TypeFlags.OPEN
+            } ?: argument.typeInfo.logicalType
         }
     }
 

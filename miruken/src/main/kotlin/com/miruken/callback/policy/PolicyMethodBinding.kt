@@ -1,7 +1,11 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeFlags
 import com.miruken.callback.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
 class PolicyMethodBinding(
@@ -27,7 +31,15 @@ class PolicyMethodBinding(
         val ruleArgs  = rule.resolveArguments(callback)
         val arguments = resolveArguments(ruleArgs, composer)
         return arguments?.let {
-            val result   = dispatcher.invoke(handler, arguments)
+            val filters = resolveFilters(callback, composer)
+            val result  = if (filters.isEmpty())
+                 dispatcher.invoke(handler, arguments)
+            else filters.foldRight(
+                    { dispatcher.invoke(handler, arguments) },
+                    { pipeline, next ->
+                        { pipeline.next(callback, this, composer, next) }
+                    })()
+
             val accepted = policy.acceptResult(result, this)
             if (accepted.handled && result != null &&
                     result !is HandleResult) {
@@ -39,6 +51,22 @@ class PolicyMethodBinding(
             }
             accepted
         } ?: HandleResult.NOT_HANDLED
+    }
+
+    private fun resolveFilters(
+            callback: Any,
+            composer: Handling
+    ): List<Filtering<Any,Any?>> {
+        if ((callback as? FilteringCallback)?.canFilter == false) {
+            return emptyList()
+        }
+        val callbackType = callbackArgument?.parameterType
+                ?: callback::class.starProjectedType
+        val filterType   = Filtering::class.createType(listOf(
+                KTypeProjection.invariant(callbackType),
+                KTypeProjection.invariant(dispatcher.returnType)))
+        return composer.getOrderedFilters(filterType, this,
+                dispatcher.useFilterProviders, dispatcher.useFilters)
     }
 
     private fun resolveArguments(
@@ -54,7 +82,7 @@ class PolicyMethodBinding(
         return composer.all {
             loop@ for (i in ruleArguments.size until arguments.size) {
                 val argument      = arguments[i]
-                val argumentClass = argument.logicalType.jvmErasure
+                val argumentClass = argument.typeInfo.logicalType.jvmErasure
                 when {
                     argumentClass == Handling::class ->
                         resolved[i] = composer
@@ -62,7 +90,7 @@ class PolicyMethodBinding(
                         resolved[i] = this@PolicyMethodBinding
                     else -> {
                         val key      = argument.key
-                        val flags    = argument.flags
+                        val flags    = argument.typeInfo.flags
                         val optional = flags has TypeFlags.OPTIONAL
                         val resolver = getResolver(argument.useResolver, composer)
                         if (resolver == null) {

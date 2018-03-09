@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.Flags
+import com.miruken.TypeFlags
 
 open class KeyResolver : KeyResolving {
     override fun resolve(
@@ -68,7 +69,8 @@ open class KeyResolver : KeyResolving {
             composer: Handling
     ): Any? {
         return when {
-            flags has TypeFlags.COLLECTION ->
+            flags has TypeFlags.COLLECTION ||
+            flags has TypeFlags.ARRAY ->
                 when {
                     flags has TypeFlags.PROMISE ->
                         resolveKeyAllAsync(key, handler, composer)

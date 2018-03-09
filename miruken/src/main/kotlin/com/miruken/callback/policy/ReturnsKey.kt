@@ -2,7 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.Key
 import com.miruken.callback.StringKey
-import com.miruken.callback.TypeFlags
+import com.miruken.TypeFlags
 
 object ReturnsKey : ReturnRule {
     override fun matches(method: CallableDispatch) =
@@ -16,9 +16,9 @@ object ReturnsKey : ReturnRule {
                     ?.let {
                         val key = it as Key
                         StringKey(key.key, key.caseSensitive)
-                    } ?: dispatch.logicalReturnType.takeUnless {
+                    } ?: dispatch.returnInfo.componentType.takeUnless {
                         !bindingInfo.strict &&
-                            (dispatch.returnFlags has TypeFlags.PRIMITIVE)
+                            (dispatch.returnInfo.flags has TypeFlags.PRIMITIVE)
                     } ?: StringKey(dispatch.callable.name)
         }
     }

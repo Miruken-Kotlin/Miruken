@@ -31,7 +31,7 @@ class BatchingHandler(
     ): HandleResult {
         return batch?.let {
             it.takeIf { (callback as? BatchingCallback)
-                ?.allowBatching != false }
+                ?.canBatch != false }
                 ?.let {
                     if (_completed.get() > 0 && callback !is Composition)
                         batch = null

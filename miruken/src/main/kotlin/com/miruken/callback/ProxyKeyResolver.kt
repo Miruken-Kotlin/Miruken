@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.Flags
+import com.miruken.TypeFlags
 import com.miruken.protocol.proxy
 import kotlin.reflect.KType
 

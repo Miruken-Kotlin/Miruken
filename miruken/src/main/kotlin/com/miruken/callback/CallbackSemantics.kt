@@ -11,8 +11,8 @@ class CallbackSemantics(
     var options = options
         private set
 
-    override val allowFiltering = false
-    override val allowBatching  = false
+    override val canFilter = false
+    override val canBatch  = false
 
     constructor() : this(CallbackOptions.NONE)
 

@@ -1,6 +1,5 @@
-package com.miruken.callback
+package com.miruken
 
-import com.miruken.Flags
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.componentType
 import com.miruken.runtime.isGeneric
@@ -14,8 +13,8 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object NONE       : TypeFlags(0)
     object LAZY       : TypeFlags(1 shl 0)
     object FUNC       : TypeFlags(1 shl 1)
-    object ARRAY      : TypeFlags(1 shl 2)
-    object COLLECTION : TypeFlags(1 shl 3)
+    object COLLECTION : TypeFlags(1 shl 2)
+    object ARRAY      : TypeFlags(1 shl 3)
     object PROMISE    : TypeFlags(1 shl 4)
     object OPTIONAL   : TypeFlags(1 shl 5)
     object PRIMITIVE  : TypeFlags(1 shl 6)
@@ -24,7 +23,7 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object OPEN       : TypeFlags(1 shl 9)
 
     companion object {
-        fun parse(type: KType): Pair<Flags<TypeFlags>, KType> {
+        fun parse(type: KType): TypeInfo {
             var logicalType = type
 
             var flags = when {
@@ -53,21 +52,21 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             logicalType = unwrapType(logicalType, Promise::class)?.let {
                 flags += PROMISE; it } ?: logicalType
 
-            logicalType = unwrapType(logicalType, Collection::class)?.let {
+            var componentType = unwrapType(logicalType, Collection::class)?.let {
                 flags += COLLECTION; it } ?: logicalType
 
             if (!(flags has COLLECTION)) {
-                logicalType = logicalType.componentType.takeIf {
+                componentType = logicalType.componentType.takeIf {
                     it != logicalType
                 }?.also { flags += ARRAY } ?: logicalType
             }
 
-            (logicalType.classifier as? KClass<*>)?.also {
+            (componentType.classifier as? KClass<*>)?.also {
                 if (it.javaPrimitiveType != null || it == String::class)
                     flags += PRIMITIVE
             }
 
-            return flags to logicalType
+            return TypeInfo(type, flags, logicalType, componentType)
         }
 
         private fun unwrapType(type: KType, criteria: KClass<*>): KType? {

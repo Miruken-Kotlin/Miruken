@@ -2,7 +2,7 @@ package com.miruken.callback
 
 class NoBatching(callback: Any)
     : Trampoline(callback), BatchingCallback {
-    override val allowBatching = false
+    override val canBatch = false
 }
 
 class NoBatchingHandler(handler: Handling): DecoratedHandler(handler) {

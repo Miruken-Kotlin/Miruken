@@ -4,9 +4,9 @@ abstract class Options<T: Options<T>> : Composition(),
         BoundingCallback, ResolvingCallback,
         FilteringCallback, BatchingCallback {
 
-    override var bounds: Any?   = null
-    override val allowFiltering = false
-    override val allowBatching  = false
+    override var bounds: Any?    = null
+    final override val canFilter = false
+    final override val canBatch  = false
 
     override fun getResolveCallback() = this
 

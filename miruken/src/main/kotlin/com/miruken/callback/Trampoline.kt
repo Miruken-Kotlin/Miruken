@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.CallbackPolicy
 
-open class Trampoline(val callback: Any) : DispatchingCallback {
+open class Trampoline(val callback: Any?) : DispatchingCallback {
 
     override val policy: CallbackPolicy?
         get() = (callback as? DispatchingCallback)?.policy
@@ -11,6 +11,7 @@ open class Trampoline(val callback: Any) : DispatchingCallback {
             handler:  Any,
             greedy:   Boolean,
             composer: Handling
-    ): HandleResult =
-            Handler.dispatch(handler, callback, greedy, composer)
+    ) = callback?.let {
+        Handler.dispatch(handler, it, greedy, composer)
+    } ?: HandleResult.NOT_HANDLED
 }

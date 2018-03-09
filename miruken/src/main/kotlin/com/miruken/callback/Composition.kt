@@ -4,11 +4,9 @@ import com.miruken.typeOf
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
-open class Composition(callback: Any): Trampoline(callback),
+open class Composition(callback: Any? = null): Trampoline(callback),
         Callback, ResolvingCallback,
         FilteringCallback, BatchingCallback {
-
-    protected constructor() : this(Unit)
 
     override val resultType: KType?
         get() = (callback as? Callback)?.resultType
@@ -22,16 +20,17 @@ open class Composition(callback: Any): Trampoline(callback),
     override fun getCallbackKey(): Any? =
             (callback as? Callback)?.getCallbackKey()
 
-    override val allowFiltering: Boolean
-        get() = (callback as? FilteringCallback)?.allowFiltering != false
+    override val canFilter: Boolean
+        get() = (callback as? FilteringCallback)?.canFilter != false
 
-    override val allowBatching: Boolean
-        get() = (callback as? BatchingCallback)?.allowBatching != false
+    override val canBatch: Boolean
+        get() = (callback as? BatchingCallback)?.canBatch != false
 
     override fun getResolveCallback(): Any {
         val resolve = (callback as? ResolvingCallback)?.getResolveCallback()
-        return if (resolve === callback) this else
-            Composition(resolve ?: Resolution.getDefaultResolvingCallback(callback))
+        if (resolve === callback || callback === null) return this
+        return Composition(resolve
+                ?: Resolution.getDefaultResolvingCallback(callback))
     }
 
     companion object {
@@ -40,9 +39,10 @@ open class Composition(callback: Any): Trampoline(callback),
                 get(callback, typeOf<T>()) as? T
 
         fun get(callback: Any, key: Any): Any? {
-            return (callback as? Composition)?.let {
-                if (isCompatibleWith(key, it.resultType ?: it.callback))
-                    it.callback else null
+            return (callback as? Composition)?.let { c ->
+                c.callback?.takeIf {
+                    isCompatibleWith(key, c.resultType ?: it)
+                }
             }
         }
     }
