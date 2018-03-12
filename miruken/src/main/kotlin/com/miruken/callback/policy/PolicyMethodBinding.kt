@@ -13,12 +13,12 @@ class PolicyMethodBinding(
         bindingInfo: PolicyMethodBindingInfo
 ) : MethodBinding(bindingInfo.dispatcher.javaMethod) {
 
-    val rule             = bindingInfo.rule
-    val annotation       = bindingInfo.annotation
-    val callbackArgument = bindingInfo.callbackArgument
-    val dispatcher       = bindingInfo.dispatcher
-    val strict           = bindingInfo.strict
-    val key              = policy.createKey(bindingInfo)
+    val rule        = bindingInfo.rule
+    val annotation  = bindingInfo.annotation
+    val callbackArg = bindingInfo.callbackArg
+    val dispatcher  = bindingInfo.dispatcher
+    val strict      = bindingInfo.strict
+    val key         = policy.createKey(bindingInfo)
 
     fun approve(callback: Any) = policy.approve(callback, this)
 
@@ -31,13 +31,16 @@ class PolicyMethodBinding(
         val ruleArgs  = rule.resolveArguments(callback)
         val arguments = resolveArguments(ruleArgs, composer)
         return arguments?.let {
-            val filters = resolveFilters(callback, composer)
+            @Suppress("UNCHECKED_CAST")
+            val filters = resolveFilters(handler, callback, composer)
+                    as List<Filtering<Any,Any?>>
             val result  = if (filters.isEmpty())
                  dispatcher.invoke(handler, arguments)
             else filters.foldRight(
                     { dispatcher.invoke(handler, arguments) },
-                    { pipeline, next ->
-                        { pipeline.next(callback, this, composer, next) }
+                    { pipeline, next -> {
+                            pipeline.next(callback, this, composer, next)
+                        }
                     })()
 
             val accepted = policy.acceptResult(result, this)
@@ -54,19 +57,24 @@ class PolicyMethodBinding(
     }
 
     private fun resolveFilters(
+            handler:  Any,
             callback: Any,
             composer: Handling
-    ): List<Filtering<Any,Any?>> {
+    ): List<Filtering<*,*>> {
         if ((callback as? FilteringCallback)?.canFilter == false) {
             return emptyList()
         }
-        val callbackType = callbackArgument?.parameterType
+        val callbackType = callbackArg?.parameterType
                 ?: callback::class.starProjectedType
         val filterType   = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(callbackType),
                 KTypeProjection.invariant(dispatcher.returnType)))
         return composer.getOrderedFilters(filterType, this,
-                dispatcher.useFilterProviders, dispatcher.useFilters)
+                (handler as? Filtering<*,*>)?.let {
+                    listOf(InstanceFilterProvider(it))
+                } ?: emptyList(),
+                dispatcher.useFilterProviders,
+                dispatcher.useFilters)
     }
 
     private fun resolveArguments(

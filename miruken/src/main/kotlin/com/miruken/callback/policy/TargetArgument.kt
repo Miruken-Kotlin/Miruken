@@ -18,8 +18,8 @@ class TargetArgument<in C, out R: Any>(
             argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo)
     {
-        if (bindingInfo.callbackArgument == null) {
-            bindingInfo.callbackArgument = argument
+        if (bindingInfo.callbackArg == null) {
+            bindingInfo.callbackArg = argument
             bindingInfo.inKey = argument.parameterType.takeUnless {
                 (argument.typeInfo.flags - TypeFlags.OPTIONAL) == TypeFlags.OPEN
             } ?: argument.typeInfo.logicalType

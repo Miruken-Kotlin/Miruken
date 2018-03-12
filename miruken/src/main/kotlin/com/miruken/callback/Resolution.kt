@@ -25,8 +25,9 @@ open class Resolution(key: Any, val callback: Any)
         fun getDefaultResolvingCallback(callback: Any): Any {
             val handlers = CallbackPolicy.getCallbackHandlerClasses(callback)
             if (handlers.isEmpty()) return callback
-            val bundle = Bundle(false)
-                    .add({ it.handle(NoResolving(callback)) }) { it }
+            val bundle = Bundle(false).apply {
+                add({ it.handle(NoResolving(callback)) }) { it }
+            }
             handlers.forEach { handler ->
                 bundle add { it.handle(Resolution(handler, callback)) }
             }

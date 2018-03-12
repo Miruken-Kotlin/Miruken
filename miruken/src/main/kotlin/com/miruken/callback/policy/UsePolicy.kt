@@ -3,7 +3,7 @@ package com.miruken.callback.policy
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)
-annotation class UsePolicy<P: CallbackPolicy>(val policyClass: KClass<P>)
+annotation class UsePolicy(val policyClass: KClass<out CallbackPolicy>)
 
-val UsePolicy<*>.policy : CallbackPolicy?
+val UsePolicy.policy : CallbackPolicy?
     get() = policyClass.objectInstance

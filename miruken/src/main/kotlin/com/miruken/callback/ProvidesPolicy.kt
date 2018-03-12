@@ -4,7 +4,7 @@ import com.miruken.callback.policy.CovariantPolicy
 import com.miruken.callback.policy.UsePolicy
 
 @Target(AnnotationTarget.FUNCTION,AnnotationTarget.PROPERTY)
-@UsePolicy<ProvidesPolicy>(ProvidesPolicy::class)
+@UsePolicy(ProvidesPolicy::class)
 annotation class Provides
 
 object ProvidesPolicy : CovariantPolicy({

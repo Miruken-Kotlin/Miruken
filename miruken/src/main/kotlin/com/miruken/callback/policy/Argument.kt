@@ -33,7 +33,7 @@ class Argument(val parameter: KParameter) {
                 } ?: typeInfo.componentType
 
         useResolver = parameter
-                .getFirstTaggedAnnotation<UseKeyResolver<*>>()
+                .getFirstTaggedAnnotation<UseKeyResolver>()
                 ?.keyResolverClass
     }
 

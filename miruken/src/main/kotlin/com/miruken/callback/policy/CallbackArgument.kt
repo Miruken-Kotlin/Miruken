@@ -10,8 +10,8 @@ class CallbackArgument(private val callbackType: KType) : ArgumentRule {
             argument:    Argument,
             bindingInfo: PolicyMethodBindingInfo
     ) {
-        if (bindingInfo.callbackArgument == null)
-            bindingInfo.callbackArgument = argument
+        if (bindingInfo.callbackArg == null)
+            bindingInfo.callbackArg = argument
     }
 
     override fun resolve(callback: Any) = callback

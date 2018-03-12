@@ -3,6 +3,7 @@
 package com.miruken.callback
 
 import com.miruken.assertAsync
+import com.miruken.callback.policy.MethodBinding
 import com.miruken.callback.policy.PolicyMethodBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
@@ -496,26 +497,40 @@ class HandlerTest {
         assertNull(foo)
     }
 
+    @Test fun `Creates a pipeline from filters`() {
+        val bar     = Bar()
+        val handler = FilteringHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(bar))
+        assertEquals(2, bar.handled)
+        assertEquals(2, bar.filters.size)
+        assertSame(handler, bar.filters[1])
+        assertTrue { bar.filters[0] is LogFilter }
+    }
+
+    @Test fun `Infers pipeline from response`() {
+        val foo     = Foo()
+        val handler = FilteringHandler()
+        val result  = handler.command<Foo>(foo)
+        assertTrue(result is SpecialFoo)
+        assertEquals(1, foo.filters.size)
+        assertTrue { foo.filters[0] is LogBehavior<*,*> }
+    }
+
     /** Callbacks */
 
-    interface Testing {
-        var handled:     Int
-        var hasComposer: Boolean
+    open class Testing {
+        var handled     = 0
+        var hasComposer = false
+        val filters     = mutableListOf<Filtering<*,*>>()
     }
 
-    open class Foo: Testing {
-        override var handled:     Int     = 0
-        override var hasComposer: Boolean = false
-    }
+    open class Foo: Testing()
 
     class SpecialFoo : Foo()
 
     class FooDecorator(foo: Foo) : Foo()
 
-    open class Bar: Testing {
-        override var handled:     Int     = 0
-        override var hasComposer: Boolean = false
-    }
+    open class Bar: Testing()
 
     class SpecialBar : Bar()
 
@@ -833,6 +848,159 @@ class HandlerTest {
         @Provides
         fun provideBarImplicitly() : Bar {
             return Bar().apply { handled = 1 }
+        }
+    }
+
+    class FilteringHandler : Handler(), Filtering<Bar, Unit> {
+        override var order: Int? = null
+
+        @Handles
+        @UseFilter(Filtering::class, true)
+        fun handleBar(bar: Bar) {
+            bar.handled++
+        }
+
+        @Handles
+        @UseFilter(Behavior::class, true)
+        fun handleFoo(foo: Foo, composer: Handling): SpecialFoo {
+            return SpecialFoo().apply { hasComposer = true }
+        }
+
+        @Handles
+        @UseFilter(Behavior::class, true)
+        fun handleBoo(boo: Boo, composer: Handling): Promise<Boo> {
+            return Promise.resolve(Boo().apply { hasComposer= true })
+        }
+
+        @Handles
+        @UseFilter(Behavior::class, true)
+        fun handleStuff(command: Command): Promise<Any?> {
+            if (command.callback is Bee)
+                return Promise.resolve(Bee())
+            return Promise.EMPTY
+        }
+
+        @Provides
+        fun <T: Any, R: Any?> createFilter(inquiry: Inquiry): Filtering<T,R>?
+        {
+            @Suppress("UNCHECKED_CAST")
+            return when (inquiry.keyClass) {
+                null -> null
+                LogFilter::class, Filtering::class -> LogFilter()
+                else ->
+                    inquiry.createKeyInstance() as Filtering<T,R>
+            }
+        }
+
+        @Provides
+        fun <T: Any, R: Any?> createBehavior(inquiry: Inquiry): Behavior<T,R>?
+        {
+            @Suppress("UNCHECKED_CAST")
+            return when (inquiry.keyClass) {
+                null -> null
+                Behavior::class -> LogBehavior()
+                else ->
+                    inquiry.createKeyInstance() as Behavior<T,R>
+            }
+        }
+
+        override fun next(
+                callback: Bar,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Unit>
+        ) {
+            callback.filters.add(this)
+            callback.handled++
+            return next()
+        }
+    }
+
+    class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
+        override var order: Int? = null
+
+        override fun next(
+                callback: T,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<R>
+        ) = next()
+    }
+
+    class RequestFilterCb<in T: Any> : Filtering<T, Any?> {
+        override var order: Int? = null
+
+        override fun next(
+                callback: T,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Any?>
+        ) = next()
+    }
+
+    class RequestFilterRes<T> : Filtering<Any, T> {
+        override var order: Int? = null
+
+        override fun next(
+                callback: Any,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<T>
+        ) = next()
+    }
+
+    interface Behavior<in TReq: Any, TResp: Any?>
+        : Filtering<TReq, Promise<TResp>>
+
+    class LogFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
+        override var order: Int? = 1
+
+        override fun next(
+                callback: Cb,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Res>
+        ): Res {
+            val cb = extractTesting(callback)
+            cb?.filters?.add(this)
+            println("Filter log $cb")
+            return next()
+        }
+    }
+
+    class LogBehavior<in Req: Any, Res: Any?> : Behavior<Req, Res> {
+        override var order: Int? = 2
+
+        override fun next(
+                callback: Req,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Promise<Res>>
+        ): Promise<Res> {
+            val cb = extractTesting(callback)
+            cb?.filters?.add(this)
+            println("Behavior log $cb")
+            return next()
+        }
+    }
+
+    class ExceptionBehaviorT<in Req: Any, Res: Any?> : Behavior<Req, Res> {
+        override var order: Int? = 2
+
+        override fun next(
+                callback: Req,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Promise<Res>>
+        ) = Promise.reject(IllegalStateException("System shutdown"))
+    }
+
+    companion object {
+        private fun extractTesting(callback: Any): Testing? {
+            return (callback as? Testing)
+                    ?: (callback as? Command)?.let {
+                        it.callback as? Testing
+                    }
         }
     }
 }

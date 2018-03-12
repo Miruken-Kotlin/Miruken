@@ -50,12 +50,11 @@ class Bundle(private val all: Boolean = true) :
         } else { if (wantsAsync) Promise.EMPTY else null }
     }
 
-    infix fun add(action: BundleActionBlock) =
-            add(action, null)
+    infix fun add(action: BundleActionBlock) = add(action, null)
 
     fun add(action: BundleActionBlock,
             notify: BundleNotifyBlock? = null
-    ) : Bundle {
+    ) {
         var act = action
         if (wantsAsync) {
             act = { handler ->
@@ -69,12 +68,11 @@ class Bundle(private val all: Boolean = true) :
             }
         }
         _operations.add(Operation(act, notify))
-        return this
     }
 
     fun addAsync(action: BundleActionAsyncBlock,
                  notify: BundleNotifyBlock? = null
-    ) : Bundle {
+    ) {
         return add({ handler ->
             _promises.add(action(handler))
         }, notify)

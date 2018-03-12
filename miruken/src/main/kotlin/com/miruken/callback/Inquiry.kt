@@ -5,6 +5,7 @@ import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_STAR
 import com.miruken.runtime.isCompatibleWith
+import java.lang.reflect.Modifier
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -40,9 +41,20 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     open fun createKeyInstance(): Any? {
         return when (key) {
-            is KType -> key.jvmErasure.createInstance()
-            is KClass<*> -> key.createInstance()
-            is Class<*> -> key.newInstance()
+            is KType -> {
+                val clazz = key.jvmErasure
+                if (clazz.isAbstract || clazz.java.isInterface ||
+                        clazz.javaPrimitiveType != null) null
+                else clazz.createInstance()
+            }
+            is KClass<*> ->
+                if (key.isAbstract || key.java.isInterface ||
+                        key.javaPrimitiveType != null) null
+                else key.createInstance()
+            is Class<*> ->
+                if (key.isInterface || key.isPrimitive ||
+                        Modifier.isAbstract(key.modifiers)) null
+                else key.newInstance()
             else -> null
         }
     }

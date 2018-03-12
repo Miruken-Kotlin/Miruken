@@ -7,7 +7,7 @@ import com.miruken.runtime.getTaggedAnnotations
 import kotlin.reflect.KAnnotatedElement
 
 @Target(AnnotationTarget.FUNCTION)
-@UsePolicy<MapsPolicy>(MapsPolicy::class)
+@UsePolicy(MapsPolicy::class)
 annotation class Maps
 
 object MapsPolicy : BivariantPolicy({

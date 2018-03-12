@@ -16,20 +16,21 @@ fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
 fun Handling.getOrderedFilters(
         filterType:   KType,
         binding:      MethodBinding,
-        useProviders: List<UseFilterProvider<*>>,
-        useFilters:   List<UseFilter<*>>? = null
-): List<Filtering<Any,Any?>> {
-    val providers = useProviders.mapNotNull {
+        providers:    List<FilteringProvider>,
+        useProviders: List<UseFilterProvider>,
+        useFilters:   List<UseFilter>? = null
+): List<Filtering<*,*>> {
+    val allProviders = (providers + useProviders.mapNotNull {
         getFilterProvider(it.filterProviderClasses, this)
-    }.toMutableList()
+    }).toMutableList()
 
-    getFilterOptions()?.also { providers.addAll(it.providers) }
+    getFilterOptions()?.also { allProviders.addAll(it.providers) }
 
     useFilters?.takeIf { it.isNotEmpty() }?.also {
-        providers.add(UseFiltersFilterProvider(it))
+        allProviders.add(UseFiltersFilterProvider(it))
     }
 
-    return providers.flatMap {
+    return allProviders.flatMap {
         it.getFilters(binding, filterType, this)
     }.sortedWith(OrderedComparator)
 }

@@ -40,14 +40,18 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
 
 
     val useFilters by lazy {
-        (callable.getTaggedAnnotations<UseFilter<*>>() +
-         owningClass.getTaggedAnnotations()).flatMap { it.second }
+        (callable.getTaggedAnnotations<UseFilter>() +
+         owningClass.getTaggedAnnotations()).flatMap { it.second } +
+         callable.annotations.filterIsInstance<UseFilter>() +
+         owningClass.annotations.filterIsInstance<UseFilter>()
                 .normalize()
     }
 
     val useFilterProviders by lazy {
-        (callable.getTaggedAnnotations<UseFilterProvider<*>>() +
-         owningClass.getTaggedAnnotations()).flatMap { it.second }
+        (callable.getTaggedAnnotations<UseFilterProvider>() +
+         owningClass.getTaggedAnnotations()).flatMap { it.second } +
+         callable.annotations.filterIsInstance<UseFilterProvider>() +
+         owningClass.annotations.filterIsInstance<UseFilterProvider>()
                 .normalize()
     }
 

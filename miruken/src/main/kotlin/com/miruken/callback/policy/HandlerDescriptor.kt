@@ -61,7 +61,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 CallableDispatch(member)
             }
             for ((annotation, usePolicies) in member
-                    .getTaggedAnnotations<UsePolicy<*>>()) {
+                    .getTaggedAnnotations<UsePolicy>()) {
                 usePolicies.single().policy?.also {
                     val rule = it.match(dispatch) ?:
                         throw PolicyRejectedException(it, member,

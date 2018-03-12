@@ -12,7 +12,7 @@ class GenericWrapper(
             ?: HandlerAdapter(this)
 
     @Provides
-    fun provide(inquiry: Inquiry) : Any? =
+    fun provide(inquiry: Inquiry) =
             if (isCompatibleWith(inquiry.key, type))
                 value else null
 

@@ -19,7 +19,6 @@ fun isCompatibleWith(
                 rightSide.classifier is KTypeParameter -> {
                     val typeParam = rightSide.classifier as KTypeParameter
                     typeParam.upperBounds.any {
-                        typeBindings?.containsKey(typeParam) == true ||
                         isCompatibleWith(it, leftSide, typeBindings).also {
                             if (it && typeBindings?.containsKey(typeParam) == false)
                                 typeBindings[typeParam] = leftSide

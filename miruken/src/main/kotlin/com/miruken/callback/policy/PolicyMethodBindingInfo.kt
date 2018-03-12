@@ -6,7 +6,7 @@ data class PolicyMethodBindingInfo(
         val annotation: Annotation,
         val strict:     Boolean
 ) {
-    var inKey:            Any?      = null
-    var outKey:           Any?      = null
-    var callbackArgument: Argument? = null
+    var inKey:       Any?      = null
+    var outKey:      Any?      = null
+    var callbackArg: Argument? = null
 }

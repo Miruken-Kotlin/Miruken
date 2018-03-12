@@ -1,5 +1,3 @@
 package com.miruken
 
-interface Ordered {
-    var order: Int?
-}
+interface Ordered { var order: Int? }
