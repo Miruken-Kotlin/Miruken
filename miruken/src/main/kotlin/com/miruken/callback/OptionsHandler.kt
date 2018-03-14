@@ -11,14 +11,12 @@ class OptionsHandler<T: Options<T>>(
             composer: Handling
     ): HandleResult {
         @Suppress("UNCHECKED_CAST")
-        val result = Composition.get(
-                callback, options::class)?.let {
+        val result = (callback as? T ?:
+            Composition.get(callback, options::class))?.let {
             options.mergeInto(it as T)
             HandleResult.HANDLED
         } ?: HandleResult.NOT_HANDLED
-        return if (greedy) result or
-            handler.handle(callback, greedy, composer)
-        else result otherwise {
+        return result.otherwise(greedy) {
             handler.handle(callback, greedy, composer)
         }
     }

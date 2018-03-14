@@ -12,6 +12,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 import kotlin.test.*
+import jdk.internal.org.objectweb.asm.Handle
+
+
 
 class HandlerTest {
     @Rule
@@ -516,6 +519,87 @@ class HandlerTest {
         assertTrue { foo.filters[0] is LogBehavior<*,*> }
     }
 
+    @Test fun `Promotes promise pipeline`() {
+        val foo     = Foo()
+        val handler = FilteringHandler()
+        assertAsync(testName) { done ->
+            handler.commandAsync<Foo>(foo) then {
+                assertTrue(it is SpecialFoo)
+                done()
+            }
+        }
+        assertEquals(1, foo.filters.size)
+        assertTrue { foo.filters[0] is LogBehavior<*,*> }
+    }
+
+    @Test fun `Infers promise pipeline`() {
+        val boo     = Boo()
+        val handler = FilteringHandler()
+        assertAsync(testName) { done ->
+            handler.commandAsync<Boo>(boo) then {
+                done()
+            }
+        }
+        assertEquals(1, boo.filters.size)
+        assertTrue { boo.filters[0] is LogBehavior<*,*> }
+    }
+
+    @Test fun `Infers command promise pipeline`() {
+        val bee     = Bee()
+        val handler = FilteringHandler()
+        assertAsync(testName) { done ->
+            handler.commandAsync<Bee>(bee) then {
+                done()
+            }
+        }
+        assertEquals(1, bee.filters.size)
+        assertTrue { bee.filters[0] is LogBehavior<*,*> }
+    }
+
+    @Test fun `Coerces pipeline`() {
+        val foo     = Foo()
+        val handler = SpecialFilteredHandler() + FilteringHandler()
+        val result  = handler.command<Foo>(foo)
+        assertTrue(result is SpecialFoo)
+        assertEquals(2, foo.filters.size)
+        assertTrue { foo.filters[0] is LogFilter<*,*> }
+        assertTrue { foo.filters[1] is LogBehavior<*,*> }
+    }
+
+    @Test fun `Coerces promise pipeline`() {
+        val baz     = Baz()
+        val handler = SpecialFilteredHandler() + FilteringHandler()
+        assertAsync(testName) { done ->
+            handler.commandAsync<Baz>(baz) then {
+                assertTrue(it is SpecialBaz)
+                done()
+            }
+        }
+        assertEquals(2, baz.filters.size)
+        assertTrue { baz.filters[0] is LogFilter<*,*> }
+        assertTrue { baz.filters[1] is LogBehavior<*,*> }
+    }
+
+    @Test fun `Propagates rejected filter promise`() {
+        val boo     = Boo()
+        val handler = SpecialFilteredHandler() + FilteringHandler()
+        assertAsync(testName) { done ->
+            handler.commandAsync<Any>(boo) catch {
+                assertTrue(it is IllegalStateException)
+                assertEquals("System shutdown", it.message)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Ignores options at boundary `() {
+        val handler = Handler().withFilters(LogFilter<Any,Any?>())
+        val options = FilterOptions()
+        assertEquals(HandleResult.HANDLED, handler.handle(options))
+        assertEquals(1, options.providers.size)
+        assertEquals(HandleResult.NOT_HANDLED, handler.stop.handle(FilterOptions()))
+    }
+
     /** Callbacks */
 
     open class Testing {
@@ -530,17 +614,13 @@ class HandlerTest {
 
     class FooDecorator(foo: Foo) : Foo()
 
-    open class Bar: Testing()
+    open class Bar : Testing()
 
     class SpecialBar : Bar()
 
-    open class Boo {
-        var hasComposer: Boolean = false
-    }
+    open class Boo : Testing()
 
-    open class Baz {
-        var hasComposer: Boolean = false
-    }
+    open class Baz : Testing()
 
     class SpecialBaz : Baz()
 
@@ -555,9 +635,9 @@ class HandlerTest {
             tag: String? =       null
     ) : BazT<T>(stuff, tag)
 
-    class Bee
+    class Bee : Testing()
 
-    class Bam
+    class Bam : Testing()
 
     /** Handlers */
 
@@ -855,25 +935,25 @@ class HandlerTest {
         override var order: Int? = null
 
         @Handles
-        @UseFilter(Filtering::class, true)
+        @AllFilters
         fun handleBar(bar: Bar) {
             bar.handled++
         }
 
         @Handles
-        @UseFilter(Behavior::class, true)
+        @AllBehaviors
         fun handleFoo(foo: Foo, composer: Handling): SpecialFoo {
             return SpecialFoo().apply { hasComposer = true }
         }
 
         @Handles
-        @UseFilter(Behavior::class, true)
+        @AllBehaviors
         fun handleBoo(boo: Boo, composer: Handling): Promise<Boo> {
             return Promise.resolve(Boo().apply { hasComposer= true })
         }
 
         @Handles
-        @UseFilter(Behavior::class, true)
+        @AllBehaviors
         fun handleStuff(command: Command): Promise<Any?> {
             if (command.callback is Bee)
                 return Promise.resolve(Bee())
@@ -904,6 +984,16 @@ class HandlerTest {
             }
         }
 
+        @Provides
+        fun <T: Any, R: Any?> forExceptions(inquiry: Inquiry): ExceptionBehavior<T,R>?
+        {
+            @Suppress("UNCHECKED_CAST")
+            return when (inquiry.keyClass) {
+                ExceptionBehavior::class -> ExceptionBehavior()
+                else -> null
+            }
+        }
+
         override fun next(
                 callback: Bar,
                 binding:  MethodBinding,
@@ -915,6 +1005,45 @@ class HandlerTest {
             return next()
         }
     }
+
+    class SpecialFilteredHandler : Handler() {
+        @Handles
+        @AllFilters
+        @AllBehaviors
+        fun handleFoo(foo: Foo): SpecialFoo {
+            return SpecialFoo()
+        }
+
+        @Handles
+        @AllFilters
+        @AllBehaviors
+        fun handleBaz(baz: Baz): Promise<SpecialBaz> {
+            return Promise.resolve(SpecialBaz())
+        }
+
+        @Handles
+        @AllFilters
+        @AllBehaviors
+        fun handleBaz(bar: Bar): Promise<SpecialBar> {
+            return Promise.resolve(SpecialBar())
+        }
+
+        @Handles
+        @Exceptions
+        fun remove(boo: Boo) {
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(Filtering::class)
+    annotation class AllFilters
+
+    interface Behavior<in TReq: Any, TResp: Any?>
+        : Filtering<TReq, Promise<TResp>>
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(Behavior::class)
+    annotation class AllBehaviors
 
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
@@ -949,9 +1078,6 @@ class HandlerTest {
         ) = next()
     }
 
-    interface Behavior<in TReq: Any, TResp: Any?>
-        : Filtering<TReq, Promise<TResp>>
-
     class LogFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         override var order: Int? = 1
 
@@ -984,7 +1110,11 @@ class HandlerTest {
         }
     }
 
-    class ExceptionBehaviorT<in Req: Any, Res: Any?> : Behavior<Req, Res> {
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(ExceptionBehavior::class)
+    annotation class Exceptions
+
+    class ExceptionBehavior<in Req: Any, Res: Any?> : Behavior<Req, Res> {
         override var order: Int? = 2
 
         override fun next(

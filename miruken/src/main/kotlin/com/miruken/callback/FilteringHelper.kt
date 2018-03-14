@@ -10,6 +10,10 @@ fun Handling.getFilterOptions(): FilterOptions? {
     return handle(options, true) success { options }
 }
 
+fun Handling.withFilters(vararg filters: Filtering<*,*>) =
+        FilterOptions(InstanceFilterProvider(*filters))
+                .decorate(this)
+
 fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
         FilterOptions(*providers).decorate(this)
 
@@ -18,15 +22,15 @@ fun Handling.getOrderedFilters(
         binding:      MethodBinding,
         providers:    List<FilteringProvider>,
         useProviders: List<UseFilterProvider>,
-        useFilters:   List<UseFilter>? = null
+        useFilters:   List<UseFilter>
 ): List<Filtering<*,*>> {
     val allProviders = (providers + useProviders.mapNotNull {
-        getFilterProvider(it.filterProviderClasses, this)
+        getFilterProvider(it.filterProviderClass, this)
     }).toMutableList()
 
     getFilterOptions()?.also { allProviders.addAll(it.providers) }
 
-    useFilters?.takeIf { it.isNotEmpty() }?.also {
+    useFilters.takeIf { it.isNotEmpty() }?.also {
         allProviders.add(UseFiltersFilterProvider(it))
     }
 
