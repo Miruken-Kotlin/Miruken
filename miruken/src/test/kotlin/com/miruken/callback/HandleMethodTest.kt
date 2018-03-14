@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.MethodBinding
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
@@ -144,7 +145,7 @@ class HandleMethodTest {
 
     @Test fun `Handles default method calls`() {
         val handler = EmailHandler()
-        var id      = handler.proxy<EmailFeature>().email(19)
+        val id      = handler.proxy<EmailFeature>().email(19)
         assertEquals(1, id)
     }
 
@@ -166,22 +167,36 @@ class HandleMethodTest {
     }
 
     class EmailHandler : Handler(), EmailFeature {
+        @Log
         override var count: Int = 0
             private set
 
+        @Log
         override fun email(message: String): Int {
             return if (count > 0 && count % 2 == 0)
                 COMPOSER!!.proxy<Offline>().email(message)
             else ++count
         }
 
+        @Log
         override fun cancelEmail(id: Int) {
             val composer = COMPOSER!!
                     .takeIf { id <= 4 } ?: COMPOSER!!.bestEffort
             composer.proxy<Billing>().bill(4.toBigDecimal())
         }
+
+        @Provides
+        fun <Res> createLogger(inquiry: Inquiry): LogFilter<Res>?
+        {
+            @Suppress("UNCHECKED_CAST")
+            return when (inquiry.keyClass) {
+                LogFilter::class -> LogFilter()
+                else -> null
+            }
+        }
     }
 
+    @Log
     class BillingImpl(private val fee: BigDecimal) : Billing {
         constructor() : this(2.toBigDecimal())
 
@@ -195,10 +210,12 @@ class HandleMethodTest {
 
         override val billing = BillingImpl()
 
+        @Log
         override fun email(message: String): Int {
             return ++count
         }
 
+        @Log
         override fun cancelEmail(id: Int) {}
 
         override fun bill(amount: BigDecimal): BigDecimal {
@@ -206,6 +223,7 @@ class HandleMethodTest {
         }
     }
 
+    @Log
     class DemoHandler : Handler() {
         fun email(message: String): Int {
             return Integer.parseInt(message)
@@ -213,6 +231,27 @@ class HandleMethodTest {
 
         fun bill(amount: BigDecimal): BigDecimal {
             return amount * 2.toBigDecimal()
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
+            AnnotationTarget.PROPERTY)
+    @UseFilter(LogFilter::class)
+    annotation class Log
+
+    class LogFilter<Res> : Filtering<HandleMethod, Res> {
+        override var order: Int? = 1
+
+        override fun next(
+                callback: HandleMethod,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Res>
+        ): Res {
+            print("Handle method '${callback.method.name}' with result ")
+            val result = next()
+            println(result)
+            return result
         }
     }
 }

@@ -13,9 +13,10 @@ class PolicyMethodBinding(
         bindingInfo: PolicyMethodBindingInfo
 ) : MethodBinding(bindingInfo.dispatcher.javaMethod) {
 
+    private val callbackArg = bindingInfo.callbackArg
+
     val rule        = bindingInfo.rule
     val annotation  = bindingInfo.annotation
-    val callbackArg = bindingInfo.callbackArg
     val dispatcher  = bindingInfo.dispatcher
     val strict      = bindingInfo.strict
     val key         = policy.createKey(bindingInfo)
@@ -31,16 +32,13 @@ class PolicyMethodBinding(
         val ruleArgs  = rule.resolveArguments(callback)
         val arguments = resolveArguments(ruleArgs, composer)
         return arguments?.let {
-            @Suppress("UNCHECKED_CAST")
             val filters = resolveFilters(handler, callback, composer)
-                    as List<Filtering<Any,Any?>>
             val result  = if (filters.isEmpty())
                  dispatcher.invoke(handler, arguments)
             else filters.foldRight(
                     { dispatcher.invoke(handler, arguments) },
                     { pipeline, next -> {
-                            pipeline.next(callback, this, composer, next)
-                        }
+                            pipeline.next(callback, this, composer, next) }
                     })()
 
             val accepted = policy.acceptResult(result, this)
@@ -56,11 +54,12 @@ class PolicyMethodBinding(
         } ?: HandleResult.NOT_HANDLED
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun resolveFilters(
             handler:  Any,
             callback: Any,
             composer: Handling
-    ): List<Filtering<*,*>> {
+    ): List<Filtering<Any,Any?>> {
         if ((callback as? FilteringCallback)?.canFilter == false) {
             return emptyList()
         }
@@ -74,7 +73,8 @@ class PolicyMethodBinding(
                     listOf(InstanceFilterProvider(it))
                 } ?: emptyList(),
                 dispatcher.useFilterProviders,
-                dispatcher.useFilters)
+                dispatcher.useFilters
+        ) as List<Filtering<Any,Any?>>
     }
 
     private fun resolveArguments(

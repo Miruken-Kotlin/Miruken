@@ -5,9 +5,11 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.HandleMethodBinding
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isTopLevelInterfaceOf
+import com.miruken.runtime.matchMethod
 import com.miruken.toKType
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 open class HandleMethod(
@@ -29,8 +31,11 @@ open class HandleMethod(
             greedy:   Boolean,
             composer: Handling
     ) = getTarget(handler)?.let {
-        BINDINGS.getOrPut(method) { HandleMethodBinding(method) }
-                .dispatch(it, this, composer)
+        BINDINGS.getOrPut(method to it::class) {
+            it::class.matchMethod(method)?.let {
+                HandleMethodBinding(method, it)
+            }
+        }?.dispatch(it, this, composer)
     } ?: HandleResult.NOT_HANDLED
 
     private fun getTarget(target: Any): Any? {
@@ -64,6 +69,6 @@ open class HandleMethod(
         }
 
         private val BINDINGS =
-            ConcurrentHashMap<Method, HandleMethodBinding>()
+                ConcurrentHashMap<Pair<Method, KClass<*>>, HandleMethodBinding?>()
     }
 }

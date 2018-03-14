@@ -3,6 +3,8 @@ package com.miruken.runtime
 import com.miruken.concurrent.Promise
 import com.miruken.toKType
 import com.miruken.typeOf
+import java.lang.reflect.AnnotatedElement
+import java.lang.reflect.Method
 import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
@@ -113,24 +115,22 @@ private fun verifyOpenConformance(
     } ?: false
 }
 
-fun Iterable<*>.filterIsAssignableTo(key: Any): List<Any> {
-    return filterIsAssignableTo(ArrayList(), key)
-}
+fun Iterable<*>.filterIsAssignableTo(key: Any) =
+        filterIsAssignableTo(ArrayList(), key)
 
 fun Iterable<*>.filterIsAssignableTo(
         destination: ArrayList<Any>, key: Any
 ): MutableList<Any> {
-    filter { isCompatibleWith(key, it!!) }.mapTo(destination) { it!! }
+    filter { isCompatibleWith(key, it!!) }
+            .mapTo(destination) { it!! }
     return destination
 }
 
-fun <T> List<T>.normalize(): List<T> =
+fun <T> List<T>.normalize() =
         if (isEmpty()) emptyList() else this
 
-val KType.isAny get() = classifier == Any::class
-
-val KType.isUnit get() = classifier == Unit::class
-
+val KType.isAny     get() = classifier == Any::class
+val KType.isUnit    get() = classifier == Unit::class
 val KType.isNothing get() = classifier == Nothing::class
 
 val KType.componentType: KType?
@@ -159,7 +159,8 @@ val KType.isOpenGenericDefinition: Boolean
         (it.type?.classifier as? KTypeParameter)
             ?.upperBounds?.all { it == ANY_TYPE } == true }
 
-inline val KClass<*>.isGeneric get() = typeParameters.isNotEmpty()
+inline val KClass<*>.isGeneric
+    get() = typeParameters.isNotEmpty()
 
 val KType.allInterfaces: Set<KType> get() =
     (classifier as? KClass<*>)?.allInterfaces
@@ -186,10 +187,10 @@ val KClass<*>.allTopLevelInterfaces : Set<KType> get() {
 fun KType.isTopLevelInterfaceOf(type: KType): Boolean =
         type.allTopLevelInterfaces.contains(this)
 
-inline fun <reified T: Any> KType.isTopLevelInterfaceOf(): Boolean =
+inline fun <reified T: Any> KType.isTopLevelInterfaceOf() =
         typeOf<T>().allTopLevelInterfaces.contains(this)
 
-fun KType.isTopLevelInterfaceOf(clazz: KClass<*>): Boolean =
+fun KType.isTopLevelInterfaceOf(clazz: KClass<*>) =
         clazz.allTopLevelInterfaces.contains(this)
 
 inline fun <reified T: Annotation> KAnnotatedElement
@@ -198,9 +199,27 @@ inline fun <reified T: Annotation> KAnnotatedElement
             if (tags.isNotEmpty()) it to tags else null
         }
 
+inline fun <reified T: Annotation> AnnotatedElement
+        .getTaggedAnnotations() = annotations.mapNotNull {
+    val tags = it.annotationClass.annotations.filterIsInstance<T>()
+    if (tags.isNotEmpty()) it to tags else null
+}
+
 inline fun <reified T: Annotation> KAnnotatedElement
         .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
         .firstOrNull()?.second?.firstOrNull()
+
+inline fun <reified T: Annotation> AnnotatedElement
+        .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
+        .firstOrNull()?.second?.firstOrNull()
+
+fun KClass<*>.matchMethod(method: Method): Method? {
+    return try {
+        java.getMethod(method.name, *method.parameterTypes)
+    } catch (e: NoSuchMethodError) {
+        null
+    }
+}
 
 val ANY_STAR        = Any::class.starProjectedType
 val ANY_TYPE        = typeOf<Any>().withNullability(true)

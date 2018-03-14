@@ -1,15 +1,37 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.HandleMethod
-import com.miruken.callback.HandleResult
-import com.miruken.callback.HandleResultException
-import com.miruken.callback.Handling
+import com.miruken.callback.*
+import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.normalize
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 
-class HandleMethodBinding(method: Method): MethodBinding(method) {
+class HandleMethodBinding(
+        val protocolMethod: Method,
+        method: Method
+): MethodBinding(method) {
     init {
         method.isAccessible = true
+    }
+
+    val useFilters by lazy {
+        (method.getTaggedAnnotations<UseFilter>() +
+         method.declaringClass.getTaggedAnnotations() +
+         protocolMethod.getTaggedAnnotations() +
+         protocolMethod.declaringClass.getTaggedAnnotations())
+                .flatMap { it.second }
+                .normalize()
+    }
+
+    val useFilterProviders by lazy {
+        (method.getTaggedAnnotations<UseFilterProvider>() +
+         method.declaringClass.getTaggedAnnotations() +
+         protocolMethod.getTaggedAnnotations() +
+         protocolMethod.declaringClass.getTaggedAnnotations())
+                .flatMap { it.second }
+                .normalize()
     }
 
     fun dispatch(
@@ -23,16 +45,22 @@ class HandleMethodBinding(method: Method): MethodBinding(method) {
 
         try {
             COMPOSER.set(composer)
-            handleMethod.result =  handleMethod
-                    .method.invoke(target, *handleMethod.arguments)
+            val filters = resolveFilters(target, handleMethod, composer)
+            if (filters.isEmpty())
+                invoke(handleMethod, target)
+            else filters.foldRight(
+                    { invoke(handleMethod, target) },
+                    { pipeline, next -> {
+                        pipeline.next(handleMethod, this, composer, next) }
+                    })()
             return HandleResult.HANDLED
         } catch (e: Throwable) {
-            when (e) {
-                is HandleResultException -> return e.result
+            return when (e) {
+                is HandleResultException -> e.result
                 is InvocationTargetException -> {
                     val cause = e.cause ?: e
                     if (cause is HandleResultException) {
-                        return cause.result
+                        cause.result
                     } else {
                         handleMethod.exception = cause
                         throw cause
@@ -48,8 +76,37 @@ class HandleMethodBinding(method: Method): MethodBinding(method) {
         }
     }
 
+    private fun invoke(
+            handleMethod: HandleMethod,
+            target:       Any
+    ): Any? {
+        val result = handleMethod.method.invoke(target, *handleMethod.arguments)
+        handleMethod.result = result
+        return result
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun resolveFilters(
+            target:       Any,
+            handleMethod: HandleMethod,
+            composer:     Handling
+    ): List<Filtering<Any,Any?>> {
+        val filterType = Filtering::class.createType(listOf(
+                KTypeProjection.invariant(HANDLE_METHOD_TYPE),
+                KTypeProjection.invariant(handleMethod.resultType!!)))
+        return composer.getOrderedFilters(filterType, this,
+                (target as? Filtering<*,*>)?.let {
+                    listOf(InstanceFilterProvider(it))
+                } ?: emptyList(),
+                useFilterProviders,
+                useFilters
+        ) as List<Filtering<Any,Any?>>
+    }
+
     companion object {
         @PublishedApi
         internal val COMPOSER = ThreadLocal<Handling?>()
+
+        private val HANDLE_METHOD_TYPE = HandleMethod::class.createType()
     }
 }
