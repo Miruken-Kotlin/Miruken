@@ -2,6 +2,8 @@ package com.miruken.protocol
 
 import com.miruken.typeOf
 import java.lang.reflect.Method
+import java.lang.reflect.Proxy
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 @FunctionalInterface
@@ -13,8 +15,17 @@ interface ProtocolAdapter {
     ): Any?
 }
 
-fun ProtocolAdapter.proxy(protocol: KType): Any =
-        Protocol.proxy(this, protocol)
+fun ProtocolAdapter.proxy(protocol: KType): Any {
+    val protocolClass = protocol.classifier as? KClass<*>
+    require(protocolClass?.java!!.isInterface, {
+        "Protocol '$protocol' is not an interface"
+    })
+
+    return Proxy.newProxyInstance(
+            protocol.javaClass.classLoader,
+            arrayOf(protocolClass.java),
+            Interceptor(this, protocol))
+}
 
 inline fun <reified T: Any> ProtocolAdapter.proxy(): T =
-        Protocol.proxy(this, typeOf<T>()) as T
+        proxy(typeOf<T>()) as T

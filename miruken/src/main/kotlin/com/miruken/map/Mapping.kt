@@ -3,9 +3,11 @@ package com.miruken.map
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.Protocol
 import com.miruken.protocol.ProtocolAdapter
+import com.miruken.protocol.proxy
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
+@Protocol
 interface Mapping {
     fun map(
             source:     Any,
@@ -26,7 +28,7 @@ interface Mapping {
     companion object {
         val PROTOCOL = typeOf<Mapping>()
         operator fun invoke(adapter: ProtocolAdapter) =
-                Protocol.proxy(adapter, PROTOCOL) as Mapping
+                adapter.proxy(PROTOCOL) as Mapping
     }
 }
 

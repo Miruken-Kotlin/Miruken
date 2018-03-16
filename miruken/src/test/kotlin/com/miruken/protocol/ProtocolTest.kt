@@ -9,8 +9,7 @@ import kotlin.test.assertNotNull
 
 class ProtocolTest {
     @Test  fun `Proxies through a protocol adapter`() {
-        val email = Protocol.proxy<EmailFeature>(
-                PassThroughAdapter(EmailFeatureImpl()))
+        val email = PassThroughAdapter(EmailFeatureImpl()).proxy<EmailFeature>()
         assertNotNull(email)
         val (confirmation, msg) = email.send("This is a test!")
         assertEquals(1, confirmation)
@@ -19,15 +18,14 @@ class ProtocolTest {
 
     @Test  fun `Rejects proxy if not protocol interface`() {
         assertFailsWith(IllegalArgumentException::class) {
-            Protocol.proxy<EmailFeatureImpl>(
-                    PassThroughAdapter(EmailFeatureImpl()))
+            PassThroughAdapter(EmailFeatureImpl()).proxy<EmailFeatureImpl>()
         }
     }
 
     @Test  fun `Protocol proxies will propagate exceptions`() {
         assertFailsWith(IllegalArgumentException::class) {
-            val email = Protocol.proxy<EmailFeature>(
-                    PassThroughAdapter(EmailFeatureImpl()))
+            val email = PassThroughAdapter(EmailFeatureImpl())
+                    .proxy<EmailFeature>()
             email.send("")
         }
     }

@@ -103,7 +103,6 @@ private fun verifyOpenConformance(
                     it.classifier == openType.classifier }
             }
             closedConformance != null &&
-            closedConformance.arguments.isNotEmpty() &&
             closedConformance.arguments.zip(openType.arguments
                     .zip(openClass.typeParameters)) { ls, rs ->
                 when {

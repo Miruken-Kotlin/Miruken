@@ -3,8 +3,10 @@ package com.miruken.container
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.Protocol
 import com.miruken.protocol.ProtocolAdapter
+import com.miruken.protocol.proxy
 import com.miruken.typeOf
 
+@Protocol
 interface Container {
     fun resolve(key: Any): Any?
     fun resolveAsync(key: Any): Promise<Any?>
@@ -15,7 +17,7 @@ interface Container {
     companion object {
         val PROTOCOL = typeOf<Container>()
         operator fun invoke(adapter: ProtocolAdapter) =
-                Protocol.proxy(adapter, PROTOCOL) as Container
+                adapter.proxy(PROTOCOL) as Container
     }
 }
 

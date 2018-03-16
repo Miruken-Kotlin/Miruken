@@ -37,8 +37,8 @@ class CallbackSemantics(
         mergeInto(semantics, CallbackOptions.BROADCAST)
     }
 
-    fun mergeInto(semantics: CallbackSemantics,
-                  option:    Flags<CallbackOptions>) {
+    private fun mergeInto(semantics: CallbackSemantics,
+                          option:    Flags<CallbackOptions>) {
         if (isSpecified(option) && !semantics.isSpecified(options))
             semantics.setOption(option, hasOption(options))
     }
