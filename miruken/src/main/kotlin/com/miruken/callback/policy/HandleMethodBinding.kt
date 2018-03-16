@@ -80,7 +80,7 @@ class HandleMethodBinding(
             handleMethod: HandleMethod,
             target:       Any
     ): Any? {
-        val result = handleMethod.method.invoke(target, *handleMethod.arguments)
+        val result = method.invoke(target, *handleMethod.arguments)
         handleMethod.result = result
         return result
     }

@@ -46,6 +46,12 @@ class HandleMethodTest {
         }
     }
 
+    @Test fun `Handles method loosely`() {
+        val handler = DemoHandler()
+        var id      = handler.duck.proxy<EmailFeature>().email("22")
+        assertEquals(22, id)
+    }
+
     @Test fun `Chains method calls strictly`() {
         val handler = OfflineHandler() + EmailHandler()
         val id      = handler.strict.proxy<EmailFeature>().email("Hello")
@@ -240,7 +246,7 @@ class HandleMethodTest {
         }
     }
 
-    @Log
+    @Log2
     class DemoHandler : Handler() {
         fun email(message: String): Int {
             return Integer.parseInt(message)
@@ -248,6 +254,12 @@ class HandleMethodTest {
 
         fun bill(amount: BigDecimal): BigDecimal {
             return amount * 2.toBigDecimal()
+        }
+
+        @Provides
+        fun <Res: Any?> createLogger(inquiry: Inquiry): Filtering<HandleMethod, Res>? {
+            @Suppress("UNCHECKED_CAST")
+            return inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
         }
     }
 
