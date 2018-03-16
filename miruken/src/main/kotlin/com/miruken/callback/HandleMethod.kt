@@ -31,11 +31,11 @@ open class HandleMethod(
             greedy:   Boolean,
             composer: Handling
     ) = getTarget(handler)?.let {
-        BINDINGS.getOrPut(method to it::class) {
-            it::class.matchMethod(method)?.let {
-                HandleMethodBinding(method, it)
-            }
-        }?.dispatch(it, this, composer)
+        val targetClass = it::class
+        targetClass.matchMethod(method)?.let {
+            BINDINGS.getOrPut(method to targetClass) {
+                    HandleMethodBinding(method, it)
+            }}?.dispatch(it, this, composer)
     } ?: HandleResult.NOT_HANDLED
 
     private fun getTarget(target: Any): Any? {

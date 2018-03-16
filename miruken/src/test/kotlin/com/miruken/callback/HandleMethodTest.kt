@@ -157,11 +157,13 @@ class HandleMethodTest {
                 email(message.toString())
     }
 
+    @Log
     @Resolving
     interface Billing {
         fun bill(amount:BigDecimal): BigDecimal
     }
 
+    @Log
     interface Offline : EmailFeature, Billing {
         val billing: Billing
     }
@@ -202,24 +204,39 @@ class HandleMethodTest {
 
         override fun bill(amount: BigDecimal): BigDecimal =
                 amount + fee
+
+        @Provides
+        fun <Res> createLogger(inquiry: Inquiry): LogFilter<Res>?
+        {
+            @Suppress("UNCHECKED_CAST")
+            return when (inquiry.keyClass) {
+                LogFilter::class -> LogFilter()
+                else -> null
+            }
+        }
     }
 
+    @Log2
     class OfflineHandler : Handler(), Offline {
         override var count: Int = 0
             private set
 
         override val billing = BillingImpl()
 
-        @Log
         override fun email(message: String): Int {
             return ++count
         }
 
-        @Log
         override fun cancelEmail(id: Int) {}
 
         override fun bill(amount: BigDecimal): BigDecimal {
             throw IllegalStateException("Not supported offline")
+        }
+
+        @Provides
+        fun <Res: Any?> createLogger(inquiry: Inquiry): Filtering<HandleMethod, Res>? {
+            @Suppress("UNCHECKED_CAST")
+            return inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
         }
     }
 
@@ -252,6 +269,25 @@ class HandleMethodTest {
             val result = next()
             println(result)
             return result
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
+            AnnotationTarget.PROPERTY)
+    @UseFilter(LogFilter2::class)
+    annotation class Log2
+
+    class LogFilter2<Res> : Filtering<HandleMethod, Res> {
+        override var order: Int? = 2
+
+        override fun next(
+                callback: HandleMethod,
+                binding:  MethodBinding,
+                composer: Handling,
+                next:     Next<Res>
+        ): Res {
+            println("Log2 method '${callback.method.name}'")
+            return next()
         }
     }
 }

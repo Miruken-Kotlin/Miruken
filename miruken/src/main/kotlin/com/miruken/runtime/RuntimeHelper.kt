@@ -96,22 +96,29 @@ private fun verifyOpenConformance(
         parameters: MutableMap<KTypeParameter, KType>?
 ): Boolean {
     return (openType.classifier as? KClass<*>)?.let { openClass ->
-        openClass == closedType.classifier &&
-                closedType.arguments.isNotEmpty() &&
-                closedType.arguments.zip(openType.arguments
-                        .zip(openClass.typeParameters)) { ls, rs ->
-                    when {
-                        ls.type == null -> true /* Star */
-                        rs.first.type == null -> true /* Star */
-                        rs.first.type!!.isOpenGeneric ->
-                            isCompatibleWith(ls.type!!, rs.first.type!!,
-                                    parameters)
-                        rs.second.variance == KVariance.IN ->
-                            ls.type!!.isSubtypeOf(rs.first.type!!)
-                        else ->
-                            rs.first.type!!.isSubtypeOf(ls.type!!)
-                    }
-                }.all { it }
+        (closedType.classifier as? KClass<*>)?.let { closedClass ->
+            val closedConformance = when (openClass) {
+                closedClass -> closedType
+                else -> closedClass.allSupertypes.firstOrNull {
+                    it.classifier == openType.classifier }
+            }
+            closedConformance != null &&
+            closedConformance.arguments.isNotEmpty() &&
+            closedConformance.arguments.zip(openType.arguments
+                    .zip(openClass.typeParameters)) { ls, rs ->
+                when {
+                    ls.type == null -> true /* Star */
+                    rs.first.type == null -> true /* Star */
+                    rs.first.type!!.isOpenGeneric ->
+                        isCompatibleWith(ls.type!!, rs.first.type!!,
+                                parameters)
+                    rs.second.variance == KVariance.IN ->
+                        ls.type!!.isSubtypeOf(rs.first.type!!)
+                    else ->
+                        rs.first.type!!.isSubtypeOf(ls.type!!)
+                }
+            }.all { it }
+        }
     } ?: false
 }
 
