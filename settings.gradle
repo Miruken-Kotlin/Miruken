@@ -2,3 +2,5 @@ rootProject.name = 'Miruken'
 
 include 'miruken'
 include 'miruken-validate'
+include 'miruken-mvc'
+

@@ -17,15 +17,15 @@ interface ProtocolAdapter {
 
 fun ProtocolAdapter.proxy(protocol: KType): Any {
     val protocolClass = protocol.classifier as? KClass<*>
-    require(protocolClass?.java!!.isInterface, {
+    require(protocolClass?.java?.isInterface ?: false, {
         "Protocol '$protocol' is not an interface"
     })
 
     return Proxy.newProxyInstance(
             protocol.javaClass.classLoader,
-            arrayOf(protocolClass.java),
+            arrayOf(protocolClass!!.java),
             Interceptor(this, protocol))
 }
 
-inline fun <reified T: Any> ProtocolAdapter.proxy(): T =
+inline fun <reified T: Any> ProtocolAdapter.proxy() =
         proxy(typeOf<T>()) as T
