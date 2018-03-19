@@ -27,6 +27,5 @@ class ContextualImplTest {
         val services = _rootContext.resolveAll<MyService>()
         assertEquals(1, services.size)
         assertTrue(services.contains(service))
-
     }
 }

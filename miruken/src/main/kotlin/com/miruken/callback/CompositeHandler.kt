@@ -17,7 +17,7 @@ open class CompositeHandler(vararg handlers: Any)
             composer: Handling
     ): HandleResult {
         val initial = super.handleCallback(callback, greedy, composer)
-        return _handlers.fold(initial, { result, handler ->
+        return handlers.fold(initial, { result, handler ->
             if (result.stop || (result.handled && !greedy)) {
                 return result
             }

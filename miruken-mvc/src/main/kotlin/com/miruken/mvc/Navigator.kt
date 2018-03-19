@@ -17,8 +17,8 @@ class Navigator(mainRegion: ViewRegion) : CompositeHandler(), Navigate {
     override fun navigate(
             controllerKey: Any,
             style:         NavigationStyle,
-            action:        (Controller) -> Any?
-    ): Any? {
+            action:        (Controller) -> Unit
+    ) {
         var composer = COMPOSER
         val context  = composer?.resolve<Context>() ?:
         throw IllegalStateException(
@@ -42,7 +42,7 @@ class Navigator(mainRegion: ViewRegion) : CompositeHandler(), Navigate {
             it == controller || it.context == ctx }
                 ?.dependsOn(controller)
 
-        return try {
+        try {
             if (style == NavigationStyle.PUSH) {
                 composer = composer.pushLayer
             } else {
@@ -77,14 +77,18 @@ class Navigator(mainRegion: ViewRegion) : CompositeHandler(), Navigate {
         }
     }
 
-    override fun goBack(): Any? {
+    override fun goBack() {
         val composer   = COMPOSER
         val controller = composer?.resolve<Controller>()
-        return controller?._retryAction?.invoke(composer)
+        controller?._retryAction?.invoke(composer)
     }
 
     private fun bindIO(io: Handling?, controller: Controller) {
-
+        controller._io = io ?: controller.context?.let { h: Handling ->
+            Controller.GLOBAL_PREPARE.foldRight(h, { filter, pipe ->
+                filter(pipe)
+            })
+        }
     }
 
     private fun resolveController(

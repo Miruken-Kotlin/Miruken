@@ -4,6 +4,7 @@ import com.miruken.callback.COMPOSER
 import com.miruken.callback.Handling
 import com.miruken.callback.resolve
 import com.miruken.context.Context
+import com.miruken.context.ContextImpl
 import com.miruken.context.ContextualHandler
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.policy.PolicyOwner
@@ -29,16 +30,22 @@ open class Controller : ContextualHandler<Context>(),
 
     protected inline fun <reified V: View> show(
             noinline init: (V.() -> Unit)? = null
-    ) = io?.let { region(it).show(init) }
+    ) = region(io).show(init)
 
     protected inline fun <reified V: View> show(
             handler:       Handling,
             noinline init: (V.() -> Unit)? = null
     ) = region(handler).show(init)
 
+    protected fun show(view: View) =
+            view.display(region(io))
+
+    protected fun show(handler: Handling, view: View) =
+        view.display(region(handler))
+
     protected inline fun <reified V: View> overlay(
             noinline init: (V.() -> Unit)? = null
-    ) = io?.let { region(it.pushLayer).show(init) }
+    ) = region(io.pushLayer).show(init)
 
     protected inline fun <reified V: View> overlay(
             handler: Handling,
@@ -58,42 +65,42 @@ open class Controller : ContextualHandler<Context>(),
     // Navigate
 
     protected inline fun <reified C: Controller> next(
-            noinline action: C.() -> Any?
-    ) = io?.next(action)
+            noinline action: C.() -> Unit
+    ) = io.next(action)
 
     protected inline fun <reified C: Controller> next(
             handler:         Handling,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = handler.next(action)
 
     protected inline fun <reified C: Controller> push(
-            noinline action: C.() -> Any?
-    ) = io?.push(action)
+            noinline action: C.() -> Unit
+    ) = io.push(action)
 
     protected inline fun <reified C: Controller> push(
             handler:         Handling,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = handler.next(action)
 
     protected inline fun <reified C: Controller> navigate(
             style:  NavigationStyle,
-            noinline action: C.() -> Any?
-    ) = io?.navigate(style, action)
+            noinline action: C.() -> Unit
+    ) = io.navigate(style, action)
 
     protected inline fun <reified C: Controller> navigate(
             style:           NavigationStyle,
             handler:         Handling,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = handler.navigate(style, action)
 
-    protected fun goBack() = io?.goBack()
+    protected fun goBack() = io.goBack()
 
     protected fun goBack(handler: Handling) =
         handler.goBack()
 
     // Context
 
-    protected val io get() = _io ?: context
+    protected val io get() = _io ?: context ?: ContextImpl()
 
     protected fun endContext() = context?.end()
 
@@ -106,8 +113,15 @@ open class Controller : ContextualHandler<Context>(),
     override fun close() {
         if (_closed.compareAndSet(false, true)) {
             policy.release()
-            context = null
-            _io     = null
+            context      = null
+            _io          = null
+            _lastAction  = null
+            _retryAction = null
         }
+    }
+
+    companion object {
+        val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
+        val GLOBAL_EXECUTE = mutableListOf<(Handling) -> Handling>()
     }
 }

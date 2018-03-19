@@ -33,21 +33,21 @@ inline fun <reified V: View> ViewRegion.show(
         noinline init: (V.() -> Unit)? = null
 ) = show(view(typeOf<V>(), init as (View.() -> Unit)?))
 
-
 inline fun <reified C: Controller> Handling.region(
         noinline action: (C: Controller) -> Unit
 ): View = object : ViewAdapter() {
     override fun display(region: ViewRegion): ViewLayer {
+        lateinit var layer: ViewLayer
         val stack = region.view<ViewStackView>()
-        return Navigate(this@region).push<C> {
+        Navigate(this@region).push<C> {
             val controllerContext = context!!
             controllerContext.addHandlers(stack)
             action(this)
-            val layer = stack.display(ViewRegion(this@region.pushLayer))
+            layer = stack.display(ViewRegion(this@region.pushLayer))
             layer.closed += { controllerContext.end() }
             controllerContext.contextEnded += { layer.close() }
-            layer
-        } as ViewLayer
+        }
+        return layer
     }
 }
 

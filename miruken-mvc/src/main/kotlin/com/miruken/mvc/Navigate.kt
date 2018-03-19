@@ -12,10 +12,10 @@ interface Navigate {
     fun navigate(
             controllerKey: Any,
             style:         NavigationStyle,
-            action:        Controller.() -> Any?
-    ): Any?
+            action:        Controller.() -> Unit
+    )
 
-    fun goBack(): Any?
+    fun goBack()
 
     companion object {
         val PROTOCOL = typeOf<Navigate>()
@@ -26,19 +26,19 @@ interface Navigate {
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified C: Controller> Navigate.next(
-        noinline action:  C.() -> Any?
+        noinline action:  C.() -> Unit
 ) = navigate(typeOf<C>(), NavigationStyle.NEXT,
-        action as Controller.() -> Any?)
+        action as Controller.() -> Unit)
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified C: Controller> Navigate.push(
-        noinline action:      C.() -> Any?
+        noinline action:      C.() -> Unit
 ) = navigate(typeOf<C>(), NavigationStyle.PUSH,
-        action as Controller.() -> Any?)
+        action as Controller.() -> Unit)
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified C: Controller> Navigate.navigate(
         style:                NavigationStyle,
-        noinline action:      C.() -> Any?
+        noinline action:      C.() -> Unit
 ) = navigate(typeOf<C>(), style,
-        action as Controller.() -> Any?)
+        action as Controller.() -> Unit)

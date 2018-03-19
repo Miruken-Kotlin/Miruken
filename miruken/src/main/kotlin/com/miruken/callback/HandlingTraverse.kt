@@ -5,8 +5,6 @@ import com.miruken.graph.TraversingAxis
 fun HandlingAxis.axis(axis: TraversingAxis): HandlingAxis =
         TraversingHandler(this, axis)
 
-val HandlingAxis.xpublish get() = xselfOrDescendant.notify
-
 val HandlingAxis.xself get() =
     TraversingHandler(this, TraversingAxis.SELF)
 
@@ -45,5 +43,8 @@ val HandlingAxis.xselfOrDescendantReverse get() =
 
 val HandlingAxis.xselfSiblingOrAncestor get() =
     TraversingHandler(this, TraversingAxis.SELF_SIBLING_ANCESTOR)
+
+val HandlingAxis.publish get() = xselfOrDescendant.notify
+
 
 
