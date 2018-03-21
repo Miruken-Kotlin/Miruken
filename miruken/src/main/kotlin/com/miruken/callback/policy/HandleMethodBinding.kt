@@ -98,8 +98,7 @@ class HandleMethodBinding(
                 (target as? Filtering<*,*>)?.let {
                     listOf(InstanceFilterProvider(it))
                 } ?: emptyList(),
-                useFilterProviders,
-                useFilters
+                useFilterProviders, useFilters
         ) as List<Filtering<Any,Any?>>
     }
 
@@ -107,6 +106,6 @@ class HandleMethodBinding(
         @PublishedApi
         internal val COMPOSER = ThreadLocal<Handling?>()
 
-        private val HANDLE_METHOD_TYPE = HandleMethod::class.createType()
+        val HANDLE_METHOD_TYPE = HandleMethod::class.createType()
     }
 }

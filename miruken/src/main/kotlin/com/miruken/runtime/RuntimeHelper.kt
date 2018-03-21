@@ -27,8 +27,20 @@ fun isCompatibleWith(
                         }
                     }
                 }
+                leftSide.classifier is KTypeParameter -> {
+                    val typeParam = leftSide.classifier as KTypeParameter
+                    typeParam.upperBounds.any {
+                        (it.isSupertypeOf(rightSide) ||
+                        isCompatibleWith(it, rightSide, typeBindings)).also {
+                            if (it && typeBindings?.containsKey(typeParam) == false)
+                                typeBindings[typeParam] = rightSide
+                        }
+                    }
+                }
                 rightSide.isOpenGeneric ->
-                    verifyOpenConformance(rightSide, leftSide, typeBindings)
+                    verifyOpenConformance(rightSide, leftSide, typeBindings) ||
+                    (leftSide.isOpenGeneric &&
+                            verifyOpenConformance(leftSide, rightSide, typeBindings))
                 leftSide.isOpenGeneric ->
                     verifyOpenConformance(leftSide, rightSide, typeBindings)
                 else -> rightSide.isSubtypeOf(leftSide)
@@ -92,32 +104,37 @@ fun isCompatibleWith(
 
 private fun verifyOpenConformance(
         openType:   KType,
-        closedType: KType,
+        otherType:  KType,
         parameters: MutableMap<KTypeParameter, KType>?
 ): Boolean {
     return (openType.classifier as? KClass<*>)?.let { openClass ->
-        (closedType.classifier as? KClass<*>)?.let { closedClass ->
-            val closedConformance = when (openClass) {
-                closedClass -> closedType
-                else -> closedClass.allSupertypes.firstOrNull {
+        val other       = otherType.classifier
+        val conformance = when (other) {
+            is KClass<*> -> when (openClass) {
+                other -> otherType
+                else -> other.allSupertypes.firstOrNull {
                     it.classifier == openType.classifier }
             }
-            closedConformance != null &&
-            closedConformance.arguments.zip(openType.arguments
-                    .zip(openClass.typeParameters)) { ls, rs ->
-                when {
-                    ls.type == null -> true /* Star */
-                    rs.first.type == null -> true /* Star */
-                    rs.first.type!!.isOpenGeneric ->
-                        isCompatibleWith(ls.type!!, rs.first.type!!,
-                                parameters)
-                    rs.second.variance == KVariance.IN ->
-                        ls.type!!.isSubtypeOf(rs.first.type!!)
-                    else ->
-                        rs.first.type!!.isSubtypeOf(ls.type!!)
-                }
-            }.all { it }
+            is KTypeParameter -> other.upperBounds.firstOrNull {
+                it.classifier == openType.classifier
+            }
+            else -> null
         }
+        conformance?.arguments?.zip(openType.arguments
+                .zip(openClass.typeParameters)) { ls, rs ->
+            when {
+                ls.type == null -> true /* Star */
+                rs.first.type == null -> true /* Star */
+                ls.type!!.isOpenGeneric ||
+                rs.first.type!!.isOpenGeneric ->
+                    isCompatibleWith(ls.type!!, rs.first.type!!,
+                            parameters)
+                rs.second.variance == KVariance.IN ->
+                    ls.type!!.isSubtypeOf(rs.first.type!!)
+                else ->
+                    rs.first.type!!.isSubtypeOf(ls.type!!)
+            }
+        }?.all { it }
     } ?: false
 }
 

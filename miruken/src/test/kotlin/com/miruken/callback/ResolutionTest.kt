@@ -1,7 +1,9 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.MethodBinding
 import com.miruken.protocol.proxy
+import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -39,7 +41,6 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves implied handlers`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
         val handler = EmailHandler()
         val id      = handler.resolving.command<Int>(SendEmail("Hello"))
         assertEquals(1, id)
@@ -54,11 +55,27 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves implied open-generic handlers`() {
-        HandlerDescriptor.getDescriptorFor<Repository<*>>()
         val handler = Repository<Message>()
         val message = Message()
         val result  = handler.resolving.handle(Create(message))
         assertEquals(HandleResult.HANDLED, result)
+    }
+
+    @Test fun `Resolves handlers with filters`() {
+        HandlerDescriptor.getDescriptorFor<EmailHandler>()
+        val handler = (EmailProvider()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
+        val id = handler.resolving.command<Int>(SendEmail("Hello"))
+        assertEquals(10, id)
+    }
+
+    @Ignore("Requires type propagation")
+    @Test fun `Skips filters with missing dependencies`() {
+        val handler = Accountant() + FilterProvider()
+        handler.resolving.command<BigDecimal>(
+                Create(Deposit().apply { amount = 10.toBigDecimal() }))
     }
 
     @Test fun `Fails if no handlers resolved`() {
@@ -243,6 +260,7 @@ class ResolutionTest {
 
     class Create<out T: Entity>(val entity: T)
 
+    @Audit
     class EmailHandler : Handler(), EmailFeature {
         override var count: Int = 0
             private set
@@ -268,8 +286,7 @@ class ResolutionTest {
     class BillingImpl(private val fee: BigDecimal) : Billing {
         constructor() : this(2.toBigDecimal())
 
-        override fun bill(amount: BigDecimal): BigDecimal =
-                amount + fee
+        override fun bill(amount: BigDecimal) = amount + fee
     }
 
     class OfflineHandler : Handler(), Offline {
@@ -343,12 +360,14 @@ class ResolutionTest {
         private var _balance: BigDecimal = 0.toBigDecimal()
 
         @Handles
+        @Balance
         fun depositFunds(deposit: Create<Deposit>): BigDecimal {
             _balance += deposit.entity.amount
             return _balance
         }
 
         @Handles
+        @Balance
         fun withdrawFunds(withdraw: Create<Withdrawal>): BigDecimal {
             _balance -= withdraw.entity.amount
             return _balance
@@ -358,9 +377,60 @@ class ResolutionTest {
     @Suppress("UNCHECKED_CAST")
     class RepositoryProvider : Handler() {
         @Provides
-        fun <T: Entity> createRepository(inquiry: Inquiry): T?
-        {
-            return inquiry.createKeyInstance() as? T
+        fun <T: Entity> createRepository(inquiry: Inquiry): Repository<T>? {
+            return inquiry.createKeyInstance() as? Repository<T>
         }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(AuditFilter::class)
+    annotation class Audit
+
+    class AuditFilter<in Cb: Any, Res: Any?> : DynamicFilter<Cb, Res>() {
+        fun next(
+                callback:       Cb,
+                next:           Next<Res>,
+                binding:        MethodBinding,
+                repository:     Repository<Message>,
+                @Proxy billing: Billing
+        ): Res {
+            @Suppress("UNCHECKED_CAST")
+            (callback as? SendEmail<*>)?.also {
+                (it.body as? String)?.also { body ->
+                    val message = Message().apply { content = body }
+                    repository.create(Create(message))
+                    if (binding.method.returnType == Int::class.java) {
+                        billing.bill(message.id.toBigDecimal())
+                        return (message.id * 10) as Res
+                    }
+                }
+            }
+            return next()
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(BalanceFilter::class)
+    annotation class Balance
+
+    class BalanceFilter<T: Entity, Res: Any?> : DynamicFilter<Create<T>, Res>() {
+        fun next(callback:   Create<T>,
+                 next:       Next<Res>,
+                 repository: Repository<T>,
+                 billing:    Billing
+        ): Res {
+            println("Balance for $callback")
+            repository.create(callback)
+            billing.bill(callback.entity.id.toBigDecimal())
+            return next()
+        }
+    }
+
+    class FilterProvider : Handler() {
+        @Provides
+        fun <Cb: Any, Res: Any?> providesAudit() = AuditFilter<Cb, Res>()
+
+        @Provides
+        fun <T: Entity, Res: Any?> providesBalance() = BalanceFilter<T, Res>()
     }
 }

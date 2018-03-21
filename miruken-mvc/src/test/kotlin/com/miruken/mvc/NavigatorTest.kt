@@ -9,7 +9,6 @@ import com.miruken.typeOf
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 import kotlin.test.assertTrue

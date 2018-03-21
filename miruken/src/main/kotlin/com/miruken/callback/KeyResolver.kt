@@ -2,6 +2,7 @@ package com.miruken.callback
 
 import com.miruken.Flags
 import com.miruken.TypeFlags
+import kotlin.reflect.KClass
 
 open class KeyResolver : KeyResolving {
     override fun resolve(
@@ -80,5 +81,18 @@ open class KeyResolver : KeyResolving {
                 resolveKeyAsync(key, handler, composer)
             else -> resolveKey(key, handler, composer)
         }
+    }
+
+    companion object {
+        fun getResolver(
+                resolverClass: KClass<out KeyResolving>?,
+                composer:      Handling
+        ): KeyResolving? {
+            return if (resolverClass == null)
+                DefaultResolver else resolverClass.objectInstance
+                    ?: composer.resolve(resolverClass) as? KeyResolving
+        }
+
+        object DefaultResolver : KeyResolver()
     }
 }

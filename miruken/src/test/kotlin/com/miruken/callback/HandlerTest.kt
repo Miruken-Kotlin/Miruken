@@ -12,9 +12,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 import kotlin.test.*
-import jdk.internal.org.objectweb.asm.Handle
-
-
 
 class HandlerTest {
     @Rule

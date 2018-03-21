@@ -2,7 +2,6 @@ package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
 import com.miruken.callback.*
-import kotlin.reflect.KClass
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
@@ -13,12 +12,11 @@ class PolicyMethodBinding(
         bindingInfo: PolicyMethodBindingInfo
 ) : MethodBinding(bindingInfo.dispatcher.javaMethod) {
 
-    private val callbackArg = bindingInfo.callbackArg
-
     val rule        = bindingInfo.rule
     val annotation  = bindingInfo.annotation
     val dispatcher  = bindingInfo.dispatcher
     val strict      = bindingInfo.strict
+    val callbackArg = bindingInfo.callbackArg
     val key         = policy.createKey(bindingInfo)
 
     fun approve(callback: Any) = policy.approve(callback, this)
@@ -32,13 +30,16 @@ class PolicyMethodBinding(
         val ruleArgs  = rule.resolveArguments(callback)
         val arguments = resolveArguments(ruleArgs, composer)
         return arguments?.let {
-            val filters = resolveFilters(handler, callback, composer)
+            val filterCallback = callbackArg?.let {
+                arguments[it.parameter.index - 1] // skip receiver
+            } ?: callback
+            val filters = resolveFilters(handler, filterCallback, composer)
             val result  = if (filters.isEmpty())
                  dispatcher.invoke(handler, arguments)
             else filters.foldRight(
                     { dispatcher.invoke(handler, arguments) },
                     { pipeline, next -> {
-                            pipeline.next(callback, this, composer, next) }
+                            pipeline.next(filterCallback, this, composer, next) }
                     })()
 
             val accepted = policy.acceptResult(result, this)
@@ -100,15 +101,15 @@ class PolicyMethodBinding(
                         val key      = argument.key
                         val flags    = argument.typeInfo.flags
                         val optional = flags has TypeFlags.OPTIONAL
-                        val resolver = getResolver(argument.useResolver, composer)
+                        val resolver = KeyResolver.getResolver(
+                                argument.useResolver, composer)
                         if (resolver == null) {
                             if (optional) continue@loop
                             return@all HandleResult.NOT_HANDLED
                         }
                         resolver.validate(key, flags)
                         add({
-                            val arg = resolver.resolve(key, flags, it, composer)
-                            resolved[i] = arg
+                            resolved[i] = resolver.resolve(key, flags, it, composer)
                         }) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }
@@ -116,18 +117,5 @@ class PolicyMethodBinding(
                 }
             }
         } success { resolved }
-    }
-
-    private fun getResolver(
-            resolverClass: KClass<out KeyResolving>?,
-            composer:      Handling
-    ): KeyResolving? {
-        return if (resolverClass == null)
-            DefaultKeyResolver else resolverClass.objectInstance
-                ?: composer.resolve(resolverClass) as? KeyResolving
-    }
-
-    companion object {
-        object DefaultKeyResolver : KeyResolver()
     }
 }
