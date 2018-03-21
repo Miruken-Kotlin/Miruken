@@ -1,6 +1,8 @@
 package com.miruken.callback
 
-typealias FilterBlock = (Any, Handling, () -> HandleResult) -> HandleResult
+import kotlin.reflect.KType
+
+typealias FilterBlock = (Any, KType?, Handling, () -> HandleResult) -> HandleResult
 
 class FilteringHandler(
         handler:               Handling,
@@ -8,15 +10,18 @@ class FilteringHandler(
         private val reentrant: Boolean = false
 ) : DecoratedHandler(handler) {
     override fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
         if (!reentrant && callback is Composition) {
-            return super.handleCallback(callback, greedy, composer)
+            return super.handleCallback(
+                    callback, callbackType, greedy, composer)
         }
-        return filter(callback, composer,
-                { super.handleCallback(callback, greedy, composer)})
+        return filter(callback, callbackType, composer) {
+            super.handleCallback(callback, callbackType, greedy, composer)
+        }
     }
 }
 

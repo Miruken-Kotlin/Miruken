@@ -1,10 +1,13 @@
 package com.miruken.callback
 
-import com.miruken.typeOf
 import com.miruken.runtime.isCompatibleWith
+import com.miruken.typeOf
 import kotlin.reflect.KType
 
-open class Composition(callback: Any? = null): Trampoline(callback),
+open class Composition(
+        callback:     Any?   = null,
+        callbackType: KType? = null
+) : Trampoline(callback, callbackType),
         Callback, ResolvingCallback,
         FilteringCallback, BatchingCallback {
 
@@ -29,21 +32,21 @@ open class Composition(callback: Any? = null): Trampoline(callback),
     override fun getResolveCallback(): Any {
         val resolve = (callback as? ResolvingCallback)?.getResolveCallback()
         if (resolve === callback || callback === null) return this
-        return Composition(resolve
-                ?: Resolution.getDefaultResolvingCallback(callback))
+        return Composition(resolve ?: Resolution
+                .getResolvingCallback(callback, callbackType),
+                callbackType)
     }
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        inline fun <reified T: Any> get(callback: Any): T? =
+        inline fun <reified T: Any> get(callback: Any) =
                 get(callback, typeOf<T>()) as? T
 
-        fun get(callback: Any, key: Any): Any? {
-            return (callback as? Composition)?.let { c ->
-                c.callback?.takeIf {
-                    isCompatibleWith(key, c.resultType ?: it)
-                }
+        fun get(callback: Any, key: Any) =
+                (callback as? Composition)?.let { c ->
+                    c.callback?.takeIf {
+                        isCompatibleWith(key, c.callbackType ?: it)
+                    }
             }
-        }
     }
 }

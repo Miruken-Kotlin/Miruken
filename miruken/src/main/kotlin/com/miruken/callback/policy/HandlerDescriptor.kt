@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
+import kotlin.reflect.KType
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.isAccessible
 
@@ -22,18 +23,19 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     internal fun dispatch(
-            policy:   CallbackPolicy,
-            receiver: Any,
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling,
-            results:  CollectResultsBlock? = null
+            policy:       CallbackPolicy,
+            receiver:     Any,
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling,
+            results:      CollectResultsBlock? = null
     ): HandleResult {
         return _policies[policy]?.let {
-            dispatch(it.getInvariantMethods(callback),
+            dispatch(it.getInvariantMethods(callback, callbackType),
                     receiver, callback, greedy, composer, results
                    ).otherwise(greedy) {
-            dispatch(it.getCompatibleMethods(callback),
+            dispatch(it.getCompatibleMethods(callback, callbackType),
                     receiver, callback, greedy, composer, results)
             }
         } ?: HandleResult.NOT_HANDLED
@@ -46,14 +48,13 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             greedy:   Boolean,
             composer: Handling,
             results:  CollectResultsBlock?
-    ): HandleResult =
-            methods.fold(HandleResult.NOT_HANDLED, { result, method ->
-                if ((result.handled && !greedy) || result.stop) {
-                    return result
-                }
-                result or method.dispatch(
-                        receiver, callback, composer, results)
-            })
+    ) = methods.fold(HandleResult.NOT_HANDLED, { result, method ->
+        if ((result.handled && !greedy) || result.stop) {
+            return result
+        }
+        result or method.dispatch(
+                receiver, callback, composer, results)
+    })
 
     private fun findCompatibleMembers() {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->
@@ -84,35 +85,38 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     companion object {
-        inline fun <reified T> getDescriptorFor() = getDescriptorFor(T::class)
+        inline fun <reified T> getDescriptorFor() =
+                getDescriptorFor(T::class)
 
-        fun getDescriptorFor(handlerClass: KClass<*>) : HandlerDescriptor {
-            try {
-                return DESCRIPTORS.getOrPut(handlerClass) {
-                    lazy { HandlerDescriptor(handlerClass) }
-                }.value
-            } catch (e: Throwable) {
-                DESCRIPTORS.remove(handlerClass)
-                throw e
-            }
-        }
+        fun getDescriptorFor(handlerClass: KClass<*>) =
+                try {
+                    DESCRIPTORS.getOrPut(handlerClass) {
+                        lazy { HandlerDescriptor(handlerClass) }
+                    }.value
+                } catch (e: Throwable) {
+                    DESCRIPTORS.remove(handlerClass)
+                    throw e
+                }
 
         fun resetDescriptors() = DESCRIPTORS.clear()
 
-        fun getHandlersClasses(policy: CallbackPolicy, callback: Any) =
-                DESCRIPTORS.mapNotNull {
-                    it.value.value._policies[policy]?.let {
-                    it.getInvariantMethods(callback).firstOrNull()
-                    ?: it.getCompatibleMethods(callback).firstOrNull() }
-                }.sortedWith(policy.methodBindingComparator)
-                 .map { it.dispatcher.owningClass }
-                 .distinct()
+        fun getHandlersClasses(
+                policy:       CallbackPolicy,
+                callback:     Any,
+                callbackType: KType? = null
+        ) = DESCRIPTORS.mapNotNull {
+            it.value.value._policies[policy]?.let {
+                it.getInvariantMethods(callback, callbackType).firstOrNull() ?:
+                it.getCompatibleMethods(callback, callbackType).firstOrNull()
+            }}.sortedWith(policy.methodBindingComparator)
+               .map { it.dispatcher.owningClass }
+               .distinct()
 
         fun getPolicyMethods(policy: CallbackPolicy, key: Any) =
                 DESCRIPTORS.values.flatMap {
                     it.value._policies[policy]?.let {
-                        it.getInvariantMethods(key) +
-                        it.getCompatibleMethods(key)
+                        it.getInvariantMethods(key, null) +
+                        it.getCompatibleMethods(key, null)
                     } ?: emptyList()
                 }.sortedWith(policy.methodBindingComparator)
 

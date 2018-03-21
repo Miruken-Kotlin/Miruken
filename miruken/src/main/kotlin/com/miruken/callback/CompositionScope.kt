@@ -1,14 +1,18 @@
 package com.miruken.callback
 
+import kotlin.reflect.KType
+
 class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
-        val wrapped =
-                if (callback::class === Composition::class)
-                    callback else Composition(callback)
-        return super.handleCallback(wrapped, greedy, composer)
+        val wrapped = when (callback::class) {
+            Composition::class -> callback
+            else -> Composition(callback, callbackType)
+        }
+        return super.handleCallback(wrapped, callbackType, greedy, composer)
     }
 }

@@ -17,11 +17,12 @@ class GenericWrapper(
                 value else null
 
     override fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
-    ) = super.handleCallback(callback, greedy, composer)
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
+    ) = super.handleCallback(callback, callbackType, greedy, composer)
             .otherwise(greedy) {
-                _handler.handle(callback, greedy, composer)
+                _handler.handle(callback, callbackType, greedy, composer)
             }
 }

@@ -3,6 +3,7 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
+import kotlin.reflect.KType
 
 typealias BundleActionBlock      = (Handling) -> Unit
 typealias BundleActionAsyncBlock = (Handling) -> Promise<*>
@@ -91,9 +92,10 @@ class Bundle(private val all: Boolean = true) :
     }
 
     override fun dispatch(
-            handler:  Any,
-            greedy:   Boolean,
-            composer: Handling
+            handler:      Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
         if (_operations.isEmpty())
             return HandleResult.NOT_HANDLED
@@ -146,14 +148,15 @@ class Bundle(private val all: Boolean = true) :
             val composer: Handling
     ) : HandlerAdapter(handler) {
         override fun handleCallback(
-                callback: Any,
-                greedy:   Boolean,
-                composer: Handling
+                callback:     Any,
+                callbackType: KType?,
+                greedy:       Boolean,
+                composer:     Handling
         ): HandleResult {
             if (callback is Composition)
                 return HandleResult.NOT_HANDLED
-            val result = super.handleCallback(callback, greedy,
-                    composer + this.composer)
+            val result = super.handleCallback(callback,
+                    callbackType, greedy, composer + this.composer)
             return result failure {
                 throw RejectedException(callback)
             } ?: result

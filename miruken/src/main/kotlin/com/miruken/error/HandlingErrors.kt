@@ -9,7 +9,7 @@ import java.util.concurrent.CancellationException
 val Handling.recover get() = recover()
 
 fun Handling.recover(context: Any? = null): Handling {
-    return filter { callback, composer, proceed ->
+    return filter { callback, _, composer, proceed ->
         if (callback is Composition) proceed()
         else {
             fun promisify(e: Throwable): Promise<*> {

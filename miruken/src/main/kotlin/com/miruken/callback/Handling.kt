@@ -1,18 +1,19 @@
 package com.miruken.callback
 
 import com.miruken.protocol.ProtocolAdapter
+import com.miruken.typeOf
 import java.lang.reflect.Method
 import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.jvmErasure
 
-@FunctionalInterface
 interface Handling : ProtocolAdapter {
     fun handle(
-            callback: Any,
-            greedy:   Boolean   = false,
-            composer: Handling? = null
-    ) : HandleResult
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean   = false,
+            composer:     Handling? = null
+    ): HandleResult
 
     override fun dispatch(
             protocol: KType,
@@ -55,3 +56,10 @@ interface Handling : ProtocolAdapter {
         } ?: handleMethod.result
     }
 }
+
+inline fun <reified T: Any> Handling.handle(
+        callback:     T,
+        greedy:       Boolean   = false,
+        composer:     Handling? = null
+) = handle(callback, typeOf<T>().takeIf { // generic
+        it.arguments.isNotEmpty() }, greedy, composer)

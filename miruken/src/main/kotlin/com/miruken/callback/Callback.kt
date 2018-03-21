@@ -34,8 +34,9 @@ interface DispatchingCallback {
     val policy: CallbackPolicy?
 
     fun dispatch(
-            handler:  Any,
-            greedy:   Boolean,
-            composer: Handling
+            handler:      Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult
 }

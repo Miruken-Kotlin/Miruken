@@ -3,7 +3,6 @@ package com.miruken.callback
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.policy.MethodBinding
 import com.miruken.protocol.proxy
-import org.junit.Ignore
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -36,13 +35,13 @@ class ResolutionTest {
     @Test fun `Resolves handlers`() {
         HandlerDescriptor.getDescriptorFor<EmailHandler>()
         val handler = EmailProvider()
-        val id      = handler.resolving.command<Int>(SendEmail("Hello"))
+        val id      = handler.resolving.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
     @Test fun `Resolves implied handlers`() {
         val handler = EmailHandler()
-        val id      = handler.resolving.command<Int>(SendEmail("Hello"))
+        val id      = handler.resolving.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
@@ -50,7 +49,7 @@ class ResolutionTest {
         HandlerDescriptor.getDescriptorFor<EmailHandler>()
         HandlerDescriptor.getDescriptorFor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
-        val id      = handler.resolvingAll.command<Int>(SendEmail("Hello"))
+        val id      = handler.resolvingAll.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
@@ -67,21 +66,31 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val id = handler.resolving.command<Int>(SendEmail("Hello"))
+        val id = handler.resolving.command(SendEmail("Hello")) as Int
         assertEquals(10, id)
     }
 
-    @Ignore("Requires type propagation")
+    @Test fun `Resolves filters with generic constraints`() {
+        val handler = (Accountant()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
+        val balance = handler.resolving.command(
+                Create(Deposit().apply { amount = 10.toBigDecimal() }))
+                as BigDecimal
+        assertEquals(13.toBigDecimal(), balance)
+    }
+
     @Test fun `Skips filters with missing dependencies`() {
         val handler = Accountant() + FilterProvider()
-        handler.resolving.command<BigDecimal>(
+        handler.resolving.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
     }
 
     @Test fun `Fails if no handlers resolved`() {
         val handler = BillingImpl().toHandler()
         assertFailsWith(NotHandledException::class) {
-            handler.resolving.command<Int>(SendEmail("Hello"))
+            handler.resolving.command(SendEmail("Hello"))
         }
     }
 
@@ -413,15 +422,20 @@ class ResolutionTest {
     @UseFilter(BalanceFilter::class)
     annotation class Balance
 
-    class BalanceFilter<T: Entity, Res: Any?> : DynamicFilter<Create<T>, Res>() {
+    class BalanceFilter<T: Entity, Res: Number> : DynamicFilter<Create<T>, Res>() {
         fun next(callback:   Create<T>,
                  next:       Next<Res>,
+                 binding:    MethodBinding,
                  repository: Repository<T>,
                  billing:    Billing
         ): Res {
             println("Balance for $callback")
             repository.create(callback)
-            billing.bill(callback.entity.id.toBigDecimal())
+            if (binding.method.returnType == BigDecimal::class.java) {
+                @Suppress("UNCHECKED_CAST")
+                return ((next() as BigDecimal) +
+                    billing.bill(callback.entity.id.toBigDecimal())) as Res
+            }
             return next()
         }
     }
@@ -431,6 +445,6 @@ class ResolutionTest {
         fun <Cb: Any, Res: Any?> providesAudit() = AuditFilter<Cb, Res>()
 
         @Provides
-        fun <T: Entity, Res: Any?> providesBalance() = BalanceFilter<T, Res>()
+        fun <T: Entity, Res: Number> providesBalance() = BalanceFilter<T, Res>()
     }
 }

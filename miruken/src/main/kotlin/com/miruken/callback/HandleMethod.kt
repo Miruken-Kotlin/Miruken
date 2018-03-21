@@ -24,12 +24,14 @@ open class HandleMethod(
     override val policy:     CallbackPolicy? get() = null
     var          exception:  Throwable? = null
 
-    override fun getResolveCallback() = Resolution(protocol, this)
+    override fun getResolveCallback() = Resolution(protocol, this,
+            HandleMethodBinding.HANDLE_METHOD_TYPE)
 
     override fun dispatch(
-            handler:  Any,
-            greedy:   Boolean,
-            composer: Handling
+            handler:      Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ) = getTarget(handler)?.let {
         val targetClass = it::class
         targetClass.matchMethod(method)?.let {

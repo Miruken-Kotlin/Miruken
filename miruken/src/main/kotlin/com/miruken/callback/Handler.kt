@@ -1,35 +1,41 @@
 package com.miruken.callback
 
+import kotlin.reflect.KType
+
 open class Handler : Handling {
     override fun handle(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling?
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling?
     ): HandleResult {
         val scope = composer ?: this as? CompositionScope
                   ?: CompositionScope(this)
-        return handleCallback(callback, greedy, scope)
+        return handleCallback(callback, callbackType, greedy, scope)
     }
 
     protected open fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
-    ) = dispatch(this, callback, greedy, composer)
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
+    ) = dispatch(this, callback, callbackType, greedy, composer)
 
     companion object {
         fun dispatch(
-                handler:  Any,
-                callback: Any,
-                greedy:   Boolean,
-                composer: Handling
-        ): HandleResult = when {
-                ExcludeTypes.contains(handler::class) ->
-                    HandleResult.NOT_HANDLED
-                callback is DispatchingCallback ->
-                    callback.dispatch(handler, greedy, composer)
-                else ->
-                    HandlesPolicy.dispatch(handler, callback, greedy, composer)
+                handler:      Any,
+                callback:     Any,
+                callbackType: KType?,
+                greedy:       Boolean,
+                composer:     Handling
+        ) = when {
+            ExcludeTypes.contains(handler::class) ->
+                HandleResult.NOT_HANDLED
+            callback is DispatchingCallback ->
+                callback.dispatch(handler, callbackType, greedy, composer)
+            else ->
+                HandlesPolicy.dispatch(handler, callback,
+                        callbackType, greedy, composer)
         }
 
         private val ExcludeTypes = setOf(Handler::class,

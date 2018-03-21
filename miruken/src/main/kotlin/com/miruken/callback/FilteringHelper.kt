@@ -11,11 +11,10 @@ fun Handling.getFilterOptions(): FilterOptions? {
 }
 
 fun Handling.withFilters(vararg filters: Filtering<*,*>) =
-        FilterOptions(InstanceFilterProvider(*filters))
-                .decorate(this)
+        withOptions(FilterOptions(InstanceFilterProvider(*filters)))
 
 fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
-        FilterOptions(*providers).decorate(this)
+        withOptions(FilterOptions(*providers))
 
 fun Handling.getOrderedFilters(
         filterType:   KType,

@@ -10,27 +10,25 @@ import com.miruken.toKType
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.isSupertypeOf
 import kotlin.reflect.jvm.jvmErasure
 
 open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
     override var order: Int? = null
 
-    override fun next(
+    final override fun next(
             callback: Cb,
             binding:  MethodBinding,
             composer: Handling,
             next:     Next<Res>
-    ): Res {
-        @Suppress("UNCHECKED_CAST")
-        return NEXT.getOrPut(this::class) { getDynamicNext(binding) }
-            ?.let { dispatcher -> resolveArguments(
-                    dispatcher, callback, binding, composer, next)
-                    ?.let { args ->
-                        dispatcher.invoke(this, args)
-                    } as Res
-        } ?: next()
-    }
+    ) = NEXT.getOrPut(this::class) { getDynamicNext(binding) }
+            ?.let { dispatcher ->
+                @Suppress("UNCHECKED_CAST")
+                resolveArguments(
+                        dispatcher, callback, binding, composer, next)
+                        ?.let { args ->
+                            dispatcher.invoke(this, args)
+                        } as Res
+            } ?: next()
 
     private fun resolveArguments(
             dispatcher: CallableDispatch,

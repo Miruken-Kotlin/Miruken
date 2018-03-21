@@ -5,14 +5,14 @@ import com.miruken.typeOf
 import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified R: Any?> Handling.command(callback: Any) =
-    command(callback, typeOf<R>()) as R
+inline fun <reified T: Any> Handling.command(callback: T) =
+    command(callback, typeOf<T>())
 
 fun Handling.command(
-        callback:   Any,
-        resultType: KType? = null
+        callback:     Any,
+        callbackType: KType
 ): Any? {
-    val command = Command(callback, resultType)
+    val command = Command(callback, callbackType)
     handle(command) failure {
         throw NotHandledException(callback)
     }
@@ -24,15 +24,15 @@ fun Handling.command(
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified R: Any?> Handling.commandAsync(callback: Any) =
-        commandAsync(callback, typeOf<R>()) as Promise<R>
+inline fun <reified T: Any> Handling.commandAsync(callback: T) =
+        commandAsync(callback, typeOf<T>())
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAsync(
-        callback:   Any,
-        resultType: KType? = null
+        callback:     Any,
+        callbackType: KType
 ): Promise<Any> {
-    val command = Command(callback, resultType).apply {
+    val command = Command(callback, callbackType).apply {
         wantsAsync = true
     }
     return try {
@@ -45,15 +45,15 @@ fun Handling.commandAsync(
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified R: Any> Handling.commandAll(callback: Any) =
-        commandAll(callback, typeOf<R>()) as List<R>
+inline fun <reified T: Any> Handling.commandAll(callback: T) =
+        commandAll(callback, typeOf<T>())
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAll(
-        callback:   Any,
-        resultType: KType? = null
+        callback:     Any,
+        callbackType: KType
 ): List<Any> {
-    val command = Command(callback, resultType, true)
+    val command = Command(callback, callbackType, true)
     handle(command) failure {
         throw NotHandledException(callback)
     }
@@ -65,15 +65,15 @@ fun Handling.commandAll(
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified R: Any> Handling.commandAllAsync(callback: Any) =
-        commandAllAsync(callback, typeOf<R>()) as Promise<List<R>>
+inline fun <reified T: Any> Handling.commandAllAsync(callback: T) =
+        commandAllAsync(callback, typeOf<T>())
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAllAsync(
-        callback:   Any,
-        resultType: KType? = null
+        callback:     Any,
+        callbackType: KType
 ): Promise<List<Any>> {
-    val command = Command(callback, resultType, true).apply {
+    val command = Command(callback, callbackType, true).apply {
         wantsAsync = true
     }
     return try {

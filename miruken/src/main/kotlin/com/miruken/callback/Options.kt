@@ -11,10 +11,4 @@ abstract class Options<T: Options<T>> : Composition(),
     override fun getResolveCallback() = this
 
     abstract fun mergeInto(other: T)
-
-    fun decorate(handler: Handling) : OptionsHandler<T>
-    {
-        @Suppress("UNCHECKED_CAST")
-        return OptionsHandler(handler, this as T)
-    }
 }

@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
@@ -24,8 +25,7 @@ abstract class CallbackPolicy(
     open fun createKey(bindingInfo: PolicyMethodBindingInfo): Any? =
             bindingInfo.inKey ?: bindingInfo.outKey
 
-    open fun getKey(callback: Any): Any? =
-            (callback as? Callback)?.getCallbackKey()
+    abstract fun getKey(callback: Any, callbackType: KType?): Any?
 
     abstract fun getCompatibleKeys(
             key:       Any,
@@ -46,28 +46,59 @@ abstract class CallbackPolicy(
     fun getMethods(key: Any) = HandlerDescriptor.getPolicyMethods(this, key)
 
     fun dispatch(
-            handler:  Any,
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling,
-            results:  CollectResultsBlock? = null
+            handler:      Any,
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling,
+            results:      CollectResultsBlock? = null
     ) = HandlerDescriptor.getDescriptorFor(handler::class)
-            .dispatch(this, handler, callback, greedy, composer, results)
+            .dispatch(this, handler, callback, callbackType,
+                    greedy, composer, results)
+
+    protected fun compareGenericArity(o1: Any?, o2: Any?) = when (o1) {
+        is KType -> when (o2) {
+            is KType -> o2.arguments.size -  o1.arguments.size
+            is KClass<*> -> o2.typeParameters.size - o1.arguments.size
+            is Class<*> -> o2.typeParameters.size - o1.arguments.size
+            else -> 0
+        }
+        is KClass<*> -> when (o2) {
+            is KType -> o2.arguments.size - o1.typeParameters.size
+            is KClass<*> -> o2.typeParameters.size - o1.typeParameters.size
+            is Class<*> -> o2.typeParameters.size -o1.typeParameters.size
+            else -> 0
+        }
+        is Class<*> -> when (o2) {
+            is KType -> o2.arguments.size - o1.typeParameters.size
+            is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
+            else -> 0
+        }
+        else -> 0
+    }
 
     companion object {
-        fun getCallbackHandlerClasses(callback: Any): List<KClass<*>> {
+        fun getCallbackHandlerClasses(
+                callback:     Any,
+                callbackType: KType? = null
+        ): List<KClass<*>> {
             val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getHandlersClasses(policy, callback)
+            return HandlerDescriptor.getHandlersClasses(
+                    policy, callback, callbackType)
         }
 
-        fun getCallbackMethods(callback: Any): List<PolicyMethodBinding> {
+        fun getCallbackMethods(
+                callback:     Any,
+                callbackType: KType? = null
+        ): List<PolicyMethodBinding> {
             val policy = getCallbackPolicy(callback)
-            return policy.getKey(callback)?.let {
+            return policy.getKey(callback, callbackType)?.let {
                 policy.getMethods(it)
             } ?: emptyList()
         }
 
         fun getCallbackPolicy(callback: Any) =
-                (callback as? DispatchingCallback)?.policy ?: HandlesPolicy
+                (callback as? DispatchingCallback)?.policy
+                        ?: HandlesPolicy
     }
 }

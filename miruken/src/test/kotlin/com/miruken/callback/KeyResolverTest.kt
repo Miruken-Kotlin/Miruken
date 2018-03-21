@@ -26,7 +26,7 @@ class KeyResolverTest {
         val order   = Order().apply {
             lineItems = listOf(LineItem("1234", 1))
         }
-        val confirmation = handler.command<UUID>(NewOrder(order))
+        val confirmation = handler.command(NewOrder(order)) as? UUID
         assertNotNull(confirmation)
         assertEquals(1, order.id)
     }
@@ -34,7 +34,7 @@ class KeyResolverTest {
     @Test fun `Fails if unresolved dependency`() {
         assertFailsWith(NotHandledException::class) {
             val handler = InventoryHandler()
-            handler.command<UUID>(NewOrder(Order()))
+            handler.command(NewOrder(Order()))
         }
     }
 
@@ -43,7 +43,7 @@ class KeyResolverTest {
                     + RepositoryImpl<Order>())
         val order   = Order().apply { id = 1 }
         assertAsync(testName) { done ->
-            handler.commandAsync<Any>(CancelOrder(order)) then {
+            handler.commandAsync(CancelOrder(order)) then {
                 done()
             }
         }
@@ -52,7 +52,7 @@ class KeyResolverTest {
     @Test fun `Fails if unresolved promise dependency`() {
         assertFailsWith(NotHandledException::class) {
             val handler = InventoryHandler()
-            handler.command<UUID>(CancelOrder(Order()))
+            handler.command(CancelOrder(Order()))
         }
     }
 
@@ -60,13 +60,14 @@ class KeyResolverTest {
         val handler = (InventoryHandler()
                     + CustomerSupport()
                     + RepositoryImpl<Order>())
-        handler.command<Any>(NewOrder(Order()))
-        handler.command<Any>(NewOrder(Order()))
-        handler.command<Any>(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
         assertAsync(testName) { done ->
-            handler.commandAsync<Order>(RefundOrder(orderId = 2)) then {
-                assertNotNull(it)
-                assertEquals(2, it.id)
+            handler.commandAsync(RefundOrder(orderId = 2)) then {
+                val order = it as? Order
+                assertNotNull(order)
+                assertEquals(2, order!!.id)
                 done()
             }
         }
@@ -76,11 +77,11 @@ class KeyResolverTest {
         val handler = (InventoryHandler()
                     + CustomerSupport()
                     + RepositoryImpl<Order>())
-        handler.command<Any>(NewOrder(Order()))
-        handler.command<Any>(NewOrder(Order()))
-        handler.command<Any>(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
         assertAsync(testName) { done ->
-            handler.commandAsync<Order>(RefundOrder(orderId = 5)) catch {
+            handler.commandAsync(RefundOrder(orderId = 5)) catch {
                 assertTrue(it is NotHandledException)
                 done()
             }
@@ -91,12 +92,14 @@ class KeyResolverTest {
         val handler = (InventoryHandler()
                     + CustomerSupport()
                     + RepositoryImpl<Order>())
-        handler.command<Any>(NewOrder(Order()))
-        handler.command<Any>(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
+        handler.command(NewOrder(Order()))
         assertAsync(testName) { done ->
-            handler.commandAsync<List<Order>>(ClockOut()) then {
-                assertNotNull(it)
-                assertEquals(2, it.size)
+            handler.commandAsync(ClockOut()) then {
+                @Suppress("UNCHECKED_CAST")
+                val orders = it as? List<Order>
+                assertNotNull(orders)
+                assertEquals(2, orders!!.size)
                 done()
             }
         }
@@ -105,35 +108,36 @@ class KeyResolverTest {
     @Test fun `Resolves simple dependency`() {
         val handler    = (SimpleDependencyHandler()
                        + ConfigurationHandler())
-        val maxRetries = handler.command<Int>(NewOrder(Order()))
+        val maxRetries = handler.command(NewOrder(Order())) as Int
         assertEquals(2, maxRetries)
     }
 
     @Test fun `Resolves promise simple dependency`() {
         val handler    = (SimpleDependencyHandler()
                        + ConfigurationHandler())
-        val maxRetries = handler.command<Int>(ChangeOrder(Order()))
+        val maxRetries = handler.command(ChangeOrder(Order())) as Int
         assertEquals(2, maxRetries)
     }
 
     @Test fun `Resolves simple array dependency`() {
         val handler = (SimpleDependencyHandler()
                     + ConfigurationHandler())
-        val help    = handler.command<List<String>>(RefundOrder(1))
+        @Suppress("UNCHECKED_CAST")
+        val help    = handler.command(RefundOrder(1)) as List<String>
         assertTrue(help.containsAll(listOf(
                 "www.help.com", "www.help2.com", "www.help3.com")))
     }
 
     @Test fun `Resolves proxy dependencies`() {
         val handler = CustomerSupport() + RepositoryImpl<Order>()
-        val valid   = handler.command<Boolean>(ChangeOrder(Order()))
+        val valid   = handler.command(ChangeOrder(Order())) as Boolean
         assertTrue(valid)
     }
 
     @Test fun `Ignores optional missing dependency`() {
         val handler = CustomerSupport()
         assertAsync { done ->
-            handler.commandAsync<Any>(NewOrder(Order())) then {
+            handler.commandAsync(NewOrder(Order())) then {
                 done()
             }
         }

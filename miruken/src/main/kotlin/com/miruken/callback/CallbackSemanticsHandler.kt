@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.Flags
+import kotlin.reflect.KType
 
 class CallbackSemanticsHandler(
         handler: Handling,
@@ -10,9 +11,10 @@ class CallbackSemanticsHandler(
     private val semantics = CallbackSemantics(options)
 
     override fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
         if (Composition.get<CallbackSemantics>(callback) != null)
             return HandleResult.NOT_HANDLED
@@ -21,12 +23,12 @@ class CallbackSemanticsHandler(
             semantics.mergeInto(callback)
             val result = HandleResult.HANDLED
             return if (greedy) result or
-                handler.handle(callback, greedy, composer)
+                handler.handle(callback, callbackType, greedy, composer)
              else result
         }
 
         if (callback is Composition)
-            return handler.handle(callback, greedy, composer)
+            return handler.handle(callback, callbackType, greedy, composer)
 
         val greed = greedy ||
                 semantics.hasOption(CallbackOptions.BROADCAST)
@@ -35,12 +37,12 @@ class CallbackSemanticsHandler(
         {
             return try {
                 HandleResult.HANDLED or
-                        handler.handle(callback, greed, composer)
+                        handler.handle(callback, callbackType, greed, composer)
             } catch (e: RejectedException) {
                 HandleResult.HANDLED
             }
         }
 
-        return super.handleCallback(callback, greed, composer)
+        return super.handleCallback(callback, callbackType, greed, composer)
     }
 }

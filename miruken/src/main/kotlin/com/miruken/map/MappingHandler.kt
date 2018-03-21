@@ -2,6 +2,7 @@ package com.miruken.map
 
 import com.miruken.callback.COMPOSER
 import com.miruken.callback.Handler
+import com.miruken.callback.handle
 import com.miruken.callback.notHandled
 import com.miruken.concurrent.Promise
 import kotlin.reflect.KType

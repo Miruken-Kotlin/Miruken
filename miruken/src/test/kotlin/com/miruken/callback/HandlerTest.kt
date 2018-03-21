@@ -80,7 +80,8 @@ class HandlerTest {
     @Test fun `Handles composed callbacks`() {
         val foo     = Foo()
         val handler = SimpleHandler()
-        assertEquals(HandleResult.HANDLED, handler.handle(Composition(foo)))
+        assertEquals(HandleResult.HANDLED, handler.handle(
+                Composition(foo, typeOf<Foo>())))
         assertEquals(1, foo.handled)
     }
 
@@ -98,6 +99,14 @@ class HandlerTest {
         assertEquals(HandleResult.HANDLED, handler.handle(baz))
         assertEquals("handlesGenericBazArity", baz.tag)
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(BazTR('M',2)))
+    }
+
+    @Test fun `Handles explicit generic callbacks`() {
+        val baz     = BazT(Foo())
+        val handler = SimpleHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(baz))
+        assertEquals("handlesConcreteBaz", baz.tag)
+        assertEquals(2, baz.stuff!!.handled)
     }
 
     @Test fun `Handles all callbacks`() {
@@ -510,7 +519,7 @@ class HandlerTest {
     @Test fun `Infers pipeline from response`() {
         val foo     = Foo()
         val handler = FilteringHandler()
-        val result  = handler.command<Foo>(foo)
+        val result  = handler.command(foo)
         assertTrue(result is SpecialFoo)
         assertEquals(1, foo.filters.size)
         assertTrue { foo.filters[0] is LogBehavior<*,*> }
@@ -520,7 +529,7 @@ class HandlerTest {
         val foo     = Foo()
         val handler = FilteringHandler()
         assertAsync(testName) { done ->
-            handler.commandAsync<Foo>(foo) then {
+            handler.commandAsync(foo) then {
                 assertTrue(it is SpecialFoo)
                 done()
             }
@@ -533,7 +542,7 @@ class HandlerTest {
         val boo     = Boo()
         val handler = FilteringHandler()
         assertAsync(testName) { done ->
-            handler.commandAsync<Boo>(boo) then {
+            handler.commandAsync(boo) then {
                 done()
             }
         }
@@ -545,7 +554,7 @@ class HandlerTest {
         val bee     = Bee()
         val handler = FilteringHandler()
         assertAsync(testName) { done ->
-            handler.commandAsync<Bee>(bee) then {
+            handler.commandAsync(bee) then {
                 done()
             }
         }
@@ -556,7 +565,7 @@ class HandlerTest {
     @Test fun `Coerces pipeline`() {
         val foo     = Foo()
         val handler = SpecialFilteredHandler() + FilteringHandler()
-        val result  = handler.command<Foo>(foo)
+        val result  = handler.command(foo)
         assertTrue(result is SpecialFoo)
         assertEquals(2, foo.filters.size)
         assertTrue { foo.filters[0] is LogFilter<*,*> }
@@ -567,7 +576,7 @@ class HandlerTest {
         val baz     = Baz()
         val handler = SpecialFilteredHandler() + FilteringHandler()
         assertAsync(testName) { done ->
-            handler.commandAsync<Baz>(baz) then {
+            handler.commandAsync(baz) then {
                 assertTrue(it is SpecialBaz)
                 done()
             }
@@ -581,7 +590,7 @@ class HandlerTest {
         val boo     = Boo()
         val handler = SpecialFilteredHandler() + FilteringHandler()
         assertAsync(testName) { done ->
-            handler.commandAsync<Any>(boo) catch {
+            handler.commandAsync(boo) catch {
                 assertTrue(it is IllegalStateException)
                 assertEquals("System shutdown", it.message)
                 done()
@@ -668,6 +677,12 @@ class HandlerTest {
                 bar.handled % 2 == 1 -> HandleResult.HANDLED
                 else -> null
             }
+        }
+
+        @Handles
+        fun <T> handlesConcreteBaz(baz: BazT<Foo>) {
+            baz.tag = "handlesConcreteBaz"
+            baz.stuff?.handled = 2
         }
 
         @Handles

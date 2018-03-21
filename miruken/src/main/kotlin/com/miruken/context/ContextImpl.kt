@@ -6,6 +6,7 @@ import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
 import com.miruken.event.Event
 import com.miruken.graph.TraversingAxis
+import kotlin.reflect.KType
 
 open class ContextImpl() : CompositeHandler(), Context {
     private val _children = mutableListOf<ContextImpl>()
@@ -38,35 +39,41 @@ open class ContextImpl() : CompositeHandler(), Context {
     }
 
     override fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
-        return super.handleCallback(callback, greedy, composer)
+        return super.handleCallback(
+                callback, callbackType, greedy, composer)
                 .otherwise(greedy) {
-                    parent?.handle(callback, greedy, composer)
+                    parent?.handle(callback, callbackType, greedy, composer)
                         ?: HandleResult.NOT_HANDLED
                 }
     }
 
     override fun handle(
-            axis:     TraversingAxis,
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling?
+            axis:         TraversingAxis,
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling?
     ): HandleResult {
         val scope = composer ?: CompositionScope(this)
 
         if (axis == TraversingAxis.SELF)
-            return super.handleCallback(callback, greedy, scope)
+            return super.handleCallback(
+                    callback, callbackType, greedy, scope)
 
         var result = HandleResult.NOT_HANDLED
         traverse(axis) {
             result = result or when {
                 it === this ->
-                    super.handleCallback(callback, greedy, scope)
+                    super.handleCallback(
+                            callback, callbackType, greedy, scope)
                 it is Context ->
-                    it.handle(TraversingAxis.SELF, callback, greedy, scope)
+                    it.handle(TraversingAxis.SELF, callback,
+                            callbackType, greedy, scope)
                 else -> result
             }
             result.stop || (result.handled && !greedy)

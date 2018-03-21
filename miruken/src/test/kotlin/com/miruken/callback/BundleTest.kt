@@ -99,7 +99,7 @@ class BundleTest {
         val result   =_bowling.all {
             add { opResult = it.handle(ResetPins()) }
             add { pins.addAll(it.resolveAll()) }
-            add { ball = it.command(FindBowlingBall(6.0)) }
+            add { ball = it.command(FindBowlingBall(6.0)) as? BowlingBall? }
         }
         assertEquals(HandleResult.HANDLED, result)
         assertEquals(HandleResult.HANDLED, opResult)
@@ -115,7 +115,7 @@ class BundleTest {
             _bowling.allAsync {
                 add { opResult = it.handle(ResetPins()) }
                 add { pins.addAll(it.resolveAll()) }
-                add { ball = it.command(FindBowlingBall(6.0)) }
+                add { ball = it.command(FindBowlingBall(6.0)) as? BowlingBall }
             } then {
                 assertEquals(HandleResult.HANDLED, it)
                 done()
@@ -137,7 +137,7 @@ class BundleTest {
                     pins.addAll(it.resolveAll())
                     Promise.delay(10)
                 }
-                add { ball = it.command(FindBowlingBall(6.0)) }
+                add { ball = it.command(FindBowlingBall(6.0)) as? BowlingBall }
             } then {
                 assertEquals(HandleResult.HANDLED, it)
                 done()
@@ -161,7 +161,7 @@ class BundleTest {
                 pins.addAll(it.resolveAll())
                 Promise.delay(10)
             }
-            add { ball = it.command(FindBowlingBall(6.0)) }
+            add { ball = it.command(FindBowlingBall(6.0)) as? BowlingBall }
         }
         assertEquals(HandleResult.HANDLED, result)
         assertEquals(HandleResult.HANDLED, opResult)
@@ -175,7 +175,7 @@ class BundleTest {
             add { it.handle(ResetPins()) }
             add { it.resolveAll<Pin>() }
             add { it.handle(FindBowlingBall(6.0)) }
-            add { it.command<Bowler>(TakeTurn(1, bowler))}
+            add { it.command(TakeTurn(1, bowler))}
         }
         assertEquals(HandleResult.HANDLED, result)
         assertEquals(1, bowler.frames[0]!!.firstTurn)
@@ -189,7 +189,7 @@ class BundleTest {
                 add { it.handle(ResetPins()) }
                 add { it.resolveAll<Pin>() }
                 add { it.handle(FindBowlingBall(6.0)) }
-                add { it.command<Bowler>(TakeTurn(1, bowler)) }
+                add { it.command(TakeTurn(1, bowler)) }
             } then {
                 assertEquals(HandleResult.HANDLED, it)
                 done()
@@ -428,7 +428,7 @@ class BundleTest {
         val result = BowlingProvider().resolving.all {
             add { handled = it.handle(ResetPins()) }
             add { pins.addAll(it.resolveAll()) }
-            add { ball = it.command(FindBowlingBall(10.0)) }
+            add { ball = it.command(FindBowlingBall(10.0)) as? BowlingBall }
         }
         assertEquals(HandleResult.HANDLED, result)
         assertEquals(HandleResult.HANDLED, handled)
@@ -517,7 +517,7 @@ class BundleTest {
             assertNotNull(composer)
             for (pin in pins) pin.up = true
             (composer.takeUnless { resolve } ?: composer.resolving)
-                    .command<BowlingBall>(FindBowlingBall(5.0))
+                    .command(FindBowlingBall(5.0))
         }
     }
 

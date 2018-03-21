@@ -24,7 +24,7 @@ fun Handling.aspect(
         reentrant: Boolean = false
 ) : Handling {
     if (before == null && after == null) return this
-    return filter(reentrant) { callback, composer, proceed ->
+    return filter(reentrant) { callback, _, composer, proceed ->
         val cb    = callback as? Callback
         val state = before?.let {
             val state = it(callback, composer)

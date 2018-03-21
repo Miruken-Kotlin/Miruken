@@ -144,9 +144,10 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     ): Boolean = true
 
     override fun dispatch(
-            handler:  Any,
-            greedy:   Boolean,
-            composer: Handling
+            handler:      Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
         val result = if (implied(handler, greedy, composer))
             HandleResult.HANDLED else HandleResult.NOT_HANDLED
@@ -154,7 +155,8 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
         val count = _resolutions.size + _promises.size
         return result then {
-            policy!!.dispatch(handler, this@Inquiry, greedy, composer)
+            policy!!.dispatch(
+                    handler, this@Inquiry, callbackType, greedy, composer)
             { r, strict -> resolve(r, strict, greedy, composer) }
         } then {
             if (_resolutions.size + _promises.size > count)

@@ -40,8 +40,10 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     internal fun getInvariantMethods() =
         _typed.values.flatMap { it } + _indexed.values.flatMap { it }
 
-    internal fun getInvariantMethods(callback: Any) =
-        policy.getKey(callback)?.let {
+    internal fun getInvariantMethods(
+            callback:     Any,
+            callbackType: KType?
+    ) = policy.getKey(callback, callbackType)?.let {
             when (it) {
                 is KType -> _typed[it]
                 is String -> _indexed[it] ?: _indexed[StringKey(it)]
@@ -49,21 +51,22 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
             }?.filter { it.approve(callback) }
         } ?: emptyList()
 
-    internal fun getCompatibleMethods(callback: Any) =
-        policy.getKey(callback)?.let {
+    internal fun getCompatibleMethods(
+            callback:     Any,
+            callbackType: KType?
+    ) = policy.getKey(callback, callbackType)?.let {
             _compatible.getOrPut(it) { inferCompatibleMethods(it) }
         }?.filter { it.approve(callback) } ?: emptyList()
 
-    private fun inferCompatibleMethods(key: Any): List<PolicyMethodBinding> {
-        return when (key) {
-            is KType, is KClass<*>, is Class<*> ->
-                policy.getCompatibleKeys(key, _typed.keys).flatMap {
-                    _typed[it] ?: emptyList<PolicyMethodBinding>()
-                }
-            else ->
-                policy.getCompatibleKeys(key, _indexed.keys).flatMap {
-                    _indexed[it] ?: emptyList<PolicyMethodBinding>()
-                }
-        }.sortedWith(policy.methodBindingComparator) + _unknown
-    }
+    private fun inferCompatibleMethods(key: Any) =
+            when (key) {
+                is KType, is KClass<*>, is Class<*> ->
+                    policy.getCompatibleKeys(key, _typed.keys).flatMap {
+                        _typed[it] ?: emptyList<PolicyMethodBinding>()
+                    }
+                else ->
+                    policy.getCompatibleKeys(key, _indexed.keys).flatMap {
+                        _indexed[it] ?: emptyList<PolicyMethodBinding>()
+                    }
+            }.sortedWith(policy.methodBindingComparator) + _unknown
 }

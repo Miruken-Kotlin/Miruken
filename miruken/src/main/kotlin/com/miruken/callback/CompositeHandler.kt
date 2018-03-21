@@ -1,5 +1,7 @@
 package com.miruken.callback
 
+import kotlin.reflect.KType
+
 open class CompositeHandler(vararg handlers: Any)
     : Handler(), CompositeHandling {
 
@@ -12,17 +14,17 @@ open class CompositeHandler(vararg handlers: Any)
     val handlers get() = _handlers.toList()
 
     override fun handleCallback(
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling
-    ): HandleResult {
-        val initial = super.handleCallback(callback, greedy, composer)
-        return handlers.fold(initial, { result, handler ->
-            if (result.stop || (result.handled && !greedy)) {
-                return result
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
+    ) = handlers.fold(
+            super.handleCallback(callback, callbackType, greedy, composer)
+    ) { result, handler ->
+            if (result.stop || (result.handled && !greedy)) result
+            else {
+                result or handler.handle(callback, callbackType, greedy, composer)
             }
-            result or handler.handle(callback, greedy, composer)
-        })
     }
 
     final override fun addHandlers(

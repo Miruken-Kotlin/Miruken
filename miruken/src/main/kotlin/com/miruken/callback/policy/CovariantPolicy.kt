@@ -1,7 +1,9 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
 import com.miruken.runtime.isCompatibleWith
+import kotlin.reflect.KType
 
 open class CovariantPolicy(
         rules:   List<MethodRule>,
@@ -17,8 +19,10 @@ open class CovariantPolicy(
             prototype.rules, prototype.filters, prototype.keyFunctor
     )
 
-    override fun getKey(callback: Any): Any? =
-            super.getKey(callback) ?: keyFunctor(callback)
+    override fun getKey(callback: Any, callbackType: KType?): Any? =
+            (callback as? Callback)?.getCallbackKey()
+                    ?: keyFunctor(callback)
+                    ?: callbackType
 
     override fun getCompatibleKeys(
             key:       Any,
@@ -29,7 +33,7 @@ open class CovariantPolicy(
         o1 == o2 -> 0
         o1 == null -> 1
         o2 == null -> -1
-        isCompatibleWith(o1, o2) -> -1
-        else -> 1
+        else -> compareGenericArity(o1, o2).takeIf { it != 0 }
+                ?: if (isCompatibleWith(o1, o2)) -1 else 1
     }
 }

@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.HandleResult
 import com.miruken.runtime.isCompatibleWith
@@ -21,14 +22,14 @@ open class ContravariantPolicy(
             prototype.rules, prototype.filters, prototype.targetFunctor
     )
 
-    override fun getKey(callback: Any): Any? =
-            super.getKey(callback) ?:
+    override fun getKey(callback: Any, callbackType: KType?): Any? =
+            (callback as? Callback)?.getCallbackKey() ?:
             targetFunctor(callback)?.let {
                 when (it) {
                     is KType, is KClass<*> -> it
                     else -> it::class
                 }
-            } ?: callback::class
+            } ?: callbackType ?: callback::class
 
     override fun getCompatibleKeys(
             key:       Any,
@@ -50,26 +51,5 @@ open class ContravariantPolicy(
         o2 == null -> -1
         else -> compareGenericArity(o1, o2).takeIf { it != 0 }
                 ?: if (isCompatibleWith(o2, o1)) -1 else 1
-    }
-    
-    private fun compareGenericArity(o1: Any?, o2: Any?) = when (o1) {
-        is KType -> when (o2) {
-            is KType -> o2.arguments.size -  o1.arguments.size
-            is KClass<*> -> o2.typeParameters.size - o1.arguments.size
-            is Class<*> -> o2.typeParameters.size - o1.arguments.size
-                else -> 0
-        }
-        is KClass<*> -> when (o2) {
-            is KType -> o2.arguments.size - o1.typeParameters.size
-            is KClass<*> -> o2.typeParameters.size - o1.typeParameters.size
-            is Class<*> -> o2.typeParameters.size -o1.typeParameters.size
-            else -> 0
-        }
-        is Class<*> -> when (o2) {
-            is KType -> o2.arguments.size - o1.typeParameters.size
-            is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
-            else -> 0
-        }
-        else -> 0
     }
 }

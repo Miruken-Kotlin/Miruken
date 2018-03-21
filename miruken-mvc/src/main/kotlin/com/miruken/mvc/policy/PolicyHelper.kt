@@ -9,7 +9,7 @@ fun Handling.trackPromise(policyOwner: PolicyOwner<*>) =
         trackPromise(policyOwner.policy)
 
 fun Handling.trackPromise(parentPolicy: Policy) =
-        filter { callback, _, proceed -> proceed().also {
+        filter { callback, _, _, proceed -> proceed().also {
             it success {
                 val cb = callback as? Callback
                 (cb?.result as? Promise<*>)?.also {

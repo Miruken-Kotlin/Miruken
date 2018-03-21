@@ -3,27 +3,33 @@ package com.miruken.callback
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
-import com.miruken.runtime.ANY_STAR
+import com.miruken.runtime.ANY_TYPE
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 
 open class Command(
-        val callback: Any,
-        resultType:   KType?  = null,
-        val many:     Boolean = false
-
+        val callback:     Any,
+        val callbackType: KType,
+        val many:         Boolean = false
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
-    private var _resultType = resultType ?: ANY_STAR
     private val _results = mutableListOf<Any>()
     private var _policy: CallbackPolicy? = null
+
+    init {
+        require(callback::class == callbackType.classifier) {
+            "Callback $callback does not match type $callbackType"
+        }
+    }
 
     override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
         private set
+
+    override fun getCallbackKey() = callbackType
 
     override var policy: CallbackPolicy?
         get() = _policy ?: HandlesPolicy
@@ -32,8 +38,8 @@ open class Command(
     val results: List<Any> get() = _results
 
     override val resultType: KType?
-        get() = _resultType.let {
-            var resultType = it
+        get() {
+            var resultType = ANY_TYPE
             if (many) {
                 resultType = List::class.createType(listOf(
                         KTypeProjection.invariant(resultType)))
@@ -78,13 +84,14 @@ open class Command(
     }
 
     override fun dispatch(
-            handler:  Any,
-            greedy:   Boolean,
-            composer: Handling
+            handler:      Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
     ): HandleResult {
         val size = _results.size
-        return policy!!.dispatch(handler, this, greedy,
-                composer, ::respond).otherwise(
+        return policy!!.dispatch(handler, this, callbackType,
+                greedy, composer, ::respond).otherwise(
                 _results.size > size)
     }
 }

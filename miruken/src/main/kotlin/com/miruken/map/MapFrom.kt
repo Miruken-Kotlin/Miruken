@@ -51,9 +51,10 @@ class MapFrom(
     }
 
     override fun dispatch(
-            handler:  Any,
-            greedy:   Boolean,
-            composer: Handling
-    ) = MapsPolicy.dispatch(handler, this, greedy,
+            handler:      Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling
+    ) = MapsPolicy.dispatch(handler, this, callbackType, greedy,
             composer, ::mapped).otherwise(_result != null)
 }
