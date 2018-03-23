@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
 import com.miruken.callback.*
+import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
@@ -22,13 +23,14 @@ class PolicyMethodBinding(
     fun approve(callback: Any) = policy.approve(callback, this)
 
     fun dispatch(
-            handler:  Any,
-            callback: Any,
-            composer: Handling,
-            results:  CollectResultsBlock?
+            handler:      Any,
+            callback:     Any,
+            callbackType: KType?,
+            composer:     Handling,
+            results:      CollectResultsBlock?
     ): HandleResult {
         val ruleArgs  = rule.resolveArguments(callback)
-        val arguments = resolveArguments(ruleArgs, composer)
+        val arguments = resolveArguments(ruleArgs, callbackType, composer)
         return arguments?.let {
             val filterCallback = callbackArg?.let {
                 arguments[it.parameter.index - 1] // skip receiver
@@ -80,6 +82,7 @@ class PolicyMethodBinding(
 
     private fun resolveArguments(
             ruleArguments: Array<Any?>,
+            callbackType:  KType?,
             composer:      Handling
     ): Array<Any?>? {
         val arguments = dispatcher.arguments
@@ -97,6 +100,15 @@ class PolicyMethodBinding(
                         resolved[i] = composer
                     argumentClass.isInstance(this@PolicyMethodBinding) ->
                         resolved[i] = this@PolicyMethodBinding
+                    argumentClass == KType::class -> {
+                        if (callbackType == null) {
+                            val flags = argument.typeInfo.flags
+                            if (!(flags has TypeFlags.OPTIONAL))
+                                return@all HandleResult.NOT_HANDLED
+                        } else {
+                            resolved[i] = callbackType
+                        }
+                    }
                     else -> {
                         val key      = argument.key
                         val flags    = argument.typeInfo.flags

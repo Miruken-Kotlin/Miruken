@@ -33,27 +33,29 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     ): HandleResult {
         return _policies[policy]?.let {
             dispatch(it.getInvariantMethods(callback, callbackType),
-                    receiver, callback, greedy, composer, results
-                   ).otherwise(greedy) {
+                    receiver, callback, callbackType,
+                    greedy, composer, results).otherwise(greedy) {
             dispatch(it.getCompatibleMethods(callback, callbackType),
-                    receiver, callback, greedy, composer, results)
+                    receiver, callback, callbackType,
+                    greedy, composer, results)
             }
         } ?: HandleResult.NOT_HANDLED
     }
 
     private fun dispatch(
-            methods:  Collection<PolicyMethodBinding>,
-            receiver: Any,
-            callback: Any,
-            greedy:   Boolean,
-            composer: Handling,
-            results:  CollectResultsBlock?
+            methods:      Collection<PolicyMethodBinding>,
+            receiver:     Any,
+            callback:     Any,
+            callbackType: KType?,
+            greedy:       Boolean,
+            composer:     Handling,
+            results:      CollectResultsBlock?
     ) = methods.fold(HandleResult.NOT_HANDLED, { result, method ->
         if ((result.handled && !greedy) || result.stop) {
             return result
         }
-        result or method.dispatch(
-                receiver, callback, composer, results)
+        result or method.dispatch(receiver, callback,
+                callbackType, composer, results)
     })
 
     private fun findCompatibleMembers() {
