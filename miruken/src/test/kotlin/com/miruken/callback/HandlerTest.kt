@@ -11,6 +11,7 @@ import com.miruken.typeOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
+import kotlin.reflect.KType
 import kotlin.test.*
 
 class HandlerTest {
@@ -680,7 +681,8 @@ class HandlerTest {
         }
 
         @Handles
-        fun <T> handlesConcreteBaz(baz: BazT<Foo>) {
+        fun <T> handlesConcreteBaz(baz: BazT<Foo>, type: KType) {
+            assertEquals(typeOf<BazT<Foo>>(), type)
             baz.tag = "handlesConcreteBaz"
             baz.stuff?.handled = 2
         }

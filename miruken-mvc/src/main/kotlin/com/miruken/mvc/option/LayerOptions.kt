@@ -2,6 +2,7 @@ package com.miruken.mvc.option
 
 import com.miruken.callback.Handling
 import com.miruken.callback.Options
+import com.miruken.callback.withOptions
 import com.miruken.mvc.view.ViewLayer
 import java.lang.IndexOutOfBoundsException
 
@@ -30,49 +31,49 @@ class LayerOptions : Options<LayerOptions>() {
 }
 
 val Handling.pushLayer get() =
-    RegionOptions().apply {
+    withOptions(RegionOptions().apply {
         layer = LayerOptions().apply { push = true }
-    }.decorate(this)
+    })
 
 val Handling.overlay get() =
-        RegionOptions().apply {
-            layer = LayerOptions().apply { overlay = true }
-        }.decorate(this)
+    withOptions(RegionOptions().apply {
+        layer = LayerOptions().apply { overlay = true }
+    })
 
 val Handling.unloadRegion get() =
-        RegionOptions().apply {
-            layer = LayerOptions().apply { unload = true }
-        }.decorate(this)
+    withOptions(RegionOptions().apply {
+        layer = LayerOptions().apply { unload = true }
+    })
 
 val Handling.displayImmediate get() =
-        RegionOptions().apply {
-            layer = LayerOptions().apply { immediate = true }
-        }.decorate(this)
+    withOptions(RegionOptions().apply {
+        layer = LayerOptions().apply { immediate = true }
+    })
 
 fun Handling.layer(viewLayer: ViewLayer) =
-        RegionOptions().apply {
-            layer = LayerOptions().apply {
-                selector = { layers ->
-                    if (!layers.contains(viewLayer)) {
-                        throw IllegalArgumentException("Layer not found")
-                    }
-                    viewLayer
+    withOptions(RegionOptions().apply {
+        layer = LayerOptions().apply {
+            selector = { layers ->
+                if (!layers.contains(viewLayer)) {
+                    throw IllegalArgumentException("Layer not found")
                 }
+                viewLayer
             }
-        }.decorate(this)
+        }
+    })
 
 fun Handling.layer(offset: Int) =
-        RegionOptions().apply {
-            layer = LayerOptions().apply {
-                selector = { layers ->
-                    val index = when {
-                        offset < 0 -> layers.size + offset - 1
-                        else -> offset
-                    }
-                    if (index < 0 || index >= layers.size) {
-                        throw IndexOutOfBoundsException()
-                    }
-                    layers[index]
+    withOptions(RegionOptions().apply {
+        layer = LayerOptions().apply {
+            selector = { layers ->
+                val index = when {
+                    offset < 0 -> layers.size + offset - 1
+                    else -> offset
                 }
+                if (index < 0 || index >= layers.size) {
+                    throw IndexOutOfBoundsException()
+                }
+                layers[index]
             }
-        }.decorate(this)
+        }
+    })
