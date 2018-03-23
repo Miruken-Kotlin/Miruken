@@ -41,7 +41,7 @@ open class Controller : ContextualHandler<Context>(),
             view.display(region(io))
 
     protected fun show(handler: Handling, view: View) =
-        view.display(region(handler))
+            view.display(region(handler))
 
     protected inline fun <reified V: View> overlay(
             noinline init: (V.() -> Unit)? = null
@@ -53,7 +53,7 @@ open class Controller : ContextualHandler<Context>(),
     ) = region(handler.pushLayer).show(init)
 
     protected fun region(handler: Handling) =
-        ViewRegion(handler)
+            ViewRegion(handler)
 
     protected fun addRegion(
         region: ViewRegion,
@@ -100,7 +100,8 @@ open class Controller : ContextualHandler<Context>(),
 
     // Context
 
-    protected val io get() = _io ?: context ?: ContextImpl()
+    protected val io get() =
+        _io ?: context ?: ContextImpl()
 
     protected fun endContext() = context?.end()
 
@@ -111,6 +112,7 @@ open class Controller : ContextualHandler<Context>(),
     }
 
     override fun close() {
+        error("")
         if (_closed.compareAndSet(false, true)) {
             policy.release()
             context      = null

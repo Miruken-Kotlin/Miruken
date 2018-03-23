@@ -46,7 +46,7 @@ class BatchingHandler(
 
     fun complete(promise: Promise<*>? = null): Promise<List<Any?>> {
         if (!_completed.compareAndSet(0, 1))
-            throw IllegalStateException("The batch already completed")
+            error("The batch already completed")
         val results = proxy<BatchingComplete>().completeBatch(this)
         return promise?.let { follow ->
             results then { rs -> follow.then { rs } }

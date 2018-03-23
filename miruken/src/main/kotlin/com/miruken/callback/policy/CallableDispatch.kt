@@ -32,7 +32,7 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val javaMethod = when (callable) {
         is KFunction<*> -> callable.javaMethod!!
         is KProperty<*> -> callable.javaGetter!!
-        else -> throw IllegalStateException()
+        else -> error("Unrecognized callable $callable")
     }
 
     val returnsSomething get() =

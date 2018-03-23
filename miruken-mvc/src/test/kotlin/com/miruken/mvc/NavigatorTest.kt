@@ -32,21 +32,22 @@ class NavigatorTest {
 
     @Test fun `Navigates to next controller`() {
         rootContext.next<HelloController> {
-            sayHello()
+            sayHello("Brenda")
             assertSame(rootContext, context)
         }
     }
 
     @Test fun `Navigates to push controller`() {
         rootContext.push<HelloController> {
-            sayHello()
+            sayHello("Craig")
             assertSame(rootContext, context?.parent)
         }
     }
 
     class HelloController : Controller() {
-        fun sayHello(): RegionOptions? {
-            println("Hello")
+        fun sayHello(name: String): RegionOptions? {
+            println("Hello $name")
+            push<GoodbyeController> { sayGoodbye(name) }
             val options = RegionOptions()
             return io.handle(options, true).success {
                 options
@@ -54,10 +55,17 @@ class NavigatorTest {
         }
     }
 
+    class GoodbyeController : Controller() {
+        fun sayGoodbye(name: String) {
+            println("Goodbye $name")
+            endContext()
+        }
+    }
+
     @Test fun `Propagates next options`() {
         rootContext.unloadRegion
                 .next<HelloController> {
-                    val options = sayHello()
+                    val options = sayHello("Lauren")
                     assertTrue(options?.layer?.push != true)
                     assertTrue(options?.layer?.unload == true)
                 }
@@ -66,7 +74,7 @@ class NavigatorTest {
     @Test fun `Propagates push options`() {
         rootContext.displayImmediate
                 .push<HelloController> {
-                    val options = sayHello()
+                    val options = sayHello("Matthew")
                     assertTrue(options?.layer?.push == true)
                     assertTrue(options?.layer?.immediate == true)
                 }

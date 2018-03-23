@@ -138,6 +138,6 @@ open class ContextImpl() : CompositeHandler(), Context {
 
     private fun requireActive() {
         if (state !== ContextState.ACTIVE)
-            throw IllegalStateException("The context has already ended")
+            error("The context has already ended")
     }
 }
