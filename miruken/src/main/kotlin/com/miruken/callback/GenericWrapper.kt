@@ -9,7 +9,7 @@ class GenericWrapper(
         override val type:  KType
 ) : Handler(), TypedValue {
     private val _handler = value as? Handling
-            ?: HandlerAdapter(this)
+            ?: HandlerAdapter(value)
 
     @Provides
     fun provide(inquiry: Inquiry) =

@@ -8,6 +8,5 @@ open class HandlerAdapter(val handler: Any) : Handler() {
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling
-    ): HandleResult =
-            dispatch(handler, callback, callbackType, greedy, composer)
+    ) = dispatch(handler, callback, callbackType, greedy, composer)
 }
