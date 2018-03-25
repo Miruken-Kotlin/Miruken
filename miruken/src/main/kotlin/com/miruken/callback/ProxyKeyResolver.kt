@@ -1,12 +1,13 @@
 package com.miruken.callback
 
-import com.miruken.Flags
 import com.miruken.TypeFlags
+import com.miruken.TypeInfo
 import com.miruken.protocol.proxy
 import kotlin.reflect.KType
 
 object ProxyKeyResolver : KeyResolver() {
-    override fun validate(key: Any, flags: Flags<TypeFlags>) {
+    override fun validate(key: Any, typeInfo: TypeInfo) {
+        val flags = typeInfo.flags
         require(flags has TypeFlags.INTERFACE) {
             "Proxied keys must be interfaces"
         }
@@ -16,6 +17,10 @@ object ProxyKeyResolver : KeyResolver() {
         }
     }
 
-    override fun resolveKey(key: Any, handler: Handling, composer: Handling) =
+    override fun resolveKey(
+            key:      Any,
+            typeInfo: TypeInfo,
+            handler:  Handling,
+            composer: Handling) =
             composer.proxy(key as KType)
 }

@@ -92,6 +92,20 @@ class ArgumentTest {
         assertFalse(flags.has(TypeFlags.OPEN))
     }
 
+    @Test fun `Extracts optional promise parameter information`() {
+        val handle   = getMethod<TestHandler.Good>("handleOptionalPromise")
+        val promise  = handle!!.parameters.component2()
+        val argument = Argument(promise)
+        val flags    = argument.typeInfo.flags
+        assertEquals(typeOf<Foo>().withNullability(true),
+                argument.typeInfo.logicalType)
+        assertFalse(flags.has(TypeFlags.COLLECTION))
+        assertFalse(flags.has(TypeFlags.LAZY))
+        assertTrue(flags.has(TypeFlags.PROMISE))
+        assertFalse(flags.has(TypeFlags.OPTIONAL))
+        assertFalse(flags.has(TypeFlags.OPEN))
+    }
+
     @Test fun `Extracts list parameter information`() {
         val handle   = getMethod<TestHandler.Good>("handleList")
         val list     = handle!!.parameters.component2()

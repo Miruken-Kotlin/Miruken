@@ -244,6 +244,16 @@ fun KClass<*>.matchMethod(method: Method): Method? {
     }
 }
 
+fun Collection<*>.toTypedArray(componentType: KClass<*>) =
+        toTypedArray(componentType.javaObjectType)
+
+fun Collection<*>.toTypedArray(componentType: Class<*>): Any {
+    val array = java.lang.reflect.Array.newInstance(componentType, size)
+    forEachIndexed { index, element ->
+        java.lang.reflect.Array.set(array, index, element) }
+    return array
+}
+
 val ANY_STAR        = Any::class.starProjectedType
 val ANY_TYPE        = typeOf<Any>().withNullability(true)
 val COLLECTION_TYPE = typeOf<Collection<Any>>().withNullability(true)

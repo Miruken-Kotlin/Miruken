@@ -4,6 +4,7 @@ import com.miruken.typeOf
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class RuntimeHelpersTest {
@@ -27,6 +28,23 @@ class RuntimeHelpersTest {
     @Test fun `Obtains component type of array`() {
         val componentType = typeOf<Array<String>>().componentType
         assertEquals(typeOf<String>(), componentType)
+    }
+
+    @Test fun `Converts untyped collection into typed array`() {
+        val list: List<*> = listOf(BarImpl(), BarImpl())
+        val array = list.toTypedArray(BarImpl::class) as Array<*>
+        assertEquals(BarImpl::class.java, array::class.java.componentType)
+        assertEquals(2, array.size)
+        assertSame(list[0], array[0])
+        assertSame(list[1], array[1])
+    }
+
+    @Test fun `Converts untyped primitive collection into typed array`() {
+        val list: List<*> = listOf(1, 2)
+        val array = list.toTypedArray(Int::class.java) as IntArray
+        assertEquals(Int::class.java, array::class.java.componentType)
+        assertEquals(2, array.size)
+        assertSame(list[0], array[0])
     }
 
     @Test fun `gets all interfaces of type`() {

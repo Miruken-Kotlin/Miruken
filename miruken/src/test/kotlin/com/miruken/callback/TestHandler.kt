@@ -38,6 +38,9 @@ sealed class TestHandler {
         fun handlePromise(cb: Promise<Foo>) {}
 
         @Handles
+        fun handleOptionalPromise(cb: Promise<Foo?>) {}
+
+        @Handles
         fun handleList(cb: List<Foo>) {}
 
         @Handles

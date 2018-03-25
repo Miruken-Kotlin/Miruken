@@ -53,17 +53,17 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                         resolved[i] = binding
                     else -> {
                         val key      = argument.key
-                        val flags    = argument.typeInfo.flags
-                        val optional = flags has TypeFlags.OPTIONAL
+                        val typeInfo = argument.typeInfo
+                        val optional = typeInfo.flags has TypeFlags.OPTIONAL
                         val resolver = KeyResolver.getResolver(
                                 argument.useResolver, composer)
                         if (resolver == null) {
                             if (optional) continue@loop
                             return@all HandleResult.NOT_HANDLED
                         }
-                        resolver.validate(key, flags)
+                        resolver.validate(key, typeInfo)
                         add({
-                            resolved[i] = resolver.resolve(key, flags, it, composer)
+                            resolved[i] = resolver.resolve(key, typeInfo, it, composer)
                         }) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }

@@ -1,15 +1,13 @@
 package com.miruken.callback
 
-import com.miruken.Flags
-import com.miruken.TypeFlags
+import com.miruken.TypeInfo
 
 interface KeyResolving {
-    fun validate(key: Any, flags: Flags<TypeFlags>) {
-    }
+    fun validate(key: Any, typeInfo: TypeInfo) {}
 
     fun resolve(
             key:      Any,
-            flags:    Flags<TypeFlags>,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ): Any?

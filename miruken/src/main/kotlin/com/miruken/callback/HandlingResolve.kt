@@ -21,12 +21,20 @@ fun Handling.resolve(key: Any): Any? {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun Handling.resolveAsync(key: Any): Promise<Any?> {
+fun Handling.resolveAsync(
+        key:      Any,
+        required: Boolean = false
+): Promise<Any?> {
     val inquiry = key as? Inquiry ?: Inquiry(key)
     inquiry.wantsAsync = true
     return handle(inquiry) success {
         inquiry.result as? Promise<Any>
-    } ?: Promise.EMPTY
+    } ?: if (required) {
+        Promise.reject(IllegalStateException(
+                "Promise required a non-null result for key '$key'"))
+    } else {
+        Promise.EMPTY
+    }
 }
 
 inline fun <reified T: Any> Handling.resolve(): T? =

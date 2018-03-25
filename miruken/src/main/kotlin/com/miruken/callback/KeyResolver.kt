@@ -1,85 +1,116 @@
 package com.miruken.callback
 
-import com.miruken.Flags
 import com.miruken.TypeFlags
+import com.miruken.TypeInfo
+import com.miruken.runtime.toTypedArray
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.jvm.jvmErasure
 
 open class KeyResolver : KeyResolving {
     override fun resolve(
             key:      Any,
-            flags:    Flags<TypeFlags>,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ) = when {
-        flags has TypeFlags.LAZY ->
-                resolveArgumentLazy(key, flags, composer)
-        flags has TypeFlags.FUNC ->
-            resolveArgumentFunc(key, flags, composer)
-        else -> resolveArgument(key, flags, handler, composer)
+        typeInfo.flags has TypeFlags.LAZY ->
+                resolveArgumentLazy(key, typeInfo, composer)
+        typeInfo.flags has TypeFlags.FUNC ->
+            resolveArgumentFunc(key, typeInfo, composer)
+        else -> resolveArgument(key, typeInfo, handler, composer)
     }
 
     open fun resolveKey(
             key:      Any,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ) = handler.resolve(key)
 
     open fun resolveKeyAsync(
             key:      Any,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = handler.resolveAsync(key)
+    ) = handler.resolveAsync(key,
+            (key as? KType)?.isMarkedNullable == false)
 
     open fun resolveKeyAll(
             key:      Any,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ) = handler.resolveAll(key)
 
+    private fun resolveKeyAllArray(
+            key:      Any,
+            typeInfo: TypeInfo,
+            handler:  Handling,
+            composer: Handling
+    ) = resolveKeyAll(key, typeInfo, handler, composer)
+            .toTypedArray(typeInfo.componentType.jvmErasure)
+
     open fun resolveKeyAllAsync(
             key:      Any,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ) = handler.resolveAllAsync(key)
 
+    private fun resolveKeyAllArrayAsync(
+            key:      Any,
+            typeInfo: TypeInfo,
+            handler:  Handling,
+            composer: Handling
+    ) = resolveKeyAllAsync(key, typeInfo, handler, composer) then {
+        it.toTypedArray(typeInfo.componentType.jvmErasure)
+    }
+
     private fun resolveArgumentLazy(
             key:      Any,
-            flags:    Flags<TypeFlags>,
+            typeInfo: TypeInfo,
             composer: Handling
     ) =
         lazy(LazyThreadSafetyMode.NONE) {
             // ** MUST ** use composer, composer since
             // handler may be invalidated at this point
-            resolveArgument(key, flags, composer, composer)
+            resolveArgument(key, typeInfo, composer, composer)
         }
 
     private fun resolveArgumentFunc(
             key:      Any,
-            flags:    Flags<TypeFlags>,
+            typeInfo: TypeInfo,
             composer: Handling
     ): () -> Any? = {
         // ** MUST ** use composer, composer since
         // handler may be invalidated at this point
-        resolveArgument(key, flags, composer, composer)
+        resolveArgument(key, typeInfo, composer, composer)
     }
 
     private fun resolveArgument(
             key:      Any,
-            flags:    Flags<TypeFlags>,
+            typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ): Any? {
+        val flags = typeInfo.flags
         return when {
-            flags has TypeFlags.COLLECTION ||
+            flags has TypeFlags.COLLECTION  ->
+                when {
+                    flags has TypeFlags.PROMISE ->
+                        resolveKeyAllAsync(key, typeInfo, handler, composer)
+                    else -> resolveKeyAll(key, typeInfo, handler, composer)
+                }
             flags has TypeFlags.ARRAY ->
                 when {
                     flags has TypeFlags.PROMISE ->
-                        resolveKeyAllAsync(key, handler, composer)
-                    else -> resolveKeyAll(key, handler, composer)
+                        resolveKeyAllArrayAsync(key, typeInfo, handler, composer)
+                    else -> resolveKeyAllArray(key, typeInfo, handler, composer)
                 }
             flags has TypeFlags.PROMISE ->
-                resolveKeyAsync(key, handler, composer)
-            else -> resolveKey(key, handler, composer)
+                resolveKeyAsync(key, typeInfo, handler, composer)
+            else -> resolveKey(key, typeInfo, handler, composer)
         }
     }
 
