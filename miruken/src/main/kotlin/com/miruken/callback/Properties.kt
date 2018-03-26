@@ -7,25 +7,26 @@ import com.miruken.runtime.getFirstTaggedAnnotation
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-fun <T> Handling.get()  = ResolveDelegateProvider<T>(this) {
+fun <T> Handling.get()  = PropertyProvider<T>(this) {
     key, typeInfo, handler, resolver ->
-        GetDelegate(key, typeInfo, handler, resolver)
+        GetProperty(key, typeInfo, handler, resolver)
 }
 
-fun <T> Handling.bind() = ResolveDelegateProvider<T>(this) {
+fun <T> Handling.link() = PropertyProvider<T>(this) {
     key, typeInfo, handler, resolver ->
-        BindDelegate(key, typeInfo, handler, resolver)
+        LinkProperty(key, typeInfo, handler, resolver)
 }
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T> Handling.getAsync()  = get<Promise<T>>()
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun <T> Handling.bindAsync() = bind<Promise<T>>()
+inline fun <T> Handling.linkAsync() = link<Promise<T>>()
 
-class ResolveDelegateProvider<out T>(
+class PropertyProvider<out T>(
         private val handler: Handling,
-        private val factory: (Any,TypeInfo,Handling,KeyResolving) -> BindDelegate<T>
+        private val factory:
+            (Any,TypeInfo,Handling,KeyResolving) -> LinkProperty<T>
 ) {
     operator fun provideDelegate(
             thisRef:  Any,
@@ -52,7 +53,7 @@ class ResolveDelegateProvider<out T>(
     }
 }
 
-open class BindDelegate<out T>(
+open class LinkProperty<out T>(
         val key:      Any,
         val typeInfo: TypeInfo,
         val handler:  Handling,
@@ -76,12 +77,12 @@ open class BindDelegate<out T>(
         }
 }
 
-class GetDelegate<out T>(
+class GetProperty<out T>(
         key:      Any,
         typeInfo: TypeInfo,
         handler:  Handling,
         resolver: KeyResolving
-) : BindDelegate<T>(key, typeInfo, handler, resolver) {
+) : LinkProperty<T>(key, typeInfo, handler, resolver) {
     private var _value: T? = null
 
     override fun getValue(thisRef: Any, property: KProperty<*>): T {

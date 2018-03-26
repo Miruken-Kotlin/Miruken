@@ -192,6 +192,28 @@ class PropertiesTest {
         }
     }
 
+    @Test fun `Delegates property to handler once`() {
+        val handler  = object : Handler() {
+            @Provides
+            fun provideFoo() = Foo()
+        }
+        val instance = object {
+            val foo by handler.get<Foo>()
+        }
+        assertSame(instance.foo, instance.foo)
+    }
+
+    @Test fun `Delegates property to handler always`() {
+        val handler  = object : Handler() {
+            @Provides
+            fun provideFoo() = Foo()
+        }
+        val instance = object {
+            val foo by handler.link<Foo>()
+        }
+        assertNotSame(instance.foo, instance.foo)
+    }
+
     @Test fun `Rejects property delegation if missing`() {
         val handler  = Handler()
         val instance = object {
