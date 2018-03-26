@@ -112,7 +112,6 @@ open class Controller : ContextualHandler<Context>(),
     }
 
     override fun close() {
-        error("")
         if (_closed.compareAndSet(false, true)) {
             policy.release()
             context      = null
