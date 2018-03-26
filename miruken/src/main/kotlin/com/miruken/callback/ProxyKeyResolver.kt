@@ -21,6 +21,6 @@ object ProxyKeyResolver : KeyResolver() {
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling) =
-            composer.proxy(key as KType)
+            composer: Handling
+    ) = composer.proxy(key as KType)
 }

@@ -245,7 +245,7 @@ fun KClass<*>.matchMethod(method: Method): Method? {
 }
 
 fun Collection<*>.toTypedArray(componentType: KClass<*>) =
-        toTypedArray(componentType.javaObjectType)
+        toTypedArray(componentType.java)
 
 fun Collection<*>.toTypedArray(componentType: Class<*>): Any {
     val array = java.lang.reflect.Array.newInstance(componentType, size)
