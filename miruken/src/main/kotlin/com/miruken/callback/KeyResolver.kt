@@ -6,7 +6,6 @@ import com.miruken.runtime.getFirstTaggedAnnotation
 import com.miruken.runtime.toTypedArray
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
 open class KeyResolver : KeyResolving {
@@ -36,7 +35,7 @@ open class KeyResolver : KeyResolving {
             handler:  Handling,
             composer: Handling
     ) = handler.resolveAsync(key,
-            (key as? KType)?.isMarkedNullable == false)
+            !typeInfo.componentType.isMarkedNullable)
 
     open fun resolveKeyAll(
             key:      Any,
@@ -137,8 +136,8 @@ open class KeyResolver : KeyResolving {
         fun getResolver(
                 resolverClass: KClass<out KeyResolving>?,
                 composer:      Handling
-        ) = if (resolverClass == null)
-            DefaultResolver else resolverClass.objectInstance
+        ) = if (resolverClass == null) DefaultResolver
+            else resolverClass.objectInstance
                 ?: composer.resolve(resolverClass) as? KeyResolving
 
         fun getResolverClass(annotatedElement: KAnnotatedElement) =

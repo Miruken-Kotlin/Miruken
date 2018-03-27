@@ -1,33 +1,22 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
-import com.miruken.callback.*
-import com.miruken.runtime.getFirstTaggedAnnotation
-import kotlin.reflect.KClass
+import com.miruken.callback.KeyResolver
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.withNullability
 
 class Argument(val parameter: KParameter) {
-
-    val key:         Any
-    val useResolver: KClass<out KeyResolving>?
-    val typeInfo =   TypeFlags.parse(parameter.type)
+    val typeInfo    = TypeFlags.parse(parameter.type)
+    val key         = KeyResolver.getKey(parameter, typeInfo, parameter.name)
+    val useResolver = KeyResolver.getResolverClass(parameter)
 
     inline val parameterType get() = parameter.type
     inline val annotations   get() = parameter.annotations
     inline val index         get() = parameter.index
 
-    init {
-        key = KeyResolver.getKey(parameter, typeInfo, parameter.name)
-        useResolver = parameter
-                .getFirstTaggedAnnotation<UseKeyResolver>()
-                ?.keyResolverClass
-    }
-
-    fun satisfies(type: KType): Boolean {
-        return parameterType.classifier != Nothing::class &&
+    fun satisfies(type: KType) =
+        parameterType.classifier != Nothing::class &&
             parameterType.isSubtypeOf(type.withNullability(true))
-    }
 }
