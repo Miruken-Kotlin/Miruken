@@ -17,3 +17,6 @@ interface Contextual<T: Context> {
     val contextChanging: Event<ContextChangingEvent<T>>
     val contextChanged:  Event<ContextChangedEvent<T>>
 }
+
+fun <T: Context> Contextual<T>.requireContext() =
+        context ?: error("Required context is not available")

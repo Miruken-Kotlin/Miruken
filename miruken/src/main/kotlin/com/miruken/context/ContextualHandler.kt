@@ -2,9 +2,12 @@ package com.miruken.context
 
 import com.miruken.callback.Handler
 import com.miruken.event.Event
+import java.util.concurrent.atomic.AtomicBoolean
 
-open class ContextualHandler<T: Context> : Handler(), Contextual<T> {
+open class ContextualHandler<T: Context> :
+        Handler(), Contextual<T>, AutoCloseable {
     private var _context: T? = null
+    private  val _closed     = AtomicBoolean()
 
     override val contextChanging = Event<ContextChangingEvent<T>>()
     override val contextChanged  = Event<ContextChangedEvent<T>>()
@@ -25,4 +28,15 @@ open class ContextualHandler<T: Context> : Handler(), Contextual<T> {
                 ContextChangedEvent(this, oldContext, _context)
             }
         }
+
+    override fun close() {
+        if (_closed.compareAndSet(false, true)) {
+            contextChanging.clear()
+            contextChanged.clear()
+            context = null
+            cleanUp()
+        }
+    }
+
+    open fun cleanUp() {}
 }

@@ -12,16 +12,14 @@ import com.miruken.mvc.view.View
 import com.miruken.mvc.view.ViewRegion
 import com.miruken.mvc.view.addRegion
 import com.miruken.mvc.view.show
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("PropertyName")
 open class Controller : ContextualHandler<Context>(),
-        PolicyOwner<ControllerPolicy>, AutoCloseable {
+        PolicyOwner<ControllerPolicy> {
 
     internal var _io:          Handling? = null
     internal var _lastAction:  ((Handling) -> Any?)? = null
     internal var _retryAction: ((Handling) -> Any?)? = null
-    private  val _closed =     AtomicBoolean()
 
     @Suppress("LeakingThis")
     override val policy = ControllerPolicy(this)
@@ -111,14 +109,11 @@ open class Controller : ContextualHandler<Context>(),
                 ?.end()
     }
 
-    override fun close() {
-        if (_closed.compareAndSet(false, true)) {
-            policy.release()
-            context      = null
-            _io          = null
-            _lastAction  = null
-            _retryAction = null
-        }
+    override fun cleanUp() {
+        policy.release()
+        _io          = null
+        _lastAction  = null
+        _retryAction = null
     }
 
     companion object {
