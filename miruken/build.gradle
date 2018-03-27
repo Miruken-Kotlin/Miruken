@@ -1,1 +1,19 @@
 apply from: "${rootDir}/gradle/kotlin.gradle"
+
+apply plugin: 'com.jfrog.bintray'
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key  = System.getenv('BINTRAY_KEY')
+    configurations = ['archives']
+    pkg {
+        repo = 'Miruken-Kotlin'
+        name = 'miruken'
+        userOrg = 'miruken'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
+        version {
+            name = '0.0.1-alpha.1'
+        }
+    }
+}
