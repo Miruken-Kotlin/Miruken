@@ -3,7 +3,6 @@ package com.miruken.callback
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getFirstTaggedAnnotation
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -33,20 +32,8 @@ class PropertyProvider<out T>(
             property: KProperty<*>
     ): ReadOnlyProperty<Any, T> {
         val typeInfo = TypeFlags.parse(property.returnType)
-        val key = property.annotations
-                .firstOrNull { it is Key }
-                ?.let {
-                    val key = it as Key
-                    StringKey(key.key, key.caseSensitive)
-                } ?: property.name.takeIf {
-            typeInfo.flags has TypeFlags.PRIMITIVE
-        } ?: typeInfo.componentType
-
-        val useResolver = property
-                .getFirstTaggedAnnotation<UseKeyResolver>()
-                ?.keyResolverClass
-
-        return KeyResolver.getResolver(useResolver, handler)?.let {
+        val key      = KeyResolver.getKey(property, typeInfo, property.name)
+        return KeyResolver.getResolver(property, handler)?.let {
             it.validate(key, typeInfo)
             factory(key,typeInfo, handler, it)
         } ?: error("Unable to resolve key '$key'")
