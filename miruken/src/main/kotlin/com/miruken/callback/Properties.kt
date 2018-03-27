@@ -6,15 +6,8 @@ import com.miruken.concurrent.Promise
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-fun <T> Handling.get()  = PropertyProvider<T>(this) {
-    key, typeInfo, handler, resolver ->
-        GetProperty(key, typeInfo, handler, resolver)
-}
-
-fun <T> Handling.link() = PropertyProvider<T>(this) {
-    key, typeInfo, handler, resolver ->
-        LinkProperty(key, typeInfo, handler, resolver)
-}
+fun <T> Handling.get()  = GetPropertyProvider<T>(this)
+fun <T> Handling.link() = LinkPropertyProvider<T>(this)
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T> Handling.getAsync()  = get<Promise<T>>()
@@ -22,54 +15,64 @@ inline fun <T> Handling.getAsync()  = get<Promise<T>>()
 @Suppress("NOTHING_TO_INLINE")
 inline fun <T> Handling.linkAsync() = link<Promise<T>>()
 
-class PropertyProvider<out T>(
-        private val handler: Handling,
-        private val factory:
-            (Any,TypeInfo,Handling,KeyResolving) -> LinkProperty<T>
-) {
+abstract class ResolveProperty<out T>(
+        val key:      Any,
+        val typeInfo: TypeInfo,
+        val resolver: KeyResolving
+) : ReadOnlyProperty<Any, T> {
+    protected fun validate(value: Any?, property: KProperty<*>) =
+            if (value != null || property.returnType.isMarkedNullable) {
+                @Suppress("UNCHECKED_CAST")
+                value as T
+            } else {
+                error(when (key) {
+                    property.returnType ->
+                        "Non-nullable '$property' could not be resolved"
+                    else ->
+                        "Non-nullable '$property' with key '$key' could not be resolved"
+                })
+            }
+}
+
+abstract class ResolvePropertyProvider<out T> {
     operator fun provideDelegate(
             thisRef:  Any,
             property: KProperty<*>
-    ): ReadOnlyProperty<Any, T> {
+    ): ResolveProperty<T> {
         val typeInfo = TypeFlags.parse(property.returnType)
         val key      = KeyResolver.getKey(property, typeInfo, property.name)
-        return KeyResolver.getResolver(property, handler)?.let {
+        return getResolver(property)?.let {
             it.validate(key, typeInfo)
-            factory(key,typeInfo, handler, it)
-        } ?: error("Unable to resolve key '$key'")
+            createPropertyResolver(key,typeInfo, it)
+        } ?: error("Unable to resolve '$property' with key '$key'")
     }
+
+    abstract fun getResolver(property: KProperty<*>): KeyResolving?
+
+    abstract fun createPropertyResolver(
+            key:      Any,
+            typeInfo: TypeInfo,
+            resolver: KeyResolving
+    ): ResolveProperty<T>
 }
 
 open class LinkProperty<out T>(
-        val key:      Any,
-        val typeInfo: TypeInfo,
-        val handler:  Handling,
-        private val resolver: KeyResolving
-) : ReadOnlyProperty<Any, T> {
+        key:         Any,
+        typeInfo:    TypeInfo,
+        resolver:    KeyResolving,
+        val handler: Handling
+) : ResolveProperty<T>(key, typeInfo, resolver) {
     override fun getValue(thisRef: Any, property: KProperty<*>) =
             validate(resolver.resolve(key, typeInfo, handler, handler),
                     property)
-
-    private fun validate(value: Any?, property: KProperty<*>) =
-        if (value != null || property.returnType.isMarkedNullable) {
-            @Suppress("UNCHECKED_CAST")
-            value as T
-        } else {
-            error(when (key) {
-                property.returnType ->
-                    "Non-nullable '$property' could not be resolved"
-                else ->
-                    "Non-nullable '$property' with key '$key' could not be resolved"
-            })
-        }
 }
 
 class GetProperty<out T>(
         key:      Any,
         typeInfo: TypeInfo,
-        handler:  Handling,
-        resolver: KeyResolving
-) : LinkProperty<T>(key, typeInfo, handler, resolver) {
+        resolver: KeyResolving,
+        handler:  Handling
+) : LinkProperty<T>(key, typeInfo, resolver, handler) {
     private var _value: T? = null
 
     override fun getValue(thisRef: Any, property: KProperty<*>): T {
@@ -79,3 +82,30 @@ class GetProperty<out T>(
         return value
     }
 }
+
+class LinkPropertyProvider<out T>(
+        private val handler: Handling
+): ResolvePropertyProvider<T>() {
+    override fun getResolver(property: KProperty<*>) =
+            KeyResolver.getResolver(property, handler)
+
+    override fun createPropertyResolver(
+            key:      Any,
+            typeInfo: TypeInfo,
+            resolver: KeyResolving
+    ) = LinkProperty<T>(key, typeInfo, resolver, handler)
+}
+
+class GetPropertyProvider<out T>(
+        private val handler: Handling
+) : ResolvePropertyProvider<T>() {
+    override fun getResolver(property: KProperty<*>) =
+            KeyResolver.getResolver(property, handler)
+
+    override fun createPropertyResolver(
+            key:      Any,
+            typeInfo: TypeInfo,
+            resolver: KeyResolving
+    ) = GetProperty<T>(key, typeInfo, resolver, handler)
+}
+

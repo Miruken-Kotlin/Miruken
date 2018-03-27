@@ -25,6 +25,15 @@ class EventTest {
         assertEquals(listOf("johns24:download", "sarah15:login"), audit)
     }
 
+    @Test fun `Can create complex event lazily`() {
+        val event = Event<Activity>()
+        val audit = mutableListOf<String>()
+        event += { (user, action) -> audit.add("$user:$action")}
+        event { Activity("johns24", "download") }
+        event { Activity("sarah15", "login") }
+        assertEquals(listOf("johns24:download", "sarah15:login"), audit)
+    }
+
     @Test fun `Can register and unregister from event`() {
         val event      = Event<String>()
         val trace      = mutableListOf<String>()

@@ -12,12 +12,15 @@ open class ContextualImpl<T : Context> : Contextual<T> {
         get() = _context
         set(value) {
             if (_context == value) return
-            val changingEvent = ContextChangingEvent(this, _context, value)
-            contextChanging(changingEvent)
+            contextChanging {
+                ContextChangingEvent(this, _context, value)
+            }
             _context?.removeHandlers(this)
             val oldContext = _context
-            _context = changingEvent.newContext
+            _context = value
             _context?.insertHandlers(0, this)
-            contextChanged(ContextChangedEvent(this, oldContext, _context))
+            contextChanged {
+                ContextChangedEvent(this, oldContext, _context)
+            }
         }
 }

@@ -28,8 +28,16 @@ class Event<T> {
     }
 
     operator fun invoke(event: T) {
-        for ((_, handler) in _handlers)
+        for (handler in _handlers.values)
             handler.accept(event)
+    }
+
+    operator fun invoke(createEvent: () -> T) {
+        if (_handlers.isNotEmpty()) {
+            val event = createEvent()
+            for (handler in _handlers.values)
+                handler.accept(event)
+        }
     }
 
     fun clear() = _handlers.clear()

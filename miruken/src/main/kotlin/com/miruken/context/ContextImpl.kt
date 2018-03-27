@@ -89,11 +89,11 @@ open class ContextImpl() : CompositeHandler(), Context {
         requireActive()
         val child = ContextImpl(this)
         child.contextEnding += { (ctx) ->
-            childContextEnding(ContextEvent(ctx))
+            childContextEnding { ContextEvent(ctx) }
         }
         child.contextEnded += { (ctx) ->
             _children.remove(ctx)
-            childContextEnded(ContextEvent(ctx))
+            childContextEnded { ContextEvent(ctx) }
         }
         _children.add(child)
         return child
@@ -120,13 +120,12 @@ open class ContextImpl() : CompositeHandler(), Context {
     final override fun end() {
         if (state != ContextState.ACTIVE) return
         state = ContextState.ENDING
-        val event = ContextEvent(this)
-        contextEnding(event)
+        contextEnding { ContextEvent(this) }
         try {
             unwind()
         } finally {
             state = ContextState.ENDED
-            contextEnded(event)
+            contextEnded { ContextEvent(this) }
             contextEnding.clear()
             contextEnded.clear()
             childContextEnding.clear()
