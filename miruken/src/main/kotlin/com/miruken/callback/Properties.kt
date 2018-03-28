@@ -6,15 +6,15 @@ import com.miruken.concurrent.Promise
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-typealias ResolverFactory<T> =
+typealias HandlingPropertyFactory<T> =
         (Any, TypeInfo, Handling, KeyResolving) -> ReadOnlyProperty<Any, T>
 
-fun <T> Handling.get() = ResolvePropertyProvider<T>(this) {
+fun <T> Handling.get() = HandlingPropertyProvider<T>(this) {
     key, typeInfo, resolver, handler ->
         GetProperty(key, typeInfo, resolver, handler)
 }
 
-fun <T> Handling.link() = ResolvePropertyProvider<T>(this) {
+fun <T> Handling.link() = HandlingPropertyProvider<T>(this) {
     key, typeInfo, resolver, handler ->
         LinkProperty(key, typeInfo, resolver, handler)
 }
@@ -22,9 +22,9 @@ fun <T> Handling.link() = ResolvePropertyProvider<T>(this) {
 fun <T> Handling.getAsync()  = get<Promise<T>>()
 fun <T> Handling.linkAsync() = link<Promise<T>>()
 
-class ResolvePropertyProvider<out T>(
+class HandlingPropertyProvider<out T>(
         val         handler: Handling,
-        private val factory: ResolverFactory<T>
+        private val factory: HandlingPropertyFactory<T>
 ) {
     operator fun provideDelegate(
             thisRef:  Any,

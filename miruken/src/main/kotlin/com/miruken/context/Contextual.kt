@@ -18,5 +18,9 @@ interface Contextual<T: Context> {
     val contextChanged:  Event<ContextChangedEvent<T>>
 }
 
-fun <T: Context> Contextual<T>.requireContext() =
-        context ?: error("Required context is not available")
+fun <T: Context> Contextual<T>.getContext(required: Boolean = false) =
+        context ?: if (required) {
+            error("Required context is not available")
+        } else {
+            null
+        }

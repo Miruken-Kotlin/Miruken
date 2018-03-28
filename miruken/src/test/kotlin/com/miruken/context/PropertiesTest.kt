@@ -267,13 +267,11 @@ class PropertiesTest {
         }
     }
 
-    @Test fun `Rejects optional property delegation if context unavailable`() {
+    @Test fun `Ignores missing optional property if context unavailable`() {
         val instance = object : ContextualHandler<Context>() {
             val foo by get<Foo?>()
         }
-        assertFailsWith(IllegalStateException::class) {
-            instance.foo
-        }
+        assertNull(instance.foo)
     }
 
     @Test fun `Rejects property delegation if missing`() {

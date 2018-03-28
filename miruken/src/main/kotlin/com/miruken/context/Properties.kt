@@ -7,32 +7,32 @@ import com.miruken.concurrent.Promise
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-typealias ResolverFactory<T> =
+typealias ContextualPropertyFactory<T> =
         (Any, TypeInfo, Contextual<*>) -> ReadOnlyProperty<Any, T>
 
 @Suppress("unused")
-fun <T> Contextual<*>.get()  = ResolvePropertyProvider<T> {
+fun <T> Contextual<*>.get() = ContextualPropertyProvider<T> {
     key, typeInfo, contextual -> GetProperty(key, typeInfo, contextual)
 }
 
 @Suppress("unused")
-fun <T> Contextual<*>.link()  = ResolvePropertyProvider<T> {
+fun <T> Contextual<*>.link() = ContextualPropertyProvider<T> {
     key, typeInfo, contextual -> LinkProperty(key, typeInfo, contextual)
 }
 
 fun <T> Contextual<*>.getAsync()  = get<Promise<T>>()
 fun <T> Contextual<*>.linkAsync() = link<Promise<T>>()
 
-class ResolvePropertyProvider<out T>(
-        private val factory: ResolverFactory<T>
+class ContextualPropertyProvider<out T>(
+        private val factory: ContextualPropertyFactory<T>
 ) {
     operator fun provideDelegate(
-            thisRef:  Contextual<*>,
-            property: KProperty<*>
+            contextual: Contextual<*>,
+            property:   KProperty<*>
     ): ReadOnlyProperty<Any, T> {
         val typeInfo = TypeFlags.parse(property.returnType)
         val key      = KeyResolver.getKey(property, typeInfo, property.name)
-        return factory(key, typeInfo, thisRef)
+        return factory(key, typeInfo, contextual)
     }
 }
 
@@ -43,12 +43,13 @@ open class LinkProperty<out T>(
 ) : ReadOnlyProperty<Any, T> {
     @Suppress("UNCHECKED_CAST")
     override fun getValue(thisRef: Any, property: KProperty<*>): T {
-        val context = contextual.requireContext()
+        val optional = property.returnType.isMarkedNullable
+        val context  = contextual.getContext(!optional) ?: return null as T
         return KeyResolver.getResolver(property, context)?.let {
             it.validate(key, typeInfo)
             validateProperty(property, key, it.resolve(
                     key, typeInfo, context, context)) as T
-        } ?: if (property.returnType.isMarkedNullable) (null as T) else
+        } ?: if (optional) (null as T) else
             error("Unable to resolve '$property' with key '$key'")
     }
 }
