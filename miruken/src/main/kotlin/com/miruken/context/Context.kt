@@ -1,10 +1,14 @@
 package com.miruken.context
 
-import com.miruken.callback.CompositeHandling
-import com.miruken.callback.HandlingAxis
+import com.miruken.callback.*
 import com.miruken.event.Event
 import com.miruken.graph.Traversing
 
+enum class ContextState {
+    ACTIVE,
+    ENDING,
+    ENDED
+}
 data class ContextEvent(val context: Context)
 
 interface Context :
@@ -32,3 +36,6 @@ interface Context :
 
     fun end()
 }
+
+val Handling.publishFromRoot: Handling
+    get() = resolve<Context>()?.run { xroot.publish } ?: this

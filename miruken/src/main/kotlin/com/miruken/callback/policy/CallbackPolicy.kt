@@ -17,12 +17,10 @@ abstract class CallbackPolicy(
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }
 
-    open fun bindMethod(
-            bindingInfo: PolicyMethodBindingInfo
-    ): PolicyMethodBinding =
+    open fun bindMethod(bindingInfo: PolicyMethodBindingInfo) =
             PolicyMethodBinding(this, bindingInfo)
 
-    open fun createKey(bindingInfo: PolicyMethodBindingInfo): Any? =
+    open fun createKey(bindingInfo: PolicyMethodBindingInfo) =
             bindingInfo.inKey ?: bindingInfo.outKey
 
     abstract fun getKey(callback: Any, callbackType: KType?): Any?

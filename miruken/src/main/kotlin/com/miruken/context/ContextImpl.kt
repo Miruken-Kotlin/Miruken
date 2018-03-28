@@ -15,26 +15,26 @@ open class ContextImpl() : CompositeHandler(), Context {
         this.parent = parent
     }
 
-    final override var state:  ContextState = ContextState.ACTIVE
+    final override var state = ContextState.ACTIVE
         private set
-    final override var parent: ContextImpl? = null
+    final override var parent: Context? = null
         private set
 
-    final override val children: List<ContextImpl>
+    final override val children: List<Context>
         get() = _children.toList()
 
     final override val hasChildren: Boolean
-        get()  = children.isNotEmpty()
+        get() = children.isNotEmpty()
 
     final override val contextEnding       = Event<ContextEvent>()
     final override val contextEnded        = Event<ContextEvent>()
     final override val childContextEnding  = Event<ContextEvent>()
     final override val childContextEnded   = Event<ContextEvent>()
 
-    final override val root: ContextImpl get() {
-        var root = this
+    final override val root: Context get() {
+        var root: Context = this
         while (root.parent != null)
-            root = root.parent as ContextImpl
+            root = root.parent as Context
         return root
     }
 
@@ -99,8 +99,8 @@ open class ContextImpl() : CompositeHandler(), Context {
         return child
     }
 
-    final override fun unwindToRoot(): ContextImpl {
-        var current: ContextImpl? = this
+    final override fun unwindToRoot(): Context {
+        var current: Context? = this
         while (current != null) {
             val parent = current.parent
             if (parent == null)  {
@@ -112,7 +112,7 @@ open class ContextImpl() : CompositeHandler(), Context {
         return this
     }
 
-    final override fun unwind(): ContextImpl {
+    final override fun unwind(): Context {
         for (child in children) child.end()
         return this
     }
