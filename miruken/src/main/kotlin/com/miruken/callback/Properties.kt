@@ -19,8 +19,16 @@ fun <T> Handling.link() = HandlingPropertyProvider<T>(this) {
         LinkProperty(key, typeInfo, resolver, handler)
 }
 
-fun <T> Handling.getAsync()  = get<Promise<T>>()
+fun <T> Handling.getAll() = get<List<T>>()
+fun <T> Handling.linkAll() = link<List<T>>()
+fun <T> Handling.getArray() = get<Array<T>>()
+fun <T> Handling.linkArray() = link<Array<T>>()
+fun <T> Handling.getAsync() = get<Promise<T>>()
 fun <T> Handling.linkAsync() = link<Promise<T>>()
+fun <T> Handling.getAllAsync() = get<Promise<List<T>>>()
+fun <T> Handling.linkAllAsync() = link<Promise<List<T>>>()
+fun <T> Handling.getArrayAsync() = get<Promise<Array<T>>>()
+fun <T> Handling.linkArrayAsync() = link<Promise<Array<T>>>()
 
 class HandlingPropertyProvider<out T>(
         val         handler: Handling,

@@ -8,7 +8,7 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 typealias ContextualPropertyFactory<T> =
-        (Any, TypeInfo, Contextual<*>) -> ReadOnlyProperty<Any, T>
+        (Any, TypeInfo, Contextual<*>) -> ReadOnlyProperty<Contextual<*>, T>
 
 @Suppress("unused")
 fun <T> Contextual<*>.get() = ContextualPropertyProvider<T> {
@@ -17,11 +17,19 @@ fun <T> Contextual<*>.get() = ContextualPropertyProvider<T> {
 
 @Suppress("unused")
 fun <T> Contextual<*>.link() = ContextualPropertyProvider<T> {
-    key, typeInfo, contextual -> LinkProperty(key, typeInfo, contextual)
+    key, typeInfo, _ -> LinkProperty(key, typeInfo)
 }
 
-fun <T> Contextual<*>.getAsync()  = get<Promise<T>>()
+fun <T> Contextual<*>.getAll() = get<List<T>>()
+fun <T> Contextual<*>.linkAll() = link<List<T>>()
+fun <T> Contextual<*>.getArray() = get<Array<T>>()
+fun <T> Contextual<*>.linkArray() = link<Array<T>>()
+fun <T> Contextual<*>.getAsync() = get<Promise<T>>()
 fun <T> Contextual<*>.linkAsync() = link<Promise<T>>()
+fun <T> Contextual<*>.getAllAsync() = get<Promise<List<T>>>()
+fun <T> Contextual<*>.linkAllAsync() = link<Promise<List<T>>>()
+fun <T> Contextual<*>.getArrayAsync() = get<Promise<Array<T>>>()
+fun <T> Contextual<*>.linkArrayAsync() = link<Promise<Array<T>>>()
 
 class ContextualPropertyProvider<out T>(
         private val factory: ContextualPropertyFactory<T>
@@ -29,7 +37,7 @@ class ContextualPropertyProvider<out T>(
     operator fun provideDelegate(
             contextual: Contextual<*>,
             property:   KProperty<*>
-    ): ReadOnlyProperty<Any, T> {
+    ): ReadOnlyProperty<Contextual<*>, T> {
         val typeInfo = TypeFlags.parse(property.returnType)
         val key      = KeyResolver.getKey(property, typeInfo, property.name)
         return factory(key, typeInfo, contextual)
@@ -38,13 +46,12 @@ class ContextualPropertyProvider<out T>(
 
 open class LinkProperty<out T>(
         val key:        Any,
-        val typeInfo:   TypeInfo,
-        val contextual: Contextual<*>
-) : ReadOnlyProperty<Any, T> {
+        val typeInfo:   TypeInfo
+) : ReadOnlyProperty<Contextual<*>, T> {
     @Suppress("UNCHECKED_CAST")
-    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+    override fun getValue(thisRef: Contextual<*>, property: KProperty<*>): T {
         val optional = property.returnType.isMarkedNullable
-        val context  = contextual.getContext(!optional) ?: return null as T
+        val context  = thisRef.getContext(!optional) ?: return null as T
         return KeyResolver.getResolver(property, context)?.let {
             it.validate(key, typeInfo)
             validateProperty(property, key, it.resolve(
@@ -58,14 +65,14 @@ class GetProperty<out T>(
         key:        Any,
         typeInfo:   TypeInfo,
         contextual: Contextual<*>
-) : LinkProperty<T>(key, typeInfo, contextual) {
+) : LinkProperty<T>(key, typeInfo) {
     private var _value: T? = null
 
     init {
         contextual.contextChanged += { _ -> _value = null }
     }
 
-    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+    override fun getValue(thisRef: Contextual<*>, property: KProperty<*>): T {
         if (_value != null) return _value!!
         val value = super.getValue(thisRef, property)
         _value = value

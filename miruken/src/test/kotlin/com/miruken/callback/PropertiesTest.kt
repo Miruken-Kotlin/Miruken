@@ -51,7 +51,7 @@ class PropertiesTest {
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         }
         val instance = object {
-            val foos by handler.get<List<Foo>>()
+            val foos by handler.getAll<Foo>()
         }
         assertEquals(3, instance.foos.size)
     }
@@ -62,7 +62,7 @@ class PropertiesTest {
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         }
         val instance = object {
-            val foos by handler.get<Array<Foo>>()
+            val foos by handler.getArray<Foo>()
         }
         assertEquals(3, instance.foos.size)
     }
@@ -86,7 +86,7 @@ class PropertiesTest {
         }
         val instance = object {
             val primes by handler.get<IntArray>()
-            val help by handler.get<Array<String>>()
+            val help by handler.getArray<String>()
         }
         assertTrue(instance.primes.contentEquals(arrayOf(2,3,5,7,11).toIntArray()))
         assertEquals(3, instance.help.size)
@@ -97,7 +97,7 @@ class PropertiesTest {
 
     @Test fun `Uses empty list property if missing`() {
         val instance = object {
-            val foos by Handler().get<List<Foo>>()
+            val foos by Handler().getAll<Foo>()
         }
         assertEquals(0, instance.foos.size)
     }
@@ -135,7 +135,7 @@ class PropertiesTest {
             fun provideFoos() = Promise.resolve(listOf(Foo(), Foo()))
         }
         val instance = object {
-            val foo by handler.getAsync<List<Foo>>()
+            val foo by handler.getAllAsync<Foo>()
         }
         assertAsync(testName) { done ->
             instance.foo then {
@@ -151,7 +151,7 @@ class PropertiesTest {
             fun provideFoos() = Promise.resolve(listOf(Foo(), Foo()))
         }
         val instance = object {
-            val foo by handler.getAsync<Array<Foo>>()
+            val foo by handler.getArrayAsync<Foo>()
         }
         assertAsync(testName) { done ->
             instance.foo then {

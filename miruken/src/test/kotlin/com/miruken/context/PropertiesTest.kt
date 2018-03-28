@@ -76,7 +76,7 @@ class PropertiesTest {
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         })
         val instance = object : ContextualHandler<Context>() {
-            val foos by get<List<Foo>>()
+            val foos by getAll<Foo>()
         }.apply { context = _context }
         assertEquals(3, instance.foos.size)
     }
@@ -87,7 +87,7 @@ class PropertiesTest {
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         })
         val instance = object : ContextualHandler<Context>() {
-            val foos by get<Array<Foo>>()
+            val foos by getArray<Foo>()
         }.apply { context = _context }
         assertEquals(3, instance.foos.size)
     }
@@ -111,7 +111,7 @@ class PropertiesTest {
         })
         val instance = object : ContextualHandler<Context>() {
             val primes by get<IntArray>()
-            val help by get<Array<String>>()
+            val help by getArray<String>()
         }.apply { context = _context }
         assertTrue(instance.primes.contentEquals(arrayOf(2,3,5,7,11).toIntArray()))
         assertEquals(3, instance.help.size)
@@ -122,7 +122,7 @@ class PropertiesTest {
 
     @Test fun `Uses empty list property if missing`() {
         val instance = object : ContextualHandler<Context>() {
-            val foos by get<List<Foo>>()
+            val foos by getAll<Foo>()
         }.apply { context = _context }
         assertEquals(0, instance.foos.size)
     }
@@ -159,7 +159,7 @@ class PropertiesTest {
             fun provideFoos() = listOf(Foo(), Foo())
         })
         val instance = object : ContextualHandler<Context>() {
-            val foo by getAsync<List<Foo>>()
+            val foo by getAllAsync<Foo>()
         }.apply { context = _context }
         assertAsync(testName) { done ->
             instance.foo then {
@@ -175,7 +175,7 @@ class PropertiesTest {
             fun provideFoos() = listOf(Foo(), Foo())
         })
         val instance = object : ContextualHandler<Context>() {
-            val foo by getAsync<Array<Foo>>()
+            val foo by getArrayAsync<Foo>()
         }.apply { context = _context }
         assertAsync(testName) { done ->
             instance.foo then {
@@ -256,6 +256,18 @@ class PropertiesTest {
             })
         }
         assertNotSame(foo, instance.foo)
+    }
+
+    @Test fun `Delegates property to context after ending`() {
+        _context.addHandlers(object : Handler() {
+            @Provides
+            fun provideFoo() = Foo()
+        })
+        val instance = object : ContextualHandler<Context>() {
+            val foo by get<Foo>()
+        }.apply { context = _context }
+        _context.end()
+        assertNotNull(instance.foo)
     }
 
     @Test fun `Rejects property delegation if context unavailable`() {
