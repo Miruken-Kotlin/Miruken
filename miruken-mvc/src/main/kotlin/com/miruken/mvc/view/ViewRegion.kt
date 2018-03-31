@@ -34,7 +34,7 @@ inline fun <reified V: View> ViewRegion.show(
 ) = show(view(typeOf<V>(), init as (View.() -> Unit)?))
 
 inline fun <reified C: Controller> Handling.region(
-        noinline action: (C: Controller) -> Unit
+        crossinline action: (C: Controller) -> Unit
 ): View = object : ViewAdapter() {
     override fun display(region: ViewRegion): ViewLayer {
         lateinit var layer: ViewLayer
@@ -44,8 +44,8 @@ inline fun <reified C: Controller> Handling.region(
             controllerContext.addHandlers(stack)
             action(this)
             layer = stack.display(ViewRegion(this@region.pushLayer))
-            layer.closed += { controllerContext.end() }
-            controllerContext.contextEnded += { layer.close() }
+            layer.closed += { _ -> controllerContext.end() }
+            controllerContext.contextEnded += { _ -> layer.close() }
         }
         return layer
     }

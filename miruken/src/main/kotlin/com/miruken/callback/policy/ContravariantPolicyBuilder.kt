@@ -13,7 +13,7 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
     val target: TargetArgument<C, S> =
             TargetArgument(callbackType, targetType, targetFunctor)
 
-    inline fun <reified E: Any> extract(noinline block: (C) -> E) =
+    inline fun <reified E: Any> extract(noinline block: C.() -> E) =
             ExtractArgument(typeOf<E>(), block)
 
     override fun build(): ContravariantPolicy {

@@ -4,7 +4,7 @@ import kotlin.reflect.KType
 
 class ExtractArgument<C, out R: Any>(
         private val extractType: KType,
-        private val extract:    (C) -> R
+        private val extract:    C.() -> R
 ): ArgumentRule {
 
     override fun matches(argument: Argument) =

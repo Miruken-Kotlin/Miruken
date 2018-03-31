@@ -228,9 +228,9 @@ open class Promise<out T>
                     cancelled(_throwable as CancellationException)
                 }
             } else {
-                _rejected +=  {
-                    if (it is CancellationException)
-                        cancelled(it)
+                _rejected += { e ->
+                    if (e is CancellationException)
+                        cancelled(e)
                 }
             }
         }
@@ -319,6 +319,8 @@ open class Promise<out T>
         val FALSE      = resolve(false)
         val EMPTY      = resolve(null as Any?)
         val EMPTY_LIST = resolve(emptyList<Any>())
+
+
 
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }

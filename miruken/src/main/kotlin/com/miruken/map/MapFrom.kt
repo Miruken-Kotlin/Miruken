@@ -1,7 +1,9 @@
 package com.miruken.map
 
-import com.miruken.callback.*
-import com.miruken.callback.policy.CallbackPolicy
+import com.miruken.callback.AsyncCallback
+import com.miruken.callback.Callback
+import com.miruken.callback.DispatchingCallback
+import com.miruken.callback.Handling
 import com.miruken.concurrent.Promise
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -22,7 +24,7 @@ class MapFrom(
     override var isAsync: Boolean = false
         private set
 
-    override val policy: CallbackPolicy? = MapsPolicy
+    override val policy get() = MapsPolicy
 
     override val resultType: KType? = targetType
             .takeIf { !wantsAsync && !isAsync }

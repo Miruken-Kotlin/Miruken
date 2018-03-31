@@ -7,7 +7,7 @@ import kotlin.reflect.KType
 class BivariantPolicyBuilder<C: Any, out S: Any>(
         callbackType:  KType,
         targetType:    KType,
-        targetFunctor: (C) -> S,
+        targetFunctor: C.() -> S,
         private val output: CovariantPolicy,
         private val input:  ContravariantPolicy
 ) : CallbackPolicyBuilder(callbackType) {
@@ -37,14 +37,14 @@ class BivariantWithKeyBuilder<C: Any>(
         val callbackType: KType
 ) {
     inline infix fun <reified S: Any> target(
-            noinline targetFunctor: (C) -> S
+            noinline targetFunctor: C.() -> S
     ) = BivariantWithKeyTargetBuilder(keyFunctor,
             targetFunctor, callbackType, typeOf<S>())
 }
 
 class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
         private val keyFunctor:    (C) -> Any,
-        private val targetFunctor: (C) -> S,
+        private val targetFunctor: C.() -> S,
         private val callbackType:  KType,
         private val targetType:    KType
 ) {

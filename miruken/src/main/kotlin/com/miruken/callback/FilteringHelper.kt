@@ -5,10 +5,8 @@ import com.miruken.callback.policy.MethodBinding
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-fun Handling.getFilterOptions(): FilterOptions? {
-    val options = FilterOptions()
-    return handle(options, true) success { options }
-}
+fun Handling.getFilterOptions() =
+        FilterOptions().takeIf { handle(it, true).handled }
 
 fun Handling.withFilters(vararg filters: Filtering<*,*>) =
         withOptions(FilterOptions(InstanceFilterProvider(*filters)))

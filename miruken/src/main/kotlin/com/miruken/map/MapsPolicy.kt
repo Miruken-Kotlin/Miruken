@@ -11,7 +11,7 @@ import kotlin.reflect.KAnnotatedElement
 annotation class Maps
 
 object MapsPolicy : BivariantPolicy({
-    key { cb: MapFrom -> cb.targetType } target { it.source } rules {
+    key { cb: MapFrom -> cb.targetType } target { source } rules {
         matches (target) returns key
         matches (target, callback) returns key
         matches (callback) returns (key or unit)

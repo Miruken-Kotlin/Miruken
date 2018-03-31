@@ -1,6 +1,5 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_STAR
@@ -32,7 +31,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     final override var isAsync: Boolean = false
         private set
 
-    final override val policy: CallbackPolicy? = ProvidesPolicy
+    override val policy get() = ProvidesPolicy
 
     val resolutions: List<Any> get() = _resolutions.toList()
 
@@ -155,7 +154,7 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
         val count = _resolutions.size + _promises.size
         return result then {
-            policy!!.dispatch(
+            policy.dispatch(
                     handler, this@Inquiry, callbackType, greedy, composer)
             { r, strict -> resolve(r, strict, greedy, composer) }
         } then {

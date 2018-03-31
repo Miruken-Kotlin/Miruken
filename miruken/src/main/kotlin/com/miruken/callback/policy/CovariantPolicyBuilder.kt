@@ -11,7 +11,7 @@ class CovariantPolicyBuilder<C: Any>(
     val key  = ReturnsKey
     val unit = ReturnsUnit
 
-    inline fun <reified E: Any> extract(noinline block: (C) -> E) =
+    inline fun <reified E: Any> extract(noinline block: C.() -> E) =
             ExtractArgument(typeOf<E>(), block)
 
     override fun build(): CovariantPolicy {

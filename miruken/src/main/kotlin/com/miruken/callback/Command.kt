@@ -65,7 +65,8 @@ open class Command(
                 _result = _results
             }
             if (wantsAsync && !isAsync) {
-                _result = Promise.resolve(_result ?: Unit)
+                _result = _result?.let { Promise.resolve(it) }
+                    ?: Promise.EMPTY
             }
             return _result
         }

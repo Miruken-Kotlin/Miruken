@@ -4,7 +4,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 
-typealias EventHandler<E> = Consumer<E>
+typealias EventHandler<T>  = (Any, T) -> Unit
+typealias EventConsumer<E> = Consumer<E>
 
 class Event<T> {
     private val _index    = AtomicInteger(0)
@@ -16,27 +17,32 @@ class Event<T> {
         return { _handlers.remove(next) }
     }
 
-    infix fun register(handler: (T) -> Unit): () -> Unit =
-            register(EventHandler { handler(it) })
+    infix fun register(handler: EventConsumer<T>) =
+            register { _, event -> handler.accept(event) }
+
+    infix fun register(handler: (T) -> Unit) =
+            register { _, event -> handler(event) }
 
     operator fun plusAssign(handler: EventHandler<T>) {
         _handlers[_index.incrementAndGet()] = handler
     }
 
-    inline operator fun plusAssign(crossinline handler: (T) -> Unit) {
-        this += EventHandler { handler(it) }
-    }
+    operator fun plusAssign(handler: EventConsumer<T>) =
+            plusAssign { _, event -> handler.accept(event) }
+
+    operator fun plusAssign(handler: (T) -> Unit) =
+            plusAssign { _, event -> handler(event) }
 
     operator fun invoke(event: T) {
         for (handler in _handlers.values)
-            handler.accept(event)
+            handler(this, event)
     }
 
     operator fun invoke(createEvent: () -> T) {
         if (_handlers.isNotEmpty()) {
             val event = createEvent()
             for (handler in _handlers.values)
-                handler.accept(event)
+                handler(this, event)
         }
     }
 

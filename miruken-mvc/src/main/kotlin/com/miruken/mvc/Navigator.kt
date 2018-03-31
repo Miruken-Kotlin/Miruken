@@ -99,7 +99,7 @@ class Navigator(mainRegion: ViewRegion) : CompositeHandler(), Navigate {
                 .resolve(controllerKey) as? Controller
                 ?: throw IllegalArgumentException(
                     "Controller '$controllerKey' could not be resolved")
-        context.contextEnded += { controller.release() }
+        context.contextEnded += { _ -> controller.release() }
         controller.policy.autoRelease()
         controller.context = context
         return controller

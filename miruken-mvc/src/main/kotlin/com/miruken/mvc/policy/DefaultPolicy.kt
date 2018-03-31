@@ -53,7 +53,7 @@ open class DefaultPolicy : Policy {
     }
 
     override fun onRelease(onRelease: () -> Unit): () -> Unit {
-        return _onRelease.register { onRelease() }
+        return _onRelease.register { _ -> onRelease() }
     }
 
     override fun release() {
