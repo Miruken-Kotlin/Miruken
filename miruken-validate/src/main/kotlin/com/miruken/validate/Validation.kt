@@ -9,7 +9,7 @@ import kotlin.reflect.KType
 
 class Validation(
         val target: Any,
-        private val targetType: KType,
+        private val targetType: KType? = null,
         scope: Any? = null
 ) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
@@ -74,23 +74,18 @@ class Validation(
     private fun createScopeMatcher(scope: Any?): ScopeMatching =
             when (scope) {
                 null -> EqualsScopeMatcher.DEFAULT
-                is Collection<*> ->  when (scope.size) {
+                is ScopeMatching -> scope
+                is Collection<*> -> when (scope.size) {
                     0 -> EqualsScopeMatcher.DEFAULT
-                    1 -> scope.first().let {
-                        it as? ScopeMatching ?: EqualsScopeMatcher(it)
-                    }
-                    else -> CompositeScopeMatcher(scope.map {
-                        createScopeMatcher(arrayOf(it))
-                    })
+                    1 -> createScopeMatcher(scope.first())
+                    else -> CompositeScopeMatcher(
+                            scope.map(::createScopeMatcher))
                 }
-                is Array<*> ->  when (scope.size) {
+                is Array<*> -> when (scope.size) {
                     0 -> EqualsScopeMatcher.DEFAULT
-                    1 -> scope[0].let {
-                        it as? ScopeMatching ?: EqualsScopeMatcher(it)
-                    }
-                    else -> CompositeScopeMatcher(scope.map {
-                        createScopeMatcher(arrayOf(it))
-                    })
+                    1 -> createScopeMatcher(scope[0])
+                    else -> CompositeScopeMatcher(
+                            scope.map(::createScopeMatcher))
                 }
                 else -> EqualsScopeMatcher(scope)
             }

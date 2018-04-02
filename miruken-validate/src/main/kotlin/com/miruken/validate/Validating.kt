@@ -13,14 +13,14 @@ import kotlin.reflect.KType
 interface Validating {
     fun validate(
             target:     Any,
-            targetType: KType,
-            scope:      Any? = null
+            targetType: KType? = null,
+            scope:      Any?   = null
     ): ValidationResult.Outcome
 
     fun validateAsync(
             target:     Any,
-            targetType: KType,
-            scope:      Any? = null
+            targetType: KType? = null,
+            scope:      Any?   = null
     ): Promise<ValidationResult.Outcome>
 
     companion object {

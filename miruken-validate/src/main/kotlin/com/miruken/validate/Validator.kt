@@ -10,7 +10,7 @@ import kotlin.reflect.KType
 class Validator : Handler(), Validating {
     override fun validate(
             target:     Any,
-            targetType: KType,
+            targetType: KType?,
             scope:      Any?
     ): ValidationResult.Outcome {
         val composer   = COMPOSER
@@ -27,7 +27,7 @@ class Validator : Handler(), Validating {
 
     override fun validateAsync(
             target:     Any,
-            targetType: KType,
+            targetType: KType?,
             scope:      Any?
     ): Promise<ValidationResult.Outcome> {
         val composer   = COMPOSER
