@@ -26,6 +26,9 @@ class MapFrom(
 
     override val policy get() = MapsPolicy
 
+    override fun getCallbackKey() =
+            sourceType?.let { targetType to it }
+
     override val resultType: KType? = targetType
             .takeIf { !wantsAsync && !isAsync }
             ?: Promise::class.createType(listOf(
@@ -41,9 +44,6 @@ class MapFrom(
             _result = value
             isAsync = _result is Promise<*>
         }
-
-    override fun getCallbackKey() =
-            sourceType?.let { targetType to it }
 
     @Suppress("UNUSED_PARAMETER")
     fun mapped(mapping: Any, strict: Boolean): Boolean {

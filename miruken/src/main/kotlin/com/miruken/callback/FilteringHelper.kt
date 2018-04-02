@@ -5,9 +5,6 @@ import com.miruken.callback.policy.MethodBinding
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-fun Handling.getFilterOptions() =
-        FilterOptions().takeIf { handle(it, true).handled }
-
 fun Handling.withFilters(vararg filters: Filtering<*,*>) =
         withOptions(FilterOptions(InstanceFilterProvider(*filters)))
 
@@ -25,7 +22,8 @@ fun Handling.getOrderedFilters(
         getFilterProvider(it.filterProviderClass, this)
     }).toMutableList()
 
-    getFilterOptions()?.also { allProviders.addAll(it.providers) }
+    getOptions(FilterOptions())
+            ?.also { allProviders.addAll(it.providers) }
 
     useFilters.takeIf { it.isNotEmpty() }?.also {
         allProviders.add(UseFiltersFilterProvider(it))

@@ -13,7 +13,7 @@ class Validation(
         scope: Any? = null
 ) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
-    private val _asyncResults = mutableListOf<Promise<*>>()
+    private val _asyncResults by lazy { mutableListOf<Promise<*>>() }
 
     val outcome       = ValidationResult.Outcome()
     val scopeMatcher  = createScopeMatcher(scope)
@@ -25,6 +25,8 @@ class Validation(
         private set
 
     override val policy get() = ValidatesPolicy
+
+    override fun getCallbackKey() = targetType
 
     override val resultType: KType?
         get() = if (wantsAsync || isAsync) PROMISE_TYPE else ANY_TYPE
@@ -47,8 +49,6 @@ class Validation(
             _result = value
             isAsync = _result is Promise<*>
         }
-
-    override fun getCallbackKey() = targetType
 
     @Suppress("UNUSED_PARAMETER")
     fun addResult(result: Any, strict: Boolean) : Boolean {

@@ -1,9 +1,6 @@
 package com.miruken.validate
 
-import com.miruken.callback.COMPOSER
-import com.miruken.callback.Handler
-import com.miruken.callback.Handling
-import com.miruken.callback.handle
+import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import kotlin.reflect.KType
 
@@ -14,7 +11,7 @@ class Validator : Handler(), Validating {
             scope:      Any?
     ): ValidationResult.Outcome {
         val composer   = COMPOSER
-        val options    = getOptions(composer)
+        val options    = composer?.getOptions(ValidationOptions())
         val validation = Validation(target, targetType, scope).apply {
             stopOnFailure = options?.stopOnFailure == true
         }
@@ -31,7 +28,7 @@ class Validator : Handler(), Validating {
             scope:      Any?
     ): Promise<ValidationResult.Outcome> {
         val composer   = COMPOSER
-        val options    = getOptions(composer)
+        val options    = composer?.getOptions(ValidationOptions())
         val validation = Validation(target, targetType, scope).apply {
             stopOnFailure = options?.stopOnFailure == true
         }
@@ -45,9 +42,4 @@ class Validator : Handler(), Validating {
             }
         } ?: Promise.resolve(validation.outcome)
     }
-
-    private fun getOptions(composer: Handling?) =
-            ValidationOptions().takeIf {
-                composer?.handle(it)?.handled == true
-            }
 }

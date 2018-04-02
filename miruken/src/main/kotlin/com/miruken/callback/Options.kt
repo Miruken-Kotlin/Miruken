@@ -12,3 +12,6 @@ abstract class Options<T: Options<T>> : Composition(),
 
     abstract fun mergeInto(other: T)
 }
+
+inline fun <reified T: Options<T>> Handling.getOptions(options: T) =
+        options.takeIf { handle(it, true).handled }
