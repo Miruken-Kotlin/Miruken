@@ -16,10 +16,9 @@ class Validator : Handler(), Validating {
             stopOnFailure = options?.stopOnFailure == true
         }
         composer?.handle(validation, true)
-
-        val outcome = validation.outcome
-        (target as? ValidationAware)?.validationOutcome = outcome
-        return outcome
+        return validation.outcome.also {
+            (target as? ValidationAware)?.validationOutcome = it
+        }
     }
 
     override fun validateAsync(
@@ -30,16 +29,14 @@ class Validator : Handler(), Validating {
         val composer   = COMPOSER
         val options    = composer?.getOptions(ValidationOptions())
         val validation = Validation(target, targetType, scope).apply {
+            wantsAsync = true
             stopOnFailure = options?.stopOnFailure == true
         }
         composer?.handle(validation, true)
-
-        return (validation.result as? Promise<*>)?.let {
-            it then {
-                val outcome = validation.outcome
-                (target as? ValidationAware)?.validationOutcome = outcome
-                outcome
+        return (validation.result as Promise<*>) then {
+            validation.outcome.also {
+                (target as? ValidationAware)?.validationOutcome = it
             }
-        } ?: Promise.resolve(validation.outcome)
+        }
     }
 }

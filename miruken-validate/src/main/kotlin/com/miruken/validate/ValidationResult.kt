@@ -91,14 +91,10 @@ sealed class ValidationResult {
         }
 
         fun merge(outcome: Outcome): Outcome {
-            synchronized(_errors) {
+            synchronized(outcome._errors) {
                 if (outcome.isValid) return this
                 for ((key, results) in outcome._errors) {
-                    results.errors?.also {
-                        for (error in it) {
-                            addResult(key, error)
-                        }
-                    }
+                    results.errors?.forEach { addResult(key, it) }
                     results.nested?.also { addResult(key, it) }
                 }
             }

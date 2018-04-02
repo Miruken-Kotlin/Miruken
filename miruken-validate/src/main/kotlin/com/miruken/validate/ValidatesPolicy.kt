@@ -13,7 +13,7 @@ annotation class Validates(
 
 object ValidatesPolicy : ContravariantPolicy({
     target { cb: Validation -> cb.target } rules {
-        matches (target, extract { outcome }, callback)
+        matches (target, callback, extract { outcome })
         matches (target, extract { outcome })
         matches (target, callback)
         matches (callback)
