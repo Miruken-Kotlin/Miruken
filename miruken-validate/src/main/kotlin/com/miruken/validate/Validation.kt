@@ -9,13 +9,14 @@ import kotlin.reflect.KType
 
 class Validation(
         val target: Any,
-        val scopes: List<Any> = emptyList()
+        private val targetType: KType,
+        scope: Any? = null
 ) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
     private val _asyncResults = mutableListOf<Promise<*>>()
 
     val outcome       = ValidationResult.Outcome()
-    val scopeMatcher  = createScopeMatcher(scopes)
+    val scopeMatcher  = createScopeMatcher(scope)
     var stopOnFailure = false
 
     override var wantsAsync: Boolean = false
@@ -47,6 +48,8 @@ class Validation(
             isAsync = _result is Promise<*>
         }
 
+    override fun getCallbackKey() = targetType
+
     @Suppress("UNUSED_PARAMETER")
     fun addResult(result: Any, strict: Boolean) : Boolean {
         if (result is Promise<*>) {
@@ -68,14 +71,27 @@ class Validation(
                     HandleResult.HANDLED_AND_STOP
                 }
 
-    private fun createScopeMatcher(scopes: List<Any>): ScopeMatching =
-            when (scopes.size) {
-                0 -> EqualsScopeMatcher.DEFAULT
-                1 -> scopes[0].let {
-                    it as? ScopeMatching ?: EqualsScopeMatcher(it)
+    private fun createScopeMatcher(scope: Any?): ScopeMatching =
+            when (scope) {
+                null -> EqualsScopeMatcher.DEFAULT
+                is Collection<*> ->  when (scope.size) {
+                    0 -> EqualsScopeMatcher.DEFAULT
+                    1 -> scope.first().let {
+                        it as? ScopeMatching ?: EqualsScopeMatcher(it)
+                    }
+                    else -> CompositeScopeMatcher(scope.map {
+                        createScopeMatcher(arrayOf(it))
+                    })
                 }
-                else -> CompositeScopeMatcher(scopes.map {
-                    createScopeMatcher(listOf(it))
-                })
+                is Array<*> ->  when (scope.size) {
+                    0 -> EqualsScopeMatcher.DEFAULT
+                    1 -> scope[0].let {
+                        it as? ScopeMatching ?: EqualsScopeMatcher(it)
+                    }
+                    else -> CompositeScopeMatcher(scope.map {
+                        createScopeMatcher(arrayOf(it))
+                    })
+                }
+                else -> EqualsScopeMatcher(scope)
             }
 }

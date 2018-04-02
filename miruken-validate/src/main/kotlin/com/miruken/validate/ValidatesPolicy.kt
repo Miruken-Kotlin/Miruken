@@ -7,7 +7,7 @@ import com.miruken.callback.policy.UsePolicy
 @Target(AnnotationTarget.FUNCTION)
 @UsePolicy(ValidatesPolicy::class)
 annotation class Validates(
-        val scopes:        Array<String>,
+        val scopes:        Array<String> = [],
         val skipIfInvalid: Boolean = false
 )
 

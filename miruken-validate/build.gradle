@@ -2,4 +2,5 @@ apply from: "${rootDir}/gradle/kotlin.gradle"
 
 dependencies {
     compile project(':miruken')
+    testCompile project(path: ':miruken', configuration: 'testClasses')
 }

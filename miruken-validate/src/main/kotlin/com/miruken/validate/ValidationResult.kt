@@ -30,8 +30,9 @@ sealed class ValidationResult {
             get() = synchronized(_errors) {
                 _errors.map { (key, err) ->
                     ("[$key] " + (err.errors?.let {
-                        it.joinToString("; ", postfix = "\n") { it.error }
-                    } ?: "") + (err.nested?.error ?: ""))
+                        it.joinToString("; ") { it.error } +
+                                (err.nested?.run { "\n" + error } ?: "")
+                    } ?: (err.nested?.error ?: "")))
                 }.joinToString("\n")
             }
 
@@ -39,10 +40,11 @@ sealed class ValidationResult {
             val (key, outcome) = parse(propertyName)
             return when (outcome) {
                 this -> synchronized(_errors) {
-                    _errors[key]?.let {
-                        it.errors?.let {
-                            it.joinToString("; ") { it.error }
-                        } ?: "" + (it.nested?.error ?: "")
+                    _errors[key]?.let { err ->
+                        err.errors?.let {
+                            it.joinToString("; ") { it.error } +
+                                    (err.nested?.run { "\n" + error } ?: "")
+                        } ?: (err.nested?.error ?: "")
                     } ?: ""
                 }
                 null -> ""

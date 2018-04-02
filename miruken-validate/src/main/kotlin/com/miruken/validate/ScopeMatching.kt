@@ -5,15 +5,13 @@ interface ScopeMatching {
 }
 
 class EqualsScopeMatcher(val scope: Any?) : ScopeMatching {
-    override fun matches(scope: Any?): Boolean {
-        if (scope == Scopes.ANY || this.scope == Scopes.ANY)
-            return true
-        return when (scope) {
+    override fun matches(scope: Any?) =
+        this.scope == Scopes.ANY || when (scope) {
+            Scopes.ANY -> true
             is Collection<*> -> scope.contains(this.scope)
             is Array<*> -> scope.contains(this.scope)
             else -> scope == this.scope
         }
-    }
 
     companion object {
         val DEFAULT = EqualsScopeMatcher(Scopes.DEFAULT)

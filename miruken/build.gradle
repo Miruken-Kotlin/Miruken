@@ -2,6 +2,21 @@ apply from: "${rootDir}/gradle/kotlin.gradle"
 
 apply plugin: 'com.jfrog.bintray'
 
+configurations {
+    testClasses {
+        extendsFrom(testRuntime)
+    }
+}
+
+task testJar(type: Jar) {
+    classifier = 'test'
+    from sourceSets.test.output
+}
+
+artifacts {
+    testClasses testJar
+}
+
 bintray {
     user = System.getenv('BINTRAY_USER')
     key  = System.getenv('BINTRAY_KEY')

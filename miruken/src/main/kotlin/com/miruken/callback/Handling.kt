@@ -58,8 +58,7 @@ interface Handling : ProtocolAdapter {
 }
 
 inline fun <reified T: Any> Handling.handle(
-        callback:     T,
-        greedy:       Boolean   = false,
-        composer:     Handling? = null
-) = handle(callback, typeOf<T>().takeIf { // generic
-        it.arguments.isNotEmpty() }, greedy, composer)
+        callback: T,
+        greedy:   Boolean   = false,
+        composer: Handling? = null
+) = handle(callback, typeOf<T>(), greedy, composer)

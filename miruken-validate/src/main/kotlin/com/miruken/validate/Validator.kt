@@ -5,15 +5,17 @@ import com.miruken.callback.Handler
 import com.miruken.callback.Handling
 import com.miruken.callback.handle
 import com.miruken.concurrent.Promise
+import kotlin.reflect.KType
 
 class Validator : Handler(), Validating {
     override fun validate(
-            target:        Any,
-            vararg scopes: Any
+            target:     Any,
+            targetType: KType,
+            scope:      Any?
     ): ValidationResult.Outcome {
         val composer   = COMPOSER
         val options    = getOptions(composer)
-        val validation = Validation(target, scopes.toList()).apply {
+        val validation = Validation(target, targetType, scope).apply {
             stopOnFailure = options?.stopOnFailure == true
         }
         composer?.handle(validation, true)
@@ -24,12 +26,13 @@ class Validator : Handler(), Validating {
     }
 
     override fun validateAsync(
-            target:        Any,
-            vararg scopes: Any
+            target:     Any,
+            targetType: KType,
+            scope:      Any?
     ): Promise<ValidationResult.Outcome> {
         val composer   = COMPOSER
         val options    = getOptions(composer)
-        val validation = Validation(target, scopes.toList()).apply {
+        val validation = Validation(target, targetType, scope).apply {
             stopOnFailure = options?.stopOnFailure == true
         }
         composer?.handle(validation, true)

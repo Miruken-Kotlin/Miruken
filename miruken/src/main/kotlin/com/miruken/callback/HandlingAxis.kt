@@ -14,11 +14,9 @@ interface HandlingAxis : Handling {
     ) : HandleResult
 }
 
-
 inline fun <reified T: Any> HandlingAxis.handle(
-        axis:         TraversingAxis,
-        callback:     T,
-        greedy:       Boolean   = false,
-        composer:     Handling? = null
-) = handle(axis, callback, typeOf<T>().takeIf {
-    it.arguments.isNotEmpty() }, greedy, composer)
+        axis:     TraversingAxis,
+        callback: T,
+        greedy:   Boolean   = false,
+        composer: Handling? = null
+) = handle(axis, callback, typeOf<T>(), greedy, composer)
