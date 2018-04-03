@@ -16,7 +16,7 @@ class HandleMethodBinding(
         method.isAccessible = true
     }
 
-    val useFilters by lazy {
+    private val useFilters by lazy {
         (method.getTaggedAnnotations<UseFilter>() +
          method.declaringClass.getTaggedAnnotations() +
          protocolMethod.getTaggedAnnotations() +
@@ -25,7 +25,7 @@ class HandleMethodBinding(
                 .normalize()
     }
 
-    val useFilterProviders by lazy {
+    private val useFilterProviders by lazy {
         (method.getTaggedAnnotations<UseFilterProvider>() +
          method.declaringClass.getTaggedAnnotations() +
          protocolMethod.getTaggedAnnotations() +

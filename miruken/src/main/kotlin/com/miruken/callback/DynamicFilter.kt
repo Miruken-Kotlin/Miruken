@@ -90,8 +90,6 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                             it.returnType)
                 }?.let { CallableDispatch(it) }
     }
-
-    companion object {
-        private val NEXT = ConcurrentHashMap<KClass<*>, CallableDispatch?>()
-    }
 }
+
+private val NEXT = ConcurrentHashMap<KClass<*>, CallableDispatch?>()

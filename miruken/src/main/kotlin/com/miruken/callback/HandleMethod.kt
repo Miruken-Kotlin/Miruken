@@ -62,15 +62,7 @@ open class HandleMethod(
             }
         }
     }
-
-    companion object {
-        fun requireComposer() {
-            requireNotNull(HandleMethodBinding.COMPOSER.get()) {
-                "Composer is not available.  Did you call this method directly?"
-            }
-        }
-
-        private val BINDINGS =
-                ConcurrentHashMap<Pair<Method, KClass<*>>, HandleMethodBinding?>()
-    }
 }
+
+private val BINDINGS =
+        ConcurrentHashMap<Pair<Method, KClass<*>>, HandleMethodBinding?>()

@@ -20,6 +20,9 @@ inline fun <reified T: Any> T.toHandler(): Handling {
 
 inline val COMPOSER get() = HandleMethodBinding.COMPOSER.get()
 
+fun requireComposer() = COMPOSER ?: error(
+        "Composer is not available.  Did you call this method directly?")
+
 fun notHandled(): Nothing =
         throw HandleResultException(HandleResult.NOT_HANDLED)
 
