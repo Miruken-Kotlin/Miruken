@@ -3,3 +3,21 @@ apply from: "${rootDir}/gradle/kotlin.gradle"
 dependencies {
     compile project(':miruken')
 }
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key  = System.getenv('BINTRAY_KEY')
+    configurations = ['archives']
+    publish = true
+    pkg {
+        repo = 'Miruken-Kotlin'
+        name = 'miruken-mvc'
+        userOrg = 'miruken'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
+        version {
+            desc = 'Miruken Mvc Implementation'
+            released = new Date()
+        }
+    }
+}

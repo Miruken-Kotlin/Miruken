@@ -4,3 +4,21 @@ dependencies {
     compile project(':miruken')
     testCompile project(path: ':miruken', configuration: 'testClasses')
 }
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key  = System.getenv('BINTRAY_KEY')
+    configurations = ['archives']
+    publish = true
+    pkg {
+        repo = 'Miruken-Kotlin'
+        name = 'miruken-validate'
+        userOrg = 'miruken'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
+        version {
+            desc = 'Miruken Validation'
+            released = new Date()
+        }
+    }
+}

@@ -1,8 +1,11 @@
 apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.jfrog.bintray'
 
 repositories {
     jcenter()
 }
+
+version = '0.0.1-alpha.7'
 
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
@@ -10,3 +13,4 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.jetbrains.kotlin:kotlin-test-junit'
 }
+
