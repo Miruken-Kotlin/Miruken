@@ -21,6 +21,8 @@ bintray {
     user = System.getenv('BINTRAY_USER')
     key  = System.getenv('BINTRAY_KEY')
     configurations = ['archives']
+    publish = true
+    override = true
     pkg {
         repo = 'Miruken-Kotlin'
         name = 'miruken'
@@ -28,7 +30,9 @@ bintray {
         licenses = ['MIT']
         vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
         version {
-            name = '0.0.1-alpha.1'
+            name = '0.0.1-alpha.2'
+            desc = 'Miruken Core Kotlin Implementation'
+            released = new Date()
         }
     }
 }

@@ -24,3 +24,4 @@ hs_err_pid*
 #intelij
 *.iml
 .idea
+local.properties
