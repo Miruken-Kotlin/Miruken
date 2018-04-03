@@ -20,6 +20,9 @@ class PolicyMethodBinding(
     val callbackArg = bindingInfo.callbackArg
     val key         = policy.createKey(bindingInfo)
 
+    override val returnType: KType
+        get() = dispatcher.returnType
+
     fun approve(callback: Any) = policy.approve(callback, this)
 
     fun dispatch(

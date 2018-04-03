@@ -9,7 +9,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.jvm.isAccessible
 
 class HandlerDescriptor(val handlerClass: KClass<*>) {
 
@@ -72,7 +71,6 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     val binding    = rule.bind(it, dispatch, annotation)
                     val descriptor = _policies.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
-                    member.isAccessible = true
                     descriptor.add(binding)
                 }
             }

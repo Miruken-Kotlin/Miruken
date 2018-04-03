@@ -48,7 +48,7 @@ class HandleMethodTest {
 
     @Test fun `Handles method loosely`() {
         val handler = DemoHandler()
-        var id      = handler.duck.proxy<EmailFeature>().email("22")
+        val id      = handler.duck.proxy<EmailFeature>().email("22")
         assertEquals(22, id)
     }
 

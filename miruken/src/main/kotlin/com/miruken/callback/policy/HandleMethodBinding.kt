@@ -3,6 +3,7 @@ package com.miruken.callback.policy
 import com.miruken.callback.*
 import com.miruken.runtime.getTaggedAnnotations
 import com.miruken.runtime.normalize
+import com.miruken.toKType
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import kotlin.reflect.KTypeProjection
@@ -15,6 +16,8 @@ class HandleMethodBinding(
     init {
         method.isAccessible = true
     }
+
+    override val returnType = method.genericReturnType.toKType()
 
     private val useFilters by lazy {
         (method.getTaggedAnnotations<UseFilter>() +
@@ -80,7 +83,7 @@ class HandleMethodBinding(
             handleMethod: HandleMethod,
             target:       Any
     ): Any? {
-        val result = method.invoke(target, *handleMethod.arguments)
+        val result = method!!.invoke(target, *handleMethod.arguments)
         handleMethod.result = result
         return result
     }

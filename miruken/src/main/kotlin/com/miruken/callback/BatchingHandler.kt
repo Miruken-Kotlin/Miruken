@@ -14,8 +14,7 @@ class BatchingHandler(
     private val _completed = AtomicInteger(0)
 
     @Provides
-    var batch: Batch? = Batch(*tags)
-        private set
+    private var batch: Batch? = Batch(*tags)
 
     @Provides
     @Suppress("UNCHECKED_CAST")

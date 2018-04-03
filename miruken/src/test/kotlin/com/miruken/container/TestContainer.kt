@@ -3,7 +3,6 @@ package com.miruken.container
 import com.miruken.callback.Handler
 import com.miruken.callback.notHandled
 import com.miruken.concurrent.Promise
-import com.miruken.container.Container
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createInstance

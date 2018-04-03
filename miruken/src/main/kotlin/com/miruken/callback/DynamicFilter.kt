@@ -6,7 +6,6 @@ import com.miruken.callback.policy.HandleMethodBinding
 import com.miruken.callback.policy.MethodBinding
 import com.miruken.callback.policy.PolicyMethodBinding
 import com.miruken.runtime.isCompatibleWith
-import com.miruken.toKType
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberFunctions
@@ -86,8 +85,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                     it.name == "next" &&
                     it.parameters.size >= 3 &&
                     isCompatibleWith(it.parameters[1].type, callbackType) &&
-                    isCompatibleWith(binding.method.genericReturnType.toKType(),
-                            it.returnType)
+                    isCompatibleWith(binding.returnType, it.returnType)
                 }?.let { CallableDispatch(it) }
     }
 }

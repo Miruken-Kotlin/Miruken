@@ -13,10 +13,15 @@ import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
+import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaMethod
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
+    init {
+        callable.isAccessible = true
+    }
+
     val strict      = annotations.any { it is Strict }
     val returnInfo  = TypeFlags.parse(callable.returnType)
     val arguments   = callable.valueParameters.map { Argument(it) }
@@ -30,8 +35,8 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     override val annotations get() = callable.annotations
 
     val javaMethod = when (callable) {
-        is KFunction<*> -> callable.javaMethod!!
-        is KProperty<*> -> callable.javaGetter!!
+        is KFunction<*> -> callable.javaMethod
+        is KProperty<*> -> callable.javaGetter // null if field
         else -> error("Unrecognized callable $callable")
     }
 

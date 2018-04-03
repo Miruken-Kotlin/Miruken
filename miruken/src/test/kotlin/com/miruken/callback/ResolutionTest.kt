@@ -408,7 +408,7 @@ class ResolutionTest {
                 (it.body as? String)?.also { body ->
                     val message = Message().apply { content = body }
                     repository.create(Create(message))
-                    if (binding.method.returnType == Int::class.java) {
+                    if (binding.returnType.classifier == Int::class) {
                         billing.bill(message.id.toBigDecimal())
                         return (message.id * 10) as Res
                     }
@@ -431,7 +431,7 @@ class ResolutionTest {
         ): Res {
             println("Balance for $callback")
             repository.create(callback)
-            if (binding.method.returnType == BigDecimal::class.java) {
+            if (binding.returnType.classifier == BigDecimal::class) {
                 @Suppress("UNCHECKED_CAST")
                 return ((next() as BigDecimal) +
                     billing.bill(callback.entity.id.toBigDecimal())) as Res
