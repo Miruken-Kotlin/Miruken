@@ -1,11 +1,11 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import kotlin.reflect.KType
 
 interface FilteringProvider {
     fun getFilters(
-            binding:    MethodBinding,
+            binding:    MemberBinding,
             filterType: KType,
             composer:   Handling
     ): List<Filtering<*,*>>

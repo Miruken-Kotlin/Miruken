@@ -8,10 +8,10 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
-class PolicyMethodBinding(
+class PolicyMemberBinding(
         val policy:  CallbackPolicy,
-        bindingInfo: PolicyMethodBindingInfo
-) : MethodBinding(bindingInfo.dispatcher.javaMethod) {
+        bindingInfo: PolicyMemberBindingInfo
+) : MemberBinding(bindingInfo.dispatcher.javaMember) {
 
     val rule        = bindingInfo.rule
     val annotation  = bindingInfo.annotation
@@ -101,8 +101,8 @@ class PolicyMethodBinding(
                 when {
                     argumentClass == Handling::class ->
                         resolved[i] = composer
-                    argumentClass.isInstance(this@PolicyMethodBinding) ->
-                        resolved[i] = this@PolicyMethodBinding
+                    argumentClass.isInstance(this@PolicyMemberBinding) ->
+                        resolved[i] = this@PolicyMemberBinding
                     argumentClass == KType::class -> {
                         if (callbackType == null) {
                             val flags = argument.typeInfo.flags

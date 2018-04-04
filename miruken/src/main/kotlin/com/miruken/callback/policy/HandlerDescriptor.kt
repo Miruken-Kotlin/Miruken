@@ -42,14 +42,14 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     private fun dispatch(
-            methods:      Collection<PolicyMethodBinding>,
+            members:      Collection<PolicyMemberBinding>,
             receiver:     Any,
             callback:     Any,
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock?
-    ) = methods.fold(HandleResult.NOT_HANDLED, { result, method ->
+    ) = members.fold(HandleResult.NOT_HANDLED, { result, method ->
         if ((result.handled && !greedy) || result.stop) {
             return result
         }
@@ -108,7 +108,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             it.value.value._policies[policy]?.let {
                 it.getInvariantMethods(callback, callbackType).firstOrNull() ?:
                 it.getCompatibleMethods(callback, callbackType).firstOrNull()
-            }}.sortedWith(policy.methodBindingComparator)
+            }}.sortedWith(policy.memberBindingComparator)
                .map { it.dispatcher.owningClass }
                .distinct()
 
@@ -118,7 +118,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                         it.getInvariantMethods(key, null) +
                         it.getCompatibleMethods(key, null)
                     } ?: emptyList()
-                }.sortedWith(policy.methodBindingComparator)
+                }.sortedWith(policy.memberBindingComparator)
 
         fun getPolicyMethods(policy: CallbackPolicy) =
                 DESCRIPTORS.values.flatMap {

@@ -1,7 +1,7 @@
 package com.miruken.validate
 
 import com.miruken.callback.policy.ContravariantPolicy
-import com.miruken.callback.policy.PolicyMethodBinding
+import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.UsePolicy
 
 @Target(AnnotationTarget.FUNCTION)
@@ -21,7 +21,7 @@ object ValidatesPolicy : ContravariantPolicy({
 }) {
     override fun approve(
             callback: Any,
-            binding:  PolicyMethodBinding
+            binding:  PolicyMemberBinding
     ) = (callback as? Validation)?.let {
         val validates = binding.annotation as Validates
         val scope = validates.scopes.takeIf { it.isNotEmpty() }

@@ -1,6 +1,5 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.HandleMethodBinding
 import com.miruken.runtime.isGeneric
 import com.miruken.typeOf
 
@@ -18,7 +17,7 @@ inline fun <reified T: Any> T.toHandler(): Handling {
         this as? Handling ?: HandlerAdapter(this)
 }
 
-inline val COMPOSER get() = HandleMethodBinding.COMPOSER.get()
+inline val COMPOSER get() = com.miruken.callback.policy.COMPOSER
 
 fun requireComposer() = COMPOSER ?: error(
         "Composer is not available.  Did you call this method directly?")

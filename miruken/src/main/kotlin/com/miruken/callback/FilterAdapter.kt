@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import com.miruken.concurrent.Promise
 
 class AsyncFilterAdapter<in Cb: Any, Res: Any?>(
@@ -14,7 +14,7 @@ class AsyncFilterAdapter<in Cb: Any, Res: Any?>(
 
     override fun next(
             callback: Cb,
-            binding:  MethodBinding,
+            binding:  MemberBinding,
             composer: Handling,
             next:     Next<Promise<Res>>
     ): Promise<Res> {
@@ -36,7 +36,7 @@ class SyncFilterAdapter<in Cb: Any, Res: Any?>(
 
     override fun next(
             callback: Cb,
-            binding:  MethodBinding,
+            binding:  MemberBinding,
             composer: Handling,
             next:     Next<Res>
     ): Res {

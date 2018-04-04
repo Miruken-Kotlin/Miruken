@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import org.junit.Test
@@ -110,7 +110,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: SpecialFoo,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Int>
         ) = next()
@@ -123,7 +123,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>
         ) = next()
@@ -134,7 +134,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>
         ) = next()
@@ -147,7 +147,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>
         ) = next()
@@ -158,7 +158,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<String>
         ) = next()
@@ -169,7 +169,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Number>
         ) = next()
@@ -180,7 +180,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: Foo,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<T>
         ) = next()
@@ -191,7 +191,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: Foo,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<T>
         ) = next()
@@ -202,7 +202,7 @@ class UseFiltersFilterProviderTest {
 
         override fun next(
                 callback: Any,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Any>
         ) = next()

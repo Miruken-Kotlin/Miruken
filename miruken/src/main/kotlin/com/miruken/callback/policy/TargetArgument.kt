@@ -16,7 +16,7 @@ class TargetArgument<in C, out R: Any>(
 
     override fun configure(
             argument:    Argument,
-            bindingInfo: PolicyMethodBindingInfo)
+            bindingInfo: PolicyMemberBindingInfo)
     {
         if (bindingInfo.callbackArg == null) {
             bindingInfo.callbackArg = argument

@@ -21,7 +21,7 @@ open class BivariantPolicy(
             prototype.output, prototype.input)
 
     override fun createKey(
-            bindingInfo: PolicyMethodBindingInfo
+            bindingInfo: PolicyMemberBindingInfo
     ): Pair<Any, Any>? {
         val inKey  = bindingInfo.inKey
         val outKey = bindingInfo.outKey
@@ -58,7 +58,7 @@ open class BivariantPolicy(
         return compatible
     }
 
-    override fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
+    override fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
         output.acceptResult(result, binding)
 
     override fun compare(o1: Any?, o2: Any?): Int {

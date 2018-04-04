@@ -3,7 +3,7 @@ package com.miruken.callback.policy
 interface ReturnRule {
     fun matches(method: CallableDispatch): Boolean
 
-    fun configure(bindingInfo: PolicyMethodBindingInfo) {
+    fun configure(bindingInfo: PolicyMemberBindingInfo) {
     }
 
     infix fun and(otherRule: ReturnRule) =

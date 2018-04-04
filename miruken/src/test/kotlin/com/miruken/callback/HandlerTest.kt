@@ -3,8 +3,8 @@
 package com.miruken.callback
 
 import com.miruken.assertAsync
-import com.miruken.callback.policy.MethodBinding
-import com.miruken.callback.policy.PolicyMethodBinding
+import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
 import com.miruken.typeOf
@@ -849,7 +849,7 @@ class HandlerTest {
         fun providesBazExplicitly(
                 inquiry:  Inquiry,
                 composer: Handling,
-                binding:  PolicyMethodBinding
+                binding:  PolicyMemberBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(SpecialBaz(), composer)
@@ -886,7 +886,7 @@ class HandlerTest {
         fun providesBazExplicitly(
                 inquiry:  Inquiry,
                 composer: Handling,
-                binding:  PolicyMethodBinding
+                binding:  PolicyMemberBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(Promise.resolve(SpecialBaz()), composer)
@@ -1010,7 +1010,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Bar,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Unit>
         ) {
@@ -1064,7 +1064,7 @@ class HandlerTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>
         ) = next()
@@ -1075,7 +1075,7 @@ class HandlerTest {
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Any?>
         ) = next()
@@ -1086,7 +1086,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Any,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<T>
         ) = next()
@@ -1097,7 +1097,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Cb,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>
         ): Res {
@@ -1113,7 +1113,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Req,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Promise<Res>>
         ): Promise<Res> {
@@ -1133,7 +1133,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Req,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Promise<Res>>
         ) = Promise.reject(IllegalStateException("System shutdown"))

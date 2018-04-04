@@ -7,7 +7,7 @@ class ReturnRuleDisjunction(
     override fun matches(method: CallableDispatch): Boolean =
             leftSide.matches(method) || rightSide.matches(method)
 
-    override fun configure(bindingInfo: PolicyMethodBindingInfo) {
+    override fun configure(bindingInfo: PolicyMemberBindingInfo) {
         if (leftSide.matches(bindingInfo.dispatcher))
             leftSide.configure(bindingInfo)
         else if (rightSide.matches(bindingInfo.dispatcher))

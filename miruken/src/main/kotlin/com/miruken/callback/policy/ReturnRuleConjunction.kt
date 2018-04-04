@@ -7,7 +7,7 @@ class ReturnRuleConjunction(
     override fun matches(method: CallableDispatch): Boolean =
         leftSide.matches(method) && rightSide.matches(method)
 
-    override fun configure(bindingInfo: PolicyMethodBindingInfo) {
+    override fun configure(bindingInfo: PolicyMemberBindingInfo) {
         leftSide.configure(bindingInfo)
         rightSide.configure(bindingInfo)
     }

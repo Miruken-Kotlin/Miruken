@@ -1,6 +1,6 @@
 package com.miruken.callback.policy
 
-data class PolicyMethodBindingInfo(
+data class PolicyMemberBindingInfo(
         val rule:       MethodRule,
         val dispatcher: CallableDispatch,
         val annotation: Annotation,

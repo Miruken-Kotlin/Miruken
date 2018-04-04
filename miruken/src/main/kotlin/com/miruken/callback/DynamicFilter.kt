@@ -3,8 +3,8 @@ package com.miruken.callback
 import com.miruken.TypeFlags
 import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.HandleMethodBinding
-import com.miruken.callback.policy.MethodBinding
-import com.miruken.callback.policy.PolicyMethodBinding
+import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.runtime.isCompatibleWith
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -16,7 +16,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
 
     final override fun next(
             callback: Cb,
-            binding:  MethodBinding,
+            binding:  MemberBinding,
             composer: Handling,
             next:     Next<Res>
     ) = NEXT.getOrPut(this::class) { getDynamicNext(binding) }
@@ -32,7 +32,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
     private fun resolveArguments(
             dispatcher: CallableDispatch,
             callback:   Cb,
-            binding:    MethodBinding,
+            binding:    MemberBinding,
             composer:   Handling,
             next:       Next<Res>
     ): Array<Any?>? {
@@ -76,10 +76,10 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         }
     }
 
-    private fun getDynamicNext(binding: MethodBinding): CallableDispatch? {
-        val callbackType = (binding as? PolicyMethodBinding)
+    private fun getDynamicNext(binding: MemberBinding): CallableDispatch? {
+        val callbackType = (binding as? PolicyMemberBinding)
                 ?.callbackArg?.parameterType
-                ?: HandleMethodBinding.HANDLE_METHOD_TYPE
+                ?: HandleMethod.TYPE
         return this::class.declaredMemberFunctions
                 .firstOrNull {
                     it.name == "next" &&

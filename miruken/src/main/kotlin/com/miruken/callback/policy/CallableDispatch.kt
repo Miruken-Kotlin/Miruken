@@ -10,17 +10,17 @@ import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import com.miruken.runtime.normalize
 import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Member
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaMethod
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
-    init {
-        callable.isAccessible = true
-    }
+    init { callable.isAccessible = true }
 
     val strict      = annotations.any { it is Strict }
     val returnInfo  = TypeFlags.parse(callable.returnType)
@@ -34,9 +34,9 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     inline   val returnType  get() = callable.returnType
     override val annotations get() = callable.annotations
 
-    val javaMethod = when (callable) {
-        is KFunction<*> -> callable.javaMethod
-        is KProperty<*> -> callable.javaGetter // null if field
+    val javaMember: Member = when (callable) {
+        is KFunction<*> -> callable.javaMethod!!
+        is KProperty<*> -> callable.javaGetter ?: callable.javaField!!
         else -> error("Unrecognized callable $callable")
     }
 

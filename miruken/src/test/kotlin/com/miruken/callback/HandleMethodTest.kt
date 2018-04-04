@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
@@ -273,7 +273,7 @@ class HandleMethodTest {
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>
         ): Res {
@@ -294,7 +294,7 @@ class HandleMethodTest {
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>
         ): Res {

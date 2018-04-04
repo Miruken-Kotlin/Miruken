@@ -1,8 +1,8 @@
 package com.miruken.callback.policy
 
-import java.lang.reflect.Method
+import java.lang.reflect.Member
 import kotlin.reflect.KType
 
-abstract class MethodBinding(val method: Method?) {
+abstract class MemberBinding(val member: Member) {
     abstract val returnType: KType
 }

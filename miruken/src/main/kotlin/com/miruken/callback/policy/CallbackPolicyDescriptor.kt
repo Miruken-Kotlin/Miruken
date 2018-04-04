@@ -7,33 +7,33 @@ import kotlin.reflect.KType
 
 class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     private val _typed =
-            HashMap<KType, MutableList<PolicyMethodBinding>>()
+            HashMap<KType, MutableList<PolicyMemberBinding>>()
 
     private val _compatible =
-            ConcurrentHashMap<Any, List<PolicyMethodBinding>>()
+            ConcurrentHashMap<Any, List<PolicyMemberBinding>>()
 
     private val _indexed by lazy {
-        HashMap<Any, MutableList<PolicyMethodBinding>>()
+        HashMap<Any, MutableList<PolicyMemberBinding>>()
     }
 
     private val _unknown by lazy {
-        mutableListOf<PolicyMethodBinding>()
+        mutableListOf<PolicyMemberBinding>()
     }
 
-    internal fun add(methodBinding: PolicyMethodBinding) {
-        val key = methodBinding.key
+    internal fun add(memberBinding: PolicyMemberBinding) {
+        val key = memberBinding.key
         when (key) {
             is KType ->
                 if (key.classifier == Any::class)
-                    _unknown.add(methodBinding)
+                    _unknown.add(memberBinding)
                 else
                     _typed.getOrPut(key) { mutableListOf() }
-                        .add(methodBinding)
+                        .add(memberBinding)
             null, Any::class ->
-                _unknown.add(methodBinding)
+                _unknown.add(memberBinding)
             else ->
                 _indexed.getOrPut(key) { mutableListOf() }
-                    .add(methodBinding)
+                    .add(memberBinding)
         }
     }
 
@@ -62,11 +62,11 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
             when (key) {
                 is KType, is KClass<*>, is Class<*> ->
                     policy.getCompatibleKeys(key, _typed.keys).flatMap {
-                        _typed[it] ?: emptyList<PolicyMethodBinding>()
+                        _typed[it] ?: emptyList<PolicyMemberBinding>()
                     }
                 else ->
                     policy.getCompatibleKeys(key, _indexed.keys).flatMap {
-                        _indexed[it] ?: emptyList<PolicyMethodBinding>()
+                        _indexed[it] ?: emptyList<PolicyMemberBinding>()
                     }
-            }.sortedWith(policy.methodBindingComparator) + _unknown
+            }.sortedWith(policy.memberBindingComparator) + _unknown
 }

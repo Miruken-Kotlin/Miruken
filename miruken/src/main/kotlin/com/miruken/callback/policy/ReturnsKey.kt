@@ -8,7 +8,7 @@ object ReturnsKey : ReturnRule {
     override fun matches(method: CallableDispatch) =
             method.returnsSomething
 
-    override fun configure(bindingInfo: PolicyMethodBindingInfo) {
+    override fun configure(bindingInfo: PolicyMemberBindingInfo) {
         if (bindingInfo.outKey == null) {
             val dispatch = bindingInfo.dispatcher
             bindingInfo.outKey = dispatch.annotations

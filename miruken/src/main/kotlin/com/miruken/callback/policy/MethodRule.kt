@@ -23,9 +23,9 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
 
     fun bind(policy:     CallbackPolicy,
              dispatch:   CallableDispatch,
-             annotation: Annotation): PolicyMethodBinding {
+             annotation: Annotation): PolicyMemberBinding {
         val strict      = policy.strict || dispatch.strict
-        val bindingInfo = PolicyMethodBindingInfo(
+        val bindingInfo = PolicyMemberBindingInfo(
                 this, dispatch, annotation, strict)
         returnRule?.configure(bindingInfo)
         argumentRules.zip(dispatch.arguments) { argRule, arg ->

@@ -12,10 +12,8 @@ import kotlin.reflect.full.createType
 class HandleMethodBinding(
         val protocolMethod: Method,
         method: Method
-): MethodBinding(method) {
-    init {
-        method.isAccessible = true
-    }
+): MemberBinding(method) {
+    init { method.isAccessible = true }
 
     override val returnType = method.genericReturnType.toKType()
 
@@ -43,11 +41,11 @@ class HandleMethodBinding(
             composer: Handling
     ): HandleResult {
 
-        val oldComposer  = COMPOSER.get()
+        val oldComposer  = threadComposer.get()
         val handleMethod = callback as HandleMethod
 
         try {
-            COMPOSER.set(composer)
+            threadComposer.set(composer)
             val filters = resolveFilters(target, handleMethod, composer)
             if (filters.isEmpty())
                 invoke(handleMethod, target)
@@ -75,18 +73,17 @@ class HandleMethodBinding(
                 }
             }
         } finally {
-            COMPOSER.set(oldComposer)
+            threadComposer.set(oldComposer)
         }
     }
 
     private fun invoke(
             handleMethod: HandleMethod,
             target:       Any
-    ): Any? {
-        val result = method!!.invoke(target, *handleMethod.arguments)
-        handleMethod.result = result
-        return result
-    }
+    ) = (member as Method)
+            .invoke(target, *handleMethod.arguments)?.also {
+                handleMethod.result = it
+            }
 
     @Suppress("UNCHECKED_CAST")
     private fun resolveFilters(
@@ -95,7 +92,7 @@ class HandleMethodBinding(
             composer:     Handling
     ): List<Filtering<Any,Any?>> {
         val filterType = Filtering::class.createType(listOf(
-                KTypeProjection.invariant(HANDLE_METHOD_TYPE),
+                KTypeProjection.invariant(HandleMethod.TYPE),
                 KTypeProjection.invariant(handleMethod.resultType!!)))
         return composer.getOrderedFilters(filterType, this,
                 (target as? Filtering<*,*>)?.let {
@@ -104,11 +101,7 @@ class HandleMethodBinding(
                 useFilterProviders, useFilters
         ) as List<Filtering<Any,Any?>>
     }
-
-    companion object {
-        @PublishedApi
-        internal val COMPOSER = ThreadLocal<Handling?>()
-
-        val HANDLE_METHOD_TYPE = HandleMethod::class.createType()
-    }
 }
+
+private val threadComposer = ThreadLocal<Handling?>()
+val COMPOSER get() = threadComposer.get()

@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.PROMISE_TYPE
 import com.miruken.runtime.isCompatibleWith
@@ -16,7 +16,7 @@ open class UseFiltersFilterProvider(
         private val useFilters: List<UseFilter>
 ): FilteringProvider {
     override fun getFilters(
-            binding:    MethodBinding,
+            binding:    MemberBinding,
             filterType: KType,
             composer:   Handling
     ): List<Filtering<*,*>> {
@@ -30,15 +30,15 @@ open class UseFiltersFilterProvider(
     }
 
     protected open fun acceptFilterType(
-            filterType: KType, binding: MethodBinding) = true
+            filterType: KType, binding: MemberBinding) = true
 
     protected open fun useFilterInstance(
-            filter: Filtering<*,*>, binding: MethodBinding) = true
+            filter: Filtering<*,*>, binding: MemberBinding) = true
 
     private fun getFilters(
             filterType: KType,
             useFilter:  UseFilter,
-            binding:    MethodBinding,
+            binding:    MemberBinding,
             bundle:     Bundle,
             filters:    MutableList<Filtering<*,*>>
     ) {

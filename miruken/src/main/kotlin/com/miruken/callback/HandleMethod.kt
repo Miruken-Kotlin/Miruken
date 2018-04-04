@@ -11,6 +11,7 @@ import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.createType
 
 open class HandleMethod(
         val protocol:  KType,
@@ -24,8 +25,8 @@ open class HandleMethod(
     override val policy:     CallbackPolicy? get() = null
     var          exception:  Throwable? = null
 
-    override fun getResolveCallback() = Resolution(protocol, this,
-            HandleMethodBinding.HANDLE_METHOD_TYPE)
+    override fun getResolveCallback() =
+            Resolution(protocol, this, TYPE)
 
     override fun dispatch(
             handler:      Any,
@@ -62,7 +63,12 @@ open class HandleMethod(
             }
         }
     }
+
+    companion object {
+        val TYPE = HandleMethod::class.createType()
+
+        private val BINDINGS = ConcurrentHashMap<
+                Pair<Method, KClass<*>>, HandleMethodBinding?>()
+    }
 }
 
-private val BINDINGS =
-        ConcurrentHashMap<Pair<Method, KClass<*>>, HandleMethodBinding?>()

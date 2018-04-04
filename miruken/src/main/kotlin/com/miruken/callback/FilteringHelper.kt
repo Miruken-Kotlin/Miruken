@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.OrderedComparator
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
@@ -13,7 +13,7 @@ fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
 
 fun Handling.getOrderedFilters(
         filterType:   KType,
-        binding:      MethodBinding,
+        binding:      MemberBinding,
         providers:    List<FilteringProvider>,
         useProviders: List<UseFilterProvider>,
         useFilters:   List<UseFilter>

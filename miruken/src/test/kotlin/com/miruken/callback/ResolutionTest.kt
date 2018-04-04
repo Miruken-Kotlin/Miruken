@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptor
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.MemberBinding
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
@@ -399,7 +399,7 @@ class ResolutionTest {
         fun next(
                 callback:       Cb,
                 next:           Next<Res>,
-                binding:        MethodBinding,
+                binding:        MemberBinding,
                 repository:     Repository<Message>,
                 @Proxy billing: Billing
         ): Res {
@@ -425,7 +425,7 @@ class ResolutionTest {
     class BalanceFilter<T: Entity, Res: Number> : DynamicFilter<Create<T>, Res>() {
         fun next(callback:   Create<T>,
                  next:       Next<Res>,
-                 binding:    MethodBinding,
+                 binding:    MemberBinding,
                  repository: Repository<T>,
                  billing:    Billing
         ): Res {

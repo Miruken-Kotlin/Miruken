@@ -11,16 +11,16 @@ abstract class CallbackPolicy(
         val filters: List<FilteringProvider>,
         val strict:  Boolean = false
 ) : Comparator<Any> {
-    val methodBindingComparator : Comparator<PolicyMethodBinding> =
+    val memberBindingComparator : Comparator<PolicyMemberBinding> =
             Comparator { a, b -> compare(a.key, b.key) }
 
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }
 
-    open fun bindMethod(bindingInfo: PolicyMethodBindingInfo) =
-            PolicyMethodBinding(this, bindingInfo)
+    open fun bindMethod(bindingInfo: PolicyMemberBindingInfo) =
+            PolicyMemberBinding(this, bindingInfo)
 
-    open fun createKey(bindingInfo: PolicyMethodBindingInfo) =
+    open fun createKey(bindingInfo: PolicyMemberBindingInfo) =
             bindingInfo.inKey ?: bindingInfo.outKey
 
     abstract fun getKey(callback: Any, callbackType: KType?): Any?
@@ -30,14 +30,14 @@ abstract class CallbackPolicy(
             available: Collection<Any>
     ): Collection<Any>
 
-    open fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
+    open fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
          when (result) {
              null, Unit -> HandleResult.NOT_HANDLED
              is HandleResult -> result
              else -> HandleResult.HANDLED
          }
 
-    open fun approve(callback: Any, binding: PolicyMethodBinding) = true
+    open fun approve(callback: Any, binding: PolicyMemberBinding) = true
 
     fun getMethods() = HandlerDescriptor.getPolicyMethods(this)
 
@@ -88,7 +88,7 @@ abstract class CallbackPolicy(
         fun getCallbackMethods(
                 callback:     Any,
                 callbackType: KType? = null
-        ): List<PolicyMethodBinding> {
+        ): List<PolicyMemberBinding> {
             val policy = getCallbackPolicy(callback)
             return policy.getKey(callback, callbackType)?.let {
                 policy.getMethods(it)
