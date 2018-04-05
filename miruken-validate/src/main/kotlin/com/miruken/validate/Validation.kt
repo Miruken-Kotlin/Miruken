@@ -5,18 +5,22 @@ import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_TYPE
 import com.miruken.runtime.PROMISE_TYPE
+import com.miruken.validate.scopes.Anything
+import javax.validation.groups.Default
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 class Validation(
-        val target: Any,
+        val         target:     Any,
         private val targetType: KType? = null,
-        scope: Any? = null
+        vararg      scopes:     KClass<*>
 ) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
     private val _asyncResults by lazy { mutableListOf<Promise<*>>() }
+    private val  scopes  = scopes.takeIf { it.isNotEmpty() }
+            ?: DEFAULT_SCOPES
 
-    val outcome       = ValidationResult.Outcome()
-    val scopeMatcher  = createScopeMatcher(scope)
+    val outcome = ValidationResult.Outcome()
     var stopOnFailure = false
 
     override var wantsAsync: Boolean = false
@@ -50,8 +54,14 @@ class Validation(
             isAsync = _result is Promise<*>
         }
 
+    fun satisfiesScopes(vararg scopes: KClass<*>) =
+        scopes.contains(Anything::class) ||
+        this.scopes.contains(Anything::class) ||
+        (scopes.takeIf { it.isNotEmpty() } ?: DEFAULT_SCOPES)
+                .all { this.scopes.contains(it) }
+
     @Suppress("UNUSED_PARAMETER")
-    fun addResult(result: Any, strict: Boolean) : Boolean {
+    private fun addResult(result: Any, strict: Boolean): Boolean {
         if (result is Promise<*>) {
             _asyncResults.add(result)
             isAsync = true
@@ -67,26 +77,9 @@ class Validation(
             composer:     Handling
     ) = policy.dispatch(handler, this, callbackType,
             greedy, composer, ::addResult)
-                .then(stopOnFailure && !outcome.isValid) {
-                    HandleResult.HANDLED_AND_STOP
-                }
-
-    private fun createScopeMatcher(scope: Any?): ScopeMatching =
-            when (scope) {
-                null -> EqualsScopeMatcher.DEFAULT
-                is ScopeMatching -> scope
-                is Collection<*> -> when (scope.size) {
-                    0 -> EqualsScopeMatcher.DEFAULT
-                    1 -> createScopeMatcher(scope.first())
-                    else -> CompositeScopeMatcher(
-                            scope.map(::createScopeMatcher))
-                }
-                is Array<*> -> when (scope.size) {
-                    0 -> EqualsScopeMatcher.DEFAULT
-                    1 -> createScopeMatcher(scope[0])
-                    else -> CompositeScopeMatcher(
-                            scope.map(::createScopeMatcher))
-                }
-                else -> EqualsScopeMatcher(scope)
+            .then(stopOnFailure && !outcome.isValid) {
+                HandleResult.HANDLED_AND_STOP
             }
 }
+
+private val DEFAULT_SCOPES = arrayOf(Default::class)

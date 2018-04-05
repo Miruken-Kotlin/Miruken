@@ -29,7 +29,7 @@ sealed class ValidationResult {
         override val error: String
             get() = synchronized(_errors) {
                 _errors.map { (key, err) ->
-                    ("[$key] " + (err.errors?.let {
+                    ("$key | " + (err.errors?.let {
                         it.joinToString("; ") { it.error } +
                                 (err.nested?.run { "\n" + error } ?: "")
                     } ?: (err.nested?.error ?: "")))
@@ -133,7 +133,7 @@ sealed class ValidationResult {
                             return own to this
                         } else {
                             getOrCreateOutcome(own, create)?.let {
-                                return own to it
+                                return propertyName.substring(end + 2) to it
                             }
                         }
                     }

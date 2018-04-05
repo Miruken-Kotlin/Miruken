@@ -11,6 +11,7 @@ import org.junit.Test
 import org.junit.rules.TestName
 import java.time.LocalDate
 import java.time.Period
+import javax.validation.groups.Default
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
@@ -40,7 +41,7 @@ class ValidatorTest {
             dob = LocalDate.of(2005, 6, 14)
         }
         val outcome = Validating(handler)
-                .validate(player, listOf(Scopes.DEFAULT, "Recreational"))
+                .validate(player, Default::class, Recreational::class)
         assertFalse(outcome.isValid)
         assertSame(outcome, player.validationOutcome)
         assertEquals("player must be 10 or younger", outcome["dob"])
@@ -66,7 +67,7 @@ class ValidatorTest {
         val team    = Team().apply { coach = Coach() }
         assertAsync(testName) { done ->
             Validating(handler)
-                    .validateAsync(team, listOf(Scopes.DEFAULT, "ECNL"))
+                    .validateAsync(team, Default::class, Ecnl::class)
                     .then { outcome ->
                         assertFalse(outcome.isValid)
                         assertSame(outcome, team.validationOutcome)
@@ -125,6 +126,9 @@ class ValidatorTest {
         }
     }
 
+    interface Ecnl
+    interface Recreational
+
     interface TeamManagement {
         fun addPlayer(player: Player, team: Team): Promise<Team>
     }
@@ -150,7 +154,7 @@ class ValidatorTest {
             }
         }
 
-        @Validates(scopes = ["ECNL"])
+        @Validates(Ecnl::class)
         fun shouldHaveLicensesCoach(
                  team:    Team,
                  outcome: ValidationResult.Outcome
@@ -182,7 +186,7 @@ class ValidatorTest {
             }
         }
 
-        @Validates(scopes = ["Recreational"])
+        @Validates(Recreational::class)
         fun mustBeTenOrUnder(
                 validation: Validation
         ) {

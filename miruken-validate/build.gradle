@@ -2,5 +2,9 @@ apply from: "${rootDir}/gradle/kotlin.gradle"
 
 dependencies {
     compile project(':miruken')
+    compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
     testCompile project(path: ':miruken', configuration: 'testClasses')
+    testCompile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+    testCompile group: 'org.glassfish.web', name: 'javax.el', version: '2.2.6'
+    testCompile group: 'org.hibernate.validator', name: 'hibernate-validator', version: '6.0.9.Final'
 }
