@@ -17,7 +17,7 @@ inline fun <reified T: Any> T.toHandler(): Handling {
         this as? Handling ?: HandlerAdapter(this)
 }
 
-inline val COMPOSER get() = com.miruken.callback.policy.COMPOSER
+val COMPOSER get() = threadComposer.get()
 
 fun requireComposer() = COMPOSER ?: error(
         "Composer is not available.  Did you call this method directly?")
@@ -27,3 +27,16 @@ fun notHandled(): Nothing =
 
 fun notHandledAndStop(): Nothing =
         throw HandleResultException(HandleResult.NOT_HANDLED_AND_STOP)
+
+fun <R> withComposer(composer: Handling, block: () -> R): R {
+    val oldComposer = threadComposer.get()
+    try {
+        threadComposer.set(composer)
+        return block()
+    } finally {
+        threadComposer.set(oldComposer)
+    }
+}
+
+private val threadComposer = ThreadLocal<Handling?>()
+

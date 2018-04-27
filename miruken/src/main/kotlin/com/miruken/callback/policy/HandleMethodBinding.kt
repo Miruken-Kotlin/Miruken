@@ -39,13 +39,9 @@ class HandleMethodBinding(
             target:   Any,
             callback: Any,
             composer: Handling
-    ): HandleResult {
-
-        val oldComposer  = threadComposer.get()
+    ) = withComposer(composer) {
         val handleMethod = callback as HandleMethod
-
         try {
-            threadComposer.set(composer)
             val filters = resolveFilters(target, handleMethod, composer)
             if (filters.isEmpty())
                 invoke(handleMethod, target)
@@ -54,9 +50,9 @@ class HandleMethodBinding(
                     { pipeline, next -> {
                         pipeline.next(handleMethod, this, composer, next) }
                     })()
-            return HandleResult.HANDLED
+            HandleResult.HANDLED
         } catch (e: Throwable) {
-            return when (e) {
+            when (e) {
                 is HandleResultException -> e.result
                 is InvocationTargetException -> {
                     val cause = e.cause ?: e
@@ -72,8 +68,6 @@ class HandleMethodBinding(
                     throw e
                 }
             }
-        } finally {
-            threadComposer.set(oldComposer)
         }
     }
 
@@ -102,6 +96,3 @@ class HandleMethodBinding(
         ) as List<Filtering<Any,Any?>>
     }
 }
-
-private val threadComposer = ThreadLocal<Handling?>()
-val COMPOSER get() = threadComposer.get()

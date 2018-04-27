@@ -300,7 +300,7 @@ open class Promise<out T>
                     _onCancel()
                 }
                 catch (t: Throwable) {
-                    // consume errors
+                    e.addSuppressed(t)
                 }
             }
             synchronized (_guard) {
