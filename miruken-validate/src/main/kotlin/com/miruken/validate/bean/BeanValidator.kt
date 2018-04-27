@@ -1,18 +1,28 @@
 package com.miruken.validate.bean
 
 import com.miruken.callback.Handler
+import com.miruken.callback.Handling
 import com.miruken.validate.Validates
 import com.miruken.validate.Validation
-import com.miruken.validate.scopes.Anything
-import javax.validation.Validator
+import com.miruken.validate.scopes.Everything
+import javax.validation.ValidatorFactory
 
 class BeanValidator(
-        private val validator: Validator
+        private val validatorFactory: ValidatorFactory
 ) : Handler() {
-    @Validates(Anything::class)
-    fun <T> validate(target: T, validation: Validation) {
+    @Validates(Everything::class)
+    fun <T> validate(
+            target:     T,
+            validation: Validation,
+            composer:   Handling
+    ) {
         val outcome = validation.outcome
-        validator.validate(target).forEach {
+        val scopes  = validation.scopes.map { it.java }.toTypedArray()
+        val context = validatorFactory.usingContext()
+        context.constraintValidatorFactory(
+                CascadeConstraintValidatorFactoy(context, composer,
+                        validatorFactory.constraintValidatorFactory))
+        context.validator.validate(target, *scopes).forEach {
             val propertyName = it.propertyPath.toString()
             outcome.addError(propertyName, it.message)
         }

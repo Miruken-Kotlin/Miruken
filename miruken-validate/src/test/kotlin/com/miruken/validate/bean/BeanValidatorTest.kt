@@ -2,25 +2,30 @@ package com.miruken.validate.bean
 
 import com.miruken.callback.plus
 import com.miruken.validate.*
-import org.junit.Before
+import org.junit.After
 import org.junit.Test
 import java.time.LocalDate
 import javax.validation.Validation
+import javax.validation.ValidatorFactory
 import kotlin.test.*
 
 class BeanValidatorTest {
-    private lateinit var _validator: javax.validation.Validator
+    private lateinit var _validatorFactory: ValidatorFactory
 
-    @Before
+    @BeforeTest
     fun setup() {
-        _validator = Validation
+        _validatorFactory = Validation
                 .buildDefaultValidatorFactory()
-                .validator
+    }
+
+    @After
+    fun cleanup() {
+        _validatorFactory.close()
     }
 
     @Test fun `Validates target`() {
         val handler = (Validator()
-                    + BeanValidator(_validator))
+                    + BeanValidator(_validatorFactory))
         val player  = Player().apply {
             dob = LocalDate.of(2005, 6, 14)
         }
@@ -29,13 +34,11 @@ class BeanValidatorTest {
         assertSame(outcome, player.validationOutcome)
         assertEquals("must not be empty", outcome["firstName"])
         assertEquals("must not be empty", outcome["lastName"])
-        assertEquals("lastName | must not be empty\n" +
-                "firstName | must not be empty", outcome.error)
     }
 
-    @Test fun `Validates nested target`() {
+    @Test fun `Validates target graph`() {
         val handler = (Validator()
-                    + BeanValidator(_validator))
+                    + BeanValidator(_validatorFactory))
         val team    = Team().apply {
             division = "10"
             coach    = Coach()

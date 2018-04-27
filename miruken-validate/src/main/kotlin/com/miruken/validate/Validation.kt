@@ -5,7 +5,7 @@ import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_TYPE
 import com.miruken.runtime.PROMISE_TYPE
-import com.miruken.validate.scopes.Anything
+import com.miruken.validate.scopes.Everything
 import javax.validation.groups.Default
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -17,9 +17,8 @@ class Validation(
 ) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
     private val _asyncResults by lazy { mutableListOf<Promise<*>>() }
-    private val  scopes  = scopes.takeIf { it.isNotEmpty() }
-            ?: DEFAULT_SCOPES
 
+    val scopes  = scopes.takeIf { it.isNotEmpty() } ?: DEFAULT_SCOPES
     val outcome = ValidationResult.Outcome()
     var stopOnFailure = false
 
@@ -55,8 +54,8 @@ class Validation(
         }
 
     fun satisfiesScopes(vararg scopes: KClass<*>) =
-        scopes.contains(Anything::class) ||
-        this.scopes.contains(Anything::class) ||
+        scopes.contains(Everything::class) ||
+        this.scopes.contains(Everything::class) ||
         (scopes.takeIf { it.isNotEmpty() } ?: DEFAULT_SCOPES)
                 .all { this.scopes.contains(it) }
 

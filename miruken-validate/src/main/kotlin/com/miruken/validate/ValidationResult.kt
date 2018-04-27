@@ -31,8 +31,8 @@ sealed class ValidationResult {
                 _errors.map { (key, err) ->
                     ("$key | " + (err.errors?.let {
                         it.joinToString("; ") { it.error } +
-                                (err.nested?.run { "\n" + error } ?: "")
-                    } ?: (err.nested?.error ?: "")))
+                                (err.cascade?.run { "\n" + error } ?: "")
+                    } ?: (err.cascade?.error ?: "")))
                 }.joinToString("\n")
             }
 
@@ -43,8 +43,8 @@ sealed class ValidationResult {
                     _errors[key]?.let { err ->
                         err.errors?.let {
                             it.joinToString("; ") { it.error } +
-                                    (err.nested?.run { "\n" + error } ?: "")
-                        } ?: (err.nested?.error ?: "")
+                                    (err.cascade?.run { "\n" + error } ?: "")
+                        } ?: (err.cascade?.error ?: "")
                     } ?: ""
                 }
                 null -> ""
@@ -95,7 +95,7 @@ sealed class ValidationResult {
                 if (outcome.isValid) return this
                 for ((key, results) in outcome._errors) {
                     results.errors?.forEach { addResult(key, it) }
-                    results.nested?.also { addResult(key, it) }
+                    results.cascade?.also { addResult(key, it) }
                 }
             }
             return this
@@ -107,10 +107,10 @@ sealed class ValidationResult {
         ): Outcome? {
             return if (create) {
                 _errors.getOrPut(propertyName) { Errors() }.let {
-                    it.nested ?: Outcome().apply { it.nested = this }
+                    it.cascade ?: Outcome().apply { it.cascade = this }
                 }
             } else {
-                _errors[propertyName]?.nested
+                _errors[propertyName]?.cascade
             }
         }
 
@@ -152,12 +152,12 @@ sealed class ValidationResult {
     }
 
     private data class Errors(
-            var nested: Outcome?            = null,
-            var errors: MutableList<Error>? = null
+            var cascade: Outcome?            = null,
+            var errors:  MutableList<Error>? = null
     ) {
         val results: List<ValidationResult>
             get() = errors?.toList() ?: emptyList<ValidationResult>() +
-                (nested?.let { listOf<ValidationResult>(it) }
+                (cascade?.let { listOf<ValidationResult>(it) }
                     ?: emptyList())
 
         fun addResult(result: ValidationResult) {
@@ -167,8 +167,8 @@ sealed class ValidationResult {
                             .apply { errors = this })
                             .add(result)
                 is Outcome ->
-                    nested?.apply { merge(result) }
-                        ?: result.also { nested = it }
+                    cascade?.apply { merge(result) }
+                        ?: result.also { cascade = it }
             }
         }
     }

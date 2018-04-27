@@ -1,4 +1,4 @@
 package com.miruken.validate.scopes
 
-interface Anything {
+interface Everything {
 }
