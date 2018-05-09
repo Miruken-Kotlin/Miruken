@@ -6,9 +6,8 @@ import com.miruken.runtime.allInterfaces
 import kotlin.reflect.KClass
 import kotlin.reflect.full.starProjectedType
 
-typealias Next<Res> = () -> Res
+typealias Next<Res> = (Handling?, Boolean?) -> Res
 
-@FunctionalInterface
 interface Filtering<in Cb: Any, Res: Any?> : Ordered {
     fun next(
             callback: Cb,
@@ -17,6 +16,11 @@ interface Filtering<in Cb: Any, Res: Any?> : Ordered {
             next:     Next<Res>
     ): Res
 }
+
+operator fun <Res> Next<Res>.invoke(composer: Handling? = null) =
+        this(composer, true)
+
+fun <Res> Next<Res>.abort() = this(null, false)
 
 fun KClass<out Filtering<*,*>>.getFilteringInterface() =
         if (this == Filtering::class) FILTERING_STAR else

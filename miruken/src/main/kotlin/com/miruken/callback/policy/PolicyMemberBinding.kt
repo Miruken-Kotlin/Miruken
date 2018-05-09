@@ -33,31 +33,42 @@ class PolicyMemberBinding(
             results:      CollectResultsBlock?
     ): HandleResult {
         val ruleArgs  = rule.resolveArguments(callback)
-        val arguments = resolveArguments(ruleArgs, callbackType, composer)
-        return arguments?.let {
-            val filterCallback = callbackArg?.let {
-                arguments[it.parameter.index - 1] // skip receiver
-            } ?: callback
-            val filters = resolveFilters(handler, filterCallback, composer)
-            val result  = if (filters.isEmpty())
-                 dispatcher.invoke(handler, arguments)
-            else filters.foldRight(
-                    { dispatcher.invoke(handler, arguments) },
-                    { pipeline, next -> {
-                            pipeline.next(filterCallback, this, composer, next) }
-                    })()
-
-            val accepted = policy.acceptResult(result, this)
-            if (accepted.handled && result != null &&
-                    result !is HandleResult) {
-                if (results?.invoke(result, strict) == false) {
-                    return@let if (accepted.stop)
-                        HandleResult.NOT_HANDLED_AND_STOP
-                    else HandleResult.NOT_HANDLED
-                }
+        val filterCallback = callbackArg?.let {
+            ruleArgs[it.parameter.index - 1] // skip receiver
+        } ?: callback
+        val filters = resolveFilters(handler, filterCallback, composer)
+        val result  = if (filters.isEmpty()) {
+            val args = resolveArguments(ruleArgs, callbackType, composer)
+                    ?: return HandleResult.NOT_HANDLED
+            dispatcher.invoke(handler, args)
+        } else filters.foldRight({ comp: Handling, proceed: Boolean ->
+            if (!proceed) {
+                return@foldRight HandleResult.NOT_HANDLED
             }
-            accepted
-        } ?: HandleResult.NOT_HANDLED
+            val args = resolveArguments(ruleArgs, callbackType, comp)
+                    ?: return@foldRight HandleResult.NOT_HANDLED
+                dispatcher.invoke(handler, args)
+            }, { pipeline, next -> { comp, proceed ->
+                    if (proceed) {
+                        pipeline.next(filterCallback, this, comp, { c,p ->
+                            next(c ?: comp, p ?: true)
+                        })
+                    } else {
+                        HandleResult.NOT_HANDLED
+                    }
+                }
+            })(composer, true)
+
+        val accepted = policy.acceptResult(result, this)
+        if (accepted.handled && result != null &&
+                result !is HandleResult) {
+            if (results?.invoke(result, strict) == false) {
+                return if (accepted.stop)
+                    HandleResult.NOT_HANDLED_AND_STOP
+                else HandleResult.NOT_HANDLED
+            }
+        }
+        return accepted
     }
 
     @Suppress("UNCHECKED_CAST")

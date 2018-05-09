@@ -21,7 +21,8 @@ class AsyncFilterAdapter<in Cb: Any, Res: Any?>(
         @Suppress("UNCHECKED_CAST")
         return Promise.resolve<Any?>(
                 filter.next(callback, binding, composer,
-                { next().get(timeoutMs) })) as Promise<Res>
+                { c,p -> next(c,p).get(timeoutMs) }))
+                as Promise<Res>
     }
 }
 
@@ -42,7 +43,8 @@ class SyncFilterAdapter<in Cb: Any, Res: Any?>(
     ): Res {
         @Suppress("UNCHECKED_CAST")
         return filter.next(callback, binding, composer,
-                { Promise.resolve<Any?>(next()) as Promise<Res> })
+                { c,p -> Promise.resolve<Any?>(next(c,p))
+                        as Promise<Res> })
                 .get(timeoutMs)
     }
 }

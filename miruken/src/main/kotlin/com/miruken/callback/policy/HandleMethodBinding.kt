@@ -39,18 +39,34 @@ class HandleMethodBinding(
             target:   Any,
             callback: Any,
             composer: Handling
-    ) = withComposer(composer) {
+    ): HandleResult {
         val handleMethod = callback as HandleMethod
-        try {
+        return try {
             val filters = resolveFilters(target, handleMethod, composer)
-            if (filters.isEmpty())
-                invoke(handleMethod, target)
-            else filters.foldRight(
-                    { invoke(handleMethod, target) },
-                    { pipeline, next -> {
-                        pipeline.next(handleMethod, this, composer, next) }
-                    })()
-            HandleResult.HANDLED
+            if (filters.isEmpty()) {
+                withComposer(composer) {
+                    invoke(handleMethod, target)
+                }
+                HandleResult.HANDLED
+            } else filters.foldRight({ comp: Handling, proceed: Boolean ->
+                if (!proceed) {
+                    return@foldRight HandleResult.NOT_HANDLED
+                }
+                withComposer(comp) {
+                    invoke(handleMethod, target)
+                }
+                HandleResult.HANDLED
+            }, { pipeline, next -> { comp, proceed ->
+                    if (proceed) {
+                        pipeline.next(handleMethod, this, comp, { c,p ->
+                            next(c ?: comp, p ?: true)
+                        })
+                        HandleResult.HANDLED
+                    } else {
+                        HandleResult.NOT_HANDLED
+                    }
+                }
+            })(composer, true)
         } catch (e: Throwable) {
             when (e) {
                 is HandleResultException -> e.result

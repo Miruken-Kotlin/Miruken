@@ -2,7 +2,6 @@ package com.miruken.callback
 
 import com.miruken.TypeFlags
 import com.miruken.callback.policy.CallableDispatch
-import com.miruken.callback.policy.HandleMethodBinding
 import com.miruken.callback.policy.MemberBinding
 import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.runtime.isCompatibleWith
