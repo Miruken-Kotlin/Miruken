@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package com.miruken.callback
 
 import com.miruken.callback.policy.MemberBinding
@@ -155,6 +157,12 @@ class HandleMethodTest {
         assertEquals(1, id)
     }
 
+    @Test fun `Aborts method calls`() {
+        assertFailsWith(NotHandledException::class) {
+            EmailHandler().proxy<EmailFeature>().email("Abort")
+        }
+    }
+
     interface EmailFeature {
         val count: Int
         fun email(message: String): Int
@@ -174,6 +182,7 @@ class HandleMethodTest {
         val billing: Billing
     }
 
+    @Abort
     class EmailHandler : Handler(), EmailFeature {
         @Log
         override var count: Int = 0
@@ -202,6 +211,10 @@ class HandleMethodTest {
                 else -> null
             }
         }
+
+        @Provides
+        fun <R: Any?> createAborting(inquiry: Inquiry) =
+                AbortingFilter<R>()
     }
 
     @Log
@@ -240,10 +253,9 @@ class HandleMethodTest {
         }
 
         @Provides
-        fun <Res: Any?> createLogger(inquiry: Inquiry): Filtering<HandleMethod, Res>? {
-            @Suppress("UNCHECKED_CAST")
-            return inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
-        }
+        @Suppress("UNCHECKED_CAST")
+        fun <Res: Any?> createLogger(inquiry: Inquiry) =
+                inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
     }
 
     @Log2
@@ -257,10 +269,9 @@ class HandleMethodTest {
         }
 
         @Provides
-        fun <Res: Any?> createLogger(inquiry: Inquiry): Filtering<HandleMethod, Res>? {
-            @Suppress("UNCHECKED_CAST")
-            return inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
-        }
+        @Suppress("UNCHECKED_CAST")
+        fun <Res: Any?> createLogger(inquiry: Inquiry) =
+                inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
@@ -300,6 +311,26 @@ class HandleMethodTest {
         ): Res {
             println("Log2 method '${callback.method.name}'")
             return next()
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
+            AnnotationTarget.PROPERTY)
+    @UseFilter(AbortingFilter::class)
+    annotation class Abort
+
+    class AbortingFilter<R: Any?> : Filtering<HandleMethod, R> {
+        override var order: Int? = 0
+
+        override fun next(
+                callback: HandleMethod,
+                binding:  MemberBinding,
+                composer: Handling,
+                next:     Next<R>
+        ) = when {
+            callback.method.name == "email" &&
+                    callback.arguments[0] == "Abort" -> next.abort()
+            else -> next()
         }
     }
 }

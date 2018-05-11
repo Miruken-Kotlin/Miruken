@@ -34,7 +34,7 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
         return policy.bindMethod(bindingInfo)
     }
 
-    fun resolveArguments(callback: Any): Array<Any?> =
+    fun resolveArguments(callback: Any) =
             argumentRules.map { it.resolve(callback) }
                     .toTypedArray()
 }

@@ -512,9 +512,10 @@ class HandlerTest {
         val handler = FilteringHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(bar))
         assertEquals(2, bar.handled)
-        assertEquals(2, bar.filters.size)
-        assertSame(handler, bar.filters[1])
-        assertTrue { bar.filters[0] is LogFilter }
+        assertEquals(3, bar.filters.size)
+        assertSame(handler, bar.filters[2])
+        assertTrue { bar.filters[0] is AbortingFilter }
+        assertTrue { bar.filters[1] is LogFilter }
     }
 
     @Test fun `Infers pipeline from response`() {
@@ -524,6 +525,13 @@ class HandlerTest {
         assertTrue(result is SpecialFoo)
         assertEquals(1, foo.filters.size)
         assertTrue { foo.filters[0] is LogBehavior<*,*> }
+    }
+
+    @Test fun `Aborts pipeline`() {
+        val bar     = Bar().apply { handled = 100 }
+        val handler = FilteringHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(bar))
+        assertEquals(-99, bar.handled)
     }
 
     @Test fun `Promotes promise pipeline`() {
@@ -969,8 +977,11 @@ class HandlerTest {
         @Handles
         @AllBehaviors
         fun handleStuff(command: Command): Promise<Any?> {
-            if (command.callback is Bee)
-                return Promise.resolve(Bee())
+            val callback = command.callback
+            when (callback) {
+                is Bee -> return Promise.resolve(Bee())
+                is Bar -> callback.handled = -99
+            }
             return Promise.EMPTY
         }
 
@@ -1007,6 +1018,10 @@ class HandlerTest {
                 else -> null
             }
         }
+
+        @Provides
+        fun <R: Any?> createAborting(inquiry: Inquiry): Filtering<Bar,R> =
+                AbortingFilter()
 
         override fun next(
                 callback: Bar,
@@ -1049,14 +1064,14 @@ class HandlerTest {
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Filtering::class)
+    @UseFilter(Filtering::class, many = true)
     annotation class AllFilters
 
     interface Behavior<in TReq: Any, TResp: Any?>
         : Filtering<TReq, Promise<TResp>>
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Behavior::class)
+    @UseFilter(Behavior::class, many = true)
     annotation class AllBehaviors
 
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
@@ -1121,6 +1136,24 @@ class HandlerTest {
             cb?.filters?.add(this)
             println("Behavior log $cb")
             return next()
+        }
+    }
+
+    class AbortingFilter<R: Any?> : Filtering<Bar, R> {
+        override var order: Int? = 0
+
+        override fun next(
+                callback: Bar,
+                binding:  MemberBinding,
+                composer: Handling,
+                next:     Next<R>
+        ): R {
+            val cb = extractTesting(callback)
+            cb?.filters?.add(this)
+            return when {
+                callback.handled > 99 -> next.abort()
+                else -> next()
+            }
         }
     }
 

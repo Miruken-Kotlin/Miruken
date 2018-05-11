@@ -31,11 +31,9 @@ open class Handler : Handling {
         ) = when {
             ExcludeTypes.contains(handler::class) ->
                 HandleResult.NOT_HANDLED
-            callback is DispatchingCallback ->
-                callback.dispatch(handler, callbackType, greedy, composer)
-            else ->
-                HandlesPolicy.dispatch(handler, callback,
-                        callbackType, greedy, composer)
+            else -> ((callback as? DispatchingCallback) ?:
+                    Command(callback, callbackType))
+                    .dispatch(handler, callbackType, greedy, composer)
         }
 
         private val ExcludeTypes = setOf(Handler::class,

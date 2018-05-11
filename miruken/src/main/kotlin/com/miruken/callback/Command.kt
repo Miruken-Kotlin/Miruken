@@ -10,19 +10,13 @@ import kotlin.reflect.full.createType
 
 open class Command(
         val callback:     Any,
-        val callbackType: KType,
+        val callbackType: KType?,
         val many:         Boolean = false
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
     private val _results = mutableListOf<Any>()
     private var _policy: CallbackPolicy? = null
-
-    init {
-        require(callback::class == callbackType.classifier) {
-            "Callback $callback does not match type $callbackType"
-        }
-    }
 
     override var wantsAsync: Boolean = false
 

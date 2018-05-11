@@ -27,7 +27,5 @@ class TargetArgument<in C, out R: Any>(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun resolve(callback: Any) =
-            if (isCompatibleWith(callbackType, callback))
-                target(callback as C) else callback
+    override fun resolve(callback: Any) = target(callback as C)
 }

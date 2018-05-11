@@ -31,11 +31,11 @@ abstract class CallbackPolicy(
     ): Collection<Any>
 
     open fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
-         when (result) {
-             null, Unit -> HandleResult.NOT_HANDLED
-             is HandleResult -> result
-             else -> HandleResult.HANDLED
-         }
+            when (result) {
+                null, Unit -> HandleResult.NOT_HANDLED
+                is HandleResult -> result
+                else -> HandleResult.HANDLED
+            }
 
     open fun approve(callback: Any, binding: PolicyMemberBinding) = true
 

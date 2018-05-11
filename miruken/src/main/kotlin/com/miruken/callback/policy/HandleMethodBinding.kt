@@ -41,39 +41,31 @@ class HandleMethodBinding(
             composer: Handling
     ): HandleResult {
         val handleMethod = callback as HandleMethod
-        return try {
+        handleMethod.result = try {
             val filters = resolveFilters(target, handleMethod, composer)
             if (filters.isEmpty()) {
                 withComposer(composer) {
                     invoke(handleMethod, target)
                 }
-                HandleResult.HANDLED
             } else filters.foldRight({ comp: Handling, proceed: Boolean ->
-                if (!proceed) {
-                    return@foldRight HandleResult.NOT_HANDLED
-                }
+                if (!proceed) notHandled()
                 withComposer(comp) {
                     invoke(handleMethod, target)
                 }
-                HandleResult.HANDLED
             }, { pipeline, next -> { comp, proceed ->
-                    if (proceed) {
-                        pipeline.next(handleMethod, this, comp, { c,p ->
-                            next(c ?: comp, p ?: true)
-                        })
-                        HandleResult.HANDLED
-                    } else {
-                        HandleResult.NOT_HANDLED
-                    }
+                    if (!proceed) notHandled()
+                    pipeline.next(handleMethod, this, comp, { c,p ->
+                        next(c ?: comp, p ?: true)
+                    })
                 }
             })(composer, true)
         } catch (e: Throwable) {
             when (e) {
-                is HandleResultException -> e.result
+                is HandleResultException -> return e.result
                 is InvocationTargetException -> {
                     val cause = e.cause ?: e
                     if (cause is HandleResultException) {
-                        cause.result
+                        return cause.result
                     } else {
                         handleMethod.exception = cause
                         throw cause
@@ -85,15 +77,14 @@ class HandleMethodBinding(
                 }
             }
         }
+        return HandleResult.HANDLED
     }
 
     private fun invoke(
             handleMethod: HandleMethod,
             target:       Any
     ) = (member as Method)
-            .invoke(target, *handleMethod.arguments)?.also {
-                handleMethod.result = it
-            }
+            .invoke(target, *handleMethod.arguments)
 
     @Suppress("UNCHECKED_CAST")
     private fun resolveFilters(
