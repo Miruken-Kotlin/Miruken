@@ -6,6 +6,8 @@ import kotlin.reflect.KType
 abstract class CallbackPolicyBuilder(val callbackType: KType) {
     private val _rules = mutableListOf<MethodRuleBuilder>()
 
+    val any = ReturnRule.Anything
+
     val filters = mutableListOf<FilteringProvider>()
 
     val callback: CallbackArgument = CallbackArgument(callbackType)

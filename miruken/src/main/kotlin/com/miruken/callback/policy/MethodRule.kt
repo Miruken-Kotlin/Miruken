@@ -13,12 +13,12 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
     }
 
     fun matches(method: CallableDispatch): Boolean {
+        val context   = RuleContext()
         val arguments = method.arguments
-        if (arguments.size < argumentRules.size ||
-                !arguments.zip(argumentRules) { arg, argRule ->
-                    argRule.matches(arg) }.all { it })
-            return false
-        return returnRule?.matches(method) ?: true
+        return returnRule?.matches(method, context) != false &&
+            arguments.size >= argumentRules.size &&
+                arguments.zip(argumentRules) { arg, argRule ->
+                    argRule.matches(arg, context) }.all { it }
     }
 
     fun bind(policy:     CallbackPolicy,

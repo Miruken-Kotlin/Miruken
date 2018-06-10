@@ -1,7 +1,10 @@
 package com.miruken.callback.policy
 
 interface ReturnRule {
-    fun matches(method: CallableDispatch): Boolean
+    fun matches(
+            method:  CallableDispatch,
+            context: RuleContext
+    ): Boolean
 
     fun configure(bindingInfo: PolicyMemberBindingInfo) {
     }
@@ -11,5 +14,12 @@ interface ReturnRule {
 
     infix fun or(otherRule: ReturnRule) =
             ReturnRuleDisjunction(this, otherRule)
+
+    object Anything : ReturnRule {
+        override fun matches(
+                method: CallableDispatch,
+                context: RuleContext
+        ) = true
+    }
 }
 

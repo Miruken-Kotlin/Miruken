@@ -1,7 +1,6 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
-import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 class TargetArgument<in C, out R: Any>(
@@ -10,8 +9,10 @@ class TargetArgument<in C, out R: Any>(
         private val target:       (C) -> R
 ) : ArgumentRule {
 
-    override fun matches(argument: Argument) =
-            !argument.satisfies(callbackType) &&  // CallbackArgument matches
+    override fun matches(
+            argument: Argument,
+            context:  RuleContext
+    ) = !argument.satisfies(callbackType) &&  // CallbackArgument matches
                     argument.satisfies(targetType)
 
     override fun configure(

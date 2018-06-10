@@ -3,7 +3,9 @@ package com.miruken.callback.policy
 import kotlin.reflect.KType
 
 class CallbackArgument(private val callbackType: KType) : ArgumentRule {
-    override fun matches(argument: Argument) =
+    override fun matches(
+            argument: Argument,
+            context:  RuleContext) =
             argument.satisfies(callbackType)
 
     override fun configure(

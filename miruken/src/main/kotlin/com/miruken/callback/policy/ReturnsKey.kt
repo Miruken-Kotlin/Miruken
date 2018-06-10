@@ -5,8 +5,10 @@ import com.miruken.callback.StringKey
 import com.miruken.TypeFlags
 
 object ReturnsKey : ReturnRule {
-    override fun matches(method: CallableDispatch) =
-            method.returnsSomething
+    override fun matches(
+            method:  CallableDispatch,
+            context: RuleContext
+    ) = method.returnsSomething
 
     override fun configure(bindingInfo: PolicyMemberBindingInfo) {
         if (bindingInfo.outKey == null) {

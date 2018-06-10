@@ -7,8 +7,10 @@ class ExtractArgument<C, out R: Any>(
         private val extract:    C.() -> R
 ): ArgumentRule {
 
-    override fun matches(argument: Argument) =
-            argument.satisfies(extractType)
+    override fun matches(
+            argument: Argument,
+            context:  RuleContext
+    ) = argument.satisfies(extractType)
 
     @Suppress("UNCHECKED_CAST")
     override fun resolve(callback: Any) = extract(callback as C)
