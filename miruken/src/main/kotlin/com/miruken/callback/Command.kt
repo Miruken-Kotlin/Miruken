@@ -47,20 +47,25 @@ open class Command(
 
     override var result: Any?
         get() {
-            if (_result != null) return _result
-            if (!many) {
-                if (_results.isNotEmpty()) {
-                    _result = _results.first()
+            if (_result == null) {
+                if (!many) {
+                    if (_results.isNotEmpty()) {
+                        _result = _results.first()
+                    }
+                } else if (isAsync) {
+                    _result = Promise.all(_results
+                            .map { Promise.resolve(it) })
+                } else {
+                    _result = _results
                 }
-            } else if (isAsync) {
-                _result = Promise.all(_results
-                        .map { Promise.resolve(it) })
-            } else {
-                _result = _results
             }
-            if (wantsAsync && !isAsync) {
+            if (isAsync) {
+                if (!wantsAsync) {
+                    _result = (_result as? Promise<*>)?.get()
+                }
+            } else if (wantsAsync) {
                 _result = _result?.let { Promise.resolve(it) }
-                    ?: Promise.EMPTY
+                        ?: Promise.EMPTY
             }
             return _result
         }

@@ -2,6 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.policy.MemberBinding
+import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
@@ -402,7 +403,7 @@ class ResolutionTest {
                 binding:        MemberBinding,
                 repository:     Repository<Message>,
                 @Proxy billing: Billing
-        ): Res {
+        ): Promise<Res> {
             @Suppress("UNCHECKED_CAST")
             (callback as? SendEmail<*>)?.also {
                 (it.body as? String)?.also { body ->
@@ -410,7 +411,7 @@ class ResolutionTest {
                     repository.create(Create(message))
                     if (binding.returnType.classifier == Int::class) {
                         billing.bill(message.id.toBigDecimal())
-                        return (message.id * 10) as Res
+                        return Promise.resolve((message.id * 10)) as Promise<Res>
                     }
                 }
             }
@@ -428,13 +429,15 @@ class ResolutionTest {
                  binding:    MemberBinding,
                  repository: Repository<T>,
                  billing:    Billing
-        ): Res {
+        ): Promise<Res> {
             println("Balance for $callback")
             repository.create(callback)
             if (binding.returnType.classifier == BigDecimal::class) {
                 @Suppress("UNCHECKED_CAST")
-                return ((next() as BigDecimal) +
-                    billing.bill(callback.entity.id.toBigDecimal())) as Res
+                return next() then {
+                    ((it as BigDecimal) + billing.bill(
+                            callback.entity.id.toBigDecimal())) as Res
+                }
             }
             return next()
         }

@@ -518,81 +518,11 @@ class HandlerTest {
         assertTrue { bar.filters[1] is LogFilter }
     }
 
-    @Test fun `Infers pipeline from response`() {
-        val foo     = Foo()
-        val handler = FilteringHandler()
-        val result  = handler.command(foo)
-        assertTrue(result is SpecialFoo)
-        assertEquals(1, foo.filters.size)
-        assertTrue { foo.filters[0] is LogBehavior<*,*> }
-    }
-
     @Test fun `Aborts pipeline`() {
         val bar     = Bar().apply { handled = 100 }
         val handler = FilteringHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(bar))
         assertEquals(-99, bar.handled)
-    }
-
-    @Test fun `Promotes promise pipeline`() {
-        val foo     = Foo()
-        val handler = FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(foo) then {
-                assertTrue(it is SpecialFoo)
-                done()
-            }
-        }
-        assertEquals(1, foo.filters.size)
-        assertTrue { foo.filters[0] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Infers promise pipeline`() {
-        val boo     = Boo()
-        val handler = FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(boo) then {
-                done()
-            }
-        }
-        assertEquals(1, boo.filters.size)
-        assertTrue { boo.filters[0] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Infers command promise pipeline`() {
-        val bee     = Bee()
-        val handler = FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(bee) then {
-                done()
-            }
-        }
-        assertEquals(1, bee.filters.size)
-        assertTrue { bee.filters[0] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Coerces pipeline`() {
-        val foo     = Foo()
-        val handler = SpecialFilteredHandler() + FilteringHandler()
-        val result  = handler.command(foo)
-        assertTrue(result is SpecialFoo)
-        assertEquals(2, foo.filters.size)
-        assertTrue { foo.filters[0] is LogFilter<*,*> }
-        assertTrue { foo.filters[1] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Coerces promise pipeline`() {
-        val baz     = Baz()
-        val handler = SpecialFilteredHandler() + FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(baz) then {
-                assertTrue(it is SpecialBaz)
-                done()
-            }
-        }
-        assertEquals(2, baz.filters.size)
-        assertTrue { baz.filters[0] is LogFilter<*,*> }
-        assertTrue { baz.filters[1] is LogBehavior<*,*> }
     }
 
     @Test fun `Propagates rejected filter promise`() {
@@ -611,7 +541,7 @@ class HandlerTest {
         val handler = Handler().withFilters(LogFilter<Any,Any?>())
         val options = FilterOptions()
         assertEquals(HandleResult.HANDLED, handler.handle(options))
-        assertEquals(1, options.providers.size)
+        assertEquals(1, options.providers!!.size)
         assertEquals(HandleResult.NOT_HANDLED, handler.stop.handle(FilterOptions()))
     }
 
@@ -963,23 +893,9 @@ class HandlerTest {
         }
 
         @Handles
-        @AllBehaviors
-        fun handleFoo(foo: Foo, composer: Handling): SpecialFoo {
-            return SpecialFoo().apply { hasComposer = true }
-        }
-
-        @Handles
-        @AllBehaviors
-        fun handleBoo(boo: Boo, composer: Handling): Promise<Boo> {
-            return Promise.resolve(Boo().apply { hasComposer= true })
-        }
-
-        @Handles
-        @AllBehaviors
         fun handleStuff(command: Command): Promise<Any?> {
             val callback = command.callback
             when (callback) {
-                is Bee -> return Promise.resolve(Bee())
                 is Bar -> callback.handled = -99
             }
             return Promise.EMPTY
@@ -994,18 +910,6 @@ class HandlerTest {
                 LogFilter::class, Filtering::class -> LogFilter()
                 else ->
                     inquiry.createKeyInstance() as Filtering<T,R>
-            }
-        }
-
-        @Provides
-        fun <T: Any, R: Any?> createBehavior(inquiry: Inquiry): Behavior<T,R>?
-        {
-            @Suppress("UNCHECKED_CAST")
-            return when (inquiry.keyClass) {
-                null -> null
-                Behavior::class -> LogBehavior()
-                else ->
-                    inquiry.createKeyInstance() as Behavior<T,R>
             }
         }
 
@@ -1027,8 +931,9 @@ class HandlerTest {
                 callback: Bar,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Unit>
-        ) {
+                next:     Next<Unit>,
+                provider: FilteringProvider?
+        ): Promise<Unit> {
             callback.filters.add(this)
             callback.handled++
             return next()
@@ -1038,21 +943,18 @@ class HandlerTest {
     class SpecialFilteredHandler : Handler() {
         @Handles
         @AllFilters
-        @AllBehaviors
         fun handleFoo(foo: Foo): SpecialFoo {
             return SpecialFoo()
         }
 
         @Handles
         @AllFilters
-        @AllBehaviors
         fun handleBaz(baz: Baz): Promise<SpecialBaz> {
             return Promise.resolve(SpecialBaz())
         }
 
         @Handles
         @AllFilters
-        @AllBehaviors
         fun handleBaz(bar: Bar): Promise<SpecialBar> {
             return Promise.resolve(SpecialBar())
         }
@@ -1067,13 +969,6 @@ class HandlerTest {
     @UseFilter(Filtering::class, many = true)
     annotation class AllFilters
 
-    interface Behavior<in TReq: Any, TResp: Any?>
-        : Filtering<TReq, Promise<TResp>>
-
-    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Behavior::class, many = true)
-    annotation class AllBehaviors
-
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
 
@@ -1081,7 +976,8 @@ class HandlerTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
+                next:     Next<R>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -1092,7 +988,8 @@ class HandlerTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Any?>
+                next:     Next<Any?>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -1103,7 +1000,8 @@ class HandlerTest {
                 callback: Any,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<T>
+                next:     Next<T>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -1114,27 +1012,12 @@ class HandlerTest {
                 callback: Cb,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Res>
-        ): Res {
-            val cb = extractTesting(callback)
-            cb?.filters?.add(this)
-            println("Filter log $cb")
-            return next()
-        }
-    }
-
-    class LogBehavior<in Req: Any, Res: Any?> : Behavior<Req, Res> {
-        override var order: Int? = 2
-
-        override fun next(
-                callback: Req,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Promise<Res>>
+                next:     Next<Res>,
+                provider: FilteringProvider?
         ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
-            println("Behavior log $cb")
+            println("Filter log $cb")
             return next()
         }
     }
@@ -1146,8 +1029,9 @@ class HandlerTest {
                 callback: Bar,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
-        ): R {
+                next:     Next<R>,
+                provider: FilteringProvider?
+        ): Promise<R> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
             return when {
@@ -1161,14 +1045,15 @@ class HandlerTest {
     @UseFilter(ExceptionBehavior::class)
     annotation class Exceptions
 
-    class ExceptionBehavior<in Req: Any, Res: Any?> : Behavior<Req, Res> {
+    class ExceptionBehavior<in Req: Any, Res: Any?> : Filtering<Req, Res> {
         override var order: Int? = 2
 
         override fun next(
                 callback: Req,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Promise<Res>>
+                next:     Next<Res>,
+                provider: FilteringProvider?
         ) = Promise.reject(IllegalStateException("System shutdown"))
     }
 

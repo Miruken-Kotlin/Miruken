@@ -5,11 +5,20 @@ import com.miruken.callback.policy.MemberBinding
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
+fun Handling.skipFilters(skip: Boolean = true) =
+        withOptions(FilterOptions().apply {
+            skipFilters = skip
+        })
+
 fun Handling.withFilters(vararg filters: Filtering<*,*>) =
-        withOptions(FilterOptions(InstanceFilterProvider(*filters)))
+        withOptions(FilterOptions().apply {
+            providers = listOf(InstanceFilterProvider(*filters))
+        })
 
 fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
-        withOptions(FilterOptions(*providers))
+        withOptions(FilterOptions().apply {
+            this.providers = providers.toList()
+        })
 
 fun Handling.getOrderedFilters(
         filterType:   KType,
@@ -18,12 +27,26 @@ fun Handling.getOrderedFilters(
         useProviders: List<UseFilterProvider>,
         useFilters:   List<UseFilter>
 ): List<Filtering<*,*>> {
+    val options = getOptions(FilterOptions())
+    val handler =  this.takeUnless { options?.skipFilters == null }
+            ?: skipFilters()
+    return handler.getOrderedFilters(filterType, binding,
+            options, providers, useProviders, useFilters)
+}
+
+fun Handling.getOrderedFilters(
+        filterType:   KType,
+        binding:      MemberBinding,
+        options:      FilterOptions?,
+        providers:    List<FilteringProvider>,
+        useProviders: List<UseFilterProvider>,
+        useFilters:   List<UseFilter>
+): List<Filtering<*,*>> {
     val allProviders = (providers + useProviders.mapNotNull {
         getFilterProvider(it.filterProviderClass, this)
     }).toMutableList()
 
-    getOptions(FilterOptions())
-            ?.also { allProviders.addAll(it.providers) }
+    options?.providers?.also { allProviders.addAll(it) }
 
     useFilters.takeIf { it.isNotEmpty() }?.also {
         allProviders.add(UseFiltersFilterProvider(it))

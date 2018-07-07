@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.*
+import com.miruken.concurrent.Promise
 import com.miruken.runtime.getTaggedAnnotations
 import com.miruken.runtime.normalize
 import com.miruken.toKType
@@ -50,15 +51,19 @@ class HandleMethodBinding(
             } else filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
                 withComposer(comp) {
-                    invoke(handleMethod, target)
+                    Promise.resolve(invoke(handleMethod, target))
                 }
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
                     pipeline.next(handleMethod, this, comp, { c,p ->
-                        next(c ?: comp, p ?: true)
+                        next((c ?: comp).skipFilters(), p ?: true)
                     })
                 }
-            })(composer, true)
+            })(composer, true).let {
+                it.takeIf {
+                    protocolMethod.returnType.isInstance(it)
+                } ?: it.get()
+            }
         } catch (e: Throwable) {
             when (e) {
                 is HandleResultException -> return e.result
@@ -97,9 +102,25 @@ class HandleMethodBinding(
                 KTypeProjection.invariant(handleMethod.resultType!!)))
         return composer.getOrderedFilters(filterType, this,
                 (target as? Filtering<*,*>)?.let {
-                    listOf(InstanceFilterProvider(it))
-                } ?: emptyList(),
+                    GLOBAL_FILTERS + InstanceFilterProvider(it)
+                } ?: GLOBAL_FILTERS,
                 useFilterProviders, useFilters
         ) as List<Filtering<Any,Any?>>
+    }
+
+    companion object {
+        private var GLOBAL_FILTERS = mutableListOf<FilteringProvider>()
+
+        val globalFilters: List<FilteringProvider> get() = GLOBAL_FILTERS
+
+        fun addFilters(vararg filters: Filtering<*,*>) {
+            if (filters.isNotEmpty()) {
+                GLOBAL_FILTERS.add(InstanceFilterProvider(*filters))
+            }
+        }
+
+        fun addFilterProviders(vararg providers: FilteringProvider) {
+            GLOBAL_FILTERS.addAll(providers)
+        }
     }
 }

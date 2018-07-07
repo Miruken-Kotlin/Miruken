@@ -3,6 +3,7 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.MemberBinding
+import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
@@ -286,8 +287,9 @@ class HandleMethodTest {
                 callback: HandleMethod,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Res>
-        ): Res {
+                next:     Next<Res>,
+                provider: FilteringProvider?
+        ): Promise<Res> {
             print("Handle method '${callback.method.name}' with result ")
             val result = next()
             println(result)
@@ -307,8 +309,9 @@ class HandleMethodTest {
                 callback: HandleMethod,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Res>
-        ): Res {
+                next:     Next<Res>,
+                provider: FilteringProvider?
+        ): Promise<Res> {
             println("Log2 method '${callback.method.name}'")
             return next()
         }
@@ -326,7 +329,8 @@ class HandleMethodTest {
                 callback: HandleMethod,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
+                next:     Next<R>,
+                provider: FilteringProvider?
         ) = when {
             callback.method.name == "email" &&
                     callback.arguments[0] == "Abort" -> next.abort()

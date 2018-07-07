@@ -6,4 +6,5 @@ import kotlin.reflect.KClass
 annotation class UseFilter(
         val filterClass: KClass<out Filtering<*,*>>,
         val many:        Boolean = false,
-        val order:       Int = -1)
+        val order:       Int = -1,
+        val required:    Boolean = false)

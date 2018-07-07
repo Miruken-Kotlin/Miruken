@@ -11,7 +11,7 @@ import kotlin.reflect.KAnnotatedElement
 annotation class Maps
 
 object MapsPolicy : BivariantPolicy({
-    key { cb: MapFrom -> cb.targetType } target { source } rules {
+    key { cb: Mapping -> cb.targetType } target { source } rules {
         matches (target) returns key
         matches (target, callback) returns key
         matches (callback) returns (key or unit)
@@ -20,7 +20,7 @@ object MapsPolicy : BivariantPolicy({
     override fun approve(
             callback: Any,
             binding:  PolicyMemberBinding
-    ) = (callback as? MapFrom)?.let {
+    ) = (callback as? Mapping)?.let {
             val format = it.format ?: return true
             return binding.dispatcher.let {
                 matches(format, it) || matches(format, it.owningClass)

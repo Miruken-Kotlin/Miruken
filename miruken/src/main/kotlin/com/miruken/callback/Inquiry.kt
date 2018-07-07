@@ -74,18 +74,24 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     override var result: Any?
         get() {
-            if (_result != null) return _result
-            _result = if (isAsync) {
-                Promise.all(_promises) then {
-                    val flat = flatten(_resolutions, it)
+            if (_result == null) {
+                _result = if (isAsync) {
+                    Promise.all(_promises) then {
+                        val flat = flatten(_resolutions, it)
+                        if (many) flat else flat.firstOrNull()
+                    }
+                } else {
+                    val flat = flatten(_resolutions)
                     if (many) flat else flat.firstOrNull()
                 }
-            } else {
-                val flat = flatten(_resolutions)
-                if (many) flat else flat.firstOrNull()
             }
-            if (wantsAsync && _result !is Promise<*>) {
-                _result = Promise.resolve(_result)
+            if (isAsync) {
+                if (!wantsAsync) {
+                    _result = (_result as? Promise<*>)?.get()
+                }
+            } else if (wantsAsync) {
+                _result = _result?.let { Promise.resolve(it) }
+                        ?: Promise.EMPTY
             }
             return _result
         }
@@ -106,13 +112,13 @@ open class Inquiry(val key: Any, val many: Boolean = false)
         val resolved = when {
             !strict && resolution is Collection<*> ->
                 resolution.filterNotNull().fold(false, { s, res ->
-                    include(res, greedy, composer) || s
+                    include(res, false, greedy, composer) || s
                 })
             !strict && resolution is Array<*> ->
                 resolution.filterNotNull().fold(false, { s, res ->
-                    include(res, greedy, composer) || s
+                    include(res, false, greedy, composer) || s
                 })
-            else -> include(resolution, greedy, composer)
+            else -> include(resolution, strict, greedy, composer)
         }
         if (resolved) _result = null
         return resolved
@@ -120,13 +126,23 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     private fun include(
             resolution: Any,
+            strict:     Boolean,
             greedy:     Boolean,
             composer:   Handling
     ): Boolean {
         if (resolution is Promise<*>) {
             isAsync = true
             _promises.add(resolution.then {
-                it?.takeIf { isSatisfied(it, greedy, composer) }
+                when {
+                    !strict && it is Collection<*> -> it.filter {
+                        it != null && isSatisfied(it, greedy, composer)
+                    }
+                    !strict && it is Array<*> -> it.filter {
+                        it != null && isSatisfied(it, greedy, composer)
+                    }
+                    else ->
+                        it?.takeIf { isSatisfied(it, greedy, composer) }
+                }
             })
         } else if (!isSatisfied(resolution, greedy, composer)) {
             return false

@@ -2,19 +2,21 @@ package com.miruken.callback
 
 import com.miruken.Ordered
 import com.miruken.callback.policy.MemberBinding
+import com.miruken.concurrent.Promise
 import com.miruken.runtime.allInterfaces
 import kotlin.reflect.KClass
 import kotlin.reflect.full.starProjectedType
 
-typealias Next<Res> = (Handling?, Boolean?) -> Res
+typealias Next<Res> = (Handling?, Boolean?) -> Promise<Res>
 
 interface Filtering<in Cb: Any, Res: Any?> : Ordered {
     fun next(
             callback: Cb,
             binding:  MemberBinding,
             composer: Handling,
-            next:     Next<Res>
-    ): Res
+            next:     Next<Res>,
+            provider: FilteringProvider? = null
+    ): Promise<Res>
 }
 
 operator fun <Res> Next<Res>.invoke(composer: Handling? = null) =

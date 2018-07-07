@@ -7,11 +7,13 @@ open class Resolution(
         key:              Any,
         val callback:     Any,
         val callbackType: KType?
-) : Inquiry(key, true), ResolvingCallback {
+) : Inquiry(key, true), ResolvingCallback, FilteringCallback {
 
     private var _handled = false
 
     override fun getResolveCallback() = this
+
+    override val canFilter = false
 
     override fun isSatisfied(
             resolution: Any,

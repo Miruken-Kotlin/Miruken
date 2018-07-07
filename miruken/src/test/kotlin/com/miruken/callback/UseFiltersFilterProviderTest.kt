@@ -112,7 +112,8 @@ class UseFiltersFilterProviderTest {
                 callback: SpecialFoo,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Int>
+                next:     Next<Int>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -125,7 +126,8 @@ class UseFiltersFilterProviderTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
+                next:     Next<R>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -136,7 +138,8 @@ class UseFiltersFilterProviderTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
+                next:     Next<R>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -149,7 +152,8 @@ class UseFiltersFilterProviderTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
+                next:     Next<R>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -160,7 +164,8 @@ class UseFiltersFilterProviderTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<String>
+                next:     Next<String>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -171,7 +176,8 @@ class UseFiltersFilterProviderTest {
                 callback: T,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Number>
+                next:     Next<Number>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -182,7 +188,8 @@ class UseFiltersFilterProviderTest {
                 callback: Foo,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<T>
+                next:     Next<T>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -193,7 +200,8 @@ class UseFiltersFilterProviderTest {
                 callback: Foo,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<T>
+                next:     Next<T>,
+                provider: FilteringProvider?
         ) = next()
     }
 
@@ -204,7 +212,8 @@ class UseFiltersFilterProviderTest {
                 callback: Any,
                 binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Any>
+                next:     Next<Any>,
+                provider: FilteringProvider?
         ) = next()
     }
 }

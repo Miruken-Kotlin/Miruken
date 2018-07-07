@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
 import com.miruken.callback.*
+import com.miruken.concurrent.Promise
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
@@ -34,30 +35,35 @@ class PolicyMemberBinding(
     ): HandleResult {
         val ruleArgs  = rule.resolveArguments(callback)
         val filterCallback = callbackArg?.let {
-            ruleArgs[it.parameter.index - 1] // skip receiver
+            ruleArgs[it.parameter.index - 1].takeIf { // skip receiver
+                arg -> it.parameterType.jvmErasure.isInstance(arg)
+            } ?: return HandleResult.NOT_HANDLED
         } ?: callback
         val filters = resolveFilters(handler, filterCallback, composer)
         val result  = if (filters.isEmpty()) {
             val args = resolveArguments(ruleArgs, callbackType, composer)
                     ?: return HandleResult.NOT_HANDLED
             dispatcher.invoke(handler, args)
-        } else filters.foldRight({ comp: Handling, proceed: Boolean ->
-            if (!proceed) {
-                return@foldRight HandleResult.NOT_HANDLED
-            }
-            val args = resolveArguments(ruleArgs, callbackType, comp)
-                    ?: return@foldRight HandleResult.NOT_HANDLED
-                dispatcher.invoke(handler, args)
-            }, { pipeline, next -> { comp, proceed ->
-                    if (proceed) {
-                        pipeline.next(filterCallback, this, comp, { c,p ->
-                            next(c ?: comp, p ?: true)
-                        })
-                    } else {
-                        HandleResult.NOT_HANDLED
-                    }
+        } else try {
+            filters.foldRight({ comp: Handling, proceed: Boolean ->
+                if (!proceed) notHandled()
+                val args = resolveArguments(ruleArgs, callbackType, comp)
+                        ?: notHandled()
+                Promise.resolve(dispatcher.invoke(handler, args))
+            }, { pipeline, next ->
+                { comp, proceed ->
+                    if (!proceed) notHandled()
+                    pipeline.next(filterCallback, this, comp, { c, p ->
+                        next((c ?: comp).skipFilters(), p ?: true)
+                    })
                 }
             })(composer, true)
+        } catch (e: Throwable) {
+            when (e) {
+                is HandleResultException -> return e.result
+                else -> throw e
+            }
+        }
 
         val accepted = policy.acceptResult(result, this)
         if (accepted.handled && result != null &&

@@ -16,11 +16,7 @@ fun Handling.command(
     handle(command) failure {
         throw NotHandledException(callback)
     }
-    val result = command.result
-    return when (result) {
-        is Promise<*> -> result.get()
-        else -> result
-    }
+    return command.result
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -57,11 +53,7 @@ fun Handling.commandAll(
     handle(command) failure {
         throw NotHandledException(callback)
     }
-    val result = command.result
-    return when (result) {
-        is Promise<*> -> result.get()
-        else -> result
-    } as List<Any>
+    return command.result as List<Any>
 }
 
 @Suppress("UNCHECKED_CAST")
