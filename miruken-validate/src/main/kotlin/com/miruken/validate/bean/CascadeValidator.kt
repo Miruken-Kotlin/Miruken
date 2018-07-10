@@ -1,8 +1,8 @@
 package com.miruken.validate.bean
 
 import com.miruken.callback.Handling
-import com.miruken.validate.Validating
 import com.miruken.validate.ValidationResult
+import com.miruken.validate.validate
 import javax.validation.*
 import kotlin.reflect.KClass
 
@@ -47,11 +47,12 @@ class CascadeValidator : ConstraintValidator<Valid, Any>, CascadeAware {
             value:   Any?,
             context: ConstraintValidatorContext
     ): Boolean {
-        if (value == null || _validationContext == null || _composer == null) {
+        if (value == null ||
+            _validationContext == null ||
+            _composer == null) {
             return true
         }
 
-        val validating  = Validating(_composer!!)
         val validator   = _validationContext!!.validator
         val constraints = validator.getConstraintsForClass(value.javaClass)
 
@@ -61,7 +62,7 @@ class CascadeValidator : ConstraintValidator<Valid, Any>, CascadeAware {
 
         when {
             constraints.isBeanConstrained -> {
-                val outcome = validating.validate(value, null, *_groups)
+                val outcome = _composer!!.validate(value, null, *_groups)
                 if (!outcome.isValid) {
                     addErrors(outcome, builder)
                 }
@@ -71,7 +72,7 @@ class CascadeValidator : ConstraintValidator<Valid, Any>, CascadeAware {
                     if (element != null &&
                             validator.getConstraintsForClass(element.javaClass)
                                     .isBeanConstrained) {
-                        val outcome = validating.validate(element, null, *_groups)
+                        val outcome = _composer!!.validate(element, null, *_groups)
                         if (!outcome.isValid) {
                             addErrors(outcome, builder, index)
                         }
@@ -83,7 +84,7 @@ class CascadeValidator : ConstraintValidator<Valid, Any>, CascadeAware {
                     if (element != null &&
                             validator.getConstraintsForClass(element.javaClass)
                                     .isBeanConstrained) {
-                        val outcome = validating.validate(element, null, *_groups)
+                        val outcome = _composer!!.validate(element, null, *_groups)
                         if (!outcome.isValid) {
                             addErrors(outcome, builder, index)
                         }

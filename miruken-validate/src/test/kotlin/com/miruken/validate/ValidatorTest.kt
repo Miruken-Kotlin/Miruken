@@ -22,12 +22,11 @@ class ValidatorTest {
     @JvmField val testName = TestName()
 
     @Test fun `Validates target`() {
-        val handler = (Validator()
-                    +  ValidatePlayer())
+        val handler = ValidatePlayer()
         val player  = Player().apply {
             dob = LocalDate.of(2005, 6, 14)
         }
-        val outcome = Validating(handler).validate(player)
+        val outcome = handler.validate(player)
         assertFalse(outcome.isValid)
         assertSame(outcome, player.validationOutcome)
         assertEquals("first name is required", outcome["firstName"])
@@ -35,24 +34,22 @@ class ValidatorTest {
     }
 
     @Test fun `Validates target for scope`() {
-        val handler = (Validator()
-                    +  ValidatePlayer())
+        val handler = ValidatePlayer()
         val player  = Player().apply {
             dob = LocalDate.of(2005, 6, 14)
         }
-        val outcome = Validating(handler)
-                .validate(player, Default::class, Recreational::class)
+        val outcome = handler.validate(
+                player, Default::class, Recreational::class)
         assertFalse(outcome.isValid)
         assertSame(outcome, player.validationOutcome)
         assertEquals("player must be 10 or younger", outcome["dob"])
     }
 
     @Test fun `Validates target async`() {
-        val handler = (Validator()
-                    +  ValidateTeam())
+        val handler = ValidateTeam()
         val team    = Team()
         assertAsync(testName) { done ->
-            Validating(handler).validateAsync(team) then { outcome ->
+            handler.validateAsync(team) then { outcome ->
                 assertFalse(outcome.isValid)
                 assertSame(outcome, team.validationOutcome)
                 assertEquals("name is required", outcome["name"])
@@ -62,12 +59,10 @@ class ValidatorTest {
     }
 
     @Test fun `Validates target async for scope`() {
-        val handler = (Validator()
-                    +  ValidateTeam())
+        val handler = ValidateTeam()
         val team    = Team().apply { coach = Coach() }
         assertAsync(testName) { done ->
-            Validating(handler)
-                    .validateAsync(team, Default::class, Ecnl::class)
+            handler.validateAsync(team, Default::class, Ecnl::class)
                     .then { outcome ->
                         assertFalse(outcome.isValid)
                         assertSame(outcome, team.validationOutcome)
@@ -80,9 +75,8 @@ class ValidatorTest {
     }
 
     @Test fun `Validates before method`() {
-        val handler = (Validator()
-                + TeamManager()
-                + ValidatePlayer())
+        val handler = (TeamManager()
+                    + ValidatePlayer())
         val team    = Team()
         val player  = Player().apply {
             firstName = "Wayne"
@@ -99,8 +93,7 @@ class ValidatorTest {
     }
 
     @Test fun `Rejects method if invalid`() {
-        val handler = (Validator()
-                    + TeamManager()
+        val handler = (TeamManager()
                     + ValidatePlayer())
         val team    = Team()
         val player  = Player()
@@ -113,9 +106,8 @@ class ValidatorTest {
     }
 
     @Test fun `Rejects method if invalid async`() {
-        val handler = (Validator()
-                + TeamManager()
-                + ValidatePlayer())
+        val handler = (TeamManager()
+                    + ValidatePlayer())
         val team    = Team()
         val player  = Player()
         assertAsync(testName) { done ->

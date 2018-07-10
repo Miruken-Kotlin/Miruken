@@ -36,13 +36,18 @@ class Validation(
 
     override var result: Any?
         get() {
-            if (_result != null) return _result
-            _result = when (_asyncResults.size) {
-                0 -> null
-                1 -> _asyncResults[0]
-                else -> Promise.all(_asyncResults)
+            if (_result == null) {
+                _result = when (_asyncResults.size) {
+                    0 -> null
+                    1 -> _asyncResults[0]
+                    else -> Promise.all(_asyncResults)
+                }
             }
-            if (wantsAsync && !isAsync) {
+            if (isAsync) {
+                if (!wantsAsync) {
+                    _result = (_result as? Promise<*>)?.get()
+                }
+            } else if (wantsAsync) {
                 _result = _result?.let { Promise.resolve(it) }
                         ?: Promise.EMPTY
             }

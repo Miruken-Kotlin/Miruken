@@ -24,12 +24,11 @@ class BeanValidatorTest {
     }
 
     @Test fun `Validates target`() {
-        val handler = (Validator()
-                    + BeanValidator(_validatorFactory))
+        val handler = BeanValidator(_validatorFactory)
         val player  = Player().apply {
             dob = LocalDate.of(2005, 6, 14)
         }
-        val outcome = Validating(handler).validate(player)
+        val outcome = handler.validate(player)
         assertFalse(outcome.isValid)
         assertSame(outcome, player.validationOutcome)
         assertEquals("must not be empty", outcome["firstName"])
@@ -37,8 +36,7 @@ class BeanValidatorTest {
     }
 
     @Test fun `Validates target graph`() {
-        val handler = (Validator()
-                    + BeanValidator(_validatorFactory))
+        val handler = BeanValidator(_validatorFactory)
         val team    = Team().apply {
             division = "10"
             coach    = Coach()
@@ -48,7 +46,7 @@ class BeanValidatorTest {
                 dob       = LocalDate.of(1985, 2, 5)
             }, Player().apply { firstName = "Lionel" })
         }
-        val outcome = Validating(handler).validate(team)
+        val outcome = handler.validate(team)
         assertFalse(outcome.isValid)
         assertSame(outcome, team.validationOutcome)
         assertTrue(outcome.culprits.containsAll(listOf(
