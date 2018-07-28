@@ -25,8 +25,8 @@ object ValidatesPolicy : ContravariantPolicy({
             binding:  PolicyMemberBinding
     ) = (callback as Validation).let {
         val validates = binding.annotation as Validates
-       (it.outcome.isValid ||
+        (it.outcome.isValid ||
          !(it.stopOnFailure || validates.skipIfInvalid)) &&
-           it.satisfiesScopes(*validates.scopes)
+         it.satisfiesScopes(*validates.scopes)
     }
 }

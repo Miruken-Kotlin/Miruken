@@ -7,11 +7,15 @@ import com.miruken.callback.policy.MemberBinding
 import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
+import com.miruken.runtime.checkOpenConformance
 import com.miruken.typeOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 import kotlin.test.*
 
 class HandlerTest {
@@ -543,6 +547,44 @@ class HandlerTest {
         assertEquals(HandleResult.HANDLED, handler.handle(options))
         assertEquals(1, options.providers!!.size)
         assertEquals(HandleResult.NOT_HANDLED, handler.stop.handle(FilterOptions()))
+    }
+
+    @Test fun `Checks filter open conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[0].createType()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,String>>()
+        val bindings  = mutableMapOf<KTypeParameter, KType>()
+        assertTrue(checkOpenConformance(openType,otherType, bindings))
+        assertEquals(2, bindings.size)
+        assertEquals(typeOf<Boo>(), bindings.values.first())
+        assertEquals(typeOf<String>(), bindings.values.elementAt(1))
+    }
+
+    @Test fun `Checks filter partial conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.contravariant(typeOf<Boo>()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        val bindings  = mutableMapOf<KTypeParameter, KType>()
+        assertTrue(checkOpenConformance(openType,otherType, bindings))
+        assertEquals(1, bindings.size)
+        assertEquals(typeOf<Unit>(), bindings.values.first())
+    }
+
+    @Test fun `Rejects filter open conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.contravariant(typeOf<Bar>()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        assertFalse(checkOpenConformance(openType, otherType))
     }
 
     /** Callbacks */

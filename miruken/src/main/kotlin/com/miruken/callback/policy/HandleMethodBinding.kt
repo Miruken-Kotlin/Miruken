@@ -18,6 +18,10 @@ class HandleMethodBinding(
 
     override val returnType = method.genericReturnType.toKType()
 
+    override val skipFilters =
+        method.getAnnotation(SkipFilters::class.java) != null ||
+        method.declaringClass.getAnnotation(SkipFilters::class.java) != null
+
     private val useFilters by lazy {
         (method.getTaggedAnnotations<UseFilter>() +
          method.declaringClass.getTaggedAnnotations() +

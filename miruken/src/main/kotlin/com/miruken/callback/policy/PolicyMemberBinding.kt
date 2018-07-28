@@ -6,6 +6,7 @@ import com.miruken.concurrent.Promise
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
@@ -23,6 +24,10 @@ class PolicyMemberBinding(
 
     override val returnType: KType
         get() = dispatcher.returnType
+
+    override val skipFilters =
+        dispatcher.findAnnotation<SkipFilters>() != null ||
+        dispatcher.owningClass.findAnnotation<SkipFilters>() != null
 
     fun approve(callback: Any) = policy.approve(callback, this)
 

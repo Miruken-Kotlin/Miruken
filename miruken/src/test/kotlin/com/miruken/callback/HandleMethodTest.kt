@@ -5,11 +5,18 @@ package com.miruken.callback
 import com.miruken.callback.policy.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
+import com.miruken.runtime.checkOpenConformance
+import com.miruken.typeOf
 import org.junit.Test
 import java.math.BigDecimal
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class HandleMethodTest {
     @Test fun `Handles method calls`() {
@@ -162,6 +169,19 @@ class HandleMethodTest {
         assertFailsWith(NotHandledException::class) {
             EmailHandler().proxy<EmailFeature>().email("Abort")
         }
+    }
+
+    @Test fun `Checks filter open conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.contravariant(typeOf<HandleMethod>()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<LogFilter2<Int>>()
+        val bindings  = mutableMapOf<KTypeParameter, KType>()
+        assertTrue(checkOpenConformance(openType,otherType, bindings))
+        assertEquals(1, bindings.size)
+        assertEquals(typeOf<Int>(), bindings.values.first())
     }
 
     interface EmailFeature {

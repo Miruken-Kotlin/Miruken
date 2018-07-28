@@ -5,4 +5,6 @@ import kotlin.reflect.KType
 
 abstract class MemberBinding(val member: Member) {
     abstract val returnType: KType
+
+    abstract val skipFilters: Boolean
 }

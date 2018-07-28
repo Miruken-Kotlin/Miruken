@@ -10,6 +10,11 @@ fun Handling.skipFilters(skip: Boolean = true) =
             skipFilters = skip
         })
 
+fun Handling.enableFilters(skip: Boolean = true) =
+        withOptions(FilterOptions().apply {
+            skipFilters = !skip
+        })
+
 fun Handling.withFilters(vararg filters: Filtering<*,*>) =
         withOptions(FilterOptions().apply {
             providers = listOf(InstanceFilterProvider(*filters))
@@ -28,8 +33,9 @@ fun Handling.getOrderedFilters(
         useFilters:   List<UseFilter>
 ): List<Filtering<*,*>> {
     val options = getOptions(FilterOptions())
-    val handler =  this.takeUnless { options?.skipFilters == null }
-            ?: skipFilters()
+    val handler = takeUnless {
+        options?.skipFilters == null
+    } ?: skipFilters()
     return handler.getOrderedFilters(filterType, binding,
             options, providers, useProviders, useFilters)
 }
@@ -42,6 +48,12 @@ fun Handling.getOrderedFilters(
         useProviders: List<UseFilterProvider>,
         useFilters:   List<UseFilter>
 ): List<Filtering<*,*>> {
+    val skipFilters = options?.skipFilters
+    if (skipFilters == true ||
+            (skipFilters == null && binding.skipFilters)) {
+        return emptyList()
+    }
+
     val allProviders = (providers + useProviders.mapNotNull {
         getFilterProvider(it.filterProviderClass, this)
     }).toMutableList()
