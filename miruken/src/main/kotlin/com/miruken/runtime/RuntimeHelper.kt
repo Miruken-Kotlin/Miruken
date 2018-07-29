@@ -127,24 +127,24 @@ fun checkOpenConformance(
                     }
                 }
             }
-            is KTypeParameter -> other.upperBounds.firstOrNull {
-                it.classifier == openClass
-            }?.arguments?.map { it.type }
+            is KTypeParameter ->
+                other.upperBounds.firstOrNull {
+                    it.classifier == openClass
+                }?.arguments?.map { it.type }
             else -> null
         }
-        conformance?.zip(openType.arguments.zip(
+        conformance?.zip(
+                openType.arguments.map { it.type }.zip(
                 openClass.typeParameters)) { ls, rs ->
             when {
                 ls == null -> true /* Star */
-                rs.first.type == null -> true /* Star */
-                ls.isOpenGeneric ||
-                        rs.first.type!!.isOpenGeneric ->
-                    isCompatibleWith(ls, rs.first.type!!,
-                            parameters)
+                rs.first == null -> true /* Star */
+                ls.isOpenGeneric || rs.first!!.isOpenGeneric ->
+                    isCompatibleWith(ls, rs.first!!, parameters)
                 rs.second.variance == KVariance.IN ->
-                    ls.isSubtypeOf(rs.first.type!!)
+                    ls.isSubtypeOf(rs.first!!)
                 else ->
-                    rs.first.type!!.isSubtypeOf(ls)
+                    rs.first!!.isSubtypeOf(ls)
             }
         }?.all { it }
     } ?: false

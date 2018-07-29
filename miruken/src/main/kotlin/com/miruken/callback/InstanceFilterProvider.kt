@@ -5,7 +5,8 @@ import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 class InstanceFilterProvider(
-        vararg val filters: Filtering<*,*>
+        vararg   val filters:  Filtering<*,*>,
+        override val required: Boolean = false
 ) : FilteringProvider {
     override fun getFilters(
             binding:    MemberBinding,

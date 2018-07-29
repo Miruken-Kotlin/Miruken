@@ -49,13 +49,13 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock?
-    ) = members.fold(HandleResult.NOT_HANDLED, { result, method ->
+    ) = members.fold(HandleResult.NOT_HANDLED) { result, method ->
         if ((result.handled && !greedy) || result.stop) {
             return result
         }
         result or method.dispatch(receiver, callback,
                 callbackType, composer, results)
-    })
+    }
 
     private fun findCompatibleMembers() {
         handlerClass.members.filter(::isInstanceMethod).forEach { member ->

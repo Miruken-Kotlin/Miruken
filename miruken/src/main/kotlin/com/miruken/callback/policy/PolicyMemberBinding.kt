@@ -45,6 +45,7 @@ class PolicyMemberBinding(
             } ?: return HandleResult.NOT_HANDLED
         } ?: callback
         val filters = resolveFilters(handler, filterCallback, composer)
+                ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
             val args = resolveArguments(ruleArgs, callbackType, composer)
                     ?: return HandleResult.NOT_HANDLED
@@ -87,7 +88,7 @@ class PolicyMemberBinding(
             handler:  Any,
             callback: Any,
             composer: Handling
-    ): List<Filtering<Any,Any?>> {
+    ): List<Filtering<Any,Any?>>? {
         if ((callback as? FilteringCallback)?.canFilter == false) {
             return emptyList()
         }
@@ -102,7 +103,7 @@ class PolicyMemberBinding(
                 } ?: emptyList(),
                 dispatcher.useFilterProviders,
                 dispatcher.useFilters
-        ) as List<Filtering<Any,Any?>>
+        ) as? List<Filtering<Any,Any?>>
     }
 
     private fun resolveArguments(

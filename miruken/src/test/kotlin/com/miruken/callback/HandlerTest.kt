@@ -529,6 +529,19 @@ class HandlerTest {
         assertEquals(-99, bar.handled)
     }
 
+    @Test fun `Skips filters`() {
+        val bee     = Bee()
+        val handler = FilteringHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(bee))
+        assertEquals(0, bee.filters.size)
+    }
+
+    @Test fun `Rejects if skipping required filters`() {
+        val handler = FilteringHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(Bee()))
+        assertEquals(HandleResult.NOT_HANDLED, handler.skipFilters().handle(Bee()))
+    }
+
     @Test fun `Propagates rejected filter promise`() {
         val boo     = Boo()
         val handler = SpecialFilteredHandler() + FilteringHandler()
@@ -935,10 +948,17 @@ class HandlerTest {
         }
 
         @Handles
-        fun handleStuff(command: Command): Promise<Any?> {
+        @AllFilters
+        @SkipFilters
+        fun handleBee(bee: Bee) {
+        }
+
+        @Handles
+        fun handleStuff(command: Command): Promise<Any?>? {
             val callback = command.callback
             when (callback) {
                 is Bar -> callback.handled = -99
+                else -> return null
             }
             return Promise.EMPTY
         }
@@ -1008,7 +1028,7 @@ class HandlerTest {
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Filtering::class, many = true)
+    @UseFilter(Filtering::class, many = true, required = true)
     annotation class AllFilters
 
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {

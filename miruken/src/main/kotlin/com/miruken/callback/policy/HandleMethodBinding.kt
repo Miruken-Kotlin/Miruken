@@ -48,6 +48,7 @@ class HandleMethodBinding(
         val handleMethod = callback as HandleMethod
         handleMethod.result = try {
             val filters = resolveFilters(target, handleMethod, composer)
+                    ?: return HandleResult.NOT_HANDLED
             if (filters.isEmpty()) {
                 withComposer(composer) {
                     invoke(handleMethod, target)
@@ -100,7 +101,7 @@ class HandleMethodBinding(
             target:       Any,
             handleMethod: HandleMethod,
             composer:     Handling
-    ): List<Filtering<Any,Any?>> {
+    ): List<Filtering<Any,Any?>>? {
         val filterType = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(HandleMethod.TYPE),
                 KTypeProjection.invariant(handleMethod.resultType!!)))
@@ -109,7 +110,7 @@ class HandleMethodBinding(
                     GLOBAL_FILTERS + InstanceFilterProvider(it)
                 } ?: GLOBAL_FILTERS,
                 useFilterProviders, useFilters
-        ) as List<Filtering<Any,Any?>>
+        ) as? List<Filtering<Any,Any?>>
     }
 
     companion object {

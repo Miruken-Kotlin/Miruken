@@ -31,11 +31,17 @@ fun Handling.getOrderedFilters(
         providers:    List<FilteringProvider>,
         useProviders: List<UseFilterProvider>,
         useFilters:   List<UseFilter>
-): List<Filtering<*,*>> {
+): List<Filtering<*,*>>? {
     val options = getOptions(FilterOptions())
-    val handler = takeUnless {
-        options?.skipFilters == null
-    } ?: skipFilters()
+    val handler = when (options?.skipFilters) {
+        null -> skipFilters()
+        true -> takeUnless {
+            providers.any    { it.required } ||
+            useProviders.any { it.required } ||
+            useFilters.any   { it.required }
+        } ?: return null
+        else -> this
+    }
     return handler.getOrderedFilters(filterType, binding,
             options, providers, useProviders, useFilters)
 }

@@ -11,6 +11,8 @@ import kotlin.reflect.full.createType
 open class UseFiltersFilterProvider(
         private val useFilters: List<UseFilter>
 ): FilteringProvider {
+    override val required = useFilters.any { it.required }
+
     override fun getFilters(
             binding:    MemberBinding,
             filterType: KType,
