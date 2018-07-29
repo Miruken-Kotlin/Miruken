@@ -34,19 +34,23 @@ fun Handling.getOrderedFilters(
 ): List<Filtering<*,*>>? {
     val options = getOptions(FilterOptions())
     val handler = when (options?.skipFilters) {
-        null -> skipFilters()
-        true -> takeUnless {
+        true -> return when {
             providers.any    { it.required } ||
             useProviders.any { it.required } ||
-            useFilters.any   { it.required }
-        } ?: return null
+            useFilters.any   { it.required } -> null
+            else -> emptyList()
+        }
+        null -> when (binding.skipFilters) {
+            true -> return emptyList()
+            else -> skipFilters()
+        }
         else -> this
     }
     return handler.getOrderedFilters(filterType, binding,
             options, providers, useProviders, useFilters)
 }
 
-fun Handling.getOrderedFilters(
+private fun Handling.getOrderedFilters(
         filterType:   KType,
         binding:      MemberBinding,
         options:      FilterOptions?,
@@ -54,12 +58,6 @@ fun Handling.getOrderedFilters(
         useProviders: List<UseFilterProvider>,
         useFilters:   List<UseFilter>
 ): List<Filtering<*,*>> {
-    val skipFilters = options?.skipFilters
-    if (skipFilters == true ||
-            (skipFilters == null && binding.skipFilters)) {
-        return emptyList()
-    }
-
     val allProviders = (providers + useProviders.mapNotNull {
         getFilterProvider(it.filterProviderClass, this)
     }).toMutableList()
