@@ -14,14 +14,14 @@ class ResolutionTest {
     @Test fun `Overrides providers`() {
         val demo    = DemoHandler()
         val handler = Handler()
-        val resolve = handler.resolving.provide(demo).resolve<DemoHandler>()
+        val resolve = handler.infer.provide(demo).resolve<DemoHandler>()
         assertSame(demo, resolve)
     }
 
     @Test fun `Overrides providers polymorphically`() {
         val email   = EmailHandler()
         val handler = Handler()
-        val resolve = handler.resolving.provide(email).resolve<EmailFeature>()
+        val resolve = handler.infer.provide(email).resolve<EmailFeature>()
         assertSame(email, resolve)
     }
 
@@ -29,20 +29,20 @@ class ResolutionTest {
         HandlerDescriptor.getDescriptorFor<DemoProvider>()
         val demo    = DemoHandler()
         val handler = Handler()
-        val resolve = handler.provide(demo).resolving.resolve<DemoHandler>()
+        val resolve = handler.provide(demo).infer.resolve<DemoHandler>()
         assertSame(demo, resolve)
     }
 
     @Test fun `Resolves handlers`() {
         HandlerDescriptor.getDescriptorFor<EmailHandler>()
         val handler = EmailProvider()
-        val id      = handler.resolving.command(SendEmail("Hello")) as Int
+        val id      = handler.infer.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
     @Test fun `Resolves implied handlers`() {
         val handler = EmailHandler()
-        val id      = handler.resolving.command(SendEmail("Hello")) as Int
+        val id      = handler.infer.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
@@ -50,14 +50,14 @@ class ResolutionTest {
         HandlerDescriptor.getDescriptorFor<EmailHandler>()
         HandlerDescriptor.getDescriptorFor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
-        val id      = handler.resolvingAll.command(SendEmail("Hello")) as Int
+        val id      = handler.inferAll.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
     @Test fun `Resolves implied open-generic handlers`() {
         val handler = Repository<Message>()
         val message = Message()
-        val result  = handler.resolving.handle(Create(message))
+        val result  = handler.infer.handle(Create(message))
         assertEquals(HandleResult.HANDLED, result)
     }
 
@@ -67,7 +67,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val id = handler.resolving.command(SendEmail("Hello")) as Int
+        val id = handler.infer.command(SendEmail("Hello")) as Int
         assertEquals(10, id)
     }
 
@@ -76,7 +76,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val balance = handler.resolving.command(
+        val balance = handler.infer.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
                 as BigDecimal
         assertEquals(13.toBigDecimal(), balance)
@@ -84,14 +84,14 @@ class ResolutionTest {
 
     @Test fun `Skips filters with missing dependencies`() {
         val handler = Accountant() + FilterProvider()
-        handler.resolving.command(
+        handler.infer.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
     }
 
     @Test fun `Fails if no handlers resolved`() {
         val handler = BillingImpl().toHandler()
         assertFailsWith(NotHandledException::class) {
-            handler.resolving.command(SendEmail("Hello"))
+            handler.infer.command(SendEmail("Hello"))
         }
     }
 
@@ -208,7 +208,7 @@ class ResolutionTest {
 
     @Test fun `Resolves methods calls inferred`() {
         val provider = EmailProvider()
-        val id       = provider.resolving.proxy<EmailFeature>().email("Hello")
+        val id       = provider.infer.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 

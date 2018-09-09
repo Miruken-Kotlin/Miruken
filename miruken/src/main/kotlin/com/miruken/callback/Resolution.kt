@@ -1,19 +1,26 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.CallbackPolicy
+import com.miruken.callback.policy.PolicyMemberBinding
 import kotlin.reflect.KType
 
 open class Resolution(
         key:              Any,
         val callback:     Any,
         val callbackType: KType?
-) : Inquiry(key, true), ResolvingCallback, FilteringCallback {
-
+) : Inquiry(key, true), InferringCallback,
+        FilteringCallback, DispatchingCallbackGuard {
     private var _handled = false
 
-    override fun getResolveCallback() = this
+    override fun inferCallback() = this
 
     override val canFilter = false
+
+    override fun canDispatch(
+            handler: Any,
+            binding: PolicyMemberBinding
+    ) = (callback as? DispatchingCallbackGuard)
+            ?.canDispatch(handler, binding) != false
 
     override fun isSatisfied(
             resolution: Any,
@@ -28,7 +35,7 @@ open class Resolution(
     }
 
     companion object {
-        fun getResolvingCallback(
+        fun getResolving(
                 callback:     Any,
                 callbackType: KType?
         ): Any {

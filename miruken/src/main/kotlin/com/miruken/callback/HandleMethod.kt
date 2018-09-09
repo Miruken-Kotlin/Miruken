@@ -18,14 +18,14 @@ open class HandleMethod(
         val method:    Method,
         val arguments: Array<Any?>,
         val semantics: CallbackSemantics = CallbackSemantics.NONE
-) : Callback, ResolvingCallback, DispatchingCallback {
+) : Callback, InferringCallback, DispatchingCallback {
 
     override var result:     Any?   = null
     override val resultType: KType? = method.genericReturnType.toKType()
     override val policy:     CallbackPolicy? get() = null
     var          exception:  Throwable? = null
 
-    override fun getResolveCallback() =
+    override fun inferCallback() =
             Resolution(protocol, this, TYPE)
 
     override fun dispatch(

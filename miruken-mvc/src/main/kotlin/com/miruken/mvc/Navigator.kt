@@ -85,9 +85,9 @@ class Navigator(mainRegion: ViewRegion) : CompositeHandler(), Navigate {
 
     private fun bindIO(io: Handling?, controller: Controller) {
         controller._io = io ?: controller.context?.let { h: Handling ->
-            Controller.GLOBAL_PREPARE.foldRight(h, { filter, pipe ->
+            Controller.GLOBAL_PREPARE.foldRight(h) { filter, pipe ->
                 filter(pipe)
-            })
+            }
         }
     }
 

@@ -8,7 +8,7 @@ open class Composition(
         callback:     Any?   = null,
         callbackType: KType? = null
 ) : Trampoline(callback, callbackType),
-        Callback, ResolvingCallback,
+        Callback, InferringCallback,
         FilteringCallback, BatchingCallback {
 
     override val resultType: KType?
@@ -29,11 +29,11 @@ open class Composition(
     override val canBatch: Boolean
         get() = (callback as? BatchingCallback)?.canBatch != false
 
-    override fun getResolveCallback(): Any {
-        val resolve = (callback as? ResolvingCallback)?.getResolveCallback()
+    override fun inferCallback(): Any {
+        val resolve = (callback as? InferringCallback)?.inferCallback()
         if (resolve === callback || callback === null) return this
         return Composition(resolve ?: Resolution
-                .getResolvingCallback(callback, callbackType),
+                .getResolving(callback, callbackType),
                 callbackType)
     }
 

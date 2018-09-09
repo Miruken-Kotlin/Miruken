@@ -339,11 +339,10 @@ open class Promise<out T>
 }
 
 fun <T> Promise<Promise<T>>.unwrap(): Promise<T> {
-    return Promise(this.cancelMode, {
-        resolve, reject, onCancel ->
-            onCancel { this.cancel() }
+    return Promise(this.cancelMode) { resolve, reject, onCancel ->
+        onCancel { this.cancel() }
         then({ inner -> inner.then(resolve, reject)
-            .cancelled(reject)}, reject)
-            .cancelled(reject)
-    })
+                .cancelled(reject)}, reject)
+                .cancelled(reject)
+    }
 }

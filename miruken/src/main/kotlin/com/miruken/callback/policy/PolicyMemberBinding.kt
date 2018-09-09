@@ -38,6 +38,10 @@ class PolicyMemberBinding(
             composer:     Handling,
             results:      CollectResultsBlock?
     ): HandleResult {
+        (callback as? DispatchingCallbackGuard)?.let {
+            if (!it.canDispatch(handler, this))
+                return HandleResult.NOT_HANDLED
+        }
         val ruleArgs  = rule.resolveArguments(callback)
         val filterCallback = callbackArg?.let {
             ruleArgs[it.parameter.index - 1].takeIf { // skip receiver

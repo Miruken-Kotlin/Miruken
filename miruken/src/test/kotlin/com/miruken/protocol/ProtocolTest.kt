@@ -38,7 +38,7 @@ class ProtocolTest {
         private var _count = 0
 
         override fun send(message: String): Pair<Int, String> {
-            require(message.isNotEmpty(), { "Message cannot be blank" })
+            require(message.isNotEmpty()) { "Message cannot be blank" }
             return ++_count to message
         }
     }

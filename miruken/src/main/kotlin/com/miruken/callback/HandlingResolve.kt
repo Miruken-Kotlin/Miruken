@@ -3,10 +3,10 @@ package com.miruken.callback
 import com.miruken.concurrent.Promise
 import com.miruken.typeOf
 
-val Handling.resolving get() = ResolvingHandler(this)
+val Handling.infer get() = InferringHandler(this)
 
-val Handling.resolvingAll get() = CallbackSemanticsHandler(
-        ResolvingHandler(this), CallbackOptions.BROADCAST)
+val Handling.inferAll get() = CallbackSemanticsHandler(
+        InferringHandler(this), CallbackOptions.BROADCAST)
 
 fun Handling.resolve(key: Any): Any? {
     val inquiry = key as? Inquiry ?: Inquiry(key)
