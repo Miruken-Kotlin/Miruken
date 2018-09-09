@@ -15,11 +15,11 @@ class CovariantPolicyBuilder<C: Any>(
             ExtractArgument(typeOf<E>(), block)
 
     override fun build(): CovariantPolicy {
-        return CovariantPolicy(rules, filters, {
+        return CovariantPolicy(rules, filters) {
             @Suppress("UNCHECKED_CAST")
             if (isCompatibleWith(callbackType, it))
                 keyFunctor(it as C) else null
-        })
+        }
     }
 }
 

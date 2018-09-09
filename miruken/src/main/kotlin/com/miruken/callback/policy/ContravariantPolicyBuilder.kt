@@ -17,11 +17,11 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
             ExtractArgument(typeOf<E>(), block)
 
     override fun build(): ContravariantPolicy {
-        return ContravariantPolicy(rules, filters, {
+        return ContravariantPolicy(rules, filters) {
             @Suppress("UNCHECKED_CAST")
             if (isCompatibleWith(callbackType, it))
                 targetFunctor(it as C) else null
-        })
+        }
     }
 }
 

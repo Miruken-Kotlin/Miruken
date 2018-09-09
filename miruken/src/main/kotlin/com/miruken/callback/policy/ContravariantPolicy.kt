@@ -10,7 +10,7 @@ import kotlin.reflect.KType
 
 open class ContravariantPolicy(
         rules:   List<MethodRule>,
-        filters: List<FilteringProvider>,
+        filters: Collection<FilteringProvider>,
         private val targetFunctor: (Any) -> Any?
 ): CallbackPolicy(rules, filters) {
 

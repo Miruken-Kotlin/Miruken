@@ -51,16 +51,16 @@ class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
     infix fun rules(
             define: BivariantPolicyBuilder<C,S>.() -> Unit
     ): BivariantPolicy {
-        val co = CovariantPolicy(emptyList(), emptyList(), {
+        val co = CovariantPolicy(emptyList(), emptyList()) {
             @Suppress("UNCHECKED_CAST")
             if (isCompatibleWith(callbackType, it))
                 keyFunctor(it as C) else null
-        })
-        val contra = ContravariantPolicy(emptyList(), emptyList(), {
+        }
+        val contra = ContravariantPolicy(emptyList(), emptyList()) {
             @Suppress("UNCHECKED_CAST")
             if (isCompatibleWith(callbackType, it))
                 targetFunctor(it as C) else null
-        })
+        }
         val builder = BivariantPolicyBuilder(callbackType, targetType,
                 targetFunctor, co, contra)
         define(builder)

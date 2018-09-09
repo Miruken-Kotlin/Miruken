@@ -12,3 +12,16 @@ interface FilteringProvider {
             composer:   Handling
     ): List<Filtering<*,*>>
 }
+
+interface ValidateFilteringProvider {
+    fun validate(binding: MemberBinding)
+}
+
+interface Filtered {
+    val filters: Collection<FilteringProvider>
+
+    fun addFilters(vararg filters: Filtering<*,*>)
+    fun addFilters(filters: Collection<Filtering<*,*>>)
+    fun addFilterProviders(vararg providers: FilteringProvider)
+    fun addFilterProviders(providers: Collection<FilteringProvider>)
+}

@@ -8,25 +8,16 @@ typealias CollectResultsBlock = (Any, Boolean) -> Boolean
 
 abstract class CallbackPolicy(
         val rules:  List<MethodRule>,
-        filters:    List<FilteringProvider>,
+        filters:    Collection<FilteringProvider>,
         val strict: Boolean = false
-) : Comparator<Any> {
-    private val _filters = filters.toMutableList()
+) : FilteredObject(), Comparator<Any> {
 
-    val filters: List<FilteringProvider> get() = _filters
+    init {
+        addFilterProviders(filters)
+    }
 
     val memberBindingComparator : Comparator<PolicyMemberBinding> =
             Comparator { a, b -> compare(a.key, b.key) }
-
-    fun addFilters(vararg filters: Filtering<*,*>) {
-        if (filters.isNotEmpty()) {
-            _filters.add(InstanceFilterProvider(*filters))
-        }
-    }
-
-    fun addFilterProviders(vararg providers: FilteringProvider) {
-        _filters.addAll(providers)
-    }
 
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }

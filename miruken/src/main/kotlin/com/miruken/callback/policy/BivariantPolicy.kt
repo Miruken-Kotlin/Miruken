@@ -7,7 +7,7 @@ import kotlin.reflect.KType
 
 open class BivariantPolicy(
         rules:   List<MethodRule>,
-        filters: List<FilteringProvider>,
+        filters: Collection<FilteringProvider>,
         val output: CovariantPolicy,
         val input:  ContravariantPolicy
 ) : CallbackPolicy(rules, filters, true) {

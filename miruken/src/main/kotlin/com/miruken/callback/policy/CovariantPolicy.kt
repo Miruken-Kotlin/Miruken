@@ -7,7 +7,7 @@ import kotlin.reflect.KType
 
 open class CovariantPolicy(
         rules:   List<MethodRule>,
-        filters: List<FilteringProvider>,
+        filters: Collection<FilteringProvider>,
         private val keyFunctor: (Any) -> Any?
 ) : CallbackPolicy(rules, filters) {
 

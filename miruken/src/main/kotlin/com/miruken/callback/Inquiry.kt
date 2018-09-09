@@ -111,13 +111,13 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     ): Boolean {
         val resolved = when {
             !strict && resolution is Collection<*> ->
-                resolution.filterNotNull().fold(false, { s, res ->
+                resolution.filterNotNull().fold(false) { s, res ->
                     include(res, false, greedy, composer) || s
-                })
+                }
             !strict && resolution is Array<*> ->
-                resolution.filterNotNull().fold(false, { s, res ->
+                resolution.filterNotNull().fold(false) { s, res ->
                     include(res, false, greedy, composer) || s
-                })
+                }
             else -> include(resolution, strict, greedy, composer)
         }
         if (resolved) _result = null
