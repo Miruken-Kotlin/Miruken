@@ -13,7 +13,8 @@ open class KeyResolver : KeyResolving {
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
+            composer: Handling,
+            parent:   Inquiry?
     ) = when {
         typeInfo.flags has TypeFlags.LAZY ->
                 resolveArgumentLazy(key, typeInfo, composer)
@@ -26,92 +27,103 @@ open class KeyResolver : KeyResolving {
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
-    ) = handler.resolve(key)
+            composer: Handling,
+            parent:   Inquiry? = null
+    ) = handler.resolve(key, parent)
 
     open fun resolveKeyAsync(
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
-    ) = handler.resolveAsync(key,
+            composer: Handling,
+            parent:   Inquiry? = null
+    ) = handler.resolveAsync(key, parent,
             !typeInfo.componentType.isMarkedNullable)
 
     open fun resolveKeyAll(
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
-    ) = handler.resolveAll(key)
+            composer: Handling,
+            parent:   Inquiry? = null
+    ) = handler.resolveAll(key, parent)
 
     private fun resolveKeyAllArray(
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
-    ) = resolveKeyAll(key, typeInfo, handler, composer)
+            composer: Handling,
+            parent:   Inquiry? = null
+    ) = resolveKeyAll(key, typeInfo, handler, composer, parent)
             .toTypedArray(typeInfo.componentType.jvmErasure)
 
     open fun resolveKeyAllAsync(
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
-    ) = handler.resolveAllAsync(key)
+            composer: Handling,
+            parent:   Inquiry? = null
+    ) = handler.resolveAllAsync(key, parent)
 
     private fun resolveKeyAllArrayAsync(
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
-    ) = resolveKeyAllAsync(key, typeInfo, handler, composer) then {
+            composer: Handling,
+            parent:   Inquiry? = null
+    ) = resolveKeyAllAsync(key, typeInfo, handler, composer, parent) then {
         it.toTypedArray(typeInfo.componentType.jvmErasure)
     }
 
     private fun resolveArgumentLazy(
             key:      Any,
             typeInfo: TypeInfo,
-            composer: Handling
+            composer: Handling,
+            parent:   Inquiry? = null
     ) =
         lazy(LazyThreadSafetyMode.NONE) {
             // ** MUST ** use composer, composer since
             // handler may be invalidated at this point
-            resolveArgument(key, typeInfo, composer, composer)
+            resolveArgument(key, typeInfo, composer, composer, parent)
         }
 
     private fun resolveArgumentFunc(
             key:      Any,
             typeInfo: TypeInfo,
-            composer: Handling
+            composer: Handling,
+            parent:   Inquiry? = null
     ): () -> Any? = {
         // ** MUST ** use composer, composer since
         // handler may be invalidated at this point
-        resolveArgument(key, typeInfo, composer, composer)
+        resolveArgument(key, typeInfo, composer, composer, parent)
     }
 
     private fun resolveArgument(
             key:      Any,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling
+            composer: Handling,
+            parent:   Inquiry? = null
     ): Any? {
         val flags = typeInfo.flags
         return when {
             flags has TypeFlags.COLLECTION  ->
                 when {
                     flags has TypeFlags.PROMISE ->
-                        resolveKeyAllAsync(key, typeInfo, handler, composer)
-                    else -> resolveKeyAll(key, typeInfo, handler, composer)
+                        resolveKeyAllAsync(key, typeInfo, handler, composer, parent)
+                    else -> resolveKeyAll(key, typeInfo, handler, composer, parent)
                 }
             flags has TypeFlags.ARRAY ->
                 when {
                     flags has TypeFlags.PROMISE ->
-                        resolveKeyAllArrayAsync(key, typeInfo, handler, composer)
-                    else -> resolveKeyAllArray(key, typeInfo, handler, composer)
+                        resolveKeyAllArrayAsync(
+                                key, typeInfo, handler, composer, parent)
+                    else -> resolveKeyAllArray(
+                            key, typeInfo, handler, composer, parent)
                 }
             flags has TypeFlags.PROMISE ->
-                resolveKeyAsync(key, typeInfo, handler, composer)
-            else -> resolveKey(key, typeInfo, handler, composer)
+                resolveKeyAsync(key, typeInfo, handler, composer, parent)
+            else -> resolveKey(key, typeInfo, handler, composer, parent)
         }
     }
 

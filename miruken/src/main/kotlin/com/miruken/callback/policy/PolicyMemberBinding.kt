@@ -51,13 +51,13 @@ class PolicyMemberBinding(
         val filters = resolveFilters(handler, filterCallback, composer)
                 ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
-            val args = resolveArguments(ruleArgs, callbackType, composer)
+            val args = resolveArguments(callback, ruleArgs, callbackType, composer)
                     ?: return HandleResult.NOT_HANDLED
             dispatcher.invoke(handler, args)
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
-                val args = resolveArguments(ruleArgs, callbackType, comp)
+                val args = resolveArguments(callback, ruleArgs, callbackType, comp)
                         ?: notHandled()
                 Promise.resolve(dispatcher.invoke(handler, args))
             }, { pipeline, next ->
@@ -111,6 +111,7 @@ class PolicyMemberBinding(
     }
 
     private fun resolveArguments(
+            callback:      Any,
             ruleArguments: Array<Any?>,
             callbackType:  KType?,
             composer:      Handling
@@ -119,6 +120,7 @@ class PolicyMemberBinding(
         if (arguments.size == ruleArguments.size)
             return ruleArguments
 
+        val parent   = callback as? Inquiry
         val resolved = ruleArguments.copyOf(arguments.size)
 
         return composer.all {
@@ -151,7 +153,8 @@ class PolicyMemberBinding(
                         }
                         resolver.validate(key, typeInfo)
                         add({
-                            resolved[i] = resolver.resolve(key, typeInfo, it, composer)
+                            resolved[i] = resolver.resolve(
+                                    key, typeInfo, it, composer, parent)
                         }) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }

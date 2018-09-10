@@ -8,8 +8,9 @@ open class Resolution(
         key:              Any,
         val callback:     Any,
         val callbackType: KType?
-) : Inquiry(key, true), InferringCallback,
-        FilteringCallback, DispatchingCallbackGuard {
+) : Inquiry(key, true, callback as? Inquiry),
+        InferringCallback, FilteringCallback,
+        DispatchingCallbackGuard {
     private var _handled = false
 
     override fun inferCallback() = this

@@ -43,6 +43,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         if (arguments.size == 2) {
             return arrayOf(callback, next)
         }
+        val parent   = callback as? Inquiry
         val resolved = arrayOfNulls<Any?>(arguments.size)
         return composer.all {
             loop@ for (i in 2 until resolved.size) {
@@ -67,7 +68,8 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                         }
                         resolver.validate(key, typeInfo)
                         add({
-                            resolved[i] = resolver.resolve(key, typeInfo, it, composer)
+                            resolved[i] = resolver.resolve(
+                                    key, typeInfo, it, composer, parent)
                         }) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }

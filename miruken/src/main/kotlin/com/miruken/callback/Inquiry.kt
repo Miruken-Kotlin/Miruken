@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_STAR
@@ -13,9 +14,12 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
-open class Inquiry(val key: Any, val many: Boolean = false)
-    : Callback, AsyncCallback, DispatchingCallback {
-
+open class Inquiry(
+        val key:    Any,
+        val many:   Boolean = false,
+        val parent: Inquiry? = null
+) : Callback, AsyncCallback, DispatchingCallback,
+    DispatchingCallbackGuard {
     private var _result: Any? = null
     private val _promises     = mutableListOf<Promise<*>>()
     private val _resolutions  = mutableListOf<Any>()
@@ -26,6 +30,9 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             else -> ANY_STAR
         }
     }
+    private var _handler: Any? = null
+    private var _binding: PolicyMemberBinding? = null
+
     override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
@@ -158,6 +165,16 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer:   Handling
     ): Boolean = true
 
+    override fun canDispatch(
+            handler: Any,
+            binding: PolicyMemberBinding
+    ): Boolean {
+        if (inProgress(handler, binding)) return false
+        _handler = handler
+        _binding = binding
+        return true
+    }
+
     override fun dispatch(
             handler:      Any,
             callbackType: KType?,
@@ -185,6 +202,15 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer:  Handling
     ) = isCompatibleWith(key, item) &&
             resolve(item, false, greedy, composer)
+
+    private fun inProgress(
+            handler: Any,
+            binding: PolicyMemberBinding
+    ): Boolean {
+        return (handler == _handler  &&
+                binding == _binding) ||
+                parent?.inProgress(handler, binding) == true
+    }
 
     private fun flatten(vararg lists: List<*>): List<Any> {
         val flat = mutableSetOf<Any>()
