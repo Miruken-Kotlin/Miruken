@@ -28,7 +28,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not handled using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bee()))
     }
 
@@ -38,7 +38,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not handled explicitly using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         assertEquals(HandleResult.NOT_HANDLED_AND_STOP, handler.handle(Bam()))
     }
 
@@ -51,7 +51,7 @@ class HandlerTest {
 
     @Test fun `Handles callbacks implicitly using adapter`() {
         val foo     = Foo()
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(1, foo.handled)
     }
@@ -160,7 +160,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not provided using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         val bee     = handler.resolve<Bee>()
         assertNull(bee)
     }
@@ -183,7 +183,7 @@ class HandlerTest {
     }
 
     @Test fun `Provides callbacks implicitly using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         val bar     = handler.resolve<Bar>()
         assertNotNull(bar!!)
         assertFalse(bar.hasComposer)
@@ -290,9 +290,9 @@ class HandlerTest {
             }
         }
         assertAsync(testName) { done ->
-            handler.resolveAllAsync<Bar>() then {
-                assertEquals(3, it.size)
-                assertTrue(it.map { it.handled to it.hasComposer }
+            handler.resolveAllAsync<Bar>() then { bars ->
+                assertEquals(3, bars.size)
+                assertTrue(bars.map { it.handled to it.hasComposer }
                         .containsAll(listOf(1 to false, 2 to false, 3 to false)))
                 done()
             }
@@ -448,16 +448,16 @@ class HandlerTest {
     }
 
     @Test fun `Provides adapted self implicitly`() {
-        val controller = Controller()
+        val controller = ControllerBase()
         val handler    = HandlerAdapter(controller)
-        val result     = handler.resolve<Controller>()
+        val result     = handler.resolve<ControllerBase>()
         assertSame(controller, result)
     }
 
     @Test fun `Provides adapted self decorated`() {
-        val controller = Controller()
+        val controller = ControllerBase()
         val handler    = HandlerAdapter(controller)
-        val result     = handler.broadcast.resolve<Controller>()
+        val result     = handler.broadcast.resolve<ControllerBase>()
         assertSame(controller, result)
     }
 
@@ -922,7 +922,7 @@ class HandlerTest {
         fun add(op1: Int, op2: Int){}
     }
 
-    class Controller {
+    open class ControllerBase @Provides constructor() {
         @Handles
         fun handleFooImplicitly(foo: Foo) {
             ++foo.handled
@@ -937,6 +937,11 @@ class HandlerTest {
             return Bar().apply { handled = 1 }
         }
     }
+
+    class Controller<TView, TModel> @Provides constructor(
+            val view:  TView,
+            val model: TModel
+    ) : ControllerBase()
 
     class FilteringHandler : Handler(), Filtering<Bar, Unit> {
         override var order: Int? = null
@@ -964,8 +969,9 @@ class HandlerTest {
         }
 
         @Provides
-        fun <T: Any, R: Any?> createFilter(inquiry: Inquiry): Filtering<T,R>?
-        {
+        fun <T: Any, R: Any?> createFilter(
+                inquiry: Inquiry
+        ): Filtering<T,R>? {
             @Suppress("UNCHECKED_CAST")
             return when (inquiry.keyClass) {
                 null -> null
@@ -976,8 +982,9 @@ class HandlerTest {
         }
 
         @Provides
-        fun <T: Any, R: Any?> forExceptions(inquiry: Inquiry): ExceptionBehavior<T,R>?
-        {
+        fun <T: Any, R: Any?> forExceptions(
+                inquiry: Inquiry
+        ): ExceptionBehavior<T,R>? {
             @Suppress("UNCHECKED_CAST")
             return when (inquiry.keyClass) {
                 ExceptionBehavior::class -> ExceptionBehavior()

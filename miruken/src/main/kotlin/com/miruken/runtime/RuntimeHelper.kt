@@ -20,8 +20,8 @@ fun isCompatibleWith(
                 leftSide == rightSide -> true
                 rightSide.classifier is KTypeParameter -> {
                     val typeParam = rightSide.classifier as KTypeParameter
-                    typeParam.upperBounds.any {
-                        isCompatibleWith(it, leftSide, typeBindings).also {
+                    typeParam.upperBounds.any { bound ->
+                        isCompatibleWith(bound, leftSide, typeBindings).also {
                             if (it && typeBindings?.containsKey(typeParam) == false)
                                 typeBindings[typeParam] = leftSide
                         }
@@ -29,9 +29,9 @@ fun isCompatibleWith(
                 }
                 leftSide.classifier is KTypeParameter -> {
                     val typeParam = leftSide.classifier as KTypeParameter
-                    typeParam.upperBounds.any {
-                        (it.isSupertypeOf(rightSide) ||
-                        isCompatibleWith(it, rightSide, typeBindings)).also {
+                    typeParam.upperBounds.any { bound ->
+                        (bound.isSupertypeOf(rightSide) ||
+                        isCompatibleWith(bound, rightSide, typeBindings)).also {
                             if (it && typeBindings?.containsKey(typeParam) == false)
                                 typeBindings[typeParam] = rightSide
                         }
@@ -114,10 +114,10 @@ fun checkOpenConformance(
                 other -> otherType.arguments.map { it.type }
                 else -> other.allSupertypes.firstOrNull {
                     it.classifier == openClass
-                }?.let {
+                }?.let { conform ->
                     val otherArgs   = otherType.arguments
                     val otherParams = other.typeParameters
-                    it.arguments.map { arg ->
+                    conform.arguments.map { arg ->
                         val classifier = arg.type?.classifier
                         arg.type.takeIf { classifier is KClass<*> }
                                 ?: otherParams.indexOf(classifier)
@@ -190,8 +190,8 @@ val KType.isOpenGeneric: Boolean
                 arguments.any { it.type?.isOpenGeneric == true }
 
 val KType.isOpenGenericDefinition: Boolean
-    get() = arguments.isNotEmpty() && arguments.all {
-        (it.type?.classifier as? KTypeParameter)
+    get() = arguments.isNotEmpty() && arguments.all { arg ->
+        (arg.type?.classifier as? KTypeParameter)
             ?.upperBounds?.all { it == ANY_TYPE } == true }
 
 inline val KClass<*>.isGeneric
@@ -255,6 +255,10 @@ fun KClass<*>.matchMethod(method: Method): Method? {
         null
     }
 }
+
+val KCallable<*>.isInstanceCallable: Boolean get() =
+        parameters.takeIf { it.isNotEmpty() }
+                ?.get(0)?.kind == KParameter.Kind.INSTANCE
 
 fun Collection<*>.toTypedArray(componentType: KClass<*>) =
         toTypedArray(componentType.java)

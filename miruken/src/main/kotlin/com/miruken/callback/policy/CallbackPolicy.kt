@@ -17,7 +17,13 @@ abstract class CallbackPolicy(
     }
 
     val memberBindingComparator : Comparator<PolicyMemberBinding> =
-            Comparator { a, b -> compare(a.key, b.key) }
+            Comparator { a, b ->
+                val order = compare(a.key, b.key)
+                when (order) {
+                    0 -> b.dispatcher.arity - a.dispatcher.arity
+                    else -> order
+                }
+            }
 
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }
@@ -44,9 +50,9 @@ abstract class CallbackPolicy(
 
     open fun approve(callback: Any, binding: PolicyMemberBinding) = true
 
-    fun getMethods() = HandlerDescriptor.getPolicyMethods(this)
+    fun getMethods() = HandlerDescriptor.getPolicyMembers(this)
 
-    fun getMethods(key: Any) = HandlerDescriptor.getPolicyMethods(this, key)
+    fun getMethods(key: Any) = HandlerDescriptor.getPolicyMembers(this, key)
 
     fun dispatch(
             handler:      Any,
@@ -55,9 +61,15 @@ abstract class CallbackPolicy(
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock? = null
-    ) = HandlerDescriptor.getDescriptorFor(handler::class)
-            .dispatch(this, handler, callback, callbackType,
+    ): HandleResult {
+        if (handler is CallbackPolicyDispatching) {
+            return handler.dispatch(this, handler, callbackType,
                     greedy, composer, results)
+        }
+        return HandlerDescriptor.getDescriptorFor(handler::class)
+                .dispatch(this, handler, callback, callbackType,
+                        greedy, composer, results)
+    }
 
     protected fun compareGenericArity(o1: Any?, o2: Any?) = when (o1) {
         is KType -> when (o2) {
@@ -86,7 +98,7 @@ abstract class CallbackPolicy(
                 callbackType: KType? = null
         ): List<KClass<*>> {
             val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getHandlersClasses(
+            return HandlerDescriptor.getHandlerClasses(
                     policy, callback, callbackType)
         }
 

@@ -20,8 +20,8 @@ object MapsPolicy : BivariantPolicy({
     override fun approve(
             callback: Any,
             binding:  PolicyMemberBinding
-    ) = (callback as? Mapping)?.let {
-            val format = it.format ?: return true
+    ) = (callback as? Mapping)?.let { mapping ->
+        val format = mapping.format ?: return true
             return binding.dispatcher.let {
                 matches(format, it) || matches(format, it.owningClass)
             }
@@ -29,9 +29,9 @@ object MapsPolicy : BivariantPolicy({
 
     private fun matches(format: Any, sources: KAnnotatedElement) =
             sources.getTaggedAnnotations<UseFormatMatcher<*>>().any {
-                val (annotation, match) = it
-                match.any {
-                    it.formatMatcherClass.objectInstance
+                val (annotation, matcher) = it
+                matcher.any { match ->
+                    match.formatMatcherClass.objectInstance
                             ?.matches(annotation, format) == true
                 }
             }

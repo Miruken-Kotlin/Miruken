@@ -3,16 +3,18 @@ package com.miruken.callback.policy
 import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
 import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.isInstanceCallable
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.full.isSubclassOf
 
 class HandlerDescriptor(val handlerClass: KClass<*>) {
+    private val _policies = lazy {
+        HashMap<CallbackPolicy, CallbackPolicyDescriptor>()
+    }
 
-    private val _policies by lazy {
+    private val _noReceiverpolicies = lazy {
         HashMap<CallbackPolicy, CallbackPolicyDescriptor>()
     }
 
@@ -30,11 +32,12 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             composer:     Handling,
             results:      CollectResultsBlock? = null
     ): HandleResult {
-        return _policies[policy]?.let {
-            dispatch(it.getInvariantMethods(callback, callbackType),
+        return _policies.takeIf { it.isInitialized() }
+                ?.value?.get(policy)?.let {
+            dispatch(it.getInvariantMembers(callback, callbackType),
                     receiver, callback, callbackType,
                     greedy, composer, results).otherwise(greedy) {
-            dispatch(it.getCompatibleMethods(callback, callbackType),
+            dispatch(it.getCompatibleMembers(callback, callbackType),
                     receiver, callback, callbackType,
                     greedy, composer, results)
             }
@@ -58,7 +61,8 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     private fun findCompatibleMembers() {
-        handlerClass.members.filter(::isInstanceMethod).forEach { member ->
+        handlerClass.members.filter {
+            it.isInstanceCallable }.forEach { member ->
             val dispatch by lazy(LazyThreadSafetyMode.NONE) {
                 CallableDispatch(member)
             }
@@ -69,19 +73,28 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                         throw PolicyRejectedException(it, member,
                                 "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
                     val binding    = rule.bind(it, dispatch, annotation)
-                    val descriptor = _policies.getOrPut(it) {
+                    val descriptor = _policies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
                     descriptor.add(binding)
                 }
             }
         }
-    }
 
-    private fun isInstanceMethod(member: KCallable<*>): Boolean
-    {
-        val parameters = member.parameters
-        return parameters.isNotEmpty() &&
-                parameters[0].kind == KParameter.Kind.INSTANCE
+        handlerClass.constructors.forEach { constructor ->
+            val dispatch by lazy(LazyThreadSafetyMode.NONE) {
+                CallableDispatch(constructor)
+            }
+            for ((annotation, usePolicies) in constructor
+                    .getTaggedAnnotations<UsePolicy>()) {
+                usePolicies.single().policy?.also {
+                    val bindingInfo = PolicyMemberBindingInfo(
+                            null, dispatch, annotation, false)
+                    val descriptor = _noReceiverpolicies.value.getOrPut(it) {
+                        CallbackPolicyDescriptor(it) }
+                    descriptor.add(it.bindMethod(bindingInfo))
+                }
+            }
+        }
     }
 
     companion object {
@@ -100,30 +113,75 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
 
         fun resetDescriptors() = DESCRIPTORS.clear()
 
-        fun getHandlersClasses(
+        fun getInstanceHandlers(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null
-        ) = DESCRIPTORS.mapNotNull {
-            it.value.value._policies[policy]?.let {
-                it.getInvariantMethods(callback, callbackType).firstOrNull() ?:
-                it.getCompatibleMethods(callback, callbackType).firstOrNull()
-            }}.sortedWith(policy.memberBindingComparator)
-               .map { it.dispatcher.owningClass }
-               .distinct()
+        ) = getHandlerClasses(policy, callback, callbackType, true, false)
 
-        fun getPolicyMethods(policy: CallbackPolicy, key: Any) =
-                DESCRIPTORS.values.flatMap {
-                    it.value._policies[policy]?.let {
-                        it.getInvariantMethods(key, null) +
-                        it.getCompatibleMethods(key, null)
-                    } ?: emptyList()
-                }.sortedWith(policy.memberBindingComparator)
+        fun getNoReceiverHandlers(
+                policy:       CallbackPolicy,
+                callback:     Any,
+                callbackType: KType? = null
+        ) = getHandlerClasses(policy, callback, callbackType, false, true)
 
-        fun getPolicyMethods(policy: CallbackPolicy) =
-                DESCRIPTORS.values.flatMap {
-                    it.value._policies[policy]?.getInvariantMethods()
-                            ?: emptyList()
+        fun getHandlerClasses(
+                policy:       CallbackPolicy,
+                callback:     Any,
+                callbackType: KType? = null
+        ) = getHandlerClasses(policy, callback, callbackType, true, true)
+
+        private fun getHandlerClasses(
+                policy:       CallbackPolicy,
+                callback:     Any,
+                callbackType: KType?  = null,
+                receiver:     Boolean = false,
+                noReceiver:   Boolean = false
+        ) = DESCRIPTORS.values.mapNotNull { handler ->
+            val descriptor = handler.value
+            descriptor._policies.takeIf { receiver && it.isInitialized() }
+                    ?.value?.get(policy)?.let { recv ->
+                    recv.getInvariantMembers(callback, callbackType)
+                            .firstOrNull() ?:
+                    recv.getCompatibleMembers(callback, callbackType)
+                            .firstOrNull()
+                } ?:
+            descriptor._noReceiverpolicies.takeIf {
+                noReceiver && it.isInitialized() }
+                    ?.value?.get(policy)?.let { recv ->
+                    recv.getInvariantMembers(callback, callbackType)
+                            .firstOrNull() ?:
+                    recv.getCompatibleMembers(callback, callbackType)
+                            .firstOrNull()
+             }
+        }.sortedWith(policy.memberBindingComparator)
+                    .map { it.dispatcher.owningClass }
+                    .distinct()
+
+        fun getPolicyMembers(policy: CallbackPolicy, key: Any) =
+                DESCRIPTORS.values.flatMap { handler ->
+                    val descriptor = handler.value
+                    (descriptor._policies.takeIf { it.isInitialized() }
+                        ?.value?.get(policy)?.let { recv ->
+                            recv.getInvariantMembers(key, null) +
+                            recv.getCompatibleMembers(key, null)
+                        } ?: emptyList()) +
+                    (descriptor._noReceiverpolicies.takeIf { it.isInitialized() }
+                        ?.value?.get(policy)?.let { recv ->
+                            recv.getInvariantMembers(key, null) +
+                            recv.getCompatibleMembers(key, null)
+                        } ?: emptyList())
+                }
+
+        fun getPolicyMembers(policy: CallbackPolicy) =
+                DESCRIPTORS.values.flatMap { handler ->
+                    val descriptor = handler.value
+                    (descriptor._policies.takeIf { it.isInitialized() }
+                        ?.value?.get(policy)?.getInvariantMembers()
+                            ?: emptyList()) +
+                    (descriptor._noReceiverpolicies.takeIf { it.isInitialized() }
+                        ?.value?.get(policy)?.getInvariantMembers()
+                            ?: emptyList())
                 }
 
         private fun validate(handlerClass: KClass<*>) {

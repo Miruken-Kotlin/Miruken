@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.addSorted
 import com.miruken.callback.StringKey
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -21,44 +22,41 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     }
 
     internal fun add(memberBinding: PolicyMemberBinding) {
-        val key = memberBinding.key
-        when (key) {
+        val key  = memberBinding.key
+        val list = when (key) {
             is KType ->
                 if (key.classifier == Any::class)
-                    _unknown.add(memberBinding)
+                    _unknown
                 else
                     _typed.getOrPut(key) { mutableListOf() }
-                        .add(memberBinding)
-            null, Any::class ->
-                _unknown.add(memberBinding)
-            else ->
-                _indexed.getOrPut(key) { mutableListOf() }
-                    .add(memberBinding)
+            null, Any::class -> _unknown
+            else -> _indexed.getOrPut(key) { mutableListOf() }
         }
+        list.addSorted(memberBinding, PolicyMemberBinding.ORDER_BY_ARITY)
     }
 
-    internal fun getInvariantMethods() =
+    internal fun getInvariantMembers() =
         _typed.values.flatMap { it } + _indexed.values.flatMap { it }
 
-    internal fun getInvariantMethods(
+    internal fun getInvariantMembers(
             callback:     Any,
             callbackType: KType?
-    ) = policy.getKey(callback, callbackType)?.let {
-            when (it) {
-                is KType -> _typed[it]
-                is String -> _indexed[it] ?: _indexed[StringKey(it)]
-                else -> _indexed[it]
+    ) = policy.getKey(callback, callbackType)?.let { key ->
+        when (key) {
+                is KType -> _typed[key]
+                is String -> _indexed[key] ?: _indexed[StringKey(key)]
+                else -> _indexed[key]
             }?.filter { it.approve(callback) }
         } ?: emptyList()
 
-    internal fun getCompatibleMethods(
+    internal fun getCompatibleMembers(
             callback:     Any,
             callbackType: KType?
     ) = policy.getKey(callback, callbackType)?.let {
-            _compatible.getOrPut(it) { inferCompatibleMethods(it) }
+            _compatible.getOrPut(it) { inferCompatibleMembers(it) }
         }?.filter { it.approve(callback) } ?: emptyList()
 
-    private fun inferCompatibleMethods(key: Any) =
+    private fun inferCompatibleMembers(key: Any) =
             when (key) {
                 is KType, is KClass<*>, is Class<*> ->
                     policy.getCompatibleKeys(key, _typed.keys).flatMap {

@@ -42,7 +42,7 @@ class PolicyMemberBinding(
             if (!it.canDispatch(handler, this))
                 return HandleResult.NOT_HANDLED
         }
-        val ruleArgs  = rule.resolveArguments(callback)
+        val ruleArgs  = rule?.resolveArguments(callback) ?: emptyArray()
         val filterCallback = callbackArg?.let {
             ruleArgs[it.parameter.index - 1].takeIf { // skip receiver
                 arg -> it.parameterType.jvmErasure.isInstance(arg)
@@ -162,5 +162,12 @@ class PolicyMemberBinding(
                 }
             }
         } success { resolved }
+    }
+
+    companion object {
+        val ORDER_BY_ARITY : Comparator<PolicyMemberBinding> =
+                Comparator { a, b ->
+                    b.dispatcher.arity - a.dispatcher.arity
+                }
     }
 }

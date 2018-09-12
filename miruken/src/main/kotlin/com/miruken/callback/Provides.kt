@@ -3,7 +3,8 @@ package com.miruken.callback
 import com.miruken.callback.policy.CovariantPolicy
 import com.miruken.callback.policy.UsePolicy
 
-@Target(AnnotationTarget.FUNCTION,AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.FUNCTION,AnnotationTarget.PROPERTY,
+        AnnotationTarget.CONSTRUCTOR)
 @UsePolicy(ProvidesPolicy::class)
 annotation class Provides
 

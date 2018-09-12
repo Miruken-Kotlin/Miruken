@@ -14,10 +14,7 @@ import java.lang.reflect.Member
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.javaField
-import kotlin.reflect.jvm.javaGetter
-import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.*
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     init { callable.isAccessible = true }
@@ -25,23 +22,29 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val strict      = annotations.any { it is Strict }
     val returnInfo  = TypeFlags.parse(callable.returnType)
     val arguments   = callable.valueParameters.map { Argument(it) }
+    val owningType  = callable.instanceParameter?.type ?:
+                      callable.returnType
 
-    val owningClass = callable.instanceParameter?.let {
-        it.type.classifier as? KClass<*>
-    } ?: throw IllegalArgumentException(
-            "Only class bindings are supported: $callable")
-
+    inline   val owningClass get() = owningType.jvmErasure
+    inline   val arity       get() = arguments.size
     inline   val returnType  get() = callable.returnType
     override val annotations get() = callable.annotations
 
-    val javaMember: Member = when (callable) {
-        is KFunction<*> -> callable.javaMethod!!
+    val javaMember: Member get() = when (callable) {
+        is KFunction<*> -> callable.javaMethod ?: callable.javaConstructor!!
         is KProperty<*> -> callable.javaGetter ?: callable.javaField!!
         else -> error("Unrecognized callable $callable")
     }
 
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing
+
+    val isConstructor get() =
+        when (callable.parameters.firstOrNull()?.kind) {
+            KParameter.Kind.INSTANCE,
+            KParameter.Kind.EXTENSION_RECEIVER -> false
+            else -> true
+        }
 
     val useFilters by lazy {
         (callable.getTaggedAnnotations<UseFilter>() +
@@ -57,7 +60,11 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
 
     fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
         return try {
-            callable.call(receiver, *arguments)
+            if (isConstructor) {
+                callable.call(*arguments)
+            } else {
+                callable.call(receiver, *arguments)
+            }
         } catch (e: Throwable) {
             val cause = (e as? InvocationTargetException)?.cause ?: e
             if (returnInfo.flags has TypeFlags.PROMISE) {

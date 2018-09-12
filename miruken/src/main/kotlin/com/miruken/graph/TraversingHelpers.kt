@@ -53,7 +53,7 @@ fun Traversing.traverseDescendants(
         Traversal.levelOrder(this, visitor)
     }
     else {
-        Traversal.levelOrder(this, { n -> n !== this && visitor(n) } )
+        Traversal.levelOrder(this) { n -> n !== this && visitor(n) }
     }
 }
 
@@ -65,7 +65,7 @@ fun Traversing.traverseDescendantsReverse(
         Traversal.reverseLevelOrder(this, visitor)
     }
     else {
-        Traversal.reverseLevelOrder(this, { n -> n !== this && visitor(n) } )
+        Traversal.reverseLevelOrder(this) { n -> n !== this && visitor(n) }
     }
 }
 
