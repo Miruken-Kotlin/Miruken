@@ -29,6 +29,9 @@ open class CovariantPolicy(
             available: Collection<Any>
     ) = available.filter { key != it && isCompatibleWith(key, it) }
 
+    override fun getResultType(callback: Any) =
+            keyFunctor(callback) as? KType?
+
     override fun compare(o1: Any?, o2: Any?) = when {
         o1 == o2 -> 0
         o1 == null -> 1

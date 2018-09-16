@@ -3,7 +3,9 @@ package com.miruken.callback.policy
 import com.miruken.TypeFlags
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
+import com.miruken.mapOpenParameters
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.findAnnotation
@@ -51,13 +53,15 @@ class PolicyMemberBinding(
         val filters = resolveFilters(handler, filterCallback, composer)
                 ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
-            val args = resolveArguments(callback, ruleArgs, callbackType, composer)
+            val args = resolveArguments(
+                    callback, ruleArgs, callbackType, composer)
                     ?: return HandleResult.NOT_HANDLED
             dispatcher.invoke(handler, args)
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
-                val args = resolveArguments(callback, ruleArgs, callbackType, comp)
+                val args = resolveArguments(
+                        callback, ruleArgs, callbackType, comp)
                         ?: notHandled()
                 Promise.resolve(dispatcher.invoke(handler, args))
             }, { pipeline, next ->
@@ -123,18 +127,31 @@ class PolicyMemberBinding(
         val parent   = callback as? Inquiry
         val resolved = ruleArguments.copyOf(arguments.size)
 
+        val typeBindings by lazy(LazyThreadSafetyMode.NONE) {
+            val bindings = mutableMapOf<KTypeParameter, KType>()
+            if (callbackType != null) {
+                callbackArg?.typeInfo?.mapOpenParameters(
+                        callbackType, bindings)
+            }
+            policy.getResultType(callback)?.let {
+                dispatcher.returnInfo.mapOpenParameters(it, bindings)
+            }
+            bindings
+        }
+
         return composer.all {
             loop@ for (i in ruleArguments.size until arguments.size) {
                 val argument      = arguments[i]
-                val argumentClass = argument.typeInfo.logicalType.jvmErasure
-                when {
-                    argumentClass == Handling::class ->
-                        resolved[i] = composer
-                    argumentClass.isInstance(this@PolicyMemberBinding) ->
+                val typeInfo      = argument.typeInfo
+                val logicalType   = typeInfo.logicalType
+                val argumentClass = logicalType.jvmErasure
+                when (argumentClass) {
+                    Handling::class -> resolved[i] = composer
+                    PolicyMemberBinding::class ->
                         resolved[i] = this@PolicyMemberBinding
-                    argumentClass == KType::class -> {
+                    KType::class -> {
                         if (callbackType == null) {
-                            val flags = argument.typeInfo.flags
+                            val flags = typeInfo.flags
                             if (!(flags has TypeFlags.OPTIONAL))
                                 return@all HandleResult.NOT_HANDLED
                         } else {
@@ -142,8 +159,10 @@ class PolicyMemberBinding(
                         }
                     }
                     else -> {
-                        val key      = argument.key
-                        val typeInfo = argument.typeInfo
+                        if (argument.isOpen && typeBindings.isEmpty()) {
+                            return@all HandleResult.NOT_HANDLED
+                        }
+                        val key      = argument.getKey(typeBindings)
                         val optional = typeInfo.flags has TypeFlags.OPTIONAL
                         val resolver = KeyResolver.getResolver(
                                 argument.useResolver, composer)

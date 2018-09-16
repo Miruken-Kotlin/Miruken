@@ -55,24 +55,26 @@ open class UseFiltersFilterProvider(
                 val filter = filterClass.objectInstance
                 if (filter != null) return
                 if (useFilter.many) {
-                    bundle.add {
-                        filters.addAll(it.stop.resolveAll(closedFilterType)
-                            .apply {
-                                if (useFilter.required && isEmpty()) {
-                                    throw IllegalStateException(
-                                        "At least one filter is required for '${useFilter.filterClass}'")
+                    bundle.add { b ->
+                        filters.addAll(b.stop.resolveAll(closedFilterType)
+                                .apply {
+                                    if (useFilter.required && isEmpty()) {
+                                        throw IllegalStateException(
+                                                "At least one filter is required for '${useFilter.filterClass}'")
+                                    }
                                 }
-                            }
-                            .filterIsInstance<Filtering<*,*>>()
-                            .filter { f ->
-                                filterImplClasses.add(f::class).also {
-                                    if (it && order >= 0) f.order = order
+                                .asSequence()
+                                .filterIsInstance<Filtering<*,*>>()
+                                .filter { f ->
+                                    filterImplClasses.add(f::class).also {
+                                        if (it && order >= 0) f.order = order
+                                    }
                                 }
-                            })
+                                .toList())
                     }
                 } else {
-                    bundle.add {
-                        (it.stop.resolve(closedFilterType) as? Filtering<*,*>)
+                    bundle.add { b ->
+                        (b.stop.resolve(closedFilterType) as? Filtering<*,*>)
                             ?.takeIf { f ->
                                 filterImplClasses.add(f::class).also {
                                     if (it && order >= 0) f.order = order

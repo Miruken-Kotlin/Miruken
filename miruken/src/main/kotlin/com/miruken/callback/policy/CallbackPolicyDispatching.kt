@@ -6,7 +6,7 @@ import kotlin.reflect.KType
 
 interface CallbackPolicyDispatching {
     fun dispatch(
-            handler:      Any,
+            policy:       CallbackPolicy,
             callback:     Any,
             callbackType: KType?,
             greedy:       Boolean,

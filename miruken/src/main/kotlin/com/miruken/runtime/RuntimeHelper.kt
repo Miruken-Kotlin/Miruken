@@ -150,6 +150,47 @@ fun checkOpenConformance(
     } ?: false
 }
 
+fun KType.mapOpenParameters(
+        closedType:    KType,
+        typeBindings:  MutableMap<KTypeParameter, KType>? = null,
+        skipOpenCheck: Boolean = false
+): MutableMap<KTypeParameter, KType>? {
+    require(classifier == closedType.classifier) {
+        "Expected closeType to have class $classifier"
+    }
+    if (skipOpenCheck || isOpenGeneric) {
+        val closed   = closedType.arguments
+        val bindings = typeBindings ?: mutableMapOf()
+        arguments.forEachIndexed { index, arg ->
+            (arg.type?.classifier as? KTypeParameter)?.let { p ->
+                closed[index].type?.let { bindings[p] = it }
+            }
+        }
+        return bindings
+    }
+    return typeBindings
+}
+
+fun KType.closeType(
+        typeBindings:  Map<KTypeParameter, KType>,
+        skipOpenCheck: Boolean = false
+) = when {
+    skipOpenCheck || isOpenGeneric -> {
+        (classifier as? KTypeParameter)?.let {
+            typeBindings[it] ?: throw IllegalStateException(
+                "Type parameter $it is missing a binding")
+        } ?: jvmErasure.createType(arguments.map { arg ->
+                (arg.type?.classifier as? KTypeParameter)?.let {
+                    KTypeProjection(arg.variance, typeBindings[it] ?:
+                    throw IllegalStateException(
+                            "Type ${this} requires a type binding for $it"))
+            } ?: throw IllegalStateException(
+                        "Argument $arg is not a type parameter")
+        })
+    }
+    else -> this
+}
+
 fun Iterable<*>.filterIsAssignableTo(key: Any) =
         filterIsAssignableTo(ArrayList(), key)
 

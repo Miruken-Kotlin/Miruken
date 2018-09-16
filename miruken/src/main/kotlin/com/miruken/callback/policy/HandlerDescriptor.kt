@@ -31,9 +31,10 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock? = null
-    ): HandleResult {
-        return _policies.takeIf { it.isInitialized() }
-                ?.value?.get(policy)?.let {
+    ) = when (receiver) {
+            is KType, is KClass<*> -> _noReceiverpolicies
+            else -> _policies
+        }.takeIf { it.isInitialized() }?.value?.get(policy)?.let {
             dispatch(it.getInvariantMembers(callback, callbackType),
                     receiver, callback, callbackType,
                     greedy, composer, results).otherwise(greedy) {
@@ -42,7 +43,6 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     greedy, composer, results)
             }
         } ?: HandleResult.NOT_HANDLED
-    }
 
     private fun dispatch(
             members:      Collection<PolicyMemberBinding>,
@@ -88,7 +88,9 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     .getTaggedAnnotations<UsePolicy>()) {
                 usePolicies.single().policy?.also {
                     val bindingInfo = PolicyMemberBindingInfo(
-                            null, dispatch, annotation, false)
+                            null, dispatch, annotation, false).apply {
+                        outKey = constructor.returnType
+                    }
                     val descriptor = _noReceiverpolicies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
                     descriptor.add(it.bindMethod(bindingInfo))
@@ -98,10 +100,10 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     }
 
     companion object {
-        inline fun <reified T> getDescriptorFor() =
-                getDescriptorFor(T::class)
+        inline fun <reified T> getDescriptor() =
+                getDescriptor(T::class)
 
-        fun getDescriptorFor(handlerClass: KClass<*>) =
+        fun getDescriptor(handlerClass: KClass<*>) =
                 try {
                     DESCRIPTORS.getOrPut(handlerClass) {
                         lazy { HandlerDescriptor(handlerClass) }
@@ -117,21 +119,21 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null
-        ) = getHandlerClasses(policy, callback, callbackType, true, false)
+        ) = getHandlerTypes(policy, callback, callbackType, true, false)
 
         fun getNoReceiverHandlers(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null
-        ) = getHandlerClasses(policy, callback, callbackType, false, true)
+        ) = getHandlerTypes(policy, callback, callbackType, false, true)
 
-        fun getHandlerClasses(
+        fun getHandlerTypes(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null
-        ) = getHandlerClasses(policy, callback, callbackType, true, true)
+        ) = getHandlerTypes(policy, callback, callbackType, true, true)
 
-        private fun getHandlerClasses(
+        private fun getHandlerTypes(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType?  = null,
@@ -155,7 +157,9 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             .firstOrNull()
              }
         }.sortedWith(policy.memberBindingComparator)
-                    .map { it.dispatcher.owningClass }
+                    .map {
+                        it.dispatcher.owningType
+                    }
                     .distinct()
 
         fun getPolicyMembers(policy: CallbackPolicy, key: Any) =

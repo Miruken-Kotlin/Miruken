@@ -3,6 +3,7 @@
 package com.miruken.callback
 
 import com.miruken.assertAsync
+import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.policy.MemberBinding
 import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
@@ -104,6 +105,19 @@ class HandlerTest {
         assertEquals(HandleResult.HANDLED, handler.handle(baz))
         assertEquals("handlesGenericBazArity", baz.tag)
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(BazTR('M',2)))
+    }
+
+    @Test fun `Handles callbacks generically with dependencies`() {
+        val foo       = Foo()
+        val bar       = Bar()
+        val baztr     = BazTR(bar, foo)
+        val bazt      = BazT<Bar>()
+        val handler = SpecialHandler()
+        assertEquals(HandleResult.HANDLED,
+                handler.provide(bazt).handle(baztr))
+        assertSame(baztr.stuff, bazt.stuff)
+        assertNotSame(bar, baztr.stuff)
+        assertNotSame(foo, baztr.otherStuff)
     }
 
     @Test fun `Handles explicit generic callbacks`() {
@@ -554,12 +568,34 @@ class HandlerTest {
         }
     }
 
+    @Test fun `Creates instances implicitly`() {
+        val handler = NoReceiverHandler()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        val instance = handler.resolve<ControllerBase>()
+        assertNotNull(instance)
+        assertNotSame(instance, handler.resolve())
+    }
+
+    @Test fun `Creates generic instances implicitly`() {
+        val view    = Screen()
+        val bar     = SpecialBar()
+        val handler = NoReceiverHandler()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = handler
+                .provide(view).provide(bar)
+                .resolve<Controller<Screen, Bar>>()
+        assertNotNull(instance)
+        assertSame(view, instance!!.view)
+        assertSame(bar, instance.model)
+    }
+
     @Test fun `Ignores options at boundary `() {
         val handler = Handler().withFilters(LogFilter<Any,Any?>())
         val options = FilterOptions()
         assertEquals(HandleResult.HANDLED, handler.handle(options))
         assertEquals(1, options.providers!!.size)
-        assertEquals(HandleResult.NOT_HANDLED, handler.stop.handle(FilterOptions()))
+        assertEquals(HandleResult.NOT_HANDLED,
+                handler.stop.handle(FilterOptions()))
     }
 
     @Test fun `Checks filter open conformance`() {
@@ -822,6 +858,19 @@ class HandlerTest {
         @Handles
         fun handleAnything(cb: Any?) {}
 
+        @Handles
+        fun <T,R> handlesGenericBaz(
+                baztr: BazTR<T, R>,
+                bazt:  BazT<T>,
+                t:     T,
+                r:     R
+        ) : HandleResult? {
+            bazt.stuff       = t
+            baztr.stuff      = t
+            baztr.otherStuff = r
+            return HandleResult.HANDLED
+        }
+
         @Provides
         fun providesManyBars(): List<Bar> {
             return listOf(
@@ -942,6 +991,15 @@ class HandlerTest {
             val view:  TView,
             val model: TModel
     ) : ControllerBase()
+
+    class Screen @Provides constructor() : AutoCloseable {
+        var disposed: Boolean = false
+            private set
+
+        override fun close() {
+            disposed = true
+        }
+    }
 
     class FilteringHandler : Handler(), Filtering<Bar, Unit> {
         override var order: Int? = null

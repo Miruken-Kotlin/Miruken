@@ -58,6 +58,9 @@ open class BivariantPolicy(
         return compatible
     }
 
+    override fun getResultType(callback: Any) =
+            output.getResultType(callback)
+
     override fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
         output.acceptResult(result, binding)
 

@@ -41,6 +41,8 @@ abstract class CallbackPolicy(
             available: Collection<Any>
     ): Collection<Any>
 
+    open fun getResultType(callback: Any): KType? = null
+
     open fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
             when (result) {
                 null, Unit -> HandleResult.NOT_HANDLED
@@ -63,10 +65,10 @@ abstract class CallbackPolicy(
             results:      CollectResultsBlock? = null
     ): HandleResult {
         if (handler is CallbackPolicyDispatching) {
-            return handler.dispatch(this, handler, callbackType,
+            return handler.dispatch(this, callback, callbackType,
                     greedy, composer, results)
         }
-        return HandlerDescriptor.getDescriptorFor(handler::class)
+        return HandlerDescriptor.getDescriptor(handler::class)
                 .dispatch(this, handler, callback, callbackType,
                         greedy, composer, results)
     }
@@ -93,12 +95,34 @@ abstract class CallbackPolicy(
     }
 
     companion object {
-        fun getCallbackHandlerClasses(
+        fun getCallbackPolicy(callback: Any) =
+                (callback as? DispatchingCallback)?.policy
+                        ?: HandlesPolicy
+
+        fun getInstanceHandlers(
                 callback:     Any,
                 callbackType: KType? = null
-        ): List<KClass<*>> {
+        ): List<KType> {
             val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getHandlerClasses(
+            return HandlerDescriptor.getInstanceHandlers(
+                    policy, callback, callbackType)
+        }
+
+        fun getNoReceiverHandlers(
+                callback:     Any,
+                callbackType: KType? = null
+        ): List<KType> {
+            val policy = getCallbackPolicy(callback)
+            return HandlerDescriptor.getNoReceiverHandlers(
+                    policy, callback, callbackType)
+        }
+
+        fun getHandlerTypes(
+                callback:     Any,
+                callbackType: KType? = null
+        ): List<KType> {
+            val policy = getCallbackPolicy(callback)
+            return HandlerDescriptor.getHandlerTypes(
                     policy, callback, callbackType)
         }
 
@@ -111,9 +135,5 @@ abstract class CallbackPolicy(
                 policy.getMethods(it)
             } ?: emptyList()
         }
-
-        fun getCallbackPolicy(callback: Any) =
-                (callback as? DispatchingCallback)?.policy
-                        ?: HandlesPolicy
     }
 }

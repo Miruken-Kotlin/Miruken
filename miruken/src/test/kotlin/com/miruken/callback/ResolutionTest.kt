@@ -26,7 +26,7 @@ class ResolutionTest {
     }
 
     @Test fun `Overrides providers resolving`() {
-        HandlerDescriptor.getDescriptorFor<DemoProvider>()
+        HandlerDescriptor.getDescriptor<DemoProvider>()
         val demo    = DemoHandler()
         val handler = Handler()
         val resolve = handler.provide(demo).infer.resolve<DemoHandler>()
@@ -34,7 +34,7 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves handlers`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
+        HandlerDescriptor.getDescriptor<EmailHandler>()
         val handler = EmailProvider()
         val id      = handler.infer.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
@@ -47,8 +47,8 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves all handlers`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
-        HandlerDescriptor.getDescriptorFor<OfflineHandler>()
+        HandlerDescriptor.getDescriptor<EmailHandler>()
+        HandlerDescriptor.getDescriptor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
         val id      = handler.inferAll.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
@@ -62,7 +62,7 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves handlers with filters`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
+        HandlerDescriptor.getDescriptor<EmailHandler>()
         val handler = (EmailProvider()
                     + BillingImpl()
                     + RepositoryProvider()

@@ -139,16 +139,16 @@ open class Inquiry(
     ): Boolean {
         if (resolution is Promise<*>) {
             isAsync = true
-            _promises.add(resolution.then {
+            _promises.add(resolution.then { r ->
                 when {
-                    !strict && it is Collection<*> -> it.filter {
+                    !strict && r is Collection<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
                     }
-                    !strict && it is Array<*> -> it.filter {
+                    !strict && r is Array<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
                     }
                     else ->
-                        it?.takeIf { isSatisfied(it, greedy, composer) }
+                        r?.takeIf { isSatisfied(it, greedy, composer) }
                 }
             })
         } else if (!isSatisfied(resolution, greedy, composer)) {

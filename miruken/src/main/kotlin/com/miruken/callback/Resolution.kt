@@ -41,7 +41,7 @@ open class Resolution(
                 callbackType: KType?
         ): Any {
             val handlers = CallbackPolicy
-                    .getCallbackHandlerClasses(callback, callbackType)
+                    .getHandlerTypes(callback, callbackType)
             if (handlers.isEmpty()) return callback
             val bundle = Bundle(false).apply {
                 add({ it.handle(NoResolving(callback, callbackType)) }) { it }
