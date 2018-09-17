@@ -2,7 +2,6 @@ package com.miruken.mvc
 
 import com.miruken.callback.handle
 import com.miruken.context.Context
-import com.miruken.context.ContextImpl
 import com.miruken.mvc.option.RegionOptions
 import com.miruken.mvc.option.displayImmediate
 import com.miruken.mvc.option.unloadRegion
@@ -20,7 +19,7 @@ class NavigatorTest {
 
     @Before
     fun setup() {
-        rootContext = ContextImpl()
+        rootContext = Context()
         navigator   = Navigator(TestViewRegion())
         rootContext.addHandlers(navigator, TestContainer())
     }

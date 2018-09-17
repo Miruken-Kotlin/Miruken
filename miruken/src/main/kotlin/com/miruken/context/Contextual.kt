@@ -2,23 +2,23 @@ package com.miruken.context
 
 import com.miruken.event.Event
 
-data class ContextChangingEvent<T: Context>(
-        val contextual: Contextual<T>,
-        val oldContext: T?,
-        var newContext: T?)
+data class ContextChangingEvent(
+        val contextual: Contextual,
+        val oldContext: Context?,
+        var newContext: Context?)
 
-data class ContextChangedEvent<T: Context>(
-        val contextual: Contextual<T>,
-        val oldContext: T?,
-        val newContext: T?)
+data class ContextChangedEvent(
+        val contextual: Contextual,
+        val oldContext: Context?,
+        val newContext: Context?)
 
-interface Contextual<T: Context> {
-    var context:         T?
-    val contextChanging: Event<ContextChangingEvent<T>>
-    val contextChanged:  Event<ContextChangedEvent<T>>
+interface Contextual {
+    var context:         Context?
+    val contextChanging: Event<ContextChangingEvent>
+    val contextChanged:  Event<ContextChangedEvent>
 }
 
-fun <T: Context> Contextual<T>.getContext(required: Boolean = false) =
+fun Contextual.getContext(required: Boolean = false) =
         context ?: if (required) {
             error("Required context is not available")
         } else {

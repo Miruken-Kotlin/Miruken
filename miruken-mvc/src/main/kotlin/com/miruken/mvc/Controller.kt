@@ -4,7 +4,6 @@ import com.miruken.callback.COMPOSER
 import com.miruken.callback.Handling
 import com.miruken.callback.resolve
 import com.miruken.context.Context
-import com.miruken.context.ContextImpl
 import com.miruken.context.ContextualHandler
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.policy.PolicyOwner
@@ -99,7 +98,7 @@ open class Controller : ContextualHandler<Context>(),
     // Context
 
     protected val io get() =
-        _io ?: context ?: ContextImpl()
+        _io ?: context ?: Context()
 
     protected fun endContext() = context?.end()
 
