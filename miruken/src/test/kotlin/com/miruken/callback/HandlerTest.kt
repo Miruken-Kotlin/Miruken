@@ -112,7 +112,7 @@ class HandlerTest {
         val bar       = Bar()
         val baztr     = BazTR(bar, foo)
         val bazt      = BazT<Bar>()
-        val handler = SpecialHandler()
+        val handler   = SpecialHandler()
         assertEquals(HandleResult.HANDLED,
                 handler.provide(bazt).handle(baztr))
         assertSame(baztr.stuff, bazt.stuff)
@@ -568,7 +568,7 @@ class HandlerTest {
         }
     }
 
-    @Test fun `Creates instances implicitly`() {
+    @Test fun `Creates instance implicitly`() {
         val handler = NoReceiverHandler()
         HandlerDescriptor.getDescriptor<ControllerBase>()
         val instance = handler.resolve<ControllerBase>()
@@ -576,7 +576,7 @@ class HandlerTest {
         assertNotSame(instance, handler.resolve())
     }
 
-    @Test fun `Creates generic instances implicitly`() {
+    @Test fun `Creates generic instance implicitly`() {
         val view    = Screen()
         val bar     = SpecialBar()
         val handler = NoReceiverHandler()
@@ -587,6 +587,74 @@ class HandlerTest {
         assertNotNull(instance)
         assertSame(view, instance!!.view)
         assertSame(bar, instance.model)
+    }
+
+    @Test fun `Infers instance implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        assertEquals(HandleResult.HANDLED,
+                NoReceiverHandler().infer.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers generic instance implicitly`() {
+        val boo = Boo()
+        val baz = SpecialBaz()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = NoReceiverHandler().infer
+                .provide(boo).provide(baz)
+                .resolve<Controller<Boo, Baz>>()
+        assertNotNull(instance)
+        assertSame(boo, instance!!.view)
+        assertSame(baz, instance.model)
+    }
+
+    @Test fun `Provides instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        val bar = NoReceiverHandler().infer.resolve<Bar>()
+        assertNotNull(bar)
+    }
+
+    @Test fun `Provides dependencies implicitly`() {
+        val view = Screen()
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = NoReceiverHandler().infer
+                .provide(view).resolve<Controller<Screen, Bar>>()
+        assertNotNull(instance)
+        assertSame(view, instance!!.view)
+    }
+
+    @Test fun `Detects circular dependencies`() {
+        val view = Screen()
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = NoReceiverHandler().infer
+                .provide(view).resolve<Controller<Screen, Bar>>()
+        assertNull(instance)
+    }
+
+    @Test fun `Selects greediest consructor`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<OverloadedConstructors>()
+        val handler = NoReceiverHandler()
+        val ctor    = handler.resolve<OverloadedConstructors>()
+        assertNotNull(ctor)
+        assertNull(ctor!!.foo)
+        assertNull(ctor.bar)
+        val ctor1   = handler.provide(Foo())
+                .resolve<OverloadedConstructors>()
+        assertNotNull(ctor1)
+        assertNotNull(ctor1!!.foo)
+        assertNull(ctor1.bar)
+        val ctor2   = handler.provide(Foo()).provide(Bar())
+                .resolve<OverloadedConstructors>()
+        assertNotNull(ctor2)
+        assertNotNull(ctor2!!.foo)
+        assertNotNull(ctor2.bar)
     }
 
     @Test fun `Ignores options at boundary `() {
@@ -998,6 +1066,20 @@ class HandlerTest {
 
         override fun close() {
             disposed = true
+        }
+    }
+
+    class OverloadedConstructors @Provides constructor() {
+        var foo: Foo? = null
+        var bar: Bar? = null
+
+        @Provides constructor(foo: Foo) : this() {
+            this.foo = foo
+        }
+
+        @Provides constructor(foo: Foo, bar: Bar) : this() {
+            this.foo = foo
+            this.bar = bar
         }
     }
 
