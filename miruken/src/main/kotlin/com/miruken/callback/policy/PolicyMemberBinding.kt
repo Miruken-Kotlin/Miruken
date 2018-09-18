@@ -50,18 +50,21 @@ class PolicyMemberBinding(
                 arg -> it.parameterType.jvmErasure.isInstance(arg)
             } ?: return HandleResult.NOT_HANDLED
         } ?: callback
-        val filters = resolveFilters(handler, filterCallback, composer)
+        val resultType = policy.getResultType(callback)
+                ?: dispatcher.returnType
+        val filters = resolveFilters(
+                handler, filterCallback, resultType, composer)
                 ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
-            val args = resolveArguments(
-                    callback, ruleArgs, callbackType, composer)
+            val args = resolveArguments(callback,
+                    ruleArgs, callbackType, resultType, composer)
                     ?: return HandleResult.NOT_HANDLED
             dispatcher.invoke(handler, args)
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
-                val args = resolveArguments(
-                        callback, ruleArgs, callbackType, comp)
+                val args = resolveArguments(callback,
+                        ruleArgs, callbackType, resultType, comp)
                         ?: notHandled()
                 Promise.resolve(dispatcher.invoke(handler, args))
             }, { pipeline, next ->
@@ -93,9 +96,10 @@ class PolicyMemberBinding(
 
     @Suppress("UNCHECKED_CAST")
     private fun resolveFilters(
-            handler:  Any,
-            callback: Any,
-            composer: Handling
+            handler:    Any,
+            callback:   Any,
+            resultType: KType,
+            composer:   Handling
     ): List<Filtering<Any,Any?>>? {
         if ((callback as? FilteringCallback)?.canFilter == false) {
             return emptyList()
@@ -104,7 +108,7 @@ class PolicyMemberBinding(
                 ?: callback::class.starProjectedType
         val filterType   = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(callbackType),
-                KTypeProjection.invariant(dispatcher.returnType)))
+                KTypeProjection.invariant(resultType)))
         return composer.getOrderedFilters(filterType, this,
                 (handler as? Filtering<*,*>)?.let {
                     listOf(InstanceFilterProvider(it))
@@ -118,6 +122,7 @@ class PolicyMemberBinding(
             callback:      Any,
             ruleArguments: Array<Any?>,
             callbackType:  KType?,
+            resultType:    KType,
             composer:      Handling
     ): Array<Any?>? {
         val arguments = dispatcher.arguments
@@ -133,9 +138,7 @@ class PolicyMemberBinding(
                 callbackArg?.typeInfo?.mapOpenParameters(
                         callbackType, bindings)
             }
-            policy.getResultType(callback)?.let {
-                dispatcher.returnInfo.mapOpenParameters(it, bindings)
-            }
+            dispatcher.returnInfo.mapOpenParameters(resultType, bindings)
             bindings
         }
 

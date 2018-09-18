@@ -320,8 +320,6 @@ open class Promise<out T>
         val EMPTY      = resolve(null as Any?)
         val EMPTY_LIST = resolve(emptyList<Any>())
 
-
-
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }
 

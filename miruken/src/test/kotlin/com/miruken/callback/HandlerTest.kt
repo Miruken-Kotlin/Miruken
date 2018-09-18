@@ -8,6 +8,9 @@ import com.miruken.callback.policy.MemberBinding
 import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
+import com.miruken.context.Context
+import com.miruken.context.ContextAware
+import com.miruken.context.ContextualImpl
 import com.miruken.runtime.checkOpenConformance
 import com.miruken.typeOf
 import org.junit.Rule
@@ -637,6 +640,84 @@ class HandlerTest {
         assertNull(instance)
     }
 
+    @Test fun `Creates singleton instance implicitly`() {
+        val handler = NoReceiverHandler()
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ApplicationBase>()
+        val app = handler.resolve<ApplicationBase>()
+        assertNotNull(app)
+        assertSame(app, handler.resolve())
+    }
+
+    @Test fun `Creates generic singleton instance implicitly`() {
+        val view    = Screen()
+        val handler = NoReceiverHandler().infer
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        HandlerDescriptor.getDescriptor<Application<*>>()
+        val app1 = handler.provide(view)
+                .resolve<Application<Controller<Screen, Bar>>>()
+        assertNotNull(app1)
+        assertSame(view, app1!!.rootController.view)
+        assertSame(view, app1.mainScreen)
+        val app2 = handler.provide(view)
+                .resolve<Application<Controller<Screen, Bar>>>()
+        assertSame(app1, app2)
+    }
+
+    @Test fun `Creates contextual instance implicitly`() {
+        var screen: Screen? = null
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(NoReceiverHandler())
+            screen = context.resolve()
+            assertNotNull(screen)
+            assertSame(context, screen!!.context)
+            assertSame(screen, context.resolve())
+            assertFalse(screen!!.closed)
+            context.createChild().use { child ->
+                val screen2 = child.resolve<Screen>()
+                assertNotNull(screen2)
+                assertNotSame(screen, screen2)
+                assertSame(child, screen2!!.context)
+            }
+        }
+        assertTrue(screen!!.closed)
+    }
+
+    @Test fun `Creates generic contextual instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+    }
+
+    @Test fun `Rejects changing managed context`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(NoReceiverHandler())
+            val screen = context.resolve<Screen>()
+            assertSame(context, screen!!.context)
+            assertFailsWith(IllegalStateException::class,
+                    "Managed instances cannot change context") {
+                screen.context = Context()
+            }
+        }
+    }
+
+    @Test fun `Detaches context when assigned null`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(NoReceiverHandler())
+            val screen = context.resolve<Screen>()
+            assertSame(context, screen!!.context)
+            screen.context = null
+            assertNotSame(screen, context.resolve()!!)
+            assertTrue(screen.closed)
+        }
+    }
+
     @Test fun `Selects greediest consructor`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<OverloadedConstructors>()
@@ -1060,14 +1141,27 @@ class HandlerTest {
             val model: TModel
     ) : ControllerBase()
 
-    class Screen @Provides constructor() : AutoCloseable {
-        var disposed: Boolean = false
+    open class Screen @Provides @ContextAware
+        constructor() : ContextualImpl(), AutoCloseable {
+
+        var closed: Boolean = false
             private set
 
         override fun close() {
-            disposed = true
+            closed = true
         }
     }
+
+    class ScreenModel<M> @Provides @ContextAware
+        constructor(val model: M): Screen()
+
+    open class ApplicationBase @Provides @Singleton constructor()
+
+    class Application<C: ControllerBase>
+        @Provides @Singleton constructor(
+            val rootController: C,
+            val mainScreen:     Screen
+        ): ApplicationBase()
 
     class OverloadedConstructors @Provides constructor() {
         var foo: Foo? = null
