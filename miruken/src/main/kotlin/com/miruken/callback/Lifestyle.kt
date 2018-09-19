@@ -42,5 +42,5 @@ abstract class LifestyleProvider(
     }
 }
 
-val LIFESTYLES = ConcurrentHashMap<
+private val LIFESTYLES = ConcurrentHashMap<
         Pair<MemberBinding, KType>, Lifestyle<*>>()

@@ -25,10 +25,10 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
             .value?.let { dispatcher ->
                 @Suppress("UNCHECKED_CAST")
                 resolveArguments(dispatcher, callback,
-                        binding, composer, next, provider)
-                        ?.let { args ->
-                            dispatcher.invoke(this, args) as Promise<Res>
-                        }
+                    binding, composer, next, provider)
+                    ?.let { args ->
+                        dispatcher.invoke(this, args) as Promise<Res>
+                    }
             } ?: next()
 
     private fun resolveArguments(

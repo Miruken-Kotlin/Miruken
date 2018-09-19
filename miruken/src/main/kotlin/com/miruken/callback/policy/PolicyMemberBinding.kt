@@ -66,7 +66,15 @@ class PolicyMemberBinding(
                 val args = resolveArguments(callback,
                         ruleArgs, callbackType, resultType, comp)
                         ?: notHandled()
-                Promise.resolve(dispatcher.invoke(handler, args))
+                val baseResult   = dispatcher.invoke(handler, args)
+                val handleResult = when (baseResult) {
+                    is HandleResult -> baseResult
+                    else -> policy.acceptResult(baseResult, this)
+                }
+                if (!handleResult.handled) {
+                    throw NotHandledException(handleResult)
+                }
+                Promise.resolve(baseResult)
             }, { pipeline, next ->
                 { comp, proceed ->
                     if (!proceed) notHandled()

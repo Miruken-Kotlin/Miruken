@@ -56,4 +56,4 @@ object ContextualLifestyleProvider : LifestyleProvider({
 @Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION,
         AnnotationTarget.PROPERTY)
 @UseFilterProvider(ContextualLifestyleProvider::class)
-annotation class ContextAware
+annotation class Scoped

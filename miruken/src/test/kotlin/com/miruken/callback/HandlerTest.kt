@@ -9,7 +9,7 @@ import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context
-import com.miruken.context.ContextAware
+import com.miruken.context.Scoped
 import com.miruken.context.ContextualImpl
 import com.miruken.runtime.checkOpenConformance
 import com.miruken.typeOf
@@ -1148,7 +1148,7 @@ class HandlerTest {
             val model: TModel
     ) : ControllerBase()
 
-    open class Screen @Provides @ContextAware
+    open class Screen @Provides @Scoped
         constructor() : ContextualImpl(), AutoCloseable {
 
         var closed: Boolean = false
@@ -1159,7 +1159,7 @@ class HandlerTest {
         }
     }
 
-    class ScreenModel<M> @Provides @ContextAware
+    class ScreenModel<M> @Provides @Scoped
         constructor(val model: M): Screen()
 
     open class ApplicationBase @Provides @Singleton constructor()
@@ -1364,7 +1364,10 @@ class HandlerTest {
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
-        ) = Promise.reject(IllegalStateException("System shutdown"))
+        ): Promise<Res> {
+            next()
+            return Promise.reject(IllegalStateException("System shutdown"))
+        }
     }
 
     companion object {
