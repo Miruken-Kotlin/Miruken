@@ -691,6 +691,13 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
     }
 
+    @Test fun `Rejects contextual creation if no context`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        val screen = NoReceiverHandler().resolve<Screen>()
+        assertNull(screen)
+    }
+
     @Test fun `Rejects changing managed context`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()

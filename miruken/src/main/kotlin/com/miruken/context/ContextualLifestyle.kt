@@ -24,7 +24,8 @@ class ContextualLifestyle<Res>: Lifestyle<Res>() {
                     (instance as? AutoCloseable)?.close()
                 }
             } else {
-                context.contextEnded += { _ ->
+                context.contextEnded += { event ->
+                    _cache.remove(event.context)
                     (instance as? AutoCloseable)?.close()
                 }
             }

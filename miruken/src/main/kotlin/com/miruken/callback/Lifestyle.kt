@@ -35,7 +35,7 @@ abstract class LifestyleProvider(
             binding:    MemberBinding,
             filterType: KType,
             composer:   Handling
-    ): List<Filtering<*,*>> {
+    ): List<Lifestyle<*>> {
         val resultType = filterType.arguments[1].type!!
         return listOf(LIFESTYLES.getOrPut(
                 binding to resultType, initializer))
