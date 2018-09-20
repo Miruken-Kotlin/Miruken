@@ -181,6 +181,15 @@ open class Inquiry(
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
+        when (key) {
+            is KType -> (key.classifier as? KClass<*>)?.objectInstance
+            is KClass<*> -> key.objectInstance
+            else -> null
+        }?.also {
+            if (include(it, true, greedy, composer)) {
+                return HandleResult.HANDLED_AND_STOP
+            }
+        }
         val result = if (implied(handler, greedy, composer))
             HandleResult.HANDLED else HandleResult.NOT_HANDLED
         if (result.handled && !greedy) return result

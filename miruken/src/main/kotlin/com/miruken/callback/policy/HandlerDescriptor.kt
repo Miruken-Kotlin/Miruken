@@ -7,6 +7,7 @@ import com.miruken.runtime.isInstanceCallable
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
 
 class HandlerDescriptor(val handlerClass: KClass<*>) {
@@ -21,6 +22,9 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
     init {
         validate(handlerClass)
         findCompatibleMembers()
+        handlerClass.companionObject?.also {
+            getDescriptor(it)
+        }
     }
 
     internal fun dispatch(

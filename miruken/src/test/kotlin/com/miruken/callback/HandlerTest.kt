@@ -53,6 +53,25 @@ class HandlerTest {
         assertEquals(1, foo.handled)
     }
 
+    @Test fun `Handles singleton callbacks implicitly`() {
+        val foo = Foo()
+        assertEquals(HandleResult.HANDLED, SingletonHandler.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Handles explicit callbacks implicitly`() {
+        val foo = Foo()
+        assertEquals(HandleResult.HANDLED, ExplicitCompanionHandler.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Handles implicit companion callbacks implicitly`() {
+        val foo = Foo()
+        assertEquals(HandleResult.HANDLED, HandlerAdapter(
+                ImplicitCompanionHandler.Companion).handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
     @Test fun `Handles callbacks implicitly using adapter`() {
         val foo     = Foo()
         val handler = HandlerAdapter(ControllerBase())
@@ -185,6 +204,29 @@ class HandlerTest {
     @Test fun `Provides callbacks implicitly`() {
         val handler = SimpleHandler()
         val bar     = handler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides singleton callbacks implicitly`() {
+        val bar     = SingletonHandler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides explicit companion callbacks implicitly`() {
+        val bar     = ExplicitCompanionHandler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides implicit companion callbacks implicitly`() {
+        val bar = HandlerAdapter(
+                ImplicitCompanionHandler.Companion)
+                .resolve<Bar>()
         assertNotNull(bar!!)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
@@ -600,6 +642,30 @@ class HandlerTest {
         assertEquals(1, foo.handled)
     }
 
+    @Test fun `Infers singleton callbacks implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<SingletonHandler>()
+        assertEquals(HandleResult.HANDLED,
+                NoReceiverHandler().infer.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers explicit companion callbacks implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<ExplicitCompanionHandler>()
+        assertEquals(HandleResult.HANDLED,
+                NoReceiverHandler().infer.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers implicit companion callbacks implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<ImplicitCompanionHandler>()
+        assertEquals(HandleResult.HANDLED,
+                NoReceiverHandler().infer.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
     @Test fun `Infers generic instance implicitly`() {
         val boo = Boo()
         val baz = SpecialBaz()
@@ -837,14 +903,12 @@ class HandlerTest {
         // Handles
 
         @Handles
-        fun handleFooImplicitly(foo: Foo)
-        {
+        fun handleFooImplicitly(foo: Foo) {
             ++foo.handled
         }
 
         @Handles
-        fun handleSpecialFooImplicitly(foo: SpecialFoo) : HandleResult?
-        {
+        fun handleSpecialFooImplicitly(foo: SpecialFoo) : HandleResult? {
             ++foo.handled
             foo.hasComposer = true
             return null
@@ -855,8 +919,7 @@ class HandlerTest {
                 HandleResult.NOT_HANDLED_AND_STOP
 
         @Handles
-        fun handleBarExplicitly(bar: Bar, composer: Handling): HandleResult?
-        {
+        fun handleBarExplicitly(bar: Bar, composer: Handling): HandleResult? {
             ++bar.handled
             bar.hasComposer = true
             return when {
@@ -1115,6 +1178,46 @@ class HandlerTest {
 
         @Handles
         fun <T: Bar> rejectBars(cb: T?): HandleResult? = null
+    }
+
+    object SingletonHandler : Handler() {
+        @Handles
+        fun handleFooImplicitly(foo: Foo) {
+            ++foo.handled
+        }
+
+        @Provides
+        fun provideBarImplicitly(): Bar  {
+            return Bar().apply { handled = 1 }
+        }
+    }
+
+    class ImplicitCompanionHandler : Handler() {
+        companion object {
+            @Handles
+            fun handleFooImplicitly(foo: Foo) {
+                ++foo.handled
+            }
+
+            @Provides
+            fun provideBarImplicitly(): Bar  {
+                return Bar().apply { handled = 1 }
+            }
+        }
+    }
+
+    class ExplicitCompanionHandler {
+        companion object : Handler() {
+            @Handles
+            fun handleFooImplicitly(foo: Foo) {
+                ++foo.handled
+            }
+
+            @Provides
+            fun provideBarImplicitly(): Bar  {
+                return Bar().apply { handled = 1 }
+            }
+        }
     }
 
     class InvalidHandler : Handler() {
