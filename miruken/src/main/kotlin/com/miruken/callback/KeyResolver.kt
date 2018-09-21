@@ -3,7 +3,7 @@ package com.miruken.callback
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
 import com.miruken.runtime.closeType
-import com.miruken.runtime.getFirstTaggedAnnotation
+import com.miruken.runtime.getFirstMetaAnnotation
 import com.miruken.runtime.toTypedArray
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
@@ -161,7 +161,7 @@ open class KeyResolver : KeyResolving {
                 ?: composer.resolve(resolverClass) as? KeyResolving
 
         fun getResolverClass(annotatedElement: KAnnotatedElement) =
-                annotatedElement.getFirstTaggedAnnotation<UseKeyResolver>()
+                annotatedElement.getFirstMetaAnnotation<UseKeyResolver>()
                         ?.keyResolverClass
 
         object DefaultResolver : KeyResolver()

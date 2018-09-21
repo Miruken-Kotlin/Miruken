@@ -3,7 +3,7 @@ package com.miruken.map
 import com.miruken.callback.policy.BivariantPolicy
 import com.miruken.callback.policy.PolicyMemberBinding
 import com.miruken.callback.policy.UsePolicy
-import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.getMetaAnnotations
 import kotlin.reflect.KAnnotatedElement
 
 @Target(AnnotationTarget.FUNCTION)
@@ -28,7 +28,7 @@ object MapsPolicy : BivariantPolicy({
         } ?: false
 
     private fun matches(format: Any, sources: KAnnotatedElement) =
-            sources.getTaggedAnnotations<UseFormatMatcher<*>>().any {
+            sources.getMetaAnnotations<UseFormatMatcher<*>>().any {
                 val (annotation, matcher) = it
                 matcher.any { match ->
                     match.formatMatcherClass.objectInstance

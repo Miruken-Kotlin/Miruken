@@ -5,7 +5,7 @@ import com.miruken.callback.Strict
 import com.miruken.callback.UseFilter
 import com.miruken.callback.UseFilterProvider
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import com.miruken.runtime.normalize
@@ -47,14 +47,14 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
         }
 
     val useFilters by lazy {
-        (callable.getTaggedAnnotations<UseFilter>() +
-         owningClass.getTaggedAnnotations()).flatMap { it.second }
+        (callable.getMetaAnnotations<UseFilter>() +
+         owningClass.getMetaAnnotations()).flatMap { it.second }
                 .normalize()
     }
 
     val useFilterProviders by lazy {
-        (callable.getTaggedAnnotations<UseFilterProvider>() +
-         owningClass.getTaggedAnnotations()).flatMap { it.second }
+        (callable.getMetaAnnotations<UseFilterProvider>() +
+         owningClass.getMetaAnnotations()).flatMap { it.second }
                 .normalize()
     }
 

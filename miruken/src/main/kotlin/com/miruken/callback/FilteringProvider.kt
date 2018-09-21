@@ -13,7 +13,7 @@ interface FilteringProvider {
     ): List<Filtering<*,*>>
 }
 
-interface ValidateFilteringProvider {
+interface FilterValidating {
     fun validate(binding: MemberBinding)
 }
 

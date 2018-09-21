@@ -40,6 +40,7 @@ class HandlingPropertyProvider<out T>(
     ): ReadOnlyProperty<Any, T> {
         val typeInfo = TypeFlags.parse(property.returnType)
         val key      = KeyResolver.getKey(property, typeInfo, property.name)
+            ?: error("Unable to determine key for '$property'")
         return KeyResolver.getResolver(property, handler)?.let {
             it.validate(key, typeInfo)
             factory(key, typeInfo, handler, it)

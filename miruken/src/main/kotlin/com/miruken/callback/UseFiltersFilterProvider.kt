@@ -59,8 +59,7 @@ open class UseFiltersFilterProvider(
                         filters.addAll(b.stop.resolveAll(closedFilterType)
                                 .apply {
                                     if (useFilter.required && isEmpty()) {
-                                        throw IllegalStateException(
-                                                "At least one filter is required for '${useFilter.filterClass}'")
+                                        error("At least one filter is required for '${useFilter.filterClass}'")
                                     }
                                 }
                                 .asSequence()
@@ -81,8 +80,7 @@ open class UseFiltersFilterProvider(
                                     filters.add(f)
                                 }
                             } ?: if (useFilter.required) {
-                                    throw IllegalStateException(
-                                        "A filter is required for '${useFilter.filterClass}'")
+                                    error("A filter is required for '${useFilter.filterClass}'")
                             }
                     }
                 }

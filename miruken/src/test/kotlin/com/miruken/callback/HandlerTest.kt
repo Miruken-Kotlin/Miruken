@@ -290,6 +290,15 @@ class HandlerTest {
         assertEquals(1, bar.handled)
     }
 
+
+    @Test fun `Provides callbacks for interface`() {
+        val handler = SimpleHandler()
+        val bar     = handler.resolve<BarComponent>()
+        assertNotNull(bar!!)
+        assertEquals(Bar::class, bar::class)
+        assertEquals(1, bar.handled)
+    }
+
     @Test fun `Provides null if not handled`() {
         val handler = SimpleHandler()
         val bam     = handler.resolve<Bam>()
@@ -730,6 +739,9 @@ class HandlerTest {
         val app2 = handler.provide(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
+        val app3 = handler.provide(view)
+                .resolve<App<Controller<Screen, Bar>>>()
+        assertSame(app1, app3)
     }
 
     @Test fun `Creates contextual instance implicitly`() {
@@ -872,7 +884,11 @@ class HandlerTest {
 
     class FooDecorator(foo: Foo) : Foo()
 
-    open class Bar : Testing()
+    interface BarComponent {
+        val handled: Int
+    }
+
+    open class Bar : Testing(), BarComponent
 
     class SpecialBar : Bar()
 
@@ -943,7 +959,7 @@ class HandlerTest {
         }
 
         @Handles
-        fun <T,R> handlesGenericBazArity(baz: BazTR<T, R>) : HandleResult? {
+        fun <T,R> handlesGenericBazr(baz: BazTR<T, R>) : HandleResult? {
             if ((baz.stuff as Any)::class == Char::class) return null
             baz.tag = "handlesGenericBazArity"
             return HandleResult.HANDLED
@@ -1267,11 +1283,16 @@ class HandlerTest {
 
     open class ApplicationBase @Provides @Singleton constructor()
 
+    interface App<C: ControllerBase> {
+        val rootController: C
+        val mainScreen:     Screen
+    }
+
     class Application<C: ControllerBase>
         @Provides @Singleton constructor(
-            val rootController: C,
-            val mainScreen:     Screen
-        ): ApplicationBase()
+                override val rootController: C,
+                override val mainScreen:     Screen
+        ): ApplicationBase(), App<C>
 
     class OverloadedConstructors @Provides constructor() {
         var foo: Foo? = null

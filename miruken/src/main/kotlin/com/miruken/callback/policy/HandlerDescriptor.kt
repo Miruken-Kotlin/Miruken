@@ -2,7 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
-import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.isInstanceCallable
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -71,7 +71,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 CallableDispatch(member)
             }
             for ((annotation, usePolicies) in member
-                    .getTaggedAnnotations<UsePolicy>()) {
+                    .getMetaAnnotations<UsePolicy>()) {
                 usePolicies.single().policy?.also {
                     val rule = it.match(dispatch) ?:
                         throw PolicyRejectedException(it, member,
@@ -89,7 +89,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 CallableDispatch(constructor)
             }
             for ((annotation, usePolicies) in constructor
-                    .getTaggedAnnotations<UsePolicy>()) {
+                    .getMetaAnnotations<UsePolicy>()) {
                 usePolicies.single().policy?.also {
                     val bindingInfo = PolicyMemberBindingInfo(
                             null, dispatch, annotation, false).apply {

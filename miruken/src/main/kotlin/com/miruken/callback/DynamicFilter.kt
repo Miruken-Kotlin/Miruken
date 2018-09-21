@@ -57,7 +57,8 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                     argumentClass.isInstance(provider) ->
                         resolved[i] = provider
                     else -> {
-                        val key      = argument.getKey()
+                        val key = argument.getKey()
+                                ?: return@all HandleResult.NOT_HANDLED
                         val typeInfo = argument.typeInfo
                         val optional = typeInfo.flags has TypeFlags.OPTIONAL
                         val resolver = KeyResolver.getResolver(

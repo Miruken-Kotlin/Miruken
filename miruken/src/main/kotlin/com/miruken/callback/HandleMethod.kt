@@ -33,12 +33,12 @@ open class HandleMethod(
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling
-    ) = getTarget(handler)?.let {
-        val targetClass = it::class
+    ) = getTarget(handler)?.let { target ->
+        val targetClass = target::class
         targetClass.matchMethod(method)?.let {
             BINDINGS.getOrPut(method to targetClass) {
                     HandleMethodBinding(method, it)
-            }}?.dispatch(it, this, composer)
+            }}?.dispatch(target, this, composer)
     } ?: HandleResult.NOT_HANDLED
 
     private fun getTarget(target: Any): Any? {

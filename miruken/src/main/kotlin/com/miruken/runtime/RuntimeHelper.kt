@@ -39,7 +39,7 @@ fun isCompatibleWith(
                 }
                 rightSide.isOpenGeneric ->
                     checkOpenConformance(rightSide, leftSide, typeBindings) ||
-                    (leftSide.isOpenGeneric &&
+                    (leftSide.isGeneric &&
                             checkOpenConformance(leftSide, rightSide, typeBindings))
                 leftSide.isOpenGeneric ->
                     checkOpenConformance(leftSide, rightSide, typeBindings)
@@ -155,16 +155,61 @@ fun KType.mapOpenParameters(
         typeBindings:  MutableMap<KTypeParameter, KType>? = null,
         skipOpenCheck: Boolean = false
 ): MutableMap<KTypeParameter, KType>? {
-    require(classifier == closedType.classifier) {
-        "Expected closeType to have class $classifier"
-    }
-    if (skipOpenCheck || isOpenGeneric) {
-        val closed   = closedType.arguments
-        val bindings = typeBindings ?: mutableMapOf()
-        arguments.forEachIndexed { index, arg ->
-            (arg.type?.classifier as? KTypeParameter)?.let { p ->
-                closed[index].type?.let { bindings[p] = it }
+    if (skipOpenCheck || (isOpenGeneric && !closedType.isGeneric)) {
+        val closed   = closedType.classifier
+        val openType = when (classifier) {
+            closed -> this
+            else -> (classifier as? KClass<*>)
+                    ?.allSupertypes?.firstOrNull {
+                        it.classifier == closed
+                    } ?: this
+        }
+        val bindings by lazy(LazyThreadSafetyMode.NONE) {
+            typeBindings ?: mutableMapOf() }
+        (openType.classifier as? KClass<*>)?.let { openClass ->
+            val conformance = when (closed) {
+                is KClass<*> -> when (openClass) {
+                    closed -> closedType.arguments.map { it.type }
+                    else -> closed.allSupertypes.firstOrNull {
+                        it.classifier == openClass
+                    }?.let { conform ->
+                        val otherArgs   = closedType.arguments
+                        val otherParams = closed.typeParameters
+                        conform.arguments.map { arg ->
+                            val classifier = arg.type?.classifier
+                            arg.type.takeIf { classifier is KClass<*> }
+                                    ?: otherParams.indexOf(classifier)
+                                            .takeIf { it >= 0 }
+                                            ?.let { otherArgs[it].type }
+                                    ?: return bindings
+                        }
+                    }
+                }
+                is KTypeParameter ->
+                    closed.upperBounds.firstOrNull {
+                        it.classifier == openClass
+                    }?.arguments?.map { it.type }
+                else -> null
             }
+            conformance?.zip(
+                    arguments.map { it.type }.zip(
+                            openClass.typeParameters)) { ls, rs ->
+                when {
+                    ls == null -> true /* Star */
+                    rs.first == null -> true /* Star */
+                    ls.isOpenGeneric || rs.first!!.isOpenGeneric ->
+                        isCompatibleWith(ls, rs.first!!, bindings)
+                    rs.second.variance == KVariance.IN ->
+                        ls.isSubtypeOf(rs.first!!)
+                    else ->
+                        rs.first!!.isSubtypeOf(ls)
+                }
+            }?.all { it }
+        } ?: (classifier as? KTypeParameter)?.let { p ->
+             if (p.upperBounds.all { closedType.isSubtypeOf(it) }) {
+                 bindings[p] = closedType
+                 return bindings
+             }
         }
         return bindings
     }
@@ -174,18 +219,15 @@ fun KType.mapOpenParameters(
 fun KType.closeType(
         typeBindings:  Map<KTypeParameter, KType>,
         skipOpenCheck: Boolean = false
-) = when {
+): KType? = when {
     skipOpenCheck || isOpenGeneric -> {
         (classifier as? KTypeParameter)?.let {
-            typeBindings[it] ?: throw IllegalStateException(
-                "Type parameter $it is missing a binding")
+            typeBindings[it] ?: return null
         } ?: jvmErasure.createType(arguments.map { arg ->
                 (arg.type?.classifier as? KTypeParameter)?.let {
                     KTypeProjection(arg.variance, typeBindings[it] ?:
-                    throw IllegalStateException(
-                            "Type ${this} requires a type binding for $it"))
-            } ?: throw IllegalStateException(
-                        "Argument $arg is not a type parameter")
+                    return null)
+            } ?: KTypeProjection(arg.variance, arg.type)
         })
     }
     else -> this
@@ -255,7 +297,7 @@ val KType.allTopLevelInterfaces : Set<KType> get() =
 
 val KClass<*>.allTopLevelInterfaces : Set<KType> get() {
     val allInterfaces = allInterfaces
-    return allInterfaces.filter { iface ->
+    return allInterfaces.asSequence().filter { iface ->
         allInterfaces.all { iface === it || !it.isSubtypeOf(iface) }
     }.toHashSet()
 }
@@ -270,23 +312,23 @@ fun KType.isTopLevelInterfaceOf(clazz: KClass<*>) =
         clazz.allTopLevelInterfaces.contains(this)
 
 inline fun <reified T: Annotation> KAnnotatedElement
-        .getTaggedAnnotations() = annotations.mapNotNull {
+        .getMetaAnnotations() = annotations.mapNotNull {
             val tags = it.annotationClass.annotations.filterIsInstance<T>()
             if (tags.isNotEmpty()) it to tags else null
         }
 
 inline fun <reified T: Annotation> AnnotatedElement
-        .getTaggedAnnotations() = annotations.mapNotNull {
+        .getMetaAnnotations() = annotations.mapNotNull {
     val tags = it.annotationClass.annotations.filterIsInstance<T>()
     if (tags.isNotEmpty()) it to tags else null
 }
 
 inline fun <reified T: Annotation> KAnnotatedElement
-        .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
+        .getFirstMetaAnnotation() = getMetaAnnotations<T>()
         .firstOrNull()?.second?.firstOrNull()
 
 inline fun <reified T: Annotation> AnnotatedElement
-        .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
+        .getFirstMetaAnnotation() = getMetaAnnotations<T>()
         .firstOrNull()?.second?.firstOrNull()
 
 fun KClass<*>.matchMethod(method: Method): Method? {

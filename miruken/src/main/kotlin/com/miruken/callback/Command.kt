@@ -90,7 +90,8 @@ open class Command(
             composer:     Handling
     ): HandleResult {
         val size = _results.size
-        return policy!!.dispatch(handler, this, callbackType,
+        return policy!!.dispatch(handler, this,
+                this.callbackType ?: callbackType,
                 greedy, composer, ::respond).otherwise(
                 _results.size > size)
     }

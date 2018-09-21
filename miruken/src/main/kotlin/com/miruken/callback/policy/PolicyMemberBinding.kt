@@ -4,6 +4,7 @@ import com.miruken.TypeFlags
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.mapOpenParameters
+import com.miruken.runtime.closeType
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
@@ -44,27 +45,46 @@ class PolicyMemberBinding(
             if (!it.canDispatch(handler, this))
                 return HandleResult.NOT_HANDLED
         }
+
         val ruleArgs  = rule?.resolveArguments(callback) ?: emptyArray()
         val filterCallback = callbackArg?.let {
             ruleArgs[it.parameter.index - 1].takeIf { // skip receiver
                 arg -> it.parameterType.jvmErasure.isInstance(arg)
             } ?: return HandleResult.NOT_HANDLED
         } ?: callback
-        val resultType = policy.getResultType(callback)
-                ?: dispatcher.returnType
+
+        val typeBindings = lazy(LazyThreadSafetyMode.NONE) {
+            val bindings = mutableMapOf<KTypeParameter, KType>()
+            if (callbackType != null) {
+                callbackArg?.typeInfo?.mapOpenParameters(
+                        callbackType, bindings)
+            }
+            policy.getResultType(callback)?.also {
+                dispatcher.returnInfo.mapOpenParameters(it, bindings)
+            }
+            bindings
+        }
+        val resultType =
+            if (dispatcher.returnInfo.flags has TypeFlags.OPEN) {
+                dispatcher.returnType.closeType(typeBindings.value)
+                    ?: return HandleResult.NOT_HANDLED
+            } else {
+                dispatcher.returnType
+            }
+
         val filters = resolveFilters(
-                handler, filterCallback, resultType, composer)
+                handler, filterCallback, callbackType, resultType, composer)
                 ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
             val args = resolveArguments(callback,
-                    ruleArgs, callbackType, resultType, composer)
+                    ruleArgs, callbackType, composer, typeBindings)
                     ?: return HandleResult.NOT_HANDLED
             dispatcher.invoke(handler, args)
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
                 val args = resolveArguments(callback,
-                        ruleArgs, callbackType, resultType, comp)
+                        ruleArgs, callbackType, comp, typeBindings)
                         ?: notHandled()
                 val baseResult   = dispatcher.invoke(handler, args)
                 val handleResult = when (baseResult) {
@@ -104,18 +124,20 @@ class PolicyMemberBinding(
 
     @Suppress("UNCHECKED_CAST")
     private fun resolveFilters(
-            handler:    Any,
-            callback:   Any,
-            resultType: KType,
-            composer:   Handling
+            handler:      Any,
+            callback:     Any,
+            callbackType: KType?,
+            resultType:   KType,
+            composer:     Handling
     ): List<Filtering<Any,Any?>>? {
         if ((callback as? FilteringCallback)?.canFilter == false) {
             return emptyList()
         }
-        val callbackType = callbackArg?.parameterType
+        val cbType = callbackType ?: callbackArg?.parameterType
                 ?: callback::class.starProjectedType
+
         val filterType   = Filtering::class.createType(listOf(
-                KTypeProjection.invariant(callbackType),
+                KTypeProjection.invariant(cbType),
                 KTypeProjection.invariant(resultType)))
         return composer.getOrderedFilters(filterType, this,
                 (handler as? Filtering<*,*>)?.let {
@@ -130,8 +152,8 @@ class PolicyMemberBinding(
             callback:      Any,
             ruleArguments: Array<Any?>,
             callbackType:  KType?,
-            resultType:    KType,
-            composer:      Handling
+            composer:      Handling,
+            typeBindings:  Lazy<MutableMap<KTypeParameter, KType>>
     ): Array<Any?>? {
         val arguments = dispatcher.arguments
         if (arguments.size == ruleArguments.size)
@@ -139,16 +161,6 @@ class PolicyMemberBinding(
 
         val parent   = callback as? Inquiry
         val resolved = ruleArguments.copyOf(arguments.size)
-
-        val typeBindings by lazy(LazyThreadSafetyMode.NONE) {
-            val bindings = mutableMapOf<KTypeParameter, KType>()
-            if (callbackType != null) {
-                callbackArg?.typeInfo?.mapOpenParameters(
-                        callbackType, bindings)
-            }
-            dispatcher.returnInfo.mapOpenParameters(resultType, bindings)
-            bindings
-        }
 
         return composer.all {
             loop@ for (i in ruleArguments.size until arguments.size) {
@@ -170,10 +182,11 @@ class PolicyMemberBinding(
                         }
                     }
                     else -> {
-                        if (argument.isOpen && typeBindings.isEmpty()) {
+                        if (argument.isOpen && typeBindings.value.isEmpty()) {
                             return@all HandleResult.NOT_HANDLED
                         }
-                        val key      = argument.getKey(typeBindings)
+                        val key = argument.getKey(typeBindings.value)
+                            ?: return@all HandleResult.NOT_HANDLED
                         val optional = typeInfo.flags has TypeFlags.OPTIONAL
                         val resolver = KeyResolver.getResolver(
                                 argument.useResolver, composer)

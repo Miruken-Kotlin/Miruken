@@ -2,7 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.normalize
 import com.miruken.toKType
 import java.lang.reflect.InvocationTargetException
@@ -23,19 +23,19 @@ class HandleMethodBinding(
         method.declaringClass.getAnnotation(SkipFilters::class.java) != null
 
     private val useFilters by lazy {
-        (method.getTaggedAnnotations<UseFilter>() +
-         method.declaringClass.getTaggedAnnotations() +
-         protocolMethod.getTaggedAnnotations() +
-         protocolMethod.declaringClass.getTaggedAnnotations())
+        (method.getMetaAnnotations<UseFilter>() +
+         method.declaringClass.getMetaAnnotations() +
+         protocolMethod.getMetaAnnotations() +
+         protocolMethod.declaringClass.getMetaAnnotations())
                 .flatMap { it.second }
                 .normalize()
     }
 
     private val useFilterProviders by lazy {
-        (method.getTaggedAnnotations<UseFilterProvider>() +
-         method.declaringClass.getTaggedAnnotations() +
-         protocolMethod.getTaggedAnnotations() +
-         protocolMethod.declaringClass.getTaggedAnnotations())
+        (method.getMetaAnnotations<UseFilterProvider>() +
+         method.declaringClass.getMetaAnnotations() +
+         protocolMethod.getMetaAnnotations() +
+         protocolMethod.declaringClass.getMetaAnnotations())
                 .flatMap { it.second }
                 .normalize()
     }
@@ -64,10 +64,10 @@ class HandleMethodBinding(
                         next((c ?: comp).skipFilters(), p ?: true)
                     })
                 }
-            })(composer, true).let {
-                it.takeIf {
-                    protocolMethod.returnType.isInstance(it)
-                } ?: it.get()
+            })(composer, true).let { result ->
+                result.takeIf {
+                    protocolMethod.returnType.isInstance(result)
+                } ?: result.get()
             }
         } catch (e: Throwable) {
             when (e) {

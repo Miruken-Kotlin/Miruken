@@ -64,8 +64,8 @@ fun Handling.resolveAllAsync(
     return handle(inquiry, true) success  {
         inquiry.result?.let {
             when (it) {
-                is Promise<*> -> it.then {
-                    it as? List<Any> ?: emptyList()
+                is Promise<*> -> it.then { r ->
+                    r as? List<Any> ?: emptyList()
                 }
                 else -> Promise.EMPTY_LIST
             }

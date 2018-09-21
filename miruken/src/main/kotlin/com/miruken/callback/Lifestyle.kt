@@ -26,7 +26,7 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
     ): Res?
 }
 
-abstract class LifestyleProvider(
+open class LifestyleProvider(
         private val initializer: () -> Lifestyle<*>
 ): FilteringProvider {
     override val required = true

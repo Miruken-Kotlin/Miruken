@@ -75,7 +75,7 @@ abstract class CallbackPolicy(
 
     protected fun compareGenericArity(o1: Any?, o2: Any?) = when (o1) {
         is KType -> when (o2) {
-            is KType -> o2.arguments.size -  o1.arguments.size
+            is KType -> o2.arguments.size - o1.arguments.size
             is KClass<*> -> o2.typeParameters.size - o1.arguments.size
             is Class<*> -> o2.typeParameters.size - o1.arguments.size
             else -> 0

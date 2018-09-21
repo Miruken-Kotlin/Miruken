@@ -30,16 +30,15 @@ class BatchingHandler(
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        return batch?.let {
-            it.takeIf { (callback as? BatchingCallback)
-                ?.canBatch != false }
-                ?.let {
-                    if (_completed.get() > 0 && callback !is Composition)
-                        batch = null
-                    it.handle(callback, callbackType, greedy, composer)
-                            .takeIf { it.stop || it.handled }
+        return batch?.takeIf {
+                (callback as? BatchingCallback)?.canBatch != false
+            }?.let { b ->
+                if (_completed.get() > 0 && callback !is Composition) {
+                    batch = null
                 }
-        } ?: super.handleCallback(
+                b.handle(callback, callbackType, greedy, composer)
+                        .takeIf { it.stop || it.handled }
+            } ?: super.handleCallback(
                 callback, callbackType, greedy, composer)
     }
 
