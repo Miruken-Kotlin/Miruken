@@ -108,12 +108,12 @@ abstract class CallbackPolicy(
                     policy, callback, callbackType)
         }
 
-        fun getNoReceiverHandlers(
+        fun getConstructorHandlers(
                 callback:     Any,
                 callbackType: KType? = null
         ): List<KType> {
             val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getNoReceiverHandlers(
+            return HandlerDescriptor.getConstructorHandlers(
                     policy, callback, callbackType)
         }
 

@@ -15,7 +15,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
         HashMap<CallbackPolicy, CallbackPolicyDescriptor>()
     }
 
-    private val _noReceiverpolicies = lazy {
+    private val _constructorPolicies = lazy {
         HashMap<CallbackPolicy, CallbackPolicyDescriptor>()
     }
 
@@ -36,7 +36,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
             composer:     Handling,
             results:      CollectResultsBlock? = null
     ) = when (receiver) {
-            is KType, is KClass<*> -> _noReceiverpolicies
+            is KType, is KClass<*> -> _constructorPolicies
             else -> _policies
         }.takeIf { it.isInitialized() }?.value?.get(policy)?.let {
             dispatch(it.getInvariantMembers(callback, callbackType),
@@ -95,7 +95,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             null, dispatch, annotation, false).apply {
                         outKey = constructor.returnType
                     }
-                    val descriptor = _noReceiverpolicies.value.getOrPut(it) {
+                    val descriptor = _constructorPolicies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
                     descriptor.add(it.bindMethod(bindingInfo))
                 }
@@ -125,7 +125,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 callbackType: KType? = null
         ) = getHandlerTypes(policy, callback, callbackType, true, false)
 
-        fun getNoReceiverHandlers(
+        fun getConstructorHandlers(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null
@@ -141,19 +141,20 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType?  = null,
-                receiver:     Boolean = false,
-                noReceiver:   Boolean = false
+                instances:    Boolean = false,
+                constructors: Boolean = false
         ) = DESCRIPTORS.values.mapNotNull { handler ->
             val descriptor = handler.value
-            descriptor._policies.takeIf { receiver && it.isInitialized() }
+            descriptor._policies.takeIf {
+                instances && it.isInitialized() }
                     ?.value?.get(policy)?.let { recv ->
                     recv.getInvariantMembers(callback, callbackType)
                             .firstOrNull() ?:
                     recv.getCompatibleMembers(callback, callbackType)
                             .firstOrNull()
                 } ?:
-            descriptor._noReceiverpolicies.takeIf {
-                noReceiver && it.isInitialized() }
+            descriptor._constructorPolicies.takeIf {
+                constructors && it.isInitialized() }
                     ?.value?.get(policy)?.let { recv ->
                     recv.getInvariantMembers(callback, callbackType)
                             .firstOrNull() ?:
@@ -161,10 +162,8 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             .firstOrNull()
              }
         }.sortedWith(policy.memberBindingComparator)
-                    .map {
-                        it.dispatcher.owningType
-                    }
-                    .distinct()
+                .map { it.dispatcher.owningType }
+                .distinct()
 
         fun getPolicyMembers(policy: CallbackPolicy, key: Any) =
                 DESCRIPTORS.values.flatMap { handler ->
@@ -174,7 +173,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             recv.getInvariantMembers(key, null) +
                             recv.getCompatibleMembers(key, null)
                         } ?: emptyList()) +
-                    (descriptor._noReceiverpolicies.takeIf { it.isInitialized() }
+                    (descriptor._constructorPolicies.takeIf { it.isInitialized() }
                         ?.value?.get(policy)?.let { recv ->
                             recv.getInvariantMembers(key, null) +
                             recv.getCompatibleMembers(key, null)
@@ -187,7 +186,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     (descriptor._policies.takeIf { it.isInitialized() }
                         ?.value?.get(policy)?.getInvariantMembers()
                             ?: emptyList()) +
-                    (descriptor._noReceiverpolicies.takeIf { it.isInitialized() }
+                    (descriptor._constructorPolicies.takeIf { it.isInitialized() }
                         ?.value?.get(policy)?.getInvariantMembers()
                             ?: emptyList())
                 }

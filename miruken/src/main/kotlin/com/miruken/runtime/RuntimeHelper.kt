@@ -157,13 +157,11 @@ fun KType.mapOpenParameters(
 ): MutableMap<KTypeParameter, KType>? {
     if (skipOpenCheck || (isOpenGeneric && !closedType.isGeneric)) {
         val closed   = closedType.classifier
-        val openType = when (classifier) {
-            closed -> this
-            else -> (classifier as? KClass<*>)
-                    ?.allSupertypes?.firstOrNull {
-                        it.classifier == closed
-                    } ?: this
-        }
+        val openType = if (classifier != closed) {
+            (classifier as? KClass<*>)?.allSupertypes?.firstOrNull {
+                it.classifier == closed
+            } ?: this
+        } else this
         val bindings by lazy(LazyThreadSafetyMode.NONE) {
             typeBindings ?: mutableMapOf() }
         (openType.classifier as? KClass<*>)?.let { openClass ->
