@@ -13,10 +13,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class HandleMethodTest {
     @Test fun `Handles method calls`() {
@@ -179,7 +176,7 @@ class HandleMethodTest {
         )
         val otherType = typeOf<LogFilter2<Int>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
-        assertTrue(checkOpenConformance(openType,otherType, bindings))
+        assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(1, bindings.size)
         assertEquals(typeOf<Int>(), bindings.values.first())
     }

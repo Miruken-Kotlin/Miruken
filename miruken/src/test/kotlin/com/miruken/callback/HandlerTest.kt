@@ -841,7 +841,7 @@ class HandlerTest {
         )
         val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,String>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
-        assertTrue(checkOpenConformance(openType,otherType, bindings))
+        assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(2, bindings.size)
         assertEquals(typeOf<Boo>(), bindings.values.first())
         assertEquals(typeOf<String>(), bindings.values.elementAt(1))
@@ -855,7 +855,7 @@ class HandlerTest {
         )
         val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
-        assertTrue(checkOpenConformance(openType,otherType, bindings))
+        assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(1, bindings.size)
         assertEquals(typeOf<Unit>(), bindings.values.first())
     }
@@ -867,7 +867,7 @@ class HandlerTest {
                         Filtering::class.typeParameters[1].createType()))
         )
         val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
-        assertFalse(checkOpenConformance(openType, otherType))
+        assertFalse(openType.checkOpenConformance(otherType))
     }
 
     /** Callbacks */

@@ -38,11 +38,13 @@ fun isCompatibleWith(
                     }
                 }
                 rightSide.isOpenGeneric ->
-                    checkOpenConformance(rightSide, leftSide, typeBindings) ||
-                    (leftSide.isGeneric &&
-                            checkOpenConformance(leftSide, rightSide, typeBindings))
+                    rightSide.checkOpenConformance(
+                            leftSide, typeBindings, true) ||
+                    (leftSide.isGeneric && leftSide.checkOpenConformance(
+                            rightSide, typeBindings, true))
                 leftSide.isOpenGeneric ->
-                    checkOpenConformance(leftSide, rightSide, typeBindings)
+                    leftSide.checkOpenConformance(
+                            rightSide, typeBindings, true)
                 else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
@@ -102,68 +104,18 @@ fun isCompatibleWith(
     }
 }
 
-fun checkOpenConformance(
-        openType:   KType,
-        otherType:  KType,
-        parameters: MutableMap<KTypeParameter, KType>? = null
-): Boolean {
-    return (openType.classifier as? KClass<*>)?.let { openClass ->
-        val other       = otherType.classifier
-        val conformance = when (other) {
-            is KClass<*> -> when (openClass) {
-                other -> otherType.arguments.map { it.type }
-                else -> other.allSupertypes.firstOrNull {
-                    it.classifier == openClass
-                }?.let { conform ->
-                    val otherArgs   = otherType.arguments
-                    val otherParams = other.typeParameters
-                    conform.arguments.map { arg ->
-                        val classifier = arg.type?.classifier
-                        arg.type.takeIf { classifier is KClass<*> }
-                                ?: otherParams.indexOf(classifier)
-                                        .takeIf { it >= 0 }
-                                        ?.let { otherArgs[it].type }
-                                ?: return false
-                    }
-                }
-            }
-            is KTypeParameter ->
-                other.upperBounds.firstOrNull {
-                    it.classifier == openClass
-                }?.arguments?.map { it.type }
-            else -> null
-        }
-        conformance?.zip(
-                openType.arguments.map { it.type }.zip(
-                openClass.typeParameters)) { ls, rs ->
-            when {
-                ls == null -> true /* Star */
-                rs.first == null -> true /* Star */
-                ls.isOpenGeneric || rs.first!!.isOpenGeneric ->
-                    isCompatibleWith(ls, rs.first!!, parameters)
-                rs.second.variance == KVariance.IN ->
-                    ls.isSubtypeOf(rs.first!!)
-                else ->
-                    rs.first!!.isSubtypeOf(ls)
-            }
-        }?.all { it }
-    } ?: false
-}
-
-fun KType.mapOpenParameters(
+fun KType.checkOpenConformance(
         closedType:    KType,
         typeBindings:  MutableMap<KTypeParameter, KType>? = null,
         skipOpenCheck: Boolean = false
-): MutableMap<KTypeParameter, KType>? {
-    if (skipOpenCheck || (isOpenGeneric && !closedType.isGeneric)) {
+): Boolean {
+    if (skipOpenCheck || (isOpenGeneric && !closedType.isOpenGeneric)) {
         val closed   = closedType.classifier
         val openType = if (classifier != closed) {
             (classifier as? KClass<*>)?.allSupertypes?.firstOrNull {
                 it.classifier == closed
             } ?: this
         } else this
-        val bindings by lazy(LazyThreadSafetyMode.NONE) {
-            typeBindings ?: mutableMapOf() }
         (openType.classifier as? KClass<*>)?.let { openClass ->
             val conformance = when (closed) {
                 is KClass<*> -> when (openClass) {
@@ -171,15 +123,15 @@ fun KType.mapOpenParameters(
                     else -> closed.allSupertypes.firstOrNull {
                         it.classifier == openClass
                     }?.let { conform ->
-                        val otherArgs   = closedType.arguments
-                        val otherParams = closed.typeParameters
+                        val closedArgs   = closedType.arguments
+                        val closedParams = closed.typeParameters
                         conform.arguments.map { arg ->
                             val classifier = arg.type?.classifier
                             arg.type.takeIf { classifier is KClass<*> }
-                                    ?: otherParams.indexOf(classifier)
+                                    ?: closedParams.indexOf(classifier)
                                             .takeIf { it >= 0 }
-                                            ?.let { otherArgs[it].type }
-                                    ?: return bindings
+                                            ?.let { closedArgs[it].type }
+                                    ?: return false
                         }
                     }
                 }
@@ -196,22 +148,23 @@ fun KType.mapOpenParameters(
                     ls == null -> true /* Star */
                     rs.first == null -> true /* Star */
                     ls.isOpenGeneric || rs.first!!.isOpenGeneric ->
-                        isCompatibleWith(ls, rs.first!!, bindings)
+                        isCompatibleWith(ls, rs.first!!, typeBindings)
                     rs.second.variance == KVariance.IN ->
                         ls.isSubtypeOf(rs.first!!)
                     else ->
                         rs.first!!.isSubtypeOf(ls)
                 }
-            }?.all { it }
+            }?.all { it }?.also { return it }
         } ?: (classifier as? KTypeParameter)?.let { p ->
              if (p.upperBounds.all { closedType.isSubtypeOf(it) }) {
-                 bindings[p] = closedType
-                 return bindings
+                 if (typeBindings != null) {
+                     typeBindings[p] = closedType
+                     return true
+                 }
              }
         }
-        return bindings
     }
-    return typeBindings
+    return false
 }
 
 fun KType.closeType(

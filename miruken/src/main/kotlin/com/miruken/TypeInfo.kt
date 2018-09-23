@@ -1,6 +1,6 @@
 package com.miruken
 
-import com.miruken.runtime.mapOpenParameters
+import com.miruken.runtime.checkOpenConformance
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 
@@ -16,7 +16,7 @@ fun TypeInfo.mapOpenParameters(
 ): MutableMap<KTypeParameter, KType>? {
     if (flags has TypeFlags.OPEN) {
         val bindings = typeBindings ?: mutableMapOf()
-        componentType.mapOpenParameters(closedType, bindings, true)
+        componentType.checkOpenConformance(closedType, bindings, true)
         return bindings
     }
     return typeBindings
