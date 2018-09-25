@@ -624,16 +624,16 @@ class HandlerTest {
 
     @Test fun `Creates instance implicitly`() {
         HandlerDescriptor.getDescriptor<ControllerBase>()
-        val instance = Factory.resolve<ControllerBase>()
+        val instance = TypeHandlers.resolve<ControllerBase>()
         assertNotNull(instance)
-        assertNotSame(instance, Factory.resolve())
+        assertNotSame(instance, TypeHandlers.resolve())
     }
 
     @Test fun `Creates generic instance implicitly`() {
         val view = Screen()
         val bar  = SpecialBar()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
-        val instance = Factory
+        val instance = TypeHandlers
                 .provide(view).provide(bar)
                 .resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
@@ -645,7 +645,7 @@ class HandlerTest {
         val foo = Foo()
         HandlerDescriptor.getDescriptor<ControllerBase>()
         assertEquals(HandleResult.HANDLED,
-                Factory.infer.handle(foo))
+                TypeHandlers.infer.handle(foo))
         assertEquals(1, foo.handled)
     }
 
@@ -653,23 +653,21 @@ class HandlerTest {
         val foo = Foo()
         HandlerDescriptor.getDescriptor<SingletonHandler>()
         assertEquals(HandleResult.HANDLED,
-                Factory.infer.handle(foo))
+                TypeHandlers.infer.handle(foo))
         assertEquals(1, foo.handled)
     }
 
     @Test fun `Infers explicit companion callbacks implicitly`() {
         val foo = Foo()
         HandlerDescriptor.getDescriptor<ExplicitCompanionHandler>()
-        assertEquals(HandleResult.HANDLED,
-                Factory.infer.handle(foo))
+        assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
         assertEquals(1, foo.handled)
     }
 
     @Test fun `Infers implicit companion callbacks implicitly`() {
         val foo = Foo()
         HandlerDescriptor.getDescriptor<ImplicitCompanionHandler>()
-        assertEquals(HandleResult.HANDLED,
-                Factory.infer.handle(foo))
+        assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
         assertEquals(1, foo.handled)
     }
 
@@ -678,7 +676,7 @@ class HandlerTest {
         val baz = SpecialBaz()
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
-        val instance = Factory.infer
+        val instance = TypeHandlers.infer
                 .provide(boo).provide(baz)
                 .resolve<Controller<Boo, Baz>>()
         assertNotNull(instance)
@@ -689,7 +687,7 @@ class HandlerTest {
     @Test fun `Provides instance implicitly`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ControllerBase>()
-        val bar = Factory.infer.resolve<Bar>()
+        val bar = TypeHandlers.infer.resolve<Bar>()
         assertNotNull(bar)
     }
 
@@ -698,7 +696,7 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
-        val instance = Factory.infer
+        val instance = TypeHandlers.infer
                 .provide(view).resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
         assertSame(view, instance!!.view)
@@ -708,7 +706,7 @@ class HandlerTest {
         val view = Screen()
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
-        val instance = Factory.infer
+        val instance = TypeHandlers.infer
                 .provide(view).resolve<Controller<Screen, Bar>>()
         assertNull(instance)
     }
@@ -716,14 +714,14 @@ class HandlerTest {
     @Test fun `Creates singleton instance implicitly`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ApplicationBase>()
-        val app = Factory.resolve<ApplicationBase>()
+        val app = TypeHandlers.resolve<ApplicationBase>()
         assertNotNull(app)
-        assertSame(app, Factory.resolve())
+        assertSame(app, TypeHandlers.resolve())
     }
 
     @Test fun `Creates generic singleton instance implicitly`() {
         val view    = Screen()
-        val handler = Factory.infer
+        val handler = TypeHandlers.infer
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
@@ -746,7 +744,7 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
         Context().use { context ->
-            context.addHandlers(Factory)
+            context.addHandlers(TypeHandlers)
             screen = context.resolve()
             assertNotNull(screen)
             assertSame(context, screen!!.context)
@@ -766,7 +764,7 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
-            context.addHandlers(Factory)
+            context.addHandlers(TypeHandlers)
             val view = context.provide(Bar()).resolve<View<Bar>>()
             assertNotNull(view)
             assertSame(view, context.resolve())
@@ -778,7 +776,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
-            context.addHandlers(Factory)
+            context.addHandlers(TypeHandlers)
             val view = context.infer.resolve<View<Bar>>()
             assertNotNull(view)
             assertSame(view, context.resolve())
@@ -790,7 +788,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
-            context.addHandlers(Factory)
+            context.addHandlers(TypeHandlers)
             val screen1 = context.provide(Foo()).resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
             val screen2 = context.infer.resolve<ScreenModel<Bar>>()
@@ -804,14 +802,14 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<ScreenModelProvider>()
         Context().use { context ->
-            context.addHandlers(Factory)
-            val screen1 = context.infer.provide(Foo())
+            context.addHandlers(TypeHandlers)
+            val screen1 = context.provide(Foo())
                     .resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
             val screen2 = context.infer.resolve<ScreenModel<Bar>>()
             assertNotNull(screen2)
-            assertSame(screen1, context.infer.resolve())
-            assertSame(screen2, context.infer.resolve())
+            assertSame(screen1, context.resolve())
+            assertSame(screen2, context.resolve())
             assertNull(context.resolve<ScreenModel<Boo>>())
         }
     }
@@ -819,7 +817,7 @@ class HandlerTest {
     @Test fun `Rejects scoped creation if no context`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
-        val screen = Factory.resolve<Screen>()
+        val screen = TypeHandlers.resolve<Screen>()
         assertNull(screen)
     }
 
@@ -827,7 +825,7 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
         Context().use { context ->
-            context.addHandlers(Factory)
+            context.addHandlers(TypeHandlers)
             val screen = context.resolve<Screen>()
             assertSame(context, screen!!.context)
             assertFailsWith(IllegalStateException::class,
@@ -841,7 +839,7 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
         Context().use { context ->
-            context.addHandlers(Factory)
+            context.addHandlers(TypeHandlers)
             val screen = context.resolve<Screen>()
             assertSame(context, screen!!.context)
             screen.context = null
@@ -853,16 +851,16 @@ class HandlerTest {
     @Test fun `Selects greediest consructor`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<OverloadedConstructors>()
-        val ctor    = Factory.resolve<OverloadedConstructors>()
+        val ctor    = TypeHandlers.resolve<OverloadedConstructors>()
         assertNotNull(ctor)
         assertNull(ctor!!.foo)
         assertNull(ctor.bar)
-        val ctor1   = Factory.provide(Foo())
+        val ctor1   = TypeHandlers.provide(Foo())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor1)
         assertNotNull(ctor1!!.foo)
         assertNull(ctor1.bar)
-        val ctor2   = Factory.provide(Foo()).provide(Bar())
+        val ctor2   = TypeHandlers.provide(Foo()).provide(Bar())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor2)
         assertNotNull(ctor2!!.foo)
