@@ -63,13 +63,14 @@ class PolicyMemberBinding(
             }
             bindings
         }
-        val resultType =
-            if (dispatcher.returnInfo.flags has TypeFlags.OPEN) {
-                dispatcher.returnType.closeType(typeBindings.value)
-                    ?: return HandleResult.NOT_HANDLED
+        val resultType = with (dispatcher.returnInfo) {
+            if (flags has TypeFlags.OPEN) {
+                componentType.closeType(typeBindings.value)
+                        ?: return HandleResult.NOT_HANDLED
             } else {
                 dispatcher.returnType
             }
+        }
 
         val filters = resolveFilters(handler, filterCallback,
                 callbackType, resultType, composer)

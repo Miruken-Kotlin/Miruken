@@ -741,7 +741,7 @@ class HandlerTest {
         assertSame(app1, app3)
     }
 
-    @Test fun `Creates contextual instance implicitly`() {
+    @Test fun `Creates scoped instance implicitly`() {
         var screen: Screen? = null
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
@@ -762,7 +762,7 @@ class HandlerTest {
         assertTrue(screen!!.closed)
     }
 
-    @Test fun `Creates contextual instance covariantly`() {
+    @Test fun `Creates scpoed instance covariantly`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
@@ -773,7 +773,7 @@ class HandlerTest {
         }
     }
 
-    @Test fun `Creates contextual instance covariantly inferred`() {
+    @Test fun `Creates scoped instance covariantly inferred`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
@@ -785,11 +785,38 @@ class HandlerTest {
         }
     }
 
-    @Test fun `Creates generic contextual instance implicitly`() {
+    @Test fun `Creates generic scoped instance implicitly`() {
         HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        Context().use { context ->
+            context.addHandlers(Factory)
+            val screen1 = context.provide(Foo()).resolve<ScreenModel<Foo>>()
+            assertNotNull(screen1)
+            val screen2 = context.infer.resolve<ScreenModel<Bar>>()
+            assertSame(screen1, context.resolve())
+            assertSame(screen2, context.resolve())
+        }
     }
 
-    @Test fun `Rejects contextual creation if no context`() {
+    @Test fun `Provides generic scoped instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<ScreenModelProvider>()
+        Context().use { context ->
+            context.addHandlers(Factory)
+            val screen1 = context.infer.provide(Foo())
+                    .resolve<ScreenModel<Foo>>()
+            assertNotNull(screen1)
+            val screen2 = context.infer.resolve<ScreenModel<Bar>>()
+            assertNotNull(screen2)
+            assertSame(screen1, context.infer.resolve())
+            assertSame(screen2, context.infer.resolve())
+            assertNull(context.resolve<ScreenModel<Boo>>())
+        }
+    }
+
+    @Test fun `Rejects scoped creation if no context`() {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
         val screen = Factory.resolve<Screen>()
@@ -1315,6 +1342,12 @@ class HandlerTest {
 
     class ScreenModel<M> @Provides @Scoped
         constructor(override val model: M): Screen(), View<M>
+
+    object ScreenModelProvider {
+        @Provides @Scoped
+        fun <M> getScreen(model: M) =
+                Promise.resolve(ScreenModel(model))
+    }
 
     open class ApplicationBase @Provides @Singleton constructor()
 
