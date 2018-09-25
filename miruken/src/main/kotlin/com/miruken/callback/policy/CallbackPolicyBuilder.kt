@@ -12,8 +12,7 @@ abstract class CallbackPolicyBuilder(val callbackType: KType) {
 
     val callback: CallbackArgument = CallbackArgument(callbackType)
 
-    val rules: List<MethodRule>
-        get() {
+    val rules: List<MethodRule> get() {
         _rules.sortByDescending { it.weight }
         return _rules.map { it.build() }
     }

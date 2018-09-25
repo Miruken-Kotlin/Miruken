@@ -17,13 +17,25 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.*
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
-    init { callable.isAccessible = true }
-
     val strict      = annotations.any { it is Strict }
     val returnInfo  = TypeFlags.parse(callable.returnType)
     val arguments   = callable.valueParameters.map { Argument(it) }
     val owningType  = callable.instanceParameter?.type ?:
                       callable.returnType
+
+    val useFilters =
+            (callable.getMetaAnnotations<UseFilter>() +
+                    owningClass.getMetaAnnotations())
+                    .flatMap { it.second }
+                    .normalize()
+
+    val useFilterProviders =
+            (callable.getMetaAnnotations<UseFilterProvider>() +
+                    owningClass.getMetaAnnotations())
+                    .flatMap { it.second }
+                    .normalize()
+
+    init { callable.isAccessible = true }
 
     inline   val owningClass get() = owningType.jvmErasure
     inline   val arity       get() = arguments.size
@@ -45,18 +57,6 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
             KParameter.Kind.EXTENSION_RECEIVER -> false
             else -> true
         }
-
-    val useFilters by lazy {
-        (callable.getMetaAnnotations<UseFilter>() +
-         owningClass.getMetaAnnotations()).flatMap { it.second }
-                .normalize()
-    }
-
-    val useFilterProviders by lazy {
-        (callable.getMetaAnnotations<UseFilterProvider>() +
-         owningClass.getMetaAnnotations()).flatMap { it.second }
-                .normalize()
-    }
 
     fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
         return try {

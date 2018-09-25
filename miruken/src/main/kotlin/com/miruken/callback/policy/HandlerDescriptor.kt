@@ -1,5 +1,7 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.FilterProviderValidating
+import com.miruken.callback.FilterValidating
 import com.miruken.callback.HandleResult
 import com.miruken.callback.Handling
 import com.miruken.runtime.getMetaAnnotations
@@ -9,6 +11,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.superclasses
 
 class HandlerDescriptor(val handlerClass: KClass<*>) {
     private val _policies = lazy {
@@ -21,7 +24,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
 
     init {
         validate(handlerClass)
-        findCompatibleMembers()
+        addCompatibleMembers()
         handlerClass.companionObject?.also {
             getDescriptor(it)
         }
@@ -64,7 +67,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                 callbackType, composer, results)
     }
 
-    private fun findCompatibleMembers() {
+    private fun addCompatibleMembers() {
         handlerClass.members.filter {
             it.isInstanceCallable }.forEach { member ->
             val dispatch by lazy(LazyThreadSafetyMode.NONE) {
@@ -77,6 +80,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                         throw PolicyRejectedException(it, member,
                                 "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
                     val binding    = rule.bind(it, dispatch, annotation)
+                    validateBinding(binding)
                     val descriptor = _policies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
                     descriptor.add(binding)
@@ -95,11 +99,35 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             null, dispatch, annotation, false).apply {
                         outKey = constructor.returnType
                     }
+                    val binding    = it.bindMethod(bindingInfo)
+                    validateBinding(binding)
                     val descriptor = _constructorPolicies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
-                    descriptor.add(it.bindMethod(bindingInfo))
+                    descriptor.add(binding)
                 }
             }
+        }
+    }
+
+    private fun validateBinding(binding: PolicyMemberBinding) {
+        binding.dispatcher.useFilters.forEach { f ->
+            val filterClass = f.filterClass
+            (filterClass.superclasses + filterClass)
+                    .flatMap { it.nestedClasses }
+                    .asSequence()
+                    .mapNotNull { it.objectInstance }
+                    .filterIsInstance<FilterValidating>()
+                    .forEach { it.validate(filterClass, binding) }
+        }
+
+        binding.dispatcher.useFilterProviders.forEach { fp ->
+            val providerClass = fp.filterProviderClass
+            (providerClass.superclasses + providerClass)
+                    .flatMap { it.nestedClasses }
+                    .asSequence()
+                    .mapNotNull { it.objectInstance }
+                    .filterIsInstance<FilterProviderValidating>()
+                    .forEach { it.validate(providerClass, binding) }
         }
     }
 
@@ -119,13 +147,13 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
 
         fun resetDescriptors() = DESCRIPTORS.clear()
 
-        fun getInstanceHandlers(
+        fun getInstanceTypes(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null
         ) = getHandlerTypes(policy, callback, callbackType, true, false)
 
-        fun getConstructorHandlers(
+        fun getConstructorTypes(
                 policy:       CallbackPolicy,
                 callback:     Any,
                 callbackType: KType? = null

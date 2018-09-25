@@ -68,10 +68,9 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                             return@all HandleResult.NOT_HANDLED
                         }
                         resolver.validate(key, typeInfo)
-                        add({
-                            resolved[i] = resolver.resolve(
-                                    key, typeInfo, it, composer, parent)
-                        }) { result ->
+                        add({ resolved[i] = resolver.resolve(
+                                    key, typeInfo, it, composer, parent) }
+                        ) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }
                     }

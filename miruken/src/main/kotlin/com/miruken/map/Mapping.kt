@@ -59,7 +59,8 @@ class Mapping(
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling
-    ) = MapsPolicy.dispatch(handler, this, callbackType, greedy,
+    ) = MapsPolicy.dispatch(handler, this,
+            sourceType ?: callbackType, greedy,
             composer, ::mapped).otherwise(_result != null)
 }
 

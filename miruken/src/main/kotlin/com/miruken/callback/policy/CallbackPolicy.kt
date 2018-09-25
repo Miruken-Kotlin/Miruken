@@ -99,21 +99,21 @@ abstract class CallbackPolicy(
                 (callback as? DispatchingCallback)?.policy
                         ?: HandlesPolicy
 
-        fun getInstanceHandlers(
+        fun getInstanceTypes(
                 callback:     Any,
                 callbackType: KType? = null
         ): List<KType> {
             val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getInstanceHandlers(
+            return HandlerDescriptor.getInstanceTypes(
                     policy, callback, callbackType)
         }
 
-        fun getConstructorHandlers(
+        fun getConstructorTypes(
                 callback:     Any,
                 callbackType: KType? = null
         ): List<KType> {
             val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getConstructorHandlers(
+            return HandlerDescriptor.getConstructorTypes(
                     policy, callback, callbackType)
         }
 

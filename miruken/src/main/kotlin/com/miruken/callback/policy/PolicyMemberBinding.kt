@@ -25,8 +25,7 @@ class PolicyMemberBinding(
     val callbackArg = bindingInfo.callbackArg
     val key         = policy.createKey(bindingInfo)
 
-    override val returnType: KType
-        get() = dispatcher.returnType
+    override val returnType get() = dispatcher.returnType
 
     override val skipFilters =
         dispatcher.findAnnotation<SkipFilters>() != null ||
@@ -72,12 +71,12 @@ class PolicyMemberBinding(
                 dispatcher.returnType
             }
 
-        val filters = resolveFilters(
-                handler, filterCallback, callbackType, resultType, composer)
+        val filters = resolveFilters(handler, filterCallback,
+                callbackType, resultType, composer)
                 ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
-            val args = resolveArguments(callback,
-                    ruleArgs, callbackType, composer, typeBindings)
+            val args = resolveArguments(callback, ruleArgs,
+                    callbackType, composer, typeBindings)
                     ?: return HandleResult.NOT_HANDLED
             dispatcher.invoke(handler, args)
         } else try {
@@ -95,8 +94,7 @@ class PolicyMemberBinding(
                     throw NotHandledException(handleResult)
                 }
                 Promise.resolve(baseResult)
-            }, { pipeline, next ->
-                { comp, proceed ->
+            }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
                     pipeline.next(filterCallback, this, comp, { c, p ->
                         next((c ?: comp).skipFilters(), p ?: true)
@@ -195,10 +193,9 @@ class PolicyMemberBinding(
                             return@all HandleResult.NOT_HANDLED
                         }
                         resolver.validate(key, typeInfo)
-                        add({
-                            resolved[i] = resolver.resolve(
-                                    key, typeInfo, it, composer, parent)
-                        }) { result ->
+                        add({ resolved[i] = resolver.resolve(
+                                key, typeInfo, it, composer, parent) }
+                        ) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }
                     }

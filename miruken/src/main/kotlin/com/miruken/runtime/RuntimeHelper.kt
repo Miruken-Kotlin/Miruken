@@ -264,9 +264,9 @@ fun KType.isTopLevelInterfaceOf(clazz: KClass<*>) =
 
 inline fun <reified T: Annotation> KAnnotatedElement
         .getMetaAnnotations() = annotations.mapNotNull {
-            val tags = it.annotationClass.annotations.filterIsInstance<T>()
-            if (tags.isNotEmpty()) it to tags else null
-        }
+    val tags = it.annotationClass.annotations.filterIsInstance<T>()
+    if (tags.isNotEmpty()) it to tags else null
+}
 
 inline fun <reified T: Annotation> AnnotatedElement
         .getMetaAnnotations() = annotations.mapNotNull {

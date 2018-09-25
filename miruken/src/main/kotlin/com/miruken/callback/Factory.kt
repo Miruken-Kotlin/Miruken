@@ -7,7 +7,7 @@ import com.miruken.callback.policy.HandlerDescriptor
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.jvmErasure
 
-class Factory : Handler(), CallbackPolicyDispatching {
+object Factory : Handler(), CallbackPolicyDispatching {
     override fun dispatch(
             policy:       CallbackPolicy,
             callback:     Any,
@@ -15,7 +15,7 @@ class Factory : Handler(), CallbackPolicyDispatching {
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock?
-    ) = HandlerDescriptor.getConstructorHandlers(
+    ) = HandlerDescriptor.getConstructorTypes(
             policy, callback, callbackType)
             .fold(HandleResult.NOT_HANDLED) { result, handler ->
                 if ((result.handled && !greedy) || result.stop) {

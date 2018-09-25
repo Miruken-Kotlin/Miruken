@@ -19,6 +19,13 @@ interface Filtering<in Cb: Any, Res: Any?> : Ordered {
     ): Promise<Res>
 }
 
+interface FilterValidating {
+    fun validate(
+            filterClass: KClass<out Filtering<*,*>>,
+            binding:     MemberBinding
+    )
+}
+
 operator fun <Res> Next<Res>.invoke(composer: Handling? = null) =
         this(composer, true)
 

@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.MemberBinding
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 interface FilteringProvider {
@@ -13,8 +14,11 @@ interface FilteringProvider {
     ): List<Filtering<*,*>>
 }
 
-interface FilterValidating {
-    fun validate(binding: MemberBinding)
+interface FilterProviderValidating {
+    fun validate(
+            filterProviderClass: KClass<out FilteringProvider>,
+            binding: MemberBinding
+    )
 }
 
 interface Filtered {
