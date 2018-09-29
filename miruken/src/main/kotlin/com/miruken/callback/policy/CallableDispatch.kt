@@ -5,10 +5,7 @@ import com.miruken.callback.Strict
 import com.miruken.callback.UseFilter
 import com.miruken.callback.UseFilterProvider
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getMetaAnnotations
-import com.miruken.runtime.isNothing
-import com.miruken.runtime.isUnit
-import com.miruken.runtime.normalize
+import com.miruken.runtime.*
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Member
 import kotlin.reflect.*
@@ -51,19 +48,12 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing
 
-    val isConstructor get() =
-        when (callable.parameters.firstOrNull()?.kind) {
-            KParameter.Kind.INSTANCE,
-            KParameter.Kind.EXTENSION_RECEIVER -> false
-            else -> true
-        }
-
     fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
         return try {
-            if (isConstructor) {
-                callable.call(*arguments)
-            } else {
+            if (callable.requiresReceiver) {
                 callable.call(receiver, *arguments)
+            } else {
+                callable.call(*arguments)
             }
         } catch (e: Throwable) {
             val cause = (e as? InvocationTargetException)?.cause ?: e

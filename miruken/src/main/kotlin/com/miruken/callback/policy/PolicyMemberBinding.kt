@@ -205,10 +205,10 @@ class PolicyMemberBinding(
         } success { resolved }
     }
 
-    companion object {
-        val ORDER_BY_ARITY : Comparator<PolicyMemberBinding> =
-                Comparator { a, b ->
-                    b.dispatcher.arity - a.dispatcher.arity
-                }
+    companion object OrderByArity : Comparator<PolicyMemberBinding> {
+        override fun compare(
+                o1: PolicyMemberBinding,
+                o2: PolicyMemberBinding
+        ) =  o2.dispatcher.arity - o1.dispatcher.arity
     }
 }

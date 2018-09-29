@@ -216,8 +216,8 @@ open class Inquiry(
             handler: Any,
             binding: PolicyMemberBinding
     ): Boolean {
-        return (handler == _handler  &&
-                binding == _binding) ||
+        return (handler === _handler  &&
+                binding === _binding) ||
                 parent?.inProgress(handler, binding) == true
     }
 

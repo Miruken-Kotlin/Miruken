@@ -213,7 +213,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     recv.getCompatibleMembers(callback, callbackType)
                             .firstOrNull()
              }
-        }.sortedWith(policy.memberBindingComparator)
+        }.sortedWith(policy.orderMembers)
                 .map { it.dispatcher.owningType }
                 .distinct()
 

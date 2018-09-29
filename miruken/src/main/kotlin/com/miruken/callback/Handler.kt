@@ -9,8 +9,9 @@ open class Handler : Handling {
             greedy:       Boolean,
             composer:     Handling?
     ): HandleResult {
-        val scope = composer ?: this as? CompositionScope
-                  ?: CompositionScope(this)
+        val scope = composer
+                ?: this as? CompositionScope
+                ?: CompositionScope(this)
         return handleCallback(callback, callbackType, greedy, scope)
     }
 

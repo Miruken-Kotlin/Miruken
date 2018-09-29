@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class ContextualLifestyle<Res>: Lifestyle<Res>() {
     override fun getInstance(
-            binding: MemberBinding,
+            binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling
     ): Res? {
@@ -40,7 +40,7 @@ class ContextualLifestyle<Res>: Lifestyle<Res>() {
         check(newContext == null) {
             "Managed instances cannot change context"
         }
-        _cache[oldContext]?.takeIf { it == event.contextual }?.also {
+        _cache[oldContext]?.takeIf { it === event.contextual }?.also {
             _cache.remove(oldContext)
             (it as? AutoCloseable)?.close()
         }

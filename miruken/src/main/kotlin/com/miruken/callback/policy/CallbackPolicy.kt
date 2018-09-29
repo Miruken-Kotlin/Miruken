@@ -12,18 +12,7 @@ abstract class CallbackPolicy(
         val strict: Boolean = false
 ) : FilteredObject(), Comparator<Any> {
 
-    init {
-        addFilterProviders(filters)
-    }
-
-    val memberBindingComparator : Comparator<PolicyMemberBinding> =
-            Comparator { a, b ->
-                val order = compare(a.key, b.key)
-                when (order) {
-                    0 -> b.dispatcher.arity - a.dispatcher.arity
-                    else -> order
-                }
-            }
+    init { addFilterProviders(filters) }
 
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }
@@ -93,6 +82,15 @@ abstract class CallbackPolicy(
         }
         else -> 0
     }
+
+    val orderMembers : Comparator<PolicyMemberBinding> =
+            Comparator { a, b ->
+                val order = compare(a.key, b.key)
+                when (order) {
+                    0 -> b.dispatcher.arity - a.dispatcher.arity
+                    else -> order
+                }
+            }
 
     companion object {
         fun getCallbackPolicy(callback: Any) =

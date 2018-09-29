@@ -30,9 +30,10 @@ fun notHandledAndStop(): Nothing =
 
 fun <R> withComposer(composer: Handling, block: () -> R): R {
     val oldComposer = threadComposer.get()
-    try {
+    if (oldComposer === composer) return block()
+    return try {
         threadComposer.set(composer)
-        return block()
+        block()
     } finally {
         threadComposer.set(oldComposer)
     }

@@ -32,7 +32,7 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
             null, Any::class -> _unknown
             else -> _indexed.getOrPut(key) { mutableListOf() }
         }
-        list.addSorted(memberBinding, PolicyMemberBinding.ORDER_BY_ARITY)
+        list.addSorted(memberBinding, PolicyMemberBinding)
     }
 
     internal fun getInvariantMembers() =
@@ -66,5 +66,5 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
                     policy.getCompatibleKeys(key, _indexed.keys).flatMap {
                         _indexed[it] ?: emptyList<PolicyMemberBinding>()
                     }
-            }.sortedWith(policy.memberBindingComparator) + _unknown
+            }.sortedWith(policy.orderMembers) + _unknown
 }

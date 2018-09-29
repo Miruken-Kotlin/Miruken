@@ -290,9 +290,15 @@ fun KClass<*>.matchMethod(method: Method): Method? {
     }
 }
 
-val KCallable<*>.isInstanceCallable: Boolean get() =
-        parameters.takeIf { it.isNotEmpty() }
-                ?.get(0)?.kind == KParameter.Kind.INSTANCE
+val KCallable<*>.isInstanceCallable get() =
+    parameters.firstOrNull()?.kind == KParameter.Kind.INSTANCE
+
+val KCallable<*>.requiresReceiver get() =
+    when (parameters.firstOrNull()?.kind) {
+        KParameter.Kind.INSTANCE,
+        KParameter.Kind.EXTENSION_RECEIVER -> true
+        else -> false
+    }
 
 fun Collection<*>.toTypedArray(componentType: KClass<*>) =
         toTypedArray(componentType.java)
