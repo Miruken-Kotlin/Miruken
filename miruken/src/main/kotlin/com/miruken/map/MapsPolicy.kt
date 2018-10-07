@@ -1,7 +1,7 @@
 package com.miruken.map
 
 import com.miruken.callback.policy.BivariantPolicy
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.UsePolicy
 import com.miruken.runtime.getMetaAnnotations
 import kotlin.reflect.KAnnotatedElement
@@ -19,7 +19,7 @@ object MapsPolicy : BivariantPolicy({
 }) {
     override fun approve(
             callback: Any,
-            binding:  PolicyMemberBinding
+            binding: PolicyMemberBinding
     ) = (callback as? Mapping)?.let { mapping ->
         val format = mapping.format ?: return true
             return binding.dispatcher.let {

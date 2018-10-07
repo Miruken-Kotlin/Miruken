@@ -4,5 +4,4 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 annotation class UseFilterProvider(
-        val filterProviderClass: KClass<out FilteringProvider>,
-        val required:    Boolean = false)
+        val filterProviderClass: KClass<out FilteringProvider>)

@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.addSorted
 import com.miruken.callback.StringKey
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType

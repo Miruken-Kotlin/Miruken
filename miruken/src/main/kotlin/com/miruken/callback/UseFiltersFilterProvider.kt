@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KClass
 import kotlin.reflect.KType

@@ -1,6 +1,8 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.CallableDispatch
+import com.miruken.callback.policy.bindings.BindingMetadata
+import com.miruken.callback.policy.bindings.BindingScope
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_STAR
@@ -19,7 +21,7 @@ open class Inquiry(
         val many:   Boolean = false,
         val parent: Inquiry? = null
 ) : Callback, AsyncCallback, DispatchingCallback,
-    DispatchingCallbackGuard {
+    DispatchingCallbackGuard, BindingScope {
     private var _result: Any? = null
     private val _promises     = mutableListOf<Promise<*>>()
     private val _resolutions  = mutableListOf<Any>()
@@ -30,8 +32,13 @@ open class Inquiry(
             else -> ANY_STAR
         }
     }
-    private var _handler: Any? = null
-    private var _binding: PolicyMemberBinding? = null
+    var target: Any? = null
+        private set
+
+    var dispatcher: CallableDispatch? = null
+        private set
+
+    override val metadata = BindingMetadata()
 
     override var wantsAsync: Boolean = false
 
@@ -166,12 +173,12 @@ open class Inquiry(
     ): Boolean = true
 
     override fun canDispatch(
-            handler: Any,
-            binding: PolicyMemberBinding
+            target:     Any,
+            dispatcher: CallableDispatch
     ): Boolean {
-        if (inProgress(handler, binding)) return false
-        _handler = handler
-        _binding = binding
+        if (inProgress(target, dispatcher)) return false
+        this.target     = target
+        this.dispatcher = dispatcher
         return true
     }
 
@@ -213,12 +220,12 @@ open class Inquiry(
             resolve(item, false, greedy, composer)
 
     private fun inProgress(
-            handler: Any,
-            binding: PolicyMemberBinding
+            target:     Any,
+            dispatcher: CallableDispatch
     ): Boolean {
-        return (handler === _handler  &&
-                binding === _binding) ||
-                parent?.inProgress(handler, binding) == true
+        return (target === this.target &&
+                dispatcher === this.dispatcher) ||
+                parent?.inProgress(target, dispatcher) == true
     }
 
     private fun flatten(vararg lists: List<*>): List<Any> {

@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)

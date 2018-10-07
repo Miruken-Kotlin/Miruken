@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.CallableDispatch
 import kotlin.reflect.KType
 
 open class Trampoline(
@@ -11,10 +11,10 @@ open class Trampoline(
         (callback as? DispatchingCallback)?.policy
 
     override fun canDispatch(
-            handler: Any,
-            binding: PolicyMemberBinding
+            target:     Any,
+            dispatcher: CallableDispatch
     ) = (callback as? DispatchingCallbackGuard)
-            ?.canDispatch(handler, binding) != false
+            ?.canDispatch(target, dispatcher) != false
 
     override fun dispatch(
             handler:      Any,

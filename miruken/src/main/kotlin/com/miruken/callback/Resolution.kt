@@ -1,7 +1,7 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.CallbackPolicy
-import com.miruken.callback.policy.PolicyMemberBinding
 import kotlin.reflect.KType
 
 open class Resolution(
@@ -18,10 +18,10 @@ open class Resolution(
     override val canFilter = false
 
     override fun canDispatch(
-            handler: Any,
-            binding: PolicyMemberBinding
+            target:     Any,
+            dispatcher: CallableDispatch
     ) = (callback as? DispatchingCallbackGuard)
-            ?.canDispatch(handler, binding) != false
+            ?.canDispatch(target, dispatcher) != false
 
     override fun isSatisfied(
             resolution: Any,

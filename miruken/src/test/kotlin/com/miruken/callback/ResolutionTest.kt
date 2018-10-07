@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptor
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import org.junit.Test
@@ -400,7 +400,7 @@ class ResolutionTest {
         fun next(
                 callback:       Cb,
                 next:           Next<Res>,
-                binding:        MemberBinding,
+                binding: MemberBinding,
                 repository:     Repository<Message>,
                 @Proxy billing: Billing
         ): Promise<Res> {
@@ -426,7 +426,7 @@ class ResolutionTest {
     class BalanceFilter<T: Entity, Res: Number> : DynamicFilter<Create<T>, Res>() {
         fun next(callback:   Create<T>,
                  next:       Next<Res>,
-                 binding:    MemberBinding,
+                 binding: MemberBinding,
                  repository: Repository<T>,
                  billing:    Billing
         ): Promise<Res> {

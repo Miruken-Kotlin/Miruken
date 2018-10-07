@@ -55,9 +55,16 @@ open class LinkProperty<out T>(
         private val resolver: KeyResolving
 ) : ReadOnlyProperty<Any, T> {
     @Suppress("UNCHECKED_CAST")
-    override fun getValue(thisRef: Any, property: KProperty<*>) =
-            validateProperty(property, key, resolver.resolve(
-                    key, typeInfo, handler, handler)) as T
+    override fun getValue(thisRef: Any, property: KProperty<*>): T {
+        val flags   = typeInfo.flags
+        val inquiry =  Inquiry(key,
+                flags has TypeFlags.COLLECTION ||
+                flags has TypeFlags.ARRAY).apply {
+            wantsAsync = flags has TypeFlags.PROMISE
+        }
+        return validateProperty(property, key, resolver.resolve(
+                inquiry, typeInfo, handler, handler)) as T
+    }
 }
 
 class GetProperty<out T>(

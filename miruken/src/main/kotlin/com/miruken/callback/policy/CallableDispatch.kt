@@ -1,9 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
-import com.miruken.callback.Strict
-import com.miruken.callback.UseFilter
-import com.miruken.callback.UseFilterProvider
+import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.*
 import java.lang.reflect.InvocationTargetException
@@ -14,28 +12,40 @@ import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.*
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
-    val strict      = annotations.any { it is Strict }
-    val returnInfo  = TypeFlags.parse(callable.returnType)
-    val arguments   = callable.valueParameters.map { Argument(it) }
-    val owningType  = callable.instanceParameter?.type ?:
-                      callable.returnType
+    val strict     = annotations.any { it is Strict }
+    val returnInfo = TypeFlags.parse(callable.returnType)
+    val arguments  = callable.valueParameters.map { Argument(it) }
+    val owningType = callable.instanceParameter?.type ?:
+                     callable.returnType
 
-    val useFilters =
-            (callable.getMetaAnnotations<UseFilter>() +
-                    owningClass.getMetaAnnotations())
-                    .flatMap { it.second }
-                    .normalize()
-
-    val useFilterProviders =
-            (callable.getMetaAnnotations<UseFilterProvider>() +
-                    owningClass.getMetaAnnotations())
-                    .flatMap { it.second }
-                    .normalize()
+    val filterProviders by lazy {
+        (((callable.getMetaAnnotations<UseFilterProvider>() +
+           owningClass.getMetaAnnotations())
+                .flatMap { it.second }
+                .asSequence()
+                .mapNotNull {
+                    it.filterProviderClass.objectInstance
+                }) +
+        ((callable.getMetaAnnotations<UseFilterProviderFactory>() +
+          owningClass.getMetaAnnotations())
+                .flatMap { it.second.mapNotNull { f ->
+                       f.factoryClass.objectInstance
+                        ?.createProvider(it.first) }
+                }) +
+        ((callable.getMetaAnnotations<UseFilter>() +
+          owningClass.getMetaAnnotations())
+                .flatMap { it.second }
+                .takeIf  { it.isNotEmpty() }?.let {
+                    sequenceOf(UseFiltersFilterProvider(it))
+                } ?: emptySequence())
+        ).toList()
+         .normalize()
+    }
 
     init { callable.isAccessible = true }
 
-    inline   val owningClass get() = owningType.jvmErasure
     inline   val arity       get() = arguments.size
+    inline   val owningClass get() = owningType.jvmErasure
     inline   val returnType  get() = callable.returnType
     override val annotations get() = callable.annotations
 

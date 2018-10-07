@@ -1,7 +1,7 @@
 package com.miruken.context
 
 import com.miruken.callback.*
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 import java.util.concurrent.ConcurrentHashMap
 
 class ContextualLifestyle<Res>: Lifestyle<Res>() {

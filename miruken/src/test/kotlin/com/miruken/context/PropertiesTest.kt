@@ -5,8 +5,6 @@ import com.miruken.callback.Handler
 import com.miruken.callback.Key
 import com.miruken.callback.Provides
 import com.miruken.callback.Proxy
-import com.miruken.container.Managed
-import com.miruken.container.TestContainer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -193,27 +191,6 @@ class PropertiesTest {
             @Proxy val auction by get<Auction>()
         }.apply { context = _context }
         assertNotNull(instance.auction.buy(2))
-    }
-
-    @Test fun `Delegates container property to context`() {
-        _context.addHandlers(TestContainer())
-        val instance = object : ContextualHandler() {
-            @Managed val foo by get<Foo>()
-        }.apply { context = _context }
-        assertNotNull(instance.foo)
-    }
-
-    @Test fun `Delegates promise container property to context`() {
-        _context.addHandlers(TestContainer())
-        val instance = object : ContextualHandler() {
-            @Managed val foo by getAsync<Foo>()
-        }.apply { context = _context }
-        assertAsync(testName) { done ->
-            instance.foo then {
-                assertNotNull(it)
-                done()
-            }
-        }
     }
 
     @Test fun `Delegates property to context once`() {

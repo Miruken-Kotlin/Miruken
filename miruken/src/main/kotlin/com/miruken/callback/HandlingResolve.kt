@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.bindings.ConstraintBuilder
 import com.miruken.concurrent.Promise
 import com.miruken.typeOf
 
@@ -9,46 +10,57 @@ val Handling.inferAll get() = CallbackSemanticsHandler(
         InferringHandler(this), CallbackOptions.BROADCAST)
 
 fun Handling.resolve(
-        key:    Any,
-        parent: Inquiry? = null
+        key:         Any,
+        constraints: (ConstraintBuilder.() -> Unit)? = null
 ): Any? {
-    val inquiry = key as? Inquiry ?: Inquiry(key, false, parent)
+    val inquiry = (key as? Inquiry)?.also {
+        check(!it.wantsAsync) {
+            "Requested Inquiry is asynchronous"
+        }
+    } ?: Inquiry(key, false)
+    constraints?.invoke(ConstraintBuilder(inquiry))
     return handle(inquiry) success { inquiry.result }
 }
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAsync(
-        key:      Any,
-        parent:   Inquiry? = null,
-        required: Boolean = false
+        key:         Any,
+        constraints: (ConstraintBuilder.() -> Unit)? = null
 ): Promise<Any?> {
-    val inquiry = key as? Inquiry ?: Inquiry(key, false, parent)
-    inquiry.wantsAsync = true
+    val inquiry = (key as? Inquiry)?.also {
+        check(it.wantsAsync) {
+            "Requested Inquiry is synchronous"
+        }
+    } ?: Inquiry(key, false).apply { wantsAsync = true }
+    constraints?.invoke(ConstraintBuilder(inquiry))
     return handle(inquiry) success {
         inquiry.result as? Promise<Any>
-    } ?: if (required) {
-        Promise.reject(IllegalStateException(
-                "Promise required a non-null result for key '$key'"))
-    } else {
-        Promise.EMPTY
-    }
+    } ?: Promise.EMPTY
 }
 
 inline fun <reified T: Any> Handling.resolve(
-        parent: Inquiry? = null
-): T? = resolve(typeOf<T>(), parent) as? T
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
+): T? = resolve(typeOf<T>(), constraints) as? T
 
 inline fun <reified T: Any> Handling.resolveAsync(
-        parent: Inquiry? = null
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
 ): Promise<T?> =
-        resolveAsync(typeOf<T>(), parent) then { it as? T }
+        resolveAsync(typeOf<T>(), constraints) then { it as? T }
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAll(
-        key:    Any,
-        parent: Inquiry? = null
+        key:         Any,
+        constraints: (ConstraintBuilder.() -> Unit)? = null
 ): List<Any> {
-    val inquiry = key as? Inquiry ?: Inquiry(key, true, parent)
+    val inquiry = (key as? Inquiry)?.also {
+        check(it.many) {
+            "Requested Inquiry expects a single result"
+        }
+        check(!it.wantsAsync) {
+            "Requested Inquiry is asynchronous"
+        }
+    } ?: Inquiry(key, true)
+    constraints?.invoke(ConstraintBuilder(inquiry))
     return handle(inquiry, true) success  {
         inquiry.result as? List<Any>
     } ?: emptyList()
@@ -56,11 +68,18 @@ fun Handling.resolveAll(
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAllAsync(
-        key:    Any,
-        parent: Inquiry? = null
+        key:         Any,
+        constraints: (ConstraintBuilder.() -> Unit)? = null
 ): Promise<List<Any>> {
-    val inquiry = key as? Inquiry ?: Inquiry(key, true, parent)
-    inquiry.wantsAsync = true
+    val inquiry = (key as? Inquiry)?.also {
+        check(it.many) {
+            "Requested Inquiry expects a single result"
+        }
+        check(it.wantsAsync) {
+            "Requested Inquiry is synchronous"
+        }
+    } ?: Inquiry(key, true).apply { wantsAsync = true }
+    constraints?.invoke(ConstraintBuilder(inquiry))
     return handle(inquiry, true) success  {
         inquiry.result?.let {
             when (it) {
@@ -74,13 +93,13 @@ fun Handling.resolveAllAsync(
 }
 
 inline fun <reified T: Any> Handling.resolveAll(
-        parent: Inquiry? = null
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
 ): List<T> =
-    resolveAll(typeOf<T>(), parent).filterIsInstance<T>()
+    resolveAll(typeOf<T>(), constraints).filterIsInstance<T>()
 
 inline fun <reified T: Any> Handling.resolveAllAsync(
-        parent: Inquiry? = null
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
 ): Promise<List<T>> =
-        resolveAllAsync(typeOf<T>(), parent) then {
+        resolveAllAsync(typeOf<T>(), constraints) then {
             it.filterIsInstance<T>()
         }

@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
+import com.miruken.callback.policy.rules.MethodRule
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 

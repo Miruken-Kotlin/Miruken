@@ -1,9 +1,8 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.FilterProviderValidating
-import com.miruken.callback.FilterValidating
-import com.miruken.callback.HandleResult
-import com.miruken.callback.Handling
+import com.miruken.callback.*
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.isInstanceCallable
 import java.util.concurrent.ConcurrentHashMap
@@ -11,10 +10,11 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.superclasses
 import kotlin.reflect.jvm.jvmErasure
 
-class HandlerDescriptor(val handlerClass: KClass<*>) {
+class HandlerDescriptor(
+        val handlerClass: KClass<*>
+) : FilteredObject() {
     private val _instancePolicies = lazy {
         HashMap<CallbackPolicy, CallbackPolicyDescriptor>()
     }
@@ -97,8 +97,7 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                     val rule = it.match(dispatch) ?:
                         throw PolicyRejectedException(it, member,
                             "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
-                    val binding = rule.bind(it, dispatch, annotation)
-                    validateBinding(binding)
+                    val binding  = rule.bind(it, dispatch, annotation)
                     val policies = when {
                         handlerClass.objectInstance != null ->
                             _typePolicies
@@ -123,35 +122,12 @@ class HandlerDescriptor(val handlerClass: KClass<*>) {
                             null, dispatch, annotation, false).apply {
                         outKey = constructor.returnType
                     }
-                    val binding = it.bindMethod(bindingInfo)
-                    validateBinding(binding)
+                    val binding    = it.bindMethod(bindingInfo)
                     val descriptor = _typePolicies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
                     descriptor.add(binding)
                 }
             }
-        }
-    }
-
-    private fun validateBinding(binding: PolicyMemberBinding) {
-        binding.dispatcher.useFilters.forEach { f ->
-            val filterClass = f.filterClass
-            (filterClass.superclasses + filterClass)
-                    .flatMap { it.nestedClasses }
-                    .asSequence()
-                    .mapNotNull { it.objectInstance }
-                    .filterIsInstance<FilterValidating>()
-                    .forEach { it.validate(filterClass, binding) }
-        }
-
-        binding.dispatcher.useFilterProviders.forEach { fp ->
-            val providerClass = fp.filterProviderClass
-            (providerClass.superclasses + providerClass)
-                    .flatMap { it.nestedClasses }
-                    .asSequence()
-                    .mapNotNull { it.objectInstance }
-                    .filterIsInstance<FilterProviderValidating>()
-                    .forEach { it.validate(providerClass, binding) }
         }
     }
 

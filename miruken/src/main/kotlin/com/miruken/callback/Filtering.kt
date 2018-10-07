@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.Ordered
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.allInterfaces
 import kotlin.reflect.KClass
@@ -17,13 +17,6 @@ interface Filtering<in Cb: Any, Res: Any?> : Ordered {
             next:     Next<Res>,
             provider: FilteringProvider? = null
     ): Promise<Res>
-}
-
-interface FilterValidating {
-    fun validate(
-            filterClass: KClass<out Filtering<*,*>>,
-            binding:     MemberBinding
-    )
 }
 
 operator fun <Res> Next<Res>.invoke(composer: Handling? = null) =

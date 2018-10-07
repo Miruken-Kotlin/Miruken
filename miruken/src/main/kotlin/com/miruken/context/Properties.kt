@@ -55,8 +55,14 @@ open class LinkProperty<out T>(
         val context  = thisRef.getContext(!optional) ?: return null as T
         return KeyResolver.getResolver(property, context)?.let {
             it.validate(key, typeInfo)
+            val flags   = typeInfo.flags
+            val inquiry =  Inquiry(key,
+                    flags has TypeFlags.COLLECTION ||
+                    flags has TypeFlags.ARRAY).apply {
+                wantsAsync = flags has TypeFlags.PROMISE
+            }
             validateProperty(property, key, it.resolve(
-                    key, typeInfo, context, context)) as T
+                    inquiry, typeInfo, context, context)) as T
         } ?: if (optional) (null as T) else
             error("Unable to resolve '$property' with key '$key'")
     }

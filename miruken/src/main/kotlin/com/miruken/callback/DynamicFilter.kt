@@ -2,14 +2,15 @@ package com.miruken.callback
 
 import com.miruken.TypeFlags
 import com.miruken.callback.policy.CallableDispatch
-import com.miruken.callback.policy.MemberBinding
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.isCompatibleWith
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
 open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
@@ -52,12 +53,12 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                 when {
                     argumentClass == Handling::class ->
                         resolved[i] = composer
-                    argumentClass.isInstance(binding) ->
+                    argumentClass.isSubclassOf(MemberBinding::class) ->
                         resolved[i] = binding
-                    argumentClass.isInstance(provider) ->
+                    argumentClass.isSubclassOf(FilteringProvider::class)->
                         resolved[i] = provider
                     else -> {
-                        val key = argument.getKey()
+                        val inquiry  = argument.getInquiry(parent)
                                 ?: return@all HandleResult.NOT_HANDLED
                         val typeInfo = argument.typeInfo
                         val optional = typeInfo.flags has TypeFlags.OPTIONAL
@@ -67,9 +68,9 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                             if (optional) continue@loop
                             return@all HandleResult.NOT_HANDLED
                         }
-                        resolver.validate(key, typeInfo)
+                        resolver.validate(inquiry, typeInfo)
                         add({ resolved[i] = resolver.resolve(
-                                    key, typeInfo, it, composer, parent) }
+                                    inquiry, typeInfo, it, composer) }
                         ) { result ->
                             if (optional) HandleResult.HANDLED else result
                         }

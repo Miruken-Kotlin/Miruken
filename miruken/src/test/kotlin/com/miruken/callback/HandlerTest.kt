@@ -4,8 +4,8 @@ package com.miruken.callback
 
 import com.miruken.assertAsync
 import com.miruken.callback.policy.HandlerDescriptor
-import com.miruken.callback.policy.MemberBinding
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context
@@ -867,18 +867,6 @@ class HandlerTest {
         assertNotNull(ctor2.bar)
     }
 
-    @Test fun `Rejects lifestyle if not provider`() {
-        assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<InvalidLifestyle>()
-        }
-    }
-
-    @Test fun `Rejects multiple lifestyles`() {
-        assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<MultipleLifestyles>()
-        }
-    }
-
     @Test fun `Ignores options at boundary `() {
         val handler = Handler().withFilters(LogFilter<Any,Any?>())
         val options = FilterOptions()
@@ -1182,7 +1170,7 @@ class HandlerTest {
         fun providesBazExplicitly(
                 inquiry:  Inquiry,
                 composer: Handling,
-                binding:  PolicyMemberBinding
+                binding: PolicyMemberBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(SpecialBaz(), composer)
@@ -1219,7 +1207,7 @@ class HandlerTest {
         fun providesBazExplicitly(
                 inquiry:  Inquiry,
                 composer: Handling,
-                binding:  PolicyMemberBinding
+                binding: PolicyMemberBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(Promise.resolve(SpecialBaz()), composer)
@@ -1374,14 +1362,6 @@ class HandlerTest {
         }
     }
 
-    open class InvalidLifestyle {
-        @Handles @Singleton
-        fun handleBar(bar: Bar) {}
-    }
-
-    open class MultipleLifestyles
-        @Provides @Singleton @Scoped constructor()
-
     class FilteringHandler : Handler(), Filtering<Bar, Unit> {
         override var order: Int? = null
 
@@ -1437,7 +1417,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Bar,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<Unit>,
                 provider: FilteringProvider?
@@ -1482,7 +1462,7 @@ class HandlerTest {
 
         override fun next(
                 callback: T,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<R>,
                 provider: FilteringProvider?
@@ -1494,7 +1474,7 @@ class HandlerTest {
 
         override fun next(
                 callback: T,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<Any?>,
                 provider: FilteringProvider?
@@ -1506,7 +1486,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Any,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<T>,
                 provider: FilteringProvider?
@@ -1518,7 +1498,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Cb,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
@@ -1535,7 +1515,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Bar,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<R>,
                 provider: FilteringProvider?
@@ -1558,7 +1538,7 @@ class HandlerTest {
 
         override fun next(
                 callback: Req,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?

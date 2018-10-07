@@ -2,7 +2,7 @@
 
 package com.miruken.callback
 
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import com.miruken.runtime.checkOpenConformance
@@ -302,7 +302,7 @@ class HandleMethodTest {
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
@@ -324,7 +324,7 @@ class HandleMethodTest {
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
@@ -344,7 +344,7 @@ class HandleMethodTest {
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MemberBinding,
+                binding: MemberBinding,
                 composer: Handling,
                 next:     Next<R>,
                 provider: FilteringProvider?

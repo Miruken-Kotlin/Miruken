@@ -1,5 +1,9 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.policy.rules.ExtractArgument
+import com.miruken.callback.policy.rules.ReturnsKey
+import com.miruken.callback.policy.rules.ReturnsUnit
+import com.miruken.callback.policy.rules.TargetArgument
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType

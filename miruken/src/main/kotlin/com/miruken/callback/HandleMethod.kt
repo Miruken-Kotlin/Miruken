@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.TypedValue
 import com.miruken.callback.policy.CallbackPolicy
-import com.miruken.callback.policy.HandleMethodBinding
+import com.miruken.callback.policy.bindings.HandleMethodBinding
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isTopLevelInterfaceOf
 import com.miruken.runtime.matchMethod
@@ -37,7 +37,7 @@ open class HandleMethod(
         val targetClass = target::class
         targetClass.matchMethod(method)?.let {
             BINDINGS.getOrPut(method to targetClass) {
-                    HandleMethodBinding(method, it)
+                HandleMethodBinding(method, it)
             }}?.dispatch(target, this, composer)
     } ?: HandleResult.NOT_HANDLED
 

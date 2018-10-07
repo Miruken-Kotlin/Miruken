@@ -13,120 +13,118 @@ import kotlin.reflect.jvm.jvmErasure
 
 open class KeyResolver : KeyResolving {
     override fun resolve(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry?
+            composer: Handling
     ) = when {
         typeInfo.flags has TypeFlags.LAZY ->
-                resolveArgumentLazy(key, typeInfo, composer)
+            resolveKeyLazy(inquiry, typeInfo, composer)
         typeInfo.flags has TypeFlags.FUNC ->
-            resolveArgumentFunc(key, typeInfo, composer)
-        else -> resolveArgument(key, typeInfo, handler, composer)
+            resolveKeyFunc(inquiry, typeInfo, composer)
+        else -> resolveKeyInfer(inquiry, typeInfo, handler, composer)
     }
 
     open fun resolveKey(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) = handler.resolve(key, parent)
+            composer: Handling
+    ) = handler.resolve(inquiry)
 
     open fun resolveKeyAsync(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) = handler.resolveAsync(key, parent,
-            !typeInfo.componentType.isMarkedNullable)
+            composer: Handling
+    ) = handler.resolveAsync(inquiry) then {
+        check (it != null ||
+                typeInfo.componentType.isMarkedNullable) {
+            "Unable to resolve key ${inquiry.key}"
+        }
+        it
+    }
 
     open fun resolveKeyAll(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) = handler.resolveAll(key, parent)
+            composer: Handling
+    ) = handler.resolveAll(inquiry)
 
     private fun resolveKeyAllArray(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) = resolveKeyAll(key, typeInfo, handler, composer, parent)
+            composer: Handling
+    ) = resolveKeyAll(
+            inquiry, typeInfo, handler, composer)
             .toTypedArray(typeInfo.componentType.jvmErasure)
 
     open fun resolveKeyAllAsync(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) = handler.resolveAllAsync(key, parent)
+            composer: Handling
+    ) = handler.resolveAllAsync(inquiry)
 
     private fun resolveKeyAllArrayAsync(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) = resolveKeyAllAsync(key, typeInfo, handler, composer, parent) then {
+            composer: Handling
+    ) = resolveKeyAllAsync(
+            inquiry, typeInfo, handler, composer) then {
         it.toTypedArray(typeInfo.componentType.jvmErasure)
     }
 
-    private fun resolveArgumentLazy(
-            key:      Any,
+    private fun resolveKeyLazy(
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            composer: Handling,
-            parent:   Inquiry? = null
-    ) =
-        lazy(LazyThreadSafetyMode.NONE) {
-            // ** MUST ** use composer, composer since
-            // handler may be invalidated at this point
-            resolveArgument(key, typeInfo, composer, composer, parent)
-        }
+            composer: Handling
+    ) = lazy(LazyThreadSafetyMode.NONE) {
+        // ** MUST ** use composer, composer since
+        // handler may be invalidated at this point
+        resolveKeyInfer(inquiry, typeInfo, composer, composer)
+    }
 
-    private fun resolveArgumentFunc(
-            key:      Any,
+    private fun resolveKeyFunc(
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            composer: Handling,
-            parent:   Inquiry? = null
+            composer: Handling
     ): () -> Any? = {
         // ** MUST ** use composer, composer since
         // handler may be invalidated at this point
-        resolveArgument(key, typeInfo, composer, composer, parent)
+        resolveKeyInfer(inquiry, typeInfo, composer, composer)
     }
 
-    private fun resolveArgument(
-            key:      Any,
+    private fun resolveKeyInfer(
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
-            composer: Handling,
-            parent:   Inquiry? = null
+            composer: Handling
     ): Any? {
         val flags = typeInfo.flags
         return when {
             flags has TypeFlags.COLLECTION  ->
                 when {
-                    flags has TypeFlags.PROMISE ->
-                        resolveKeyAllAsync(key, typeInfo, handler, composer, parent)
-                    else -> resolveKeyAll(key, typeInfo, handler, composer, parent)
+                    inquiry.wantsAsync ->
+                        resolveKeyAllAsync(
+                                inquiry, typeInfo, handler, composer)
+                    else -> resolveKeyAll(
+                            inquiry, typeInfo, handler, composer)
                 }
             flags has TypeFlags.ARRAY ->
                 when {
-                    flags has TypeFlags.PROMISE ->
+                    inquiry.wantsAsync ->
                         resolveKeyAllArrayAsync(
-                                key, typeInfo, handler, composer, parent)
+                                inquiry, typeInfo, handler, composer)
                     else -> resolveKeyAllArray(
-                            key, typeInfo, handler, composer, parent)
+                            inquiry, typeInfo, handler, composer)
                 }
-            flags has TypeFlags.PROMISE ->
-                resolveKeyAsync(key, typeInfo, handler, composer, parent)
-            else -> resolveKey(key, typeInfo, handler, composer, parent)
+            inquiry.wantsAsync -> resolveKeyAsync(
+                    inquiry, typeInfo, handler, composer)
+            else -> resolveKey(inquiry, typeInfo, handler, composer)
         }
     }
 

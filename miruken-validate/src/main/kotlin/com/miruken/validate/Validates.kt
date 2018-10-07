@@ -1,7 +1,7 @@
 package com.miruken.validate
 
 import com.miruken.callback.policy.ContravariantPolicy
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.UsePolicy
 import kotlin.reflect.KClass
 
@@ -22,7 +22,7 @@ object ValidatesPolicy : ContravariantPolicy({
 }) {
     override fun approve(
             callback: Any,
-            binding:  PolicyMemberBinding
+            binding: PolicyMemberBinding
     ) = (callback as Validation).let {
         val validates = binding.annotation as Validates
         (it.outcome.isValid ||

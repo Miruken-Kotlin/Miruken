@@ -1,7 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.CallbackPolicy
-import com.miruken.callback.policy.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import kotlin.reflect.KType
 
 interface Callback {
@@ -33,8 +34,8 @@ interface FilteringCallback {
 
 interface DispatchingCallbackGuard {
     fun canDispatch(
-            handler: Any,
-            binding: PolicyMemberBinding
+            target:     Any,
+            dispatcher: CallableDispatch
     ): Boolean
 }
 

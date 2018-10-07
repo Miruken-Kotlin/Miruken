@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.MemberBinding
+import com.miruken.callback.policy.bindings.MemberBinding
 
 class SingletonLifestyle<Res> : Lifestyle<Res>() {
     @Volatile
