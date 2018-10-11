@@ -2,6 +2,10 @@ package com.miruken.callback
 
 import com.miruken.OrderedComparator
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.runtime.getMetaAnnotations
+import com.miruken.runtime.normalize
+import java.lang.reflect.AnnotatedElement
+import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KType
 
 fun Handling.skipFilters(skip: Boolean = true) =
@@ -28,7 +32,7 @@ fun Handling.getOrderedFilters(
         filterType:      KType,
         binding:         MemberBinding,
         filterProviders: List<FilteringProvider>
-): List<Filtering<*,*>>? {
+): List<Pair<Filtering<*,*>, FilteringProvider>>? {
     val options   = getOptions(FilterOptions())
     val providers = filterProviders +
             (options?.providers ?: emptyList())
@@ -47,6 +51,57 @@ fun Handling.getOrderedFilters(
     }
     return providers.flatMap {
         it.getFilters(binding, filterType, handler)
-    }.sortedWith(OrderedComparator)
+                .map { filter -> filter to it }
+    }.sortedWith(FilterComparator)
 }
 
+object FilterComparator :
+        Comparator<Pair<Filtering<*,*>, FilteringProvider>> {
+    override fun compare(
+            o1: Pair<Filtering<*, *>, FilteringProvider>?,
+            o2: Pair<Filtering<*, *>, FilteringProvider>?
+    ) = OrderedComparator.compare(o1?.first, o2?.first)
+}
+
+fun KAnnotatedElement.getFilterProviders() =
+        (getMetaAnnotations<UseFilterProvider>()
+                .flatMap { it.second }
+                .asSequence()
+                .mapNotNull {
+                    it.filterProviderClass.objectInstance
+                } +
+         getMetaAnnotations<UseFilterProviderFactory>()
+                .flatMap {
+                    it.second.mapNotNull { f ->
+                        f.factoryClass.objectInstance
+                                ?.createProvider(it.first) }
+                } +
+        (getMetaAnnotations<UseFilter>()
+                .flatMap { it.second }
+                .takeIf { it.isNotEmpty() }?.let {
+                    sequenceOf(UseFiltersFilterProvider(it))
+                } ?: emptySequence())
+        ).toList()
+         .normalize()
+
+
+fun AnnotatedElement.getFilterProviders() =
+        (getMetaAnnotations<UseFilterProvider>()
+                .flatMap { it.second }
+                .asSequence()
+                .mapNotNull {
+                    it.filterProviderClass.objectInstance
+                } +
+         getMetaAnnotations<UseFilterProviderFactory>()
+                        .flatMap {
+                            it.second.mapNotNull { f ->
+                                f.factoryClass.objectInstance
+                                        ?.createProvider(it.first) }
+                        } +
+        (getMetaAnnotations<UseFilter>()
+                        .flatMap { it.second }
+                        .takeIf { it.isNotEmpty() }?.let {
+                            sequenceOf(UseFiltersFilterProvider(it))
+                        } ?: emptySequence())
+        ).toList()
+         .normalize()

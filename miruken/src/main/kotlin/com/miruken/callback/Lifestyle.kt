@@ -14,12 +14,13 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
             composer: Handling,
             next:     Next<Res>,
             provider: FilteringProvider?
-    ) = getInstance(binding, next, composer)?.let {
+    ) = getInstance(callback, binding, next, composer)?.let {
         @Suppress("UNCHECKED_CAST")
         Promise.resolve(it as Any) as Promise<Res>
     } ?: next.abort()
 
     abstract fun getInstance(
+            inquiry:  Inquiry,
             binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling

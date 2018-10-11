@@ -2,38 +2,58 @@ package com.miruken.callback.policy.bindings
 
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.FilteringProviderFactory
+import com.miruken.callback.UseFilterProviderFactory
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
+class MetadataConstraint(
+        private val metadata: Map<Any, Any?>
+) : BindingConstraint {
+
+    override fun require(metadata: BindingMetadata) {
+        for ((key, value) in this.metadata) {
+            metadata.set(key, value)
+        }
+    }
+
+    override fun matches(metadata: BindingMetadata): Boolean {
+        for ((key, value) in this.metadata) {
+            if (!metadata.has(key)) return false
+            return metadata.get<Any>(key) == value
+        }
+        return true
+    }
+}
+
+class MetadataKeyConstraint(
+        private val key:   Any,
+        private val value: Any?
+): BindingConstraint {
+
+    override fun require(metadata: BindingMetadata) =
+            metadata.set(key, value)
+
+    override fun matches(metadata: BindingMetadata) =
+            metadata.has(key) && metadata.get<Any>(key) == value
+}
+
+@UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class Metadata(val key: String)
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
+@UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class MetadataBool(val key: String, val value: Boolean)
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
+@UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class MetadataInt(val key: String, val value: Int)
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
+@UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class MetadataLong(val key: String, val value: Long)
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
+@UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class MetadataFloat(val key: String, val value: Float)
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
+@UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class MetadataDouble(val key: String, val value: Double)
 
-class MetadataConstraintFactory : FilteringProviderFactory
+object MetadataConstraintFactory : FilteringProviderFactory
 {
     override fun createProvider(
             annotation: Annotation

@@ -584,10 +584,17 @@ class HandlerTest {
         val handler = FilteringHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(bar))
         assertEquals(2, bar.handled)
-        assertEquals(3, bar.filters.size)
-        assertSame(handler, bar.filters[2])
-        assertTrue { bar.filters[0] is AbortingFilter }
-        assertTrue { bar.filters[1] is LogFilter }
+        assertEquals(4, bar.filters.size)
+        assertTrue(bar.filters.contains(handler))
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ContravarintFilter>()
+                .count(), 1)
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<AbortingFilter<*>>()
+                .count(), 1)
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<LogFilter<*,*>>()
+                .count(), 1)
     }
 
     @Test fun `Aborts pipeline`() {
@@ -845,6 +852,16 @@ class HandlerTest {
             screen.context = null
             assertNotSame(screen, context.resolve()!!)
             assertTrue(screen.closed)
+        }
+    }
+
+    @Test fun `Rejects scoped dependency in singleton`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        HandlerDescriptor.getDescriptor<LifestyleMismatch>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            assertNull(context.resolve<LifestyleMismatch>())
         }
     }
 
@@ -1348,6 +1365,11 @@ class HandlerTest {
                 override val mainScreen:     Screen
         ): ApplicationBase(), App<C>
 
+    class LifestyleMismatch
+        @Provides @Singleton constructor(
+            screen: Screen
+        )
+
     class OverloadedConstructors @Provides constructor() {
         var foo: Foo? = null
         var bar: Bar? = null
@@ -1399,6 +1421,10 @@ class HandlerTest {
                     inquiry.createKeyInstance() as Filtering<T,R>
             }
         }
+
+        @Provides
+        fun createContravarintFilter() =
+                ContravarintFilter()
 
         @Provides
         fun <T: Any, R: Any?> forExceptions(
@@ -1491,6 +1517,24 @@ class HandlerTest {
                 next:     Next<T>,
                 provider: FilteringProvider?
         ) = next()
+    }
+
+    class ContravarintFilter : Filtering<Any, Unit> {
+        override fun next(
+                callback: Any,
+                binding:  MemberBinding,
+                composer: Handling,
+                next:     Next<Unit>,
+                provider: FilteringProvider?
+        ): Promise<Unit> {
+            val cb = extractTesting(callback)
+            cb?.filters?.add(this)
+            return next()
+        }
+
+        override var order: Int? = null
+
+
     }
 
     class LogFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {

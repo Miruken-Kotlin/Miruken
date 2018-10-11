@@ -5,7 +5,6 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.ConstraintBuilder
 import com.miruken.callback.policy.bindings.ConstraintProvider
 import com.miruken.protocol.Protocol
-import com.miruken.runtime.getMetaAnnotations
 import kotlin.reflect.*
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubtypeOf
@@ -26,24 +25,11 @@ class Argument(val parameter: KParameter) : KAnnotatedElement {
         private set
 
     init {
-        val constraints =
-            ((getMetaAnnotations<UseFilterProvider>()
-                    .flatMap { it.second }
-                    .asSequence()
-                    .mapNotNull {
-                        it.filterProviderClass.objectInstance
-                                as? ConstraintProvider
-                    }) +
-             (getMetaAnnotations<UseFilterProviderFactory>()
-                    .flatMap {
-                        it.second.mapNotNull { f ->
-                            f.factoryClass.objectInstance
-                                    ?.createProvider(it.first)
-                                    as? ConstraintProvider
-                        }
-                    })
-             ).map { it.constraint}
-              .toList()
+        val constraints = getFilterProviders()
+                .asSequence()
+                .filterIsInstance<ConstraintProvider>()
+                .map { it.constraint }
+                .toList()
 
         if (constraints.isNotEmpty()) {
             this.constraints = {
@@ -65,6 +51,7 @@ class Argument(val parameter: KParameter) : KAnnotatedElement {
         Inquiry(it, flags has TypeFlags.COLLECTION ||
                 flags has TypeFlags.ARRAY, parent).apply {
             wantsAsync = flags has TypeFlags.PROMISE
+            constraints?.invoke(ConstraintBuilder(this))
         }
     }
 

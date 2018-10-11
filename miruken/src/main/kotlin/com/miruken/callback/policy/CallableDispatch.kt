@@ -15,32 +15,6 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val strict     = annotations.any { it is Strict }
     val returnInfo = TypeFlags.parse(callable.returnType)
     val arguments  = callable.valueParameters.map { Argument(it) }
-    val owningType = callable.instanceParameter?.type ?:
-                     callable.returnType
-
-    val filterProviders by lazy {
-        (((callable.getMetaAnnotations<UseFilterProvider>() +
-           owningClass.getMetaAnnotations())
-                .flatMap { it.second }
-                .asSequence()
-                .mapNotNull {
-                    it.filterProviderClass.objectInstance
-                }) +
-        ((callable.getMetaAnnotations<UseFilterProviderFactory>() +
-          owningClass.getMetaAnnotations())
-                .flatMap { it.second.mapNotNull { f ->
-                       f.factoryClass.objectInstance
-                        ?.createProvider(it.first) }
-                }) +
-        ((callable.getMetaAnnotations<UseFilter>() +
-          owningClass.getMetaAnnotations())
-                .flatMap { it.second }
-                .takeIf  { it.isNotEmpty() }?.let {
-                    sequenceOf(UseFiltersFilterProvider(it))
-                } ?: emptySequence())
-        ).toList()
-         .normalize()
-    }
 
     init { callable.isAccessible = true }
 
@@ -48,6 +22,11 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     inline   val owningClass get() = owningType.jvmErasure
     inline   val returnType  get() = callable.returnType
     override val annotations get() = callable.annotations
+
+    val owningType get() = callable.instanceParameter?.type
+            ?: callable.returnType
+
+    val filterProviders by lazy { getFilterProviders() }
 
     val javaMember: Member get() = when (callable) {
         is KFunction<*> -> callable.javaMethod ?: callable.javaConstructor!!

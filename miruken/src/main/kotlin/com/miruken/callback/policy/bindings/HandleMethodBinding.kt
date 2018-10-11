@@ -2,7 +2,6 @@ package com.miruken.callback.policy.bindings
 
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.normalize
 import com.miruken.toKType
 import java.lang.reflect.InvocationTargetException
@@ -23,32 +22,10 @@ class HandleMethodBinding(
         method.declaringClass.getAnnotation(SkipFilters::class.java) != null
 
     val filterProviders by lazy {
-        (((method.getMetaAnnotations<UseFilterProvider>() +
-           method.declaringClass.getMetaAnnotations() +
-           protocolMethod.getMetaAnnotations() +
-           protocolMethod.declaringClass.getMetaAnnotations())
-                .flatMap { it.second }
-                .asSequence()
-                .mapNotNull {
-                    it.filterProviderClass.objectInstance
-                }) +
-        ((method.getMetaAnnotations<UseFilterProviderFactory>() +
-          method.declaringClass.getMetaAnnotations() +
-          protocolMethod.getMetaAnnotations() +
-          protocolMethod.declaringClass.getMetaAnnotations())
-                .flatMap { it.second.mapNotNull { f ->
-                    f.factoryClass.objectInstance
-                            ?.createProvider(it.first) }
-                }) +
-        ((method.getMetaAnnotations<UseFilter>() +
-          method.declaringClass.getMetaAnnotations() +
-          protocolMethod.getMetaAnnotations() +
-          protocolMethod.declaringClass.getMetaAnnotations())
-                .flatMap { it.second }
-                .takeIf { it.isNotEmpty() }?.let {
-                    sequenceOf(UseFiltersFilterProvider(it))
-                } ?: emptySequence())
-          ).toList()
+        method.getFilterProviders() +
+        method.declaringClass.getFilterProviders() +
+        protocolMethod.getFilterProviders() +
+        protocolMethod.declaringClass.getFilterProviders()
            .normalize()
     }
 
@@ -72,9 +49,9 @@ class HandleMethodBinding(
                 }
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.next(handleMethod, this, comp, { c,p ->
+                    pipeline.first.next(handleMethod, this, comp, { c,p ->
                         next((c ?: comp).skipFilters(), p ?: true)
-                    })
+                    }, pipeline.second)
                 }
             })(composer, true).let { result ->
                 result.takeIf {
@@ -113,7 +90,7 @@ class HandleMethodBinding(
             target:       Any,
             handleMethod: HandleMethod,
             composer:     Handling
-    ): List<Filtering<Any,Any?>>? {
+    ): List<Pair<Filtering<Any,Any?>, FilteringProvider>>? {
         val filterType = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(HandleMethod.TYPE),
                 KTypeProjection.invariant(handleMethod.resultType!!)))
@@ -122,7 +99,7 @@ class HandleMethodBinding(
                 ((target as? Filtering<*,*>)?.let {
                     filters + InstanceFilterProvider(it)
                 } ?: filters)
-        ) as? List<Filtering<Any,Any?>>
+        ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>?
     }
 
     companion object : FilteredObject()

@@ -26,6 +26,7 @@ class HandlerDescriptor(
     init {
         validate(handlerClass)
         addCompatibleMembers()
+        addFilterProviders(handlerClass.getFilterProviders())
         handlerClass.companionObject?.also {
             getDescriptor(it)
         }
@@ -82,7 +83,7 @@ class HandlerDescriptor(
             return result
         }
         result or method.dispatch(receiver, callback,
-                callbackType, composer, results)
+                callbackType, composer, this, results)
     }
 
     private fun addCompatibleMembers() {

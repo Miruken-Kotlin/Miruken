@@ -4,6 +4,7 @@ import com.miruken.TypeFlags
 import com.miruken.callback.*
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.CollectResultsBlock
+import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.mapOpenParameters
 import com.miruken.runtime.closeType
@@ -40,6 +41,7 @@ class PolicyMemberBinding(
             callback:     Any,
             callbackType: KType?,
             composer:     Handling,
+            descriptor:   HandlerDescriptor,
             results:      CollectResultsBlock?
     ): HandleResult {
         (callback as? DispatchingCallbackGuard)?.let {
@@ -75,7 +77,7 @@ class PolicyMemberBinding(
         }
 
         val filters = resolveFilters(handler, filterCallback,
-                callbackType, resultType, composer)
+                callbackType, resultType, composer, descriptor)
                 ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
             val args = resolveArguments(callback, ruleArgs,
@@ -86,8 +88,8 @@ class PolicyMemberBinding(
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
                 val args = resolveArguments(callback,
-                        ruleArgs, callbackType, comp, typeBindings)
-                        ?: notHandled()
+                        ruleArgs, callbackType, comp.enableFilters(),
+                        typeBindings) ?: notHandled()
                 val baseResult   = dispatcher.invoke(handler, args)
                 val handleResult = when (baseResult) {
                     is HandleResult -> baseResult
@@ -99,9 +101,9 @@ class PolicyMemberBinding(
                 Promise.resolve(baseResult)
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.next(filterCallback, this, comp, { c, p ->
+                    pipeline.first.next(filterCallback, this, comp, { c, p ->
                         next((c ?: comp).skipFilters(), p ?: true)
-                    })
+                    }, pipeline.second)
                 }
             })(composer, true)
         } catch (e: Throwable) {
@@ -129,8 +131,9 @@ class PolicyMemberBinding(
             callback:     Any,
             callbackType: KType?,
             resultType:   KType,
-            composer:     Handling
-    ): List<Filtering<Any,Any?>>? {
+            composer:     Handling,
+            descriptor:   HandlerDescriptor
+    ): List<Pair<Filtering<Any,Any?>, FilteringProvider>>? {
         if ((callback as? FilteringCallback)?.canFilter == false) {
             return emptyList()
         }
@@ -142,10 +145,11 @@ class PolicyMemberBinding(
                 KTypeProjection.invariant(resultType)))
         return composer.getOrderedFilters(filterType, this,
                 dispatcher.filterProviders +
+                descriptor.filters + policy.filters +
                 ((handler as? Filtering<*,*>)?.let {
                     listOf(InstanceFilterProvider(it))
                 } ?: emptyList())
-        ) as? List<Filtering<Any,Any?>>
+        ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>
     }
 
     private fun resolveArguments(
@@ -187,7 +191,7 @@ class PolicyMemberBinding(
                             return@all HandleResult.NOT_HANDLED
                         }
                         val inquiry = argument.getInquiry(
-                                parent,typeBindings.value)
+                                parent, typeBindings.value)
                             ?: return@all HandleResult.NOT_HANDLED
                         val optional = typeInfo.flags has TypeFlags.OPTIONAL
                         val resolver = KeyResolver.getResolver(

@@ -7,6 +7,7 @@ class SingletonLifestyle<Res> : Lifestyle<Res>() {
     private var _instance: Res? = null
 
     override fun getInstance(
+            inquiry:  Inquiry,
             binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling

@@ -4,12 +4,16 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.MemberBinding
 import java.util.concurrent.ConcurrentHashMap
 
-class ContextualLifestyle<Res>: Lifestyle<Res>() {
+class ContextualLifestyle<Res> : Lifestyle<Res>() {
     override fun getInstance(
+            inquiry:  Inquiry,
             binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling
     ): Res? {
+        if (!checkCompatibleParent(inquiry.parent)) {
+            return null
+        }
         val context = composer.resolve<Context>() ?: return null
         return _cache.getOrPut(context) {
             val instance = next().get()
@@ -45,6 +49,12 @@ class ContextualLifestyle<Res>: Lifestyle<Res>() {
             (it as? AutoCloseable)?.close()
         }
     }
+
+    private fun checkCompatibleParent(parent: Inquiry?) =
+            parent?.dispatcher?.let { dispatcher ->
+                dispatcher.filterProviders
+                        .all { it is ContextualLifestyleProvider}
+            } ?: true
 
     private val _cache = ConcurrentHashMap<Context, Res>()
 }
