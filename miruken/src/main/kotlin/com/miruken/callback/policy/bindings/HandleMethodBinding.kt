@@ -97,7 +97,7 @@ class HandleMethodBinding(
         return composer.getOrderedFilters(filterType, this,
                 filterProviders +
                 ((target as? Filtering<*,*>)?.let {
-                    filters + InstanceFilterProvider(it)
+                    filters + FilterInstanceProvider(it)
                 } ?: filters)
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>?
     }

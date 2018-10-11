@@ -20,7 +20,7 @@ fun Handling.enableFilters(enable: Boolean = true) =
 
 fun Handling.withFilters(vararg filters: Filtering<*,*>) =
         withOptions(FilterOptions().apply {
-            providers = listOf(InstanceFilterProvider(*filters))
+            providers = listOf(FilterInstanceProvider(*filters))
         })
 
 fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
@@ -78,8 +78,9 @@ fun KAnnotatedElement.getFilterProviders() =
                 } +
         (getMetaAnnotations<UseFilter>()
                 .flatMap { it.second }
+                .map(::createSpec)
                 .takeIf { it.isNotEmpty() }?.let {
-                    sequenceOf(UseFiltersFilterProvider(it))
+                    sequenceOf(FilterSpecProvider(it))
                 } ?: emptySequence())
         ).toList()
          .normalize()
@@ -100,8 +101,16 @@ fun AnnotatedElement.getFilterProviders() =
                         } +
         (getMetaAnnotations<UseFilter>()
                         .flatMap { it.second }
+                        .map(::createSpec)
                         .takeIf { it.isNotEmpty() }?.let {
-                            sequenceOf(UseFiltersFilterProvider(it))
+                            sequenceOf(FilterSpecProvider(it))
                         } ?: emptySequence())
         ).toList()
          .normalize()
+
+
+private fun createSpec(useFilter: UseFilter) = FilterSpec(
+        useFilter.filterClass,
+        useFilter.many,
+        useFilter.order.takeIf { it >=0 },
+        useFilter.required)

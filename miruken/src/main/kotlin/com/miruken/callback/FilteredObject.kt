@@ -7,18 +7,18 @@ abstract class FilteredObject : Filtered {
         get() = _filters
 
     final override fun addFilters(
-            vararg filters: Filtering<*,*>
+            vararg filters: FilterSpec
     ) {
         if (filters.isNotEmpty()) {
-            _filters += InstanceFilterProvider(*filters)
+            _filters += FilterSpecProvider(filters.toList())
         }
     }
 
     final override fun addFilters(
-            filters: Collection<Filtering<*,*>>
+            filters: Collection<FilterSpec>
     ) {
         if (filters.isNotEmpty()) {
-            _filters += InstanceFilterProvider(*filters.toTypedArray())
+            _filters += FilterSpecProvider(filters)
         }
     }
 

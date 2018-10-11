@@ -14,7 +14,7 @@ class NamedConstraint(val name: String) : BindingConstraint {
             metadata.name == null || metadata.name == name
 }
 
-object NamedConstraintFactory : FilteringProviderFactory {
+object NamedFactory : FilteringProviderFactory {
     override fun createProvider(
             annotation: Annotation
     ): FilteringProvider {
@@ -23,8 +23,5 @@ object NamedConstraintFactory : FilteringProviderFactory {
     }
 }
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER,
-        AnnotationTarget.CONSTRUCTOR)
-@UseFilterProviderFactory(NamedConstraintFactory::class)
+@UseFilterProviderFactory(NamedFactory::class)
 annotation class Named(val name: String)

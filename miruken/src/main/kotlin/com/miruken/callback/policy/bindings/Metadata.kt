@@ -4,6 +4,18 @@ import com.miruken.callback.FilteringProvider
 import com.miruken.callback.FilteringProviderFactory
 import com.miruken.callback.UseFilterProviderFactory
 
+class MetadataKeyConstraint(
+        private val key:   Any,
+        private val value: Any?
+): BindingConstraint {
+
+    override fun require(metadata: BindingMetadata) =
+            metadata.set(key, value)
+
+    override fun matches(metadata: BindingMetadata) =
+            metadata.has(key) && metadata.get<Any>(key) == value
+}
+
 class MetadataConstraint(
         private val metadata: Map<Any, Any?>
 ) : BindingConstraint {
@@ -21,18 +33,6 @@ class MetadataConstraint(
         }
         return true
     }
-}
-
-class MetadataKeyConstraint(
-        private val key:   Any,
-        private val value: Any?
-): BindingConstraint {
-
-    override fun require(metadata: BindingMetadata) =
-            metadata.set(key, value)
-
-    override fun matches(metadata: BindingMetadata) =
-            metadata.has(key) && metadata.get<Any>(key) == value
 }
 
 @UseFilterProviderFactory(MetadataConstraintFactory::class)

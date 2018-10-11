@@ -3,7 +3,7 @@ package com.miruken.callback.policy.bindings
 import com.miruken.Stage
 import com.miruken.callback.*
 
-class ConstraintFilter<Res>: Filtering<BindingScope, Res> {
+class ConstraintFilter<Res> : Filtering<BindingScope, Res> {
     override var order: Int? = Stage.FILTER
 
     override fun next(

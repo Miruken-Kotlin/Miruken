@@ -35,7 +35,7 @@ fun Handling.validateAsync(
         stopOnFailure = options?.stopOnFailure == true
     }
     handle(validation, true)
-    return (validation.result as Promise<*>) then {
+    return (validation.result as Promise<*>) then { _ ->
         validation.outcome.also {
             (target as? ValidationAware)?.validationOutcome = it
         }

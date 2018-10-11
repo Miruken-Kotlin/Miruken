@@ -8,10 +8,10 @@ import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 
-open class UseFiltersFilterProvider(
-        private val useFilters: List<UseFilter>
+open class FilterSpecProvider(
+        private val specs: Collection<FilterSpec>
 ): FilteringProvider {
-    override val required = useFilters.any { it.required }
+    override val required = specs.any { it.required }
 
     override fun getFilters(
             binding:    MemberBinding,
@@ -20,7 +20,7 @@ open class UseFiltersFilterProvider(
     ): List<Filtering<*,*>> {
         val bundle  = Bundle(true)
         val filters = mutableListOf<Filtering<*,*>>()
-        useFilters.forEach {
+        specs.forEach {
             getFilters(filterType, it, binding, bundle, filters)
         }
         composer.handle(bundle)
@@ -32,12 +32,12 @@ open class UseFiltersFilterProvider(
 
     private fun getFilters(
             filterType: KType,
-            useFilter:  UseFilter,
+            filterSpec: FilterSpec,
             binding:    MemberBinding,
             bundle:     Bundle,
             filters:    MutableList<Filtering<*,*>>
     ) {
-        val filterClass       = useFilter.filterClass
+        val filterClass       = filterSpec.filterClass
         val filterConformance = filterClass.getFilteringInterface()
         val filterImplClasses = mutableSetOf<KClass<out Filtering<*,*>>>()
         val typeBindings = mutableMapOf<KTypeParameter, KType>()
@@ -51,36 +51,36 @@ open class UseFiltersFilterProvider(
             }
             @Suppress("UNCHECKED_CAST")
             if (acceptFilterType(closedFilterType, binding)) {
-                val order  = useFilter.order
+                val order  = filterSpec.order
                 val filter = filterClass.objectInstance
                 if (filter != null) return
-                if (useFilter.many) {
-                    bundle.add { b ->
-                        filters.addAll(b.stop.resolveAll(closedFilterType)
-                                .apply {
-                                    if (useFilter.required && isEmpty()) {
-                                        error("At least one filter is required for '${useFilter.filterClass}'")
-                                    }
+                if (filterSpec.many) {
+                    bundle.add { b -> filters.addAll(
+                            b.stop.resolveAll(closedFilterType)
+                            .apply {
+                                if (filterSpec.required && isEmpty()) {
+                                    error("At least one filter is required for '${filterSpec.filterClass}'")
                                 }
-                                .asSequence()
-                                .filterIsInstance<Filtering<*,*>>()
-                                .filter { f ->
-                                    filterImplClasses.add(f::class).also {
-                                        if (it && order >= 0) f.order = order
-                                    }
+                            }
+                            .asSequence()
+                            .filterIsInstance<Filtering<*,*>>()
+                            .filter { f ->
+                                filterImplClasses.add(f::class).also {
+                                    if (it ) f.order = order
                                 }
-                                .toList())
+                            }
+                            .toList())
                     }
                 } else {
                     bundle.add { b ->
                         (b.stop.resolve(closedFilterType) as? Filtering<*,*>)
                             ?.takeIf { f ->
                                 filterImplClasses.add(f::class).also {
-                                    if (it && order >= 0) f.order = order
+                                    if (it) f.order = order
                                     filters.add(f)
                                 }
-                            } ?: if (useFilter.required) {
-                                    error("A filter is required for '${useFilter.filterClass}'")
+                            } ?: if (filterSpec.required) {
+                                    error("A filter is required for '${filterSpec.filterClass}'")
                             }
                     }
                 }

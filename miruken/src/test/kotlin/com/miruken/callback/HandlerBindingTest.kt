@@ -7,6 +7,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class HandlerBindingTest {
     private lateinit var _handler: Handling
@@ -14,7 +15,47 @@ class HandlerBindingTest {
     @Before
     fun setup() {
         _handler = TypeHandlers
+        HandlerDescriptor.getDescriptor<Client>()
+        HandlerDescriptor.getDescriptor<LocalConfiguration>()
+        HandlerDescriptor.getDescriptor<RemoteConfiguration>()
         HandlerDescriptor.getDescriptor<Hospital>()
+    }
+
+    @Test fun `Resolves instance without constraints`() {
+        val configuration = _handler.resolve<Configuration>()
+        assertNotNull(configuration)
+    }
+
+    @Test fun `Resolves all instances without constraints`() {
+        val configurations = _handler.resolveAll<Configuration>()
+        assertEquals(2, configurations.size)
+    }
+
+    @Test fun `Resolves named instance`() {
+        val local = _handler.resolve<Configuration> { named("local") }
+        assertNotNull(local)
+        assertTrue(local is LocalConfiguration)
+        assertEquals("http://localhost/Server", local!!.serverUrl)
+
+        val remote = _handler.resolve<Configuration> { named("remote") }
+        assertNotNull(remote)
+        assertTrue(remote is RemoteConfiguration)
+        assertEquals("http://remote/Server", remote!!.serverUrl)
+    }
+
+    @Test fun `Resolves all named instance`() {
+        val configurations = _handler.resolveAll<Configuration> {
+            named("remote")
+        }
+        assertEquals(1, configurations.size)
+        assertTrue(configurations[0] is RemoteConfiguration)
+    }
+
+    @Test fun `Injects dependency based on name`() {
+        val client = _handler.resolve<Client>()
+        assertNotNull(client)
+        assertEquals("http://localhost/Server", client!!.local.serverUrl)
+        assertEquals("http://remote/Server", client.remote.serverUrl)
     }
 
     @Test fun `Resolves instance based on qualifier`() {
@@ -80,4 +121,25 @@ class HandlerBindingTest {
         @Provides @Singleton @Programmer
         fun getProgrammer() = PersonData("Paul", "Allen")
     }
+
+    interface Configuration {
+        val serverUrl: String
+    }
+
+    class LocalConfiguration
+        @Provides @Singleton @Named("local")
+        constructor(): Configuration {
+        override val serverUrl = "http://localhost/Server"
+    }
+
+    class RemoteConfiguration
+        @Provides @Singleton @Named("remote")
+        constructor(): Configuration {
+        override val serverUrl = "http://remote/Server"
+    }
+
+    class Client @Provides constructor(
+        @Named("local")  val local: Configuration,
+        @Named("remote") val remote: Configuration
+    )
 }

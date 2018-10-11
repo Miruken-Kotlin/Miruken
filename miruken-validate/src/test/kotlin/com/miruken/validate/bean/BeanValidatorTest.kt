@@ -1,6 +1,5 @@
 package com.miruken.validate.bean
 
-import com.miruken.callback.plus
 import com.miruken.validate.*
 import org.junit.After
 import org.junit.Test

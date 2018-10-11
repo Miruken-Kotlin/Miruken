@@ -147,7 +147,7 @@ class PolicyMemberBinding(
                 dispatcher.filterProviders +
                 descriptor.filters + policy.filters +
                 ((handler as? Filtering<*,*>)?.let {
-                    listOf(InstanceFilterProvider(it))
+                    listOf(FilterInstanceProvider(it))
                 } ?: emptyList())
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>
     }

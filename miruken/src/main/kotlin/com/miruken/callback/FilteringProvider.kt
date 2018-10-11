@@ -1,7 +1,6 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.bindings.MemberBinding
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 interface FilteringProvider {
@@ -17,8 +16,8 @@ interface FilteringProvider {
 interface Filtered {
     val filters: Collection<FilteringProvider>
 
-    fun addFilters(vararg filters: Filtering<*,*>)
-    fun addFilters(filters: Collection<Filtering<*,*>>)
+    fun addFilters(vararg filters: FilterSpec)
+    fun addFilters(filters: Collection<FilterSpec>)
     fun addFilterProviders(vararg providers: FilteringProvider)
     fun addFilterProviders(providers: Collection<FilteringProvider>)
 }

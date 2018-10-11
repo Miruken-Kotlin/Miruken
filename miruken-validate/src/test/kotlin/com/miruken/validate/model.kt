@@ -1,7 +1,7 @@
 package com.miruken.validate
 
-import com.miruken.validate.bean.Valid
 import java.time.LocalDate
+import javax.validation.Valid
 import javax.validation.constraints.Min
 import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull

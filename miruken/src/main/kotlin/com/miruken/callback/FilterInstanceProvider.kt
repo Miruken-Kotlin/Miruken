@@ -4,7 +4,7 @@ import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
-class InstanceFilterProvider(
+class FilterInstanceProvider(
         vararg   val filters:  Filtering<*,*>,
         override val required: Boolean = false
 ) : FilteringProvider {

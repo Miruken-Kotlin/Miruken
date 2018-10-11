@@ -20,7 +20,7 @@ class BeanValidator(
         val scopes  = validation.scopes.map { it.java }.toTypedArray()
         val context = validatorFactory.usingContext()
         context.constraintValidatorFactory(
-                CascadeConstraintValidatorFactoy(context, composer,
+                ComposerConstraintValidatorFactoy(context, composer,
                         validatorFactory.constraintValidatorFactory))
         context.validator.validate(target, *scopes).forEach {
             val propertyName = it.propertyPath.toString()
