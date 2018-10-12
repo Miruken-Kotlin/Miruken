@@ -2,12 +2,14 @@ package com.miruken.validate.bean
 
 import com.miruken.callback.Handler
 import com.miruken.callback.Handling
+import com.miruken.callback.Provides
+import com.miruken.callback.Singleton
 import com.miruken.validate.Validates
 import com.miruken.validate.Validation
 import com.miruken.validate.scopes.Everything
 import javax.validation.ValidatorFactory
 
-class BeanValidator(
+class BeanValidator @Provides @Singleton constructor(
         private val validatorFactory: ValidatorFactory
 ) : Handler() {
     @Validates(Everything::class)

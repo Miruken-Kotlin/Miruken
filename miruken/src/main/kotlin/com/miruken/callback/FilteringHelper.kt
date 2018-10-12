@@ -31,10 +31,10 @@ fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
 fun Handling.getOrderedFilters(
         filterType:      KType,
         binding:         MemberBinding,
-        filterProviders: List<FilteringProvider>
+        filterProviders: Sequence<Collection<FilteringProvider>>
 ): List<Pair<Filtering<*,*>, FilteringProvider>>? {
     val options   = getOptions(FilterOptions())
-    val providers = filterProviders +
+    val providers = filterProviders.flatten() +
             (options?.providers ?: emptyList())
 
     val handler = when (options?.skipFilters) {
@@ -49,7 +49,7 @@ fun Handling.getOrderedFilters(
         }
         else -> this
     }
-    return providers.flatMap {
+    return providers.toList().flatMap {
         it.getFilters(binding, filterType, handler)
                 .map { filter -> filter to it }
     }.sortedWith(FilterComparator)
@@ -68,12 +68,12 @@ fun KAnnotatedElement.getFilterProviders() =
                 .flatMap { it.second }
                 .asSequence()
                 .mapNotNull {
-                    it.filterProviderClass.objectInstance
+                    it.provideBy.objectInstance
                 } +
          getMetaAnnotations<UseFilterProviderFactory>()
                 .flatMap {
                     it.second.mapNotNull { f ->
-                        f.factoryClass.objectInstance
+                        f.createBy.objectInstance
                                 ?.createProvider(it.first) }
                 } +
         (getMetaAnnotations<UseFilter>()
@@ -91,12 +91,12 @@ fun AnnotatedElement.getFilterProviders() =
                 .flatMap { it.second }
                 .asSequence()
                 .mapNotNull {
-                    it.filterProviderClass.objectInstance
+                    it.provideBy.objectInstance
                 } +
          getMetaAnnotations<UseFilterProviderFactory>()
                         .flatMap {
                             it.second.mapNotNull { f ->
-                                f.factoryClass.objectInstance
+                                f.createBy.objectInstance
                                         ?.createProvider(it.first) }
                         } +
         (getMetaAnnotations<UseFilter>()
@@ -110,7 +110,7 @@ fun AnnotatedElement.getFilterProviders() =
 
 
 private fun createSpec(useFilter: UseFilter) = FilterSpec(
-        useFilter.filterClass,
+        useFilter.filterBy,
         useFilter.many,
         useFilter.order.takeIf { it >=0 },
         useFilter.required)

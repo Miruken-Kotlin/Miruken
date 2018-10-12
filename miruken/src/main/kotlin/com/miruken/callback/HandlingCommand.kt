@@ -50,7 +50,7 @@ fun Handling.commandAll(
         callbackType: KType
 ): List<Any> {
     val command = Command(callback, callbackType, true)
-    handle(command) failure {
+    handle(command, true) failure {
         throw NotHandledException(callback)
     }
     return command.result as List<Any>
@@ -69,7 +69,7 @@ fun Handling.commandAllAsync(
         wantsAsync = true
     }
     return try {
-        handle(command) failure {
+        handle(command, true) failure {
             Promise.reject(NotHandledException(callback))
         } ?: (command.result as Promise<*>) then { it as List<Any> }
     } catch (e: Throwable) {

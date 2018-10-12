@@ -29,15 +29,17 @@ class Player : Person() {
 }
 
 class Team : Model() {
+    var id:       Int? = null
+    var active:   Boolean? = null
     @NotEmpty @Min(1)
-    var name:     String?       = null
+    var name:     String? = null
     @Pattern(regexp  = "^[u|U]\\d\\d?\$",
              message = "division must match U followed by age")
-    var division: String?       = null
+    var division: String? = null
     @NotNull @Valid
-    var coach:    Coach?        = null
+    var coach:    Coach? = null
     @Valid
     var players:  List<Player>? = null
-    var registed: Boolean       = false
+    var registed: Boolean? = null
 }
 

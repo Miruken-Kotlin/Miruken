@@ -94,11 +94,12 @@ class HandleMethodBinding(
         val filterType = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(HandleMethod.TYPE),
                 KTypeProjection.invariant(handleMethod.resultType!!)))
-        return composer.getOrderedFilters(filterType, this,
-                filterProviders +
-                ((target as? Filtering<*,*>)?.let {
-                    filters + FilterInstanceProvider(it)
-                } ?: filters)
+        return composer.getOrderedFilters(
+                filterType, this, sequenceOf(
+                        filterProviders,
+                        ((target as? Filtering<*,*>)?.let {
+                            filters + FilterInstanceProvider(it)
+                        } ?: filters))
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>?
     }
 

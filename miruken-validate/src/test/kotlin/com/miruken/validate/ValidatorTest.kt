@@ -151,8 +151,8 @@ class ValidatorTest {
                  team:    Team,
                  outcome: ValidationResult.Outcome
          ) = Promise.delay(10) then {
-            team.coach?.also {
-                if (it.license.isNullOrEmpty()) {
+            team.coach?.also { coach ->
+                if (coach.license.isNullOrEmpty()) {
                     outcome.addError("coach.license", "licensed coach is required")
                 }
             } ?: outcome.addError("coach", "coach is required")

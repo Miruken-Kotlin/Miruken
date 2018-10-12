@@ -37,7 +37,7 @@ open class FilterSpecProvider(
             bundle:     Bundle,
             filters:    MutableList<Filtering<*,*>>
     ) {
-        val filterClass       = filterSpec.filterClass
+        val filterClass       = filterSpec.filterby
         val filterConformance = filterClass.getFilteringInterface()
         val filterImplClasses = mutableSetOf<KClass<out Filtering<*,*>>>()
         val typeBindings = mutableMapOf<KTypeParameter, KType>()
@@ -59,7 +59,7 @@ open class FilterSpecProvider(
                             b.stop.resolveAll(closedFilterType)
                             .apply {
                                 if (filterSpec.required && isEmpty()) {
-                                    error("At least one filter is required for '${filterSpec.filterClass}'")
+                                    error("At least one filter is required for '${filterSpec.filterby}'")
                                 }
                             }
                             .asSequence()
@@ -80,7 +80,7 @@ open class FilterSpecProvider(
                                     filters.add(f)
                                 }
                             } ?: if (filterSpec.required) {
-                                    error("A filter is required for '${filterSpec.filterClass}'")
+                                    error("A filter is required for '${filterSpec.filterby}'")
                             }
                     }
                 }

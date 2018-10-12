@@ -72,7 +72,7 @@ class PolicyMemberBinding(
                 componentType.closeType(typeBindings.value)
                         ?: return HandleResult.NOT_HANDLED
             } else {
-                dispatcher.returnType
+                logicalType
             }
         }
 
@@ -143,12 +143,14 @@ class PolicyMemberBinding(
         val filterType = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(cbType),
                 KTypeProjection.invariant(resultType)))
-        return composer.getOrderedFilters(filterType, this,
-                dispatcher.filterProviders +
-                descriptor.filters + policy.filters +
-                ((handler as? Filtering<*,*>)?.let {
-                    listOf(FilterInstanceProvider(it))
-                } ?: emptyList())
+        return composer.getOrderedFilters(
+                filterType, this, sequenceOf(
+                        dispatcher.filterProviders,
+                        descriptor.filters,
+                        policy.filters,
+                        ((handler as? Filtering<*,*>)?.let {
+                            listOf(FilterInstanceProvider(it))
+                        } ?: emptyList()))
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>
     }
 
