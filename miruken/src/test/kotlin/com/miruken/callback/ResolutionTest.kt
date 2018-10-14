@@ -35,15 +35,21 @@ class ResolutionTest {
 
     @Test fun `Resolves handlers`() {
         HandlerDescriptor.getDescriptor<EmailHandler>()
-        val handler = EmailProvider()
+        val handler = (EmailProvider()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
         val id      = handler.infer.command(SendEmail("Hello")) as Int
-        assertEquals(1, id)
+        assertEquals(10, id)
     }
 
     @Test fun `Resolves implied handlers`() {
-        val handler = EmailHandler()
+        val handler = (EmailHandler()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
         val id      = handler.infer.command(SendEmail("Hello")) as Int
-        assertEquals(1, id)
+        assertEquals(10, id)
     }
 
     @Test fun `Resolves all handlers`() {
@@ -96,7 +102,10 @@ class ResolutionTest {
     }
 
     @Test fun `Provides methods`() {
-        val provider = EmailProvider()
+        val provider = (EmailProvider()
+                     +  BillingImpl()
+                     +  RepositoryProvider()
+                     +  FilterProvider())
         var id       = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
         id           = provider.proxy<EmailFeature>().email("Hello")
@@ -104,7 +113,10 @@ class ResolutionTest {
     }
 
     @Test fun `Provides properties`() {
-        val provider = EmailProvider()
+        val provider = (EmailProvider()
+                     +  BillingImpl()
+                     +  RepositoryProvider()
+                     +  FilterProvider())
         val count    = provider.proxy<EmailFeature>().count
         assertEquals(0, count)
     }
@@ -116,12 +128,15 @@ class ResolutionTest {
     }
 
     @Test fun `Provides methods polymorphically`() {
-        val provider = EmailProvider() + OfflineProvider()
+        val provider = (EmailProvider()
+                     + OfflineProvider()
+                     + EmailProvider()
+                     + FilterProvider())
         var id       = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
         id           = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(2, id)
-        id       = provider.proxy<EmailFeature>().email("Hello")
+        id           = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 
@@ -133,7 +148,9 @@ class ResolutionTest {
     }
 
     @Test fun `Chains Provided methods strictly`() {
-        val provider = OfflineProvider() + EmailProvider()
+        val provider = (OfflineProvider()
+                     + EmailProvider()
+                     + FilterProvider())
         val id       = provider.strict.proxy<EmailFeature>().email("22")
         assertEquals(1, id)
     }
@@ -153,12 +170,16 @@ class ResolutionTest {
     }
 
     @Test fun `Provides methods with no return value`() {
-        val provider = EmailProvider() + BillingProvider(BillingImpl())
+        val provider = (EmailProvider()
+                     + BillingProvider(BillingImpl())
+                     + EmailProvider()
+                     + FilterProvider())
         provider.proxy<EmailFeature>().cancelEmail(1)
     }
 
     @Test fun `Visits all providers`() {
-        val provider = ManyProvider()
+        val provider = (ManyProvider()
+                     +  FilterProvider())
         provider.proxy<EmailFeature>().cancelEmail(13)
     }
 
@@ -198,7 +219,9 @@ class ResolutionTest {
         val master = EmailProvider()
         val mirror = EmailProvider()
         val backup = EmailProvider()
-        val email  = master + mirror + backup
+        val email  = (master + mirror + backup
+                   + RepositoryProvider()
+                   + FilterProvider())
         val id     = email.broadcast.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
         assertEquals(1, master.resolve<EmailHandler>()!!.count)
@@ -207,7 +230,10 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves methods calls inferred`() {
-        val provider = EmailProvider()
+        val provider = (EmailProvider()
+                     +  BillingImpl()
+                     +  RepositoryProvider()
+                     +  FilterProvider())
         val id       = provider.infer.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
@@ -400,7 +426,7 @@ class ResolutionTest {
         fun next(
                 callback:       Cb,
                 next:           Next<Res>,
-                binding: MemberBinding,
+                binding:        MemberBinding,
                 repository:     Repository<Message>,
                 @Proxy billing: Billing
         ): Promise<Res> {
@@ -426,7 +452,7 @@ class ResolutionTest {
     class BalanceFilter<T: Entity, Res: Number> : DynamicFilter<Create<T>, Res>() {
         fun next(callback:   Create<T>,
                  next:       Next<Res>,
-                 binding: MemberBinding,
+                 binding:    MemberBinding,
                  repository: Repository<T>,
                  billing:    Billing
         ): Promise<Res> {

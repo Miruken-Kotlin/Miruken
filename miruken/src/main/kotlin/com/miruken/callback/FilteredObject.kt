@@ -7,28 +7,12 @@ abstract class FilteredObject : Filtered {
         get() = _filters
 
     final override fun addFilters(
-            vararg filters: FilterSpec
-    ) {
-        if (filters.isNotEmpty()) {
-            _filters += FilterSpecProvider(filters.toList())
-        }
-    }
-
-    final override fun addFilters(
-            filters: Collection<FilterSpec>
-    ) {
-        if (filters.isNotEmpty()) {
-            _filters += FilterSpecProvider(filters)
-        }
-    }
-
-    final override fun addFilterProviders(
             vararg providers: FilteringProvider
     ) {
         _filters += providers
     }
 
-    final override fun addFilterProviders(
+    final override fun addFilters(
             providers: Collection<FilteringProvider>
     ) {
         _filters += providers

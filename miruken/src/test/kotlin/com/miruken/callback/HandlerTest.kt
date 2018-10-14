@@ -590,7 +590,7 @@ class HandlerTest {
                 .filterIsInstance<ContravarintFilter>()
                 .count(), 1)
         assertEquals(bar.filters.asSequence()
-                .filterIsInstance<AbortingFilter<*>>()
+                .filterIsInstance<ExceptionBehavior<*,*>>()
                 .count(), 1)
         assertEquals(bar.filters.asSequence()
                 .filterIsInstance<LogFilter<*,*>>()
@@ -611,10 +611,18 @@ class HandlerTest {
         assertEquals(0, bee.filters.size)
     }
 
-    @Test fun `Rejects if skipping required filters`() {
+    @Test fun `Skips non required filters`() {
+        val bar     = Bar()
         val handler = FilteringHandler()
-        assertEquals(HandleResult.HANDLED, handler.handle(Bee()))
-        assertEquals(HandleResult.NOT_HANDLED, handler.skipFilters().handle(Bee()))
+        assertEquals(HandleResult.HANDLED, handler.skipFilters().handle(bar))
+        assertEquals(3, bar.filters.size)
+        assertTrue(bar.filters.contains(handler))
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ContravarintFilter>()
+                .count(), 1)
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ExceptionBehavior<*,*>>()
+                .count(), 1)
     }
 
     @Test fun `Propagates rejected filter promise`() {
@@ -1388,14 +1396,13 @@ class HandlerTest {
         override var order: Int? = null
 
         @Handles
-        @AllFilters
+        @Log @Contravarint @Exceptions @Aborting
         fun handleBar(bar: Bar) {
             bar.handled++
         }
 
         @Handles
-        @AllFilters
-        @SkipFilters
+        @Log @SkipFilters
         fun handleBee(bee: Bee) {
         }
 
@@ -1410,17 +1417,9 @@ class HandlerTest {
         }
 
         @Provides
-        fun <T: Any, R: Any?> createFilter(
+        fun <T: Any, R: Any?> forLogging(
                 inquiry: Inquiry
-        ): Filtering<T,R>? {
-            @Suppress("UNCHECKED_CAST")
-            return when (inquiry.keyClass) {
-                null -> null
-                LogFilter::class, Filtering::class -> LogFilter()
-                else ->
-                    inquiry.createKeyInstance() as Filtering<T,R>
-            }
-        }
+        ): LogFilter<T,R> = LogFilter()
 
         @Provides
         fun createContravarintFilter() =
@@ -1438,12 +1437,13 @@ class HandlerTest {
         }
 
         @Provides
-        fun <R: Any?> createAborting(inquiry: Inquiry): Filtering<Bar,R> =
-                AbortingFilter()
+        fun <R: Any?> createAborting(
+                inquiry: Inquiry
+        ): AbortingFilter<R> = AbortingFilter()
 
         override fun next(
                 callback: Bar,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Unit>,
                 provider: FilteringProvider?
@@ -1456,19 +1456,19 @@ class HandlerTest {
 
     class SpecialFilteredHandler : Handler() {
         @Handles
-        @AllFilters
+        @Log @Contravarint @Exceptions
         fun handleFoo(foo: Foo): SpecialFoo {
             return SpecialFoo()
         }
 
         @Handles
-        @AllFilters
+        @Log @Contravarint @Exceptions
         fun handleBaz(baz: Baz): Promise<SpecialBaz> {
             return Promise.resolve(SpecialBaz())
         }
 
         @Handles
-        @AllFilters
+        @Log @Contravarint @Exceptions
         fun handleBaz(bar: Bar): Promise<SpecialBar> {
             return Promise.resolve(SpecialBar())
         }
@@ -1479,47 +1479,58 @@ class HandlerTest {
         }
     }
 
-    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Filtering::class, many = true, required = true)
-    annotation class AllFilters
 
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
 
         override fun next(
                 callback: T,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>,
                 provider: FilteringProvider?
         ) = next()
     }
 
-    class RequestFilterCb<in T: Any> : Filtering<T, Any?> {
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(RequestFilter::class, required = true)
+    annotation class Request
+
+    class RequestCbFilter<in T: Any> : Filtering<T, Any?> {
         override var order: Int? = null
 
         override fun next(
                 callback: T,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Any?>,
                 provider: FilteringProvider?
         ) = next()
     }
 
-    class RequestFilterRes<T> : Filtering<Any, T> {
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(RequestCbFilter::class, required = true)
+    annotation class RequestCb
+
+    class RequestResFilter<T> : Filtering<Any, T> {
         override var order: Int? = null
 
         override fun next(
                 callback: Any,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<T>,
                 provider: FilteringProvider?
         ) = next()
     }
 
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(RequestResFilter::class, required = true)
+    annotation class RequestRes
+
     class ContravarintFilter : Filtering<Any, Unit> {
+        override var order: Int? = null
+
         override fun next(
                 callback: Any,
                 binding:  MemberBinding,
@@ -1531,18 +1542,18 @@ class HandlerTest {
             cb?.filters?.add(this)
             return next()
         }
-
-        override var order: Int? = null
-
-
     }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(ContravarintFilter::class, required = true)
+    annotation class Contravarint
 
     class LogFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         override var order: Int? = 1
 
         override fun next(
                 callback: Cb,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
@@ -1554,43 +1565,52 @@ class HandlerTest {
         }
     }
 
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(LogFilter::class)
+    annotation class Log
+
     class AbortingFilter<R: Any?> : Filtering<Bar, R> {
         override var order: Int? = 0
 
         override fun next(
                 callback: Bar,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>,
                 provider: FilteringProvider?
-        ): Promise<R> {
-            val cb = extractTesting(callback)
-            cb?.filters?.add(this)
-            return when {
+        ) = when {
                 callback.handled > 99 -> next.abort()
                 else -> next()
             }
         }
-    }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(ExceptionBehavior::class)
-    annotation class Exceptions
+    @UseFilter(AbortingFilter::class, required = true)
+    annotation class Aborting
 
     class ExceptionBehavior<in Req: Any, Res: Any?> : Filtering<Req, Res> {
         override var order: Int? = 2
 
         override fun next(
                 callback: Req,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
         ): Promise<Res> {
-            next()
-            return Promise.reject(IllegalStateException("System shutdown"))
+            val cb = extractTesting(callback)
+            cb?.filters?.add(this)
+            val result = next()
+            if (callback is Boo) {
+                return Promise.reject(IllegalStateException("System shutdown"))
+            }
+            return result
         }
     }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(ExceptionBehavior::class, required = true)
+    annotation class Exceptions
 
     companion object {
         private fun extractTesting(callback: Any): Testing? {

@@ -10,14 +10,12 @@ interface FilteringProvider {
             binding:    MemberBinding,
             filterType: KType,
             composer:   Handling
-    ): List<Filtering<*,*>>
+    ): List<Filtering<*,*>>?
 }
 
 interface Filtered {
     val filters: Collection<FilteringProvider>
 
-    fun addFilters(vararg filters: FilterSpec)
-    fun addFilters(filters: Collection<FilterSpec>)
-    fun addFilterProviders(vararg providers: FilteringProvider)
-    fun addFilterProviders(providers: Collection<FilteringProvider>)
+    fun addFilters(vararg providers: FilteringProvider)
+    fun addFilters(providers: Collection<FilteringProvider>)
 }

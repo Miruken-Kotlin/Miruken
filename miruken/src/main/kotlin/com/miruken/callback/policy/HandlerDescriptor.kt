@@ -26,7 +26,7 @@ class HandlerDescriptor(
     init {
         validate(handlerClass)
         addCompatibleMembers()
-        addFilterProviders(handlerClass.getFilterProviders())
+        addFilters(handlerClass.getFilterProviders())
         handlerClass.companionObject?.also {
             getDescriptor(it)
         }

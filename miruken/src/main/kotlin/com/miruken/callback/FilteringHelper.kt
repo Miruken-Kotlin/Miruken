@@ -23,9 +23,16 @@ fun Handling.withFilters(vararg filters: Filtering<*,*>) =
             providers = listOf(FilterInstanceProvider(*filters))
         })
 
-fun Handling.withFilterProviders(vararg providers: FilteringProvider) =
+fun Handling.withFilters(vararg providers: FilteringProvider) =
         withOptions(FilterOptions().apply {
             this.providers = providers.toList()
+        })
+
+fun Handling.withFilters(vararg specs: FilterSpec) =
+        withOptions(FilterOptions().apply {
+            this.providers = specs.map {
+                FilterSpecProvider(it)
+            }
         })
 
 fun Handling.getOrderedFilters(
@@ -34,24 +41,27 @@ fun Handling.getOrderedFilters(
         filterProviders: Sequence<Collection<FilteringProvider>>
 ): List<Pair<Filtering<*,*>, FilteringProvider>>? {
     val options   = getOptions(FilterOptions())
-    val providers = filterProviders.flatten() +
+    var providers = filterProviders.flatten() +
             (options?.providers ?: emptyList())
 
     val handler = when (options?.skipFilters) {
-        true -> return when {
-            binding.filters.any { it.required } ||
-            providers.any       { it.required } -> null
-            else -> emptyList()
+        true -> {
+            providers = providers.filter { it.required }
+            this
         }
-        null -> when (binding.skipFilters) {
-            true -> return emptyList()
-            else -> skipFilters()
+        null -> {
+            if (binding.skipFilters) {
+                providers = providers.filter { it.required }
+            }
+            this.skipFilters()
         }
         else -> this
     }
-    return providers.toList().flatMap {
-        it.getFilters(binding, filterType, handler)
-                .map { filter -> filter to it }
+
+    return providers.toList().flatMap { provider ->
+        provider.getFilters(binding, filterType, handler)
+                ?.map { filter -> filter to provider }
+                ?: return null
     }.sortedWith(FilterComparator)
 }
 
@@ -66,7 +76,27 @@ object FilterComparator :
 fun KAnnotatedElement.getFilterProviders() =
         (getMetaAnnotations<UseFilterProvider>()
                 .flatMap { it.second }
-                .asSequence()
+                .mapNotNull {
+                    it.provideBy.objectInstance
+                } +
+         getMetaAnnotations<UseFilterProviderFactory>()
+                .flatMap { it.second
+                    it.second.mapNotNull { f ->
+                        f.createBy.objectInstance
+                                ?.createProvider(it.first) }
+                } +
+        (getMetaAnnotations<UseFilter>()
+                .flatMap { it.second }
+                .map {
+                    FilterSpecProvider(createSpec(it))
+                })
+        ).toList()
+         .normalize()
+
+
+fun AnnotatedElement.getFilterProviders() =
+        (getMetaAnnotations<UseFilterProvider>()
+                .flatMap { it.second }
                 .mapNotNull {
                     it.provideBy.objectInstance
                 } +
@@ -78,39 +108,14 @@ fun KAnnotatedElement.getFilterProviders() =
                 } +
         (getMetaAnnotations<UseFilter>()
                 .flatMap { it.second }
-                .map(::createSpec)
-                .takeIf { it.isNotEmpty() }?.let {
-                    sequenceOf(FilterSpecProvider(it))
-                } ?: emptySequence())
-        ).toList()
-         .normalize()
-
-
-fun AnnotatedElement.getFilterProviders() =
-        (getMetaAnnotations<UseFilterProvider>()
-                .flatMap { it.second }
-                .asSequence()
-                .mapNotNull {
-                    it.provideBy.objectInstance
-                } +
-         getMetaAnnotations<UseFilterProviderFactory>()
-                        .flatMap {
-                            it.second.mapNotNull { f ->
-                                f.createBy.objectInstance
-                                        ?.createProvider(it.first) }
-                        } +
-        (getMetaAnnotations<UseFilter>()
-                        .flatMap { it.second }
-                        .map(::createSpec)
-                        .takeIf { it.isNotEmpty() }?.let {
-                            sequenceOf(FilterSpecProvider(it))
-                        } ?: emptySequence())
+                .map {
+                    FilterSpecProvider(createSpec(it))
+                })
         ).toList()
          .normalize()
 
 
 private fun createSpec(useFilter: UseFilter) = FilterSpec(
         useFilter.filterBy,
-        useFilter.many,
         useFilter.order.takeIf { it >=0 },
         useFilter.required)

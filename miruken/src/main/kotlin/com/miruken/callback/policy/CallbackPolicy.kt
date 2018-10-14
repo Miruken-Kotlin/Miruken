@@ -15,7 +15,7 @@ abstract class CallbackPolicy(
         val strict: Boolean = false
 ) : FilteredObject(), Comparator<Any> {
 
-    init { addFilterProviders(filters) }
+    init { addFilters(filters) }
 
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }

@@ -88,7 +88,7 @@ class PolicyMemberBinding(
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
                 val args = resolveArguments(callback,
-                        ruleArgs, callbackType, comp.enableFilters(),
+                        ruleArgs, callbackType, comp,
                         typeBindings) ?: notHandled()
                 val baseResult   = dispatcher.invoke(handler, args)
                 val handleResult = when (baseResult) {
@@ -149,7 +149,7 @@ class PolicyMemberBinding(
                         descriptor.filters,
                         policy.filters,
                         ((handler as? Filtering<*,*>)?.let {
-                            listOf(FilterInstanceProvider(it))
+                            listOf(FilterInstanceProvider(true, it))
                         } ?: emptyList()))
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>
     }

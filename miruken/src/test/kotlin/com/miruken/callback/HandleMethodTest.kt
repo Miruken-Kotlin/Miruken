@@ -174,7 +174,7 @@ class HandleMethodTest {
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = typeOf<LogFilter2<Int>>()
+        val otherType = typeOf<Log2Filter<Int>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
         assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(1, bindings.size)
@@ -232,7 +232,7 @@ class HandleMethodTest {
 
         @Provides
         fun <R: Any?> createAborting(inquiry: Inquiry) =
-                AbortingFilter<R>()
+                AbortFilter<R>()
     }
 
     @Log
@@ -271,9 +271,9 @@ class HandleMethodTest {
         }
 
         @Provides
-        @Suppress("UNCHECKED_CAST")
-        fun <Res: Any?> createLogger(inquiry: Inquiry) =
-                inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
+        fun <Res: Any?> createLogger(
+                inquiry: Inquiry
+        ): Log2Filter<Res> = Log2Filter()
     }
 
     @Log2
@@ -292,17 +292,12 @@ class HandleMethodTest {
                 inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
     }
 
-    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
-    @UseFilter(LogFilter::class)
-    annotation class Log
-
     class LogFilter<Res> : Filtering<HandleMethod, Res> {
         override var order: Int? = 1
 
         override fun next(
                 callback: HandleMethod,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
@@ -314,17 +309,18 @@ class HandleMethodTest {
         }
     }
 
+
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
             AnnotationTarget.PROPERTY)
-    @UseFilter(LogFilter2::class)
-    annotation class Log2
+    @UseFilter(LogFilter::class)
+    annotation class Log
 
-    class LogFilter2<Res> : Filtering<HandleMethod, Res> {
+    class Log2Filter<Res> : Filtering<HandleMethod, Res> {
         override var order: Int? = 2
 
         override fun next(
                 callback: HandleMethod,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<Res>,
                 provider: FilteringProvider?
@@ -336,15 +332,15 @@ class HandleMethodTest {
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
             AnnotationTarget.PROPERTY)
-    @UseFilter(AbortingFilter::class)
-    annotation class Abort
+    @UseFilter(Log2Filter::class)
+    annotation class Log2
 
-    class AbortingFilter<R: Any?> : Filtering<HandleMethod, R> {
+    class AbortFilter<R: Any?> : Filtering<HandleMethod, R> {
         override var order: Int? = 0
 
         override fun next(
                 callback: HandleMethod,
-                binding: MemberBinding,
+                binding:  MemberBinding,
                 composer: Handling,
                 next:     Next<R>,
                 provider: FilteringProvider?
@@ -354,4 +350,9 @@ class HandleMethodTest {
             else -> next()
         }
     }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
+            AnnotationTarget.PROPERTY)
+    @UseFilter(AbortFilter::class)
+    annotation class Abort
 }
