@@ -41,6 +41,13 @@ open class LifestyleProvider(
         return listOf(LIFESTYLES.getOrPut(
                 binding to resultType, initializer))
     }
+
+    override fun equals(other: Any?) =
+            this === other || other?.let {
+                this::class == it::class
+            } ?: false
+
+    override fun hashCode() = this::class.hashCode()
 }
 
 private val LIFESTYLES = ConcurrentHashMap<

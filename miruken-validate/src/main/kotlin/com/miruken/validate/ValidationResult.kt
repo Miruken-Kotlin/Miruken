@@ -18,7 +18,7 @@ sealed class ValidationResult {
         private var _errorDetails = lazy(_errors) { error }
 
         override val isValid get() = _errors.isEmpty()
-        val culprits get() = _errors.keys
+        val culprits: Collection<String> get() = _errors.keys
 
         fun getCulprits(validatorName: String) =
                 _errors.filter {

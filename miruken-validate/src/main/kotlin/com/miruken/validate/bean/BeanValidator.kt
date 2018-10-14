@@ -9,9 +9,13 @@ import com.miruken.validate.Validation
 import com.miruken.validate.scopes.Everything
 import javax.validation.ValidatorFactory
 
-class BeanValidator @Provides @Singleton constructor(
+class BeanValidator (
         private val validatorFactory: ValidatorFactory
 ) : Handler() {
+    @Provides @Singleton constructor()
+        : this(javax.validation.Validation
+            .buildDefaultValidatorFactory())
+
     @Validates(Everything::class)
     fun <T> validate(
             target:     T,

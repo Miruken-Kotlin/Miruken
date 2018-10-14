@@ -1360,7 +1360,8 @@ class HandlerTest {
                 Promise.resolve(ScreenModel(model))
     }
 
-    open class ApplicationBase @Provides @Singleton constructor()
+    open class ApplicationBase
+        @Provides @Singleton constructor()
 
     interface App<C: ControllerBase> {
         val rootController: C

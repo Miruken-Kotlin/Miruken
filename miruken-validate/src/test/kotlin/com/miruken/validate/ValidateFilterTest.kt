@@ -5,10 +5,13 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.validate.bean.BeanValidator
+import javax.validation.Valid
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ValidateFilterTest {
     private lateinit var _handler: Handling
@@ -26,8 +29,7 @@ class ValidateFilterTest {
         _handler = TypeHandlers
     }
 
-    @Test
-    fun `Validates request`() {
+    @Test fun `Validates request`() {
         assertAsync(testName) { done ->
             _handler.infer.commandAsync(CreateTeam(Team().apply {
                 name  = "Liverpool"
@@ -38,8 +40,30 @@ class ValidateFilterTest {
                 }
             })) then {
                 val team = it as Team
-
+                assertEquals(team.validationOutcome?.isValid, true)
+                assertEquals(1, team.id)
+                assertEquals(team.active, true)
                 done()
+            }
+        }
+    }
+
+    @Test fun `Rejects invalid request`() {
+        assertAsync(testName) { done ->
+            _handler.infer.commandAsync(CreateTeam(Team())) then {
+                val team = it as Team
+                assertEquals(team.validationOutcome?.isValid, true)
+                assertEquals(1, team.id)
+                assertEquals(team.active, true)
+                done()
+            } catch { exception ->
+                (exception as? ValidationException)?.also {
+                    val outcome = it.outcome
+                    assertTrue(outcome.culprits.containsAll(listOf("name", "coach")))
+                    assertEquals("must not be empty", outcome["name"])
+                    assertEquals("must not be null", outcome["coach"])
+                    done()
+                }
             }
         }
     }
@@ -49,7 +73,8 @@ class ValidateFilterTest {
     }
 
     data class CreateTeam(
-        override val team: Team
+            @Valid
+            override val team: Team
     ) : TeamAction
 
     data class TeamCreated(
@@ -57,6 +82,7 @@ class ValidateFilterTest {
     ) : TeamAction
 
     data class RemoveTeam(
+            @Valid
             override val team: Team
     ) : TeamAction
 

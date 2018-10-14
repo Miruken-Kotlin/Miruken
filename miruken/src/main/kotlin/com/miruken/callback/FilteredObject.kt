@@ -1,7 +1,9 @@
 package com.miruken.callback
 
 abstract class FilteredObject : Filtered {
-    private var _filters = emptyList<FilteringProvider>()
+    private val _filters by lazy {
+        mutableSetOf<FilteringProvider>()
+    }
 
     override val filters: Collection<FilteringProvider>
         get() = _filters
@@ -9,12 +11,12 @@ abstract class FilteredObject : Filtered {
     final override fun addFilters(
             vararg providers: FilteringProvider
     ) {
-        _filters += providers
+        _filters.addAll(providers)
     }
 
     final override fun addFilters(
             providers: Collection<FilteringProvider>
     ) {
-        _filters += providers
+        _filters.addAll(providers)
     }
 }

@@ -31,7 +31,7 @@ class Player : Person() {
 class Team : Model() {
     var id:       Int? = null
     var active:   Boolean? = null
-    @NotEmpty @Min(1)
+    @NotEmpty
     var name:     String? = null
     @Pattern(regexp  = "^[u|U]\\d\\d?\$",
              message = "division must match U followed by age")

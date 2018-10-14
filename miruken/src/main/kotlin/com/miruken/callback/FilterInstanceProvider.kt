@@ -6,8 +6,10 @@ import kotlin.reflect.KType
 
 class FilterInstanceProvider(
         override val required: Boolean,
-        vararg   val filters:  Filtering<*,*>
+        vararg       filters:  Filtering<*,*>
 ) : FilteringProvider {
+    private val _filters = setOf(*filters)
+
     constructor(vararg filters: Filtering<*,*>)
         : this(false, *filters)
 
@@ -15,7 +17,7 @@ class FilterInstanceProvider(
             binding:    MemberBinding,
             filterType: KType,
             composer:   Handling
-    ) = filters.filter {
+    ) = _filters.filter {
         val filterConformance = it::class.getFilteringInterface()
         isCompatibleWith(filterConformance, filterType)
     }

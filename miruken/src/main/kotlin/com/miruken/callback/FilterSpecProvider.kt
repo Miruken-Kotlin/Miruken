@@ -47,4 +47,11 @@ open class FilterSpecProvider(
     protected open fun acceptFilterType(
         filterType: KType, binding: MemberBinding) = true
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        return other is FilterSpecProvider
+            && other.filterSpec == filterSpec
+    }
+
+    override fun hashCode() = filterSpec.hashCode()
 }
