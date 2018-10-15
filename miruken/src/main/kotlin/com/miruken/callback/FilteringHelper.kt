@@ -62,7 +62,9 @@ fun Handling.getOrderedFilters(
         provider.getFilters(binding, filterType, handler)
                 ?.map { filter -> filter to provider }
                 ?: return null
-    }.sortedWith(FilterComparator)
+    }.asSequence()
+     .toSortedSet(FilterComparator)
+     .toList()
 }
 
 object FilterComparator :
