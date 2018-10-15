@@ -1,7 +1,8 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptor
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import org.junit.Test
 import java.math.BigDecimal
@@ -13,60 +14,66 @@ class ResolutionTest {
     @Test fun `Overrides providers`() {
         val demo    = DemoHandler()
         val handler = Handler()
-        val resolve = handler.resolving.provide(demo).resolve<DemoHandler>()
+        val resolve = handler.infer.provide(demo).resolve<DemoHandler>()
         assertSame(demo, resolve)
     }
 
     @Test fun `Overrides providers polymorphically`() {
         val email   = EmailHandler()
         val handler = Handler()
-        val resolve = handler.resolving.provide(email).resolve<EmailFeature>()
+        val resolve = handler.infer.provide(email).resolve<EmailFeature>()
         assertSame(email, resolve)
     }
 
     @Test fun `Overrides providers resolving`() {
-        HandlerDescriptor.getDescriptorFor<DemoProvider>()
+        HandlerDescriptor.getDescriptor<DemoProvider>()
         val demo    = DemoHandler()
         val handler = Handler()
-        val resolve = handler.provide(demo).resolving.resolve<DemoHandler>()
+        val resolve = handler.provide(demo).infer.resolve<DemoHandler>()
         assertSame(demo, resolve)
     }
 
     @Test fun `Resolves handlers`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
-        val handler = EmailProvider()
-        val id      = handler.resolving.command(SendEmail("Hello")) as Int
-        assertEquals(1, id)
+        HandlerDescriptor.getDescriptor<EmailHandler>()
+        val handler = (EmailProvider()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
+        val id      = handler.infer.command(SendEmail("Hello")) as Int
+        assertEquals(10, id)
     }
 
     @Test fun `Resolves implied handlers`() {
-        val handler = EmailHandler()
-        val id      = handler.resolving.command(SendEmail("Hello")) as Int
-        assertEquals(1, id)
+        val handler = (EmailHandler()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
+        val id      = handler.infer.command(SendEmail("Hello")) as Int
+        assertEquals(10, id)
     }
 
     @Test fun `Resolves all handlers`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
-        HandlerDescriptor.getDescriptorFor<OfflineHandler>()
+        HandlerDescriptor.getDescriptor<EmailHandler>()
+        HandlerDescriptor.getDescriptor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
-        val id      = handler.resolvingAll.command(SendEmail("Hello")) as Int
+        val id      = handler.inferAll.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
     @Test fun `Resolves implied open-generic handlers`() {
         val handler = Repository<Message>()
         val message = Message()
-        val result  = handler.resolving.handle(Create(message))
+        val result  = handler.infer.handle(Create(message))
         assertEquals(HandleResult.HANDLED, result)
     }
 
     @Test fun `Resolves handlers with filters`() {
-        HandlerDescriptor.getDescriptorFor<EmailHandler>()
+        HandlerDescriptor.getDescriptor<EmailHandler>()
         val handler = (EmailProvider()
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val id = handler.resolving.command(SendEmail("Hello")) as Int
+        val id = handler.infer.command(SendEmail("Hello")) as Int
         assertEquals(10, id)
     }
 
@@ -75,7 +82,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val balance = handler.resolving.command(
+        val balance = handler.infer.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
                 as BigDecimal
         assertEquals(13.toBigDecimal(), balance)
@@ -83,19 +90,22 @@ class ResolutionTest {
 
     @Test fun `Skips filters with missing dependencies`() {
         val handler = Accountant() + FilterProvider()
-        handler.resolving.command(
+        handler.infer.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
     }
 
     @Test fun `Fails if no handlers resolved`() {
         val handler = BillingImpl().toHandler()
         assertFailsWith(NotHandledException::class) {
-            handler.resolving.command(SendEmail("Hello"))
+            handler.infer.command(SendEmail("Hello"))
         }
     }
 
     @Test fun `Provides methods`() {
-        val provider = EmailProvider()
+        val provider = (EmailProvider()
+                     +  BillingImpl()
+                     +  RepositoryProvider()
+                     +  FilterProvider())
         var id       = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
         id           = provider.proxy<EmailFeature>().email("Hello")
@@ -103,7 +113,10 @@ class ResolutionTest {
     }
 
     @Test fun `Provides properties`() {
-        val provider = EmailProvider()
+        val provider = (EmailProvider()
+                     +  BillingImpl()
+                     +  RepositoryProvider()
+                     +  FilterProvider())
         val count    = provider.proxy<EmailFeature>().count
         assertEquals(0, count)
     }
@@ -115,12 +128,15 @@ class ResolutionTest {
     }
 
     @Test fun `Provides methods polymorphically`() {
-        val provider = EmailProvider() + OfflineProvider()
+        val provider = (EmailProvider()
+                     + OfflineProvider()
+                     + EmailProvider()
+                     + FilterProvider())
         var id       = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
         id           = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(2, id)
-        id       = provider.proxy<EmailFeature>().email("Hello")
+        id           = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 
@@ -132,7 +148,9 @@ class ResolutionTest {
     }
 
     @Test fun `Chains Provided methods strictly`() {
-        val provider = OfflineProvider() + EmailProvider()
+        val provider = (OfflineProvider()
+                     + EmailProvider()
+                     + FilterProvider())
         val id       = provider.strict.proxy<EmailFeature>().email("22")
         assertEquals(1, id)
     }
@@ -152,12 +170,16 @@ class ResolutionTest {
     }
 
     @Test fun `Provides methods with no return value`() {
-        val provider = EmailProvider() + BillingProvider(BillingImpl())
+        val provider = (EmailProvider()
+                     + BillingProvider(BillingImpl())
+                     + EmailProvider()
+                     + FilterProvider())
         provider.proxy<EmailFeature>().cancelEmail(1)
     }
 
     @Test fun `Visits all providers`() {
-        val provider = ManyProvider()
+        val provider = (ManyProvider()
+                     +  FilterProvider())
         provider.proxy<EmailFeature>().cancelEmail(13)
     }
 
@@ -197,7 +219,9 @@ class ResolutionTest {
         val master = EmailProvider()
         val mirror = EmailProvider()
         val backup = EmailProvider()
-        val email  = master + mirror + backup
+        val email  = (master + mirror + backup
+                   + RepositoryProvider()
+                   + FilterProvider())
         val id     = email.broadcast.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
         assertEquals(1, master.resolve<EmailHandler>()!!.count)
@@ -206,8 +230,11 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves methods calls inferred`() {
-        val provider = EmailProvider()
-        val id       = provider.resolving.proxy<EmailFeature>().email("Hello")
+        val provider = (EmailProvider()
+                     +  BillingImpl()
+                     +  RepositoryProvider()
+                     +  FilterProvider())
+        val id       = provider.infer.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 
@@ -399,18 +426,18 @@ class ResolutionTest {
         fun next(
                 callback:       Cb,
                 next:           Next<Res>,
-                binding:        MethodBinding,
+                binding:        MemberBinding,
                 repository:     Repository<Message>,
                 @Proxy billing: Billing
-        ): Res {
+        ): Promise<Res> {
             @Suppress("UNCHECKED_CAST")
             (callback as? SendEmail<*>)?.also {
                 (it.body as? String)?.also { body ->
                     val message = Message().apply { content = body }
                     repository.create(Create(message))
-                    if (binding.method.returnType == Int::class.java) {
+                    if (binding.returnType.classifier == Int::class) {
                         billing.bill(message.id.toBigDecimal())
-                        return (message.id * 10) as Res
+                        return Promise.resolve((message.id * 10)) as Promise<Res>
                     }
                 }
             }
@@ -425,16 +452,18 @@ class ResolutionTest {
     class BalanceFilter<T: Entity, Res: Number> : DynamicFilter<Create<T>, Res>() {
         fun next(callback:   Create<T>,
                  next:       Next<Res>,
-                 binding:    MethodBinding,
+                 binding:    MemberBinding,
                  repository: Repository<T>,
                  billing:    Billing
-        ): Res {
+        ): Promise<Res> {
             println("Balance for $callback")
             repository.create(callback)
-            if (binding.method.returnType == BigDecimal::class.java) {
+            if (binding.returnType.classifier == BigDecimal::class) {
                 @Suppress("UNCHECKED_CAST")
-                return ((next() as BigDecimal) +
-                    billing.bill(callback.entity.id.toBigDecimal())) as Res
+                return next() then {
+                    ((it as BigDecimal) + billing.bill(
+                            callback.entity.id.toBigDecimal())) as Res
+                }
             }
             return next()
         }

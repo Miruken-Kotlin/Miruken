@@ -17,9 +17,9 @@ interface ProtocolAdapter {
 
 fun ProtocolAdapter.proxy(protocol: KType): Any {
     val protocolClass = protocol.classifier as? KClass<*>
-    require(protocolClass?.java?.isInterface ?: false, {
+    require(protocolClass?.java?.isInterface ?: false) {
         "Protocol '$protocol' is not an interface"
-    })
+    }
 
     return Proxy.newProxyInstance(
             protocol.javaClass.classLoader,

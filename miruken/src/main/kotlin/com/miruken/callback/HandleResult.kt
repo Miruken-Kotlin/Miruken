@@ -15,15 +15,15 @@ enum class HandleResult(
 
     inline fun then(
             condition:         Boolean,
-            crossinline block: HandleResult.() -> HandleResult) =
+            block: HandleResult.() -> HandleResult) =
             if (stop || !condition) this else this or block()
 
     inline infix fun <T> success(
-            crossinline block: HandleResult.() -> T): T? =
+            block: HandleResult.() -> T): T? =
             if (handled) block() else null
 
     inline infix fun <T> failure(
-            crossinline block: HandleResult.() -> T): T? =
+            block: HandleResult.() -> T): T? =
             if (!handled) block() else null
 
     infix fun otherwise(handled: Boolean): HandleResult =
@@ -39,12 +39,12 @@ enum class HandleResult(
             }
 
     inline infix fun otherwise(
-            crossinline block: HandleResult.() -> HandleResult) =
+            block: HandleResult.() -> HandleResult) =
             if (handled || stop) this else block()
 
     inline fun otherwise(
-            condition:         Boolean,
-            crossinline block: HandleResult.() -> HandleResult) =
+            condition: Boolean,
+            block:     HandleResult.() -> HandleResult) =
             if ((handled || stop) && !condition) this
             else this or block()
 

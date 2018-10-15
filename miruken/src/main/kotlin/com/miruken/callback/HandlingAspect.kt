@@ -26,13 +26,13 @@ fun Handling.aspect(
     if (before == null && after == null) return this
     return filter(reentrant) { callback, _, composer, proceed ->
         val cb    = callback as? Callback
-        val state = before?.let {
-            val state = it(callback, composer)
+        val state = before?.let { b ->
+            val state = b(callback, composer)
             if (state is Promise<*>) {
                 // TODO("Use Promise.wait if cb.resultType is not a Promise")
                 // TODO("or you will get a ClassCastException")
-                cb?.result = state.then {
-                    if (it != false) {
+                cb?.result = state.then { st ->
+                    if (st != false) {
                         aspectProceed(callback, composer, proceed, after, state)
                         cb?.result?.let { Promise.resolve(it) } ?: Promise.EMPTY
                     } else {

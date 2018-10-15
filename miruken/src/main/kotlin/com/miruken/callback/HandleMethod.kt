@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.TypedValue
 import com.miruken.callback.policy.CallbackPolicy
-import com.miruken.callback.policy.HandleMethodBinding
+import com.miruken.callback.policy.bindings.HandleMethodBinding
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isTopLevelInterfaceOf
 import com.miruken.runtime.matchMethod
@@ -11,33 +11,34 @@ import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.createType
 
 open class HandleMethod(
         val protocol:  KType,
         val method:    Method,
         val arguments: Array<Any?>,
         val semantics: CallbackSemantics = CallbackSemantics.NONE
-) : Callback, ResolvingCallback, DispatchingCallback {
+) : Callback, InferringCallback, DispatchingCallback {
 
     override var result:     Any?   = null
     override val resultType: KType? = method.genericReturnType.toKType()
     override val policy:     CallbackPolicy? get() = null
     var          exception:  Throwable? = null
 
-    override fun getResolveCallback() = Resolution(protocol, this,
-            HandleMethodBinding.HANDLE_METHOD_TYPE)
+    override fun inferCallback() =
+            Resolution(protocol, this, TYPE)
 
     override fun dispatch(
             handler:      Any,
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling
-    ) = getTarget(handler)?.let {
-        val targetClass = it::class
+    ) = getTarget(handler)?.let { target ->
+        val targetClass = target::class
         targetClass.matchMethod(method)?.let {
             BINDINGS.getOrPut(method to targetClass) {
-                    HandleMethodBinding(method, it)
-            }}?.dispatch(it, this, composer)
+                HandleMethodBinding(method, it)
+            }}?.dispatch(target, this, composer)
     } ?: HandleResult.NOT_HANDLED
 
     private fun getTarget(target: Any): Any? {
@@ -64,13 +65,10 @@ open class HandleMethod(
     }
 
     companion object {
-        fun requireComposer() {
-            requireNotNull(HandleMethodBinding.COMPOSER.get()) {
-                "Composer is not available.  Did you call this method directly?"
-            }
-        }
+        val TYPE = HandleMethod::class.createType()
 
-        private val BINDINGS =
-                ConcurrentHashMap<Pair<Method, KClass<*>>, HandleMethodBinding?>()
+        private val BINDINGS = ConcurrentHashMap<
+                Pair<Method, KClass<*>>, HandleMethodBinding?>()
     }
 }
+

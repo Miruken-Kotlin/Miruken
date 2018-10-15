@@ -300,7 +300,7 @@ open class Promise<out T>
                     _onCancel()
                 }
                 catch (t: Throwable) {
-                    // consume errors
+                    e.addSuppressed(t)
                 }
             }
             synchronized (_guard) {
@@ -320,8 +320,6 @@ open class Promise<out T>
         val EMPTY      = resolve(null as Any?)
         val EMPTY_LIST = resolve(emptyList<Any>())
 
-
-
         fun reject(e: Throwable): Promise<Nothing> =
                 Promise { _, reject -> reject(e) }
 
@@ -339,11 +337,10 @@ open class Promise<out T>
 }
 
 fun <T> Promise<Promise<T>>.unwrap(): Promise<T> {
-    return Promise(this.cancelMode, {
-        resolve, reject, onCancel ->
-            onCancel { this.cancel() }
+    return Promise(this.cancelMode) { resolve, reject, onCancel ->
+        onCancel { this.cancel() }
         then({ inner -> inner.then(resolve, reject)
-            .cancelled(reject)}, reject)
-            .cancelled(reject)
-    })
+                .cancelled(reject)}, reject)
+                .cancelled(reject)
+    }
 }

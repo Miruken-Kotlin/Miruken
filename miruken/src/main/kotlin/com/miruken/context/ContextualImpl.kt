@@ -2,13 +2,13 @@ package com.miruken.context
 
 import com.miruken.event.Event
 
-open class ContextualImpl<T : Context> : Contextual<T> {
-    private var _context: T? = null
+open class ContextualImpl : Contextual {
+    private var _context: Context? = null
 
-    override val contextChanging = Event<ContextChangingEvent<T>>()
-    override val contextChanged  = Event<ContextChangedEvent<T>>()
+    override val contextChanging = Event<ContextChangingEvent>()
+    override val contextChanged  = Event<ContextChangedEvent>()
 
-    override var context: T?
+    override var context: Context?
         get() = _context
         set(value) {
             if (_context == value) return

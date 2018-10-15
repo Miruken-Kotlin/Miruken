@@ -7,7 +7,7 @@ import java.lang.reflect.Method
 import kotlin.reflect.KType
 
 class Interceptor(
-        private val adapter: ProtocolAdapter,
+        private val adapter:  ProtocolAdapter,
         private val protocol: KType
 ) : InvocationHandler {
     override fun invoke(

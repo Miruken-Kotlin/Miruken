@@ -3,6 +3,8 @@ package com.miruken.callback.policy
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.HandleResult
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
+import com.miruken.callback.policy.rules.MethodRule
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isUnit
 import kotlin.reflect.KClass
@@ -10,7 +12,7 @@ import kotlin.reflect.KType
 
 open class ContravariantPolicy(
         rules:   List<MethodRule>,
-        filters: List<FilteringProvider>,
+        filters: Collection<FilteringProvider>,
         private val targetFunctor: (Any) -> Any?
 ): CallbackPolicy(rules, filters) {
 
@@ -36,7 +38,7 @@ open class ContravariantPolicy(
             available: Collection<Any>
     ) = available.filter { key != it && isCompatibleWith(it, key) }
 
-    override fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
+    override fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
             when (result) {
                 null, Unit ->
                     if (binding.dispatcher.returnType.isUnit)

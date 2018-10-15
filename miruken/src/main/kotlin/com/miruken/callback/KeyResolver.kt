@@ -2,95 +2,104 @@ package com.miruken.callback
 
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
-import com.miruken.runtime.getFirstTaggedAnnotation
+import com.miruken.runtime.closeType
+import com.miruken.runtime.getFirstMetaAnnotation
 import com.miruken.runtime.toTypedArray
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
 import kotlin.reflect.jvm.jvmErasure
 
 open class KeyResolver : KeyResolving {
     override fun resolve(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
     ) = when {
         typeInfo.flags has TypeFlags.LAZY ->
-                resolveArgumentLazy(key, typeInfo, composer)
+            resolveKeyLazy(inquiry, typeInfo, composer)
         typeInfo.flags has TypeFlags.FUNC ->
-            resolveArgumentFunc(key, typeInfo, composer)
-        else -> resolveArgument(key, typeInfo, handler, composer)
+            resolveKeyFunc(inquiry, typeInfo, composer)
+        else -> resolveKeyInfer(inquiry, typeInfo, handler, composer)
     }
 
     open fun resolveKey(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = handler.resolve(key)
+    ) = handler.resolve(inquiry)
 
     open fun resolveKeyAsync(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = handler.resolveAsync(key,
-            !typeInfo.componentType.isMarkedNullable)
+    ) = handler.resolveAsync(inquiry) then {
+        check (it != null ||
+                typeInfo.componentType.isMarkedNullable) {
+            "Unable to resolve key ${inquiry.key}"
+        }
+        it
+    }
 
     open fun resolveKeyAll(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = handler.resolveAll(key)
+    ) = handler.resolveAll(inquiry)
 
     private fun resolveKeyAllArray(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = resolveKeyAll(key, typeInfo, handler, composer)
+    ) = resolveKeyAll(
+            inquiry, typeInfo, handler, composer)
             .toTypedArray(typeInfo.componentType.jvmErasure)
 
     open fun resolveKeyAllAsync(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = handler.resolveAllAsync(key)
+    ) = handler.resolveAllAsync(inquiry)
 
     private fun resolveKeyAllArrayAsync(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = resolveKeyAllAsync(key, typeInfo, handler, composer) then {
+    ) = resolveKeyAllAsync(
+            inquiry, typeInfo, handler, composer) then {
         it.toTypedArray(typeInfo.componentType.jvmErasure)
     }
 
-    private fun resolveArgumentLazy(
-            key:      Any,
+    private fun resolveKeyLazy(
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             composer: Handling
-    ) =
-        lazy(LazyThreadSafetyMode.NONE) {
-            // ** MUST ** use composer, composer since
-            // handler may be invalidated at this point
-            resolveArgument(key, typeInfo, composer, composer)
-        }
+    ) = lazy(LazyThreadSafetyMode.NONE) {
+        // ** MUST ** use composer, composer since
+        // handler may be invalidated at this point
+        resolveKeyInfer(inquiry, typeInfo, composer, composer)
+    }
 
-    private fun resolveArgumentFunc(
-            key:      Any,
+    private fun resolveKeyFunc(
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             composer: Handling
     ): () -> Any? = {
         // ** MUST ** use composer, composer since
         // handler may be invalidated at this point
-        resolveArgument(key, typeInfo, composer, composer)
+        resolveKeyInfer(inquiry, typeInfo, composer, composer)
     }
 
-    private fun resolveArgument(
-            key:      Any,
+    private fun resolveKeyInfer(
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
@@ -99,19 +108,23 @@ open class KeyResolver : KeyResolving {
         return when {
             flags has TypeFlags.COLLECTION  ->
                 when {
-                    flags has TypeFlags.PROMISE ->
-                        resolveKeyAllAsync(key, typeInfo, handler, composer)
-                    else -> resolveKeyAll(key, typeInfo, handler, composer)
+                    inquiry.wantsAsync ->
+                        resolveKeyAllAsync(
+                                inquiry, typeInfo, handler, composer)
+                    else -> resolveKeyAll(
+                            inquiry, typeInfo, handler, composer)
                 }
             flags has TypeFlags.ARRAY ->
                 when {
-                    flags has TypeFlags.PROMISE ->
-                        resolveKeyAllArrayAsync(key, typeInfo, handler, composer)
-                    else -> resolveKeyAllArray(key, typeInfo, handler, composer)
+                    inquiry.wantsAsync ->
+                        resolveKeyAllArrayAsync(
+                                inquiry, typeInfo, handler, composer)
+                    else -> resolveKeyAllArray(
+                            inquiry, typeInfo, handler, composer)
                 }
-            flags has TypeFlags.PROMISE ->
-                resolveKeyAsync(key, typeInfo, handler, composer)
-            else -> resolveKey(key, typeInfo, handler, composer)
+            inquiry.wantsAsync -> resolveKeyAsync(
+                    inquiry, typeInfo, handler, composer)
+            else -> resolveKey(inquiry, typeInfo, handler, composer)
         }
     }
 
@@ -119,14 +132,19 @@ open class KeyResolver : KeyResolving {
         fun getKey(
                 annotatedElement: KAnnotatedElement,
                 typeInfo:         TypeInfo,
-                primitiveName:    String?
+                primitiveName:    String?,
+                typeBindings:     Map<KTypeParameter, KType>? = null
         ) = annotatedElement.annotations
                 .firstOrNull { it is Key }?.let {
                     val key = it as Key
                     StringKey(key.key, key.caseSensitive)
                 } ?: primitiveName?.takeIf {
             typeInfo.flags has TypeFlags.PRIMITIVE
-        } ?: typeInfo.componentType
+        } ?: typeInfo.componentType.let { keyType ->
+            keyType.takeUnless {
+                typeBindings != null && typeInfo.flags has TypeFlags.OPEN
+            } ?: keyType.closeType(typeBindings!!)
+        }
 
         fun getResolver(
                 annotatedElement: KAnnotatedElement,
@@ -141,7 +159,7 @@ open class KeyResolver : KeyResolving {
                 ?: composer.resolve(resolverClass) as? KeyResolving
 
         fun getResolverClass(annotatedElement: KAnnotatedElement) =
-                annotatedElement.getFirstTaggedAnnotation<UseKeyResolver>()
+                annotatedElement.getFirstMetaAnnotation<UseKeyResolver>()
                         ?.keyResolverClass
 
         object DefaultResolver : KeyResolver()

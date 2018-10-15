@@ -20,8 +20,8 @@ fun isCompatibleWith(
                 leftSide == rightSide -> true
                 rightSide.classifier is KTypeParameter -> {
                     val typeParam = rightSide.classifier as KTypeParameter
-                    typeParam.upperBounds.any {
-                        isCompatibleWith(it, leftSide, typeBindings).also {
+                    typeParam.upperBounds.any { bound ->
+                        isCompatibleWith(bound, leftSide, typeBindings).also {
                             if (it && typeBindings?.containsKey(typeParam) == false)
                                 typeBindings[typeParam] = leftSide
                         }
@@ -29,20 +29,22 @@ fun isCompatibleWith(
                 }
                 leftSide.classifier is KTypeParameter -> {
                     val typeParam = leftSide.classifier as KTypeParameter
-                    typeParam.upperBounds.any {
-                        (it.isSupertypeOf(rightSide) ||
-                        isCompatibleWith(it, rightSide, typeBindings)).also {
+                    typeParam.upperBounds.any { bound ->
+                        (bound.isSupertypeOf(rightSide) ||
+                        isCompatibleWith(bound, rightSide, typeBindings)).also {
                             if (it && typeBindings?.containsKey(typeParam) == false)
                                 typeBindings[typeParam] = rightSide
                         }
                     }
                 }
                 rightSide.isOpenGeneric ->
-                    verifyOpenConformance(rightSide, leftSide, typeBindings) ||
-                    (leftSide.isOpenGeneric &&
-                            verifyOpenConformance(leftSide, rightSide, typeBindings))
+                    rightSide.checkOpenConformance(
+                            leftSide, typeBindings, true) ||
+                    (leftSide.isGeneric && leftSide.checkOpenConformance(
+                            rightSide, typeBindings, true))
                 leftSide.isOpenGeneric ->
-                    verifyOpenConformance(leftSide, rightSide, typeBindings)
+                    leftSide.checkOpenConformance(
+                            rightSide, typeBindings, true)
                 else -> rightSide.isSubtypeOf(leftSide)
             }
             is KClass<*> -> {
@@ -102,40 +104,84 @@ fun isCompatibleWith(
     }
 }
 
-private fun verifyOpenConformance(
-        openType:   KType,
-        otherType:  KType,
-        parameters: MutableMap<KTypeParameter, KType>?
+fun KType.checkOpenConformance(
+        closedType:    KType,
+        typeBindings:  MutableMap<KTypeParameter, KType>? = null,
+        skipOpenCheck: Boolean = false
 ): Boolean {
-    return (openType.classifier as? KClass<*>)?.let { openClass ->
-        val other       = otherType.classifier
-        val conformance = when (other) {
-            is KClass<*> -> when (openClass) {
-                other -> otherType
-                else -> other.allSupertypes.firstOrNull {
-                    it.classifier == openType.classifier }
+    if (skipOpenCheck || (isOpenGeneric && !closedType.isOpenGeneric)) {
+        val closed   = closedType.classifier
+        val openType = if (classifier != closed) {
+            (classifier as? KClass<*>)?.allSupertypes?.firstOrNull {
+                it.classifier == closed
+            } ?: this
+        } else this
+        (openType.classifier as? KClass<*>)?.let { openClass ->
+            val conformance = when (closed) {
+                is KClass<*> -> when (openClass) {
+                    closed -> closedType.arguments.map { it.type }
+                    else -> closed.allSupertypes.firstOrNull {
+                        it.classifier == openClass
+                    }?.let { conform ->
+                        val closedArgs   = closedType.arguments
+                        val closedParams = closed.typeParameters
+                        conform.arguments.map { arg ->
+                            val classifier = arg.type?.classifier
+                            arg.type.takeIf { classifier is KClass<*> }
+                                    ?: closedParams.indexOf(classifier)
+                                            .takeIf { it >= 0 }
+                                            ?.let { closedArgs[it].type }
+                                    ?: return false
+                        }
+                    }
+                }
+                is KTypeParameter ->
+                    closed.upperBounds.firstOrNull {
+                        it.classifier == openClass
+                    }?.arguments?.map { it.type }
+                else -> null
             }
-            is KTypeParameter -> other.upperBounds.firstOrNull {
-                it.classifier == openType.classifier
-            }
-            else -> null
+            conformance?.zip(
+                    arguments.map { it.type }.zip(
+                            openClass.typeParameters)) { ls, rs ->
+                when {
+                    ls == null -> true /* Star */
+                    rs.first == null -> true /* Star */
+                    ls.isOpenGeneric || rs.first!!.isOpenGeneric ->
+                        isCompatibleWith(ls, rs.first!!, typeBindings)
+                    rs.second.variance == KVariance.IN ->
+                        ls.isSubtypeOf(rs.first!!)
+                    else ->
+                        rs.first!!.isSubtypeOf(ls)
+                }
+            }?.all { it }?.also { return it }
+        } ?: (classifier as? KTypeParameter)?.let { p ->
+             if (p.upperBounds.all { closedType.isSubtypeOf(it) }) {
+                 if (typeBindings != null) {
+                     typeBindings[p] = closedType
+                     return true
+                 }
+             }
         }
-        conformance?.arguments?.zip(openType.arguments
-                .zip(openClass.typeParameters)) { ls, rs ->
-            when {
-                ls.type == null -> true /* Star */
-                rs.first.type == null -> true /* Star */
-                ls.type!!.isOpenGeneric ||
-                rs.first.type!!.isOpenGeneric ->
-                    isCompatibleWith(ls.type!!, rs.first.type!!,
-                            parameters)
-                rs.second.variance == KVariance.IN ->
-                    ls.type!!.isSubtypeOf(rs.first.type!!)
-                else ->
-                    rs.first.type!!.isSubtypeOf(ls.type!!)
-            }
-        }?.all { it }
-    } ?: false
+    }
+    return false
+}
+
+fun KType.closeType(
+        typeBindings:  Map<KTypeParameter, KType>,
+        skipOpenCheck: Boolean = false
+): KType? = when {
+    skipOpenCheck || isOpenGeneric -> {
+        (classifier as? KTypeParameter)?.let {
+            typeBindings[it] ?: return null
+        } ?: jvmErasure.createType(arguments.map { arg ->
+                (arg.type?.classifier as? KTypeParameter)?.let {
+                    KTypeProjection(arg.variance, typeBindings[it] ?:
+                    return null)
+            } ?: KTypeProjection(arg.variance, arg.type)
+        })
+    }
+    else -> this
 }
 
 fun Iterable<*>.filterIsAssignableTo(key: Any) =
@@ -178,8 +224,8 @@ val KType.isOpenGeneric: Boolean
                 arguments.any { it.type?.isOpenGeneric == true }
 
 val KType.isOpenGenericDefinition: Boolean
-    get() = arguments.isNotEmpty() && arguments.all {
-        (it.type?.classifier as? KTypeParameter)
+    get() = arguments.isNotEmpty() && arguments.all { arg ->
+        (arg.type?.classifier as? KTypeParameter)
             ?.upperBounds?.all { it == ANY_TYPE } == true }
 
 inline val KClass<*>.isGeneric
@@ -202,7 +248,7 @@ val KType.allTopLevelInterfaces : Set<KType> get() =
 
 val KClass<*>.allTopLevelInterfaces : Set<KType> get() {
     val allInterfaces = allInterfaces
-    return allInterfaces.filter { iface ->
+    return allInterfaces.asSequence().filter { iface ->
         allInterfaces.all { iface === it || !it.isSubtypeOf(iface) }
     }.toHashSet()
 }
@@ -217,23 +263,23 @@ fun KType.isTopLevelInterfaceOf(clazz: KClass<*>) =
         clazz.allTopLevelInterfaces.contains(this)
 
 inline fun <reified T: Annotation> KAnnotatedElement
-        .getTaggedAnnotations() = annotations.mapNotNull {
-            val tags = it.annotationClass.annotations.filterIsInstance<T>()
-            if (tags.isNotEmpty()) it to tags else null
-        }
+        .getMetaAnnotations() = annotations.mapNotNull {
+    val tags = it.annotationClass.annotations.filterIsInstance<T>()
+    if (tags.isNotEmpty()) it to tags else null
+}
 
 inline fun <reified T: Annotation> AnnotatedElement
-        .getTaggedAnnotations() = annotations.mapNotNull {
+        .getMetaAnnotations() = annotations.mapNotNull {
     val tags = it.annotationClass.annotations.filterIsInstance<T>()
     if (tags.isNotEmpty()) it to tags else null
 }
 
 inline fun <reified T: Annotation> KAnnotatedElement
-        .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
+        .getFirstMetaAnnotation() = getMetaAnnotations<T>()
         .firstOrNull()?.second?.firstOrNull()
 
 inline fun <reified T: Annotation> AnnotatedElement
-        .getFirstTaggedAnnotation() = getTaggedAnnotations<T>()
+        .getFirstMetaAnnotation() = getMetaAnnotations<T>()
         .firstOrNull()?.second?.firstOrNull()
 
 fun KClass<*>.matchMethod(method: Method): Method? {
@@ -243,6 +289,16 @@ fun KClass<*>.matchMethod(method: Method): Method? {
         null
     }
 }
+
+val KCallable<*>.isInstanceCallable get() =
+    parameters.firstOrNull()?.kind == KParameter.Kind.INSTANCE
+
+val KCallable<*>.requiresReceiver get() =
+    when (parameters.firstOrNull()?.kind) {
+        KParameter.Kind.INSTANCE,
+        KParameter.Kind.EXTENSION_RECEIVER -> true
+        else -> false
+    }
 
 fun Collection<*>.toTypedArray(componentType: KClass<*>) =
         toTypedArray(componentType.java)

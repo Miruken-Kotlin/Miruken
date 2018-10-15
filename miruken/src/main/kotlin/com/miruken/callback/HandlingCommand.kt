@@ -16,11 +16,7 @@ fun Handling.command(
     handle(command) failure {
         throw NotHandledException(callback)
     }
-    val result = command.result
-    return when (result) {
-        is Promise<*> -> result.get()
-        else -> result
-    }
+    return command.result
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -54,14 +50,10 @@ fun Handling.commandAll(
         callbackType: KType
 ): List<Any> {
     val command = Command(callback, callbackType, true)
-    handle(command) failure {
+    handle(command, true) failure {
         throw NotHandledException(callback)
     }
-    val result = command.result
-    return when (result) {
-        is Promise<*> -> result.get()
-        else -> result
-    } as List<Any>
+    return command.result as List<Any>
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -77,7 +69,7 @@ fun Handling.commandAllAsync(
         wantsAsync = true
     }
     return try {
-        handle(command) failure {
+        handle(command, true) failure {
             Promise.reject(NotHandledException(callback))
         } ?: (command.result as Promise<*>) then { it as List<Any> }
     } catch (e: Throwable) {

@@ -1,12 +1,19 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package com.miruken.callback
 
-import com.miruken.callback.policy.MethodBinding
+import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
+import com.miruken.runtime.checkOpenConformance
+import com.miruken.typeOf
 import org.junit.Test
 import java.math.BigDecimal
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
+import kotlin.test.*
 
 class HandleMethodTest {
     @Test fun `Handles method calls`() {
@@ -48,7 +55,7 @@ class HandleMethodTest {
 
     @Test fun `Handles method loosely`() {
         val handler = DemoHandler()
-        var id      = handler.duck.proxy<EmailFeature>().email("22")
+        val id      = handler.duck.proxy<EmailFeature>().email("22")
         assertEquals(22, id)
     }
 
@@ -126,7 +133,7 @@ class HandleMethodTest {
 
     @Test fun `Resolves methods calls inferred`() {
         val handler = EmailHandler()
-        val id      = handler.resolving.proxy<EmailFeature>().email("Hello")
+        val id      = handler.infer.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 
@@ -155,6 +162,25 @@ class HandleMethodTest {
         assertEquals(1, id)
     }
 
+    @Test fun `Aborts method calls`() {
+        assertFailsWith(NotHandledException::class) {
+            EmailHandler().proxy<EmailFeature>().email("Abort")
+        }
+    }
+
+    @Test fun `Checks filter open conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.contravariant(typeOf<HandleMethod>()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<Log2Filter<Int>>()
+        val bindings  = mutableMapOf<KTypeParameter, KType>()
+        assertNotNull(openType.checkOpenConformance(otherType, bindings))
+        assertEquals(1, bindings.size)
+        assertEquals(typeOf<Int>(), bindings.values.first())
+    }
+
     interface EmailFeature {
         val count: Int
         fun email(message: String): Int
@@ -174,6 +200,7 @@ class HandleMethodTest {
         val billing: Billing
     }
 
+    @Abort
     class EmailHandler : Handler(), EmailFeature {
         @Log
         override var count: Int = 0
@@ -202,6 +229,10 @@ class HandleMethodTest {
                 else -> null
             }
         }
+
+        @Provides
+        fun <R: Any?> createAborting(inquiry: Inquiry) =
+                AbortFilter<R>()
     }
 
     @Log
@@ -240,10 +271,9 @@ class HandleMethodTest {
         }
 
         @Provides
-        fun <Res: Any?> createLogger(inquiry: Inquiry): Filtering<HandleMethod, Res>? {
-            @Suppress("UNCHECKED_CAST")
-            return inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
-        }
+        fun <Res: Any?> createLogger(
+                inquiry: Inquiry
+        ): Log2Filter<Res> = Log2Filter()
     }
 
     @Log2
@@ -257,26 +287,21 @@ class HandleMethodTest {
         }
 
         @Provides
-        fun <Res: Any?> createLogger(inquiry: Inquiry): Filtering<HandleMethod, Res>? {
-            @Suppress("UNCHECKED_CAST")
-            return inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
-        }
+        @Suppress("UNCHECKED_CAST")
+        fun <Res: Any?> createLogger(inquiry: Inquiry) =
+                inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
     }
-
-    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
-    @UseFilter(LogFilter::class)
-    annotation class Log
 
     class LogFilter<Res> : Filtering<HandleMethod, Res> {
         override var order: Int? = 1
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Res>
-        ): Res {
+                next:     Next<Res>,
+                provider: FilteringProvider?
+        ): Promise<Res> {
             print("Handle method '${callback.method.name}' with result ")
             val result = next()
             println(result)
@@ -284,22 +309,50 @@ class HandleMethodTest {
         }
     }
 
+
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
             AnnotationTarget.PROPERTY)
-    @UseFilter(LogFilter2::class)
-    annotation class Log2
+    @UseFilter(LogFilter::class)
+    annotation class Log
 
-    class LogFilter2<Res> : Filtering<HandleMethod, Res> {
+    class Log2Filter<Res> : Filtering<HandleMethod, Res> {
         override var order: Int? = 2
 
         override fun next(
                 callback: HandleMethod,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Res>
-        ): Res {
+                next:     Next<Res>,
+                provider: FilteringProvider?
+        ): Promise<Res> {
             println("Log2 method '${callback.method.name}'")
             return next()
         }
     }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
+            AnnotationTarget.PROPERTY)
+    @UseFilter(Log2Filter::class)
+    annotation class Log2
+
+    class AbortFilter<R: Any?> : Filtering<HandleMethod, R> {
+        override var order: Int? = 0
+
+        override fun next(
+                callback: HandleMethod,
+                binding:  MemberBinding,
+                composer: Handling,
+                next:     Next<R>,
+                provider: FilteringProvider?
+        ) = when {
+            callback.method.name == "email" &&
+                    callback.arguments[0] == "Abort" -> next.abort()
+            else -> next()
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
+            AnnotationTarget.PROPERTY)
+    @UseFilter(AbortFilter::class)
+    annotation class Abort
 }

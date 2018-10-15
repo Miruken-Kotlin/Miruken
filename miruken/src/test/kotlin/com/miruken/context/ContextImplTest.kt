@@ -9,40 +9,40 @@ class ContextImplTest {
     class Foo
 
     @Test fun `Starts in the active state`() {
-        val context = ContextImpl()
+        val context = Context()
         assertEquals(ContextState.ACTIVE, context.state)
     }
 
     @Test fun `Resolves self when requested`() {
-        val context = ContextImpl()
+        val context = Context()
         assertSame(context, context.resolve<Context>())
     }
 
     @Test fun `Root context has no parent`() {
-        val context = ContextImpl()
+        val context = Context()
         assertNull(context.parent)
     }
 
     @Test fun `Gets root context`() {
-        val context = ContextImpl()
+        val context = Context()
         val child   = context.createChild()
         assertSame(context, context.root)
         assertSame(context, child.root)
     }
 
     @Test fun `Children should have a parent`() {
-        val context = ContextImpl()
+        val context = Context()
         val child   = context.createChild()
         assertSame(context, child.parent)
     }
 
     @Test fun `Has no children initially`() {
-        val context = ContextImpl()
+        val context = Context()
         assertFalse(context.hasChildren)
     }
 
     @Test fun `Has children if created`() {
-        val context = ContextImpl()
+        val context = Context()
         val child1  = context.createChild()
         val child2  = context.createChild()
         assertTrue(context.hasChildren)
@@ -50,13 +50,13 @@ class ContextImplTest {
     }
 
     @Test fun `Can end a context`() {
-        val context = ContextImpl()
+        val context = Context()
         context.end()
         assertEquals(ContextState.ENDED, context.state)
     }
 
     @Test fun `Ends child contexts when ended`() {
-        val context = ContextImpl()
+        val context = Context()
         val child   = context.createChild()
         assertEquals(ContextState.ACTIVE, child.state)
         context.end()
@@ -64,13 +64,13 @@ class ContextImplTest {
     }
 
     @Test fun `Ends context if closed`() {
-        val context = ContextImpl()
+        val context = Context()
         context.close()
         assertEquals(ContextState.ENDED, context.state)
     }
 
     @Test fun `Can unwind children`() {
-        val context = ContextImpl()
+        val context = Context()
         val child1  = context.createChild()
         val child2  = context.createChild()
         context.unwind()
@@ -80,7 +80,7 @@ class ContextImplTest {
     }
 
     @Test fun `Can unwind to root`() {
-        val context    = ContextImpl()
+        val context    = Context()
         val child1     = context.createChild()
         val child2     = context.createChild()
         val grandchild = child1.createChild()
@@ -94,14 +94,14 @@ class ContextImplTest {
 
     @Test fun `Can store anything`() {
         val data    = Foo()
-        val context = ContextImpl()
+        val context = Context()
         context.store(data)
         assertSame(data, context.resolve<Foo>())
     }
 
     @Test fun `Traverses ancestors by default`() {
         val data       = Foo()
-        val context    = ContextImpl()
+        val context    = Context()
         val child      = context.createChild()
         val grandchild = child.createChild()
         context.store(data)
@@ -110,7 +110,7 @@ class ContextImplTest {
 
     @Test fun `Traverses self`() {
         val data  = Foo()
-        val root  = ContextImpl()
+        val root  = Context()
         val child = root.createChild()
         root.store(data)
         assertNull(child.xself.resolve<Foo>())
@@ -119,7 +119,7 @@ class ContextImplTest {
 
     @Test fun `Traverses root`() {
         val data  = Foo()
-        val root  = ContextImpl()
+        val root  = Context()
         val child = root.createChild()
         child.store(data)
         assertNull(child.xroot.resolve<Foo>())
@@ -129,7 +129,7 @@ class ContextImplTest {
 
     @Test fun `Traverses children`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -142,7 +142,7 @@ class ContextImplTest {
 
     @Test fun `Traverses siblings`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -156,7 +156,7 @@ class ContextImplTest {
 
     @Test fun `Traverses self or children`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -170,7 +170,7 @@ class ContextImplTest {
 
     @Test fun `Traverses self or siblings`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -184,7 +184,7 @@ class ContextImplTest {
 
     @Test fun `Traverses ancestors`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child      = root.createChild()
         val grandChild = child.createChild()
         root.store(data)
@@ -194,7 +194,7 @@ class ContextImplTest {
 
     @Test fun `Traverses self or ancestors`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child      = root.createChild()
         val grandChild = child.createChild()
         root.store(data)
@@ -204,7 +204,7 @@ class ContextImplTest {
 
     @Test fun `Traverses descendants`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -218,7 +218,7 @@ class ContextImplTest {
 
     @Test fun `Traverses descendants or self`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -232,7 +232,7 @@ class ContextImplTest {
 
     @Test fun `Traverses self or descendants`() {
         val data = Foo()
-        val root = ContextImpl()
+        val root = Context()
         val child1 = root.createChild()
         val child2 = root.createChild()
         val child3 = root.createChild()
@@ -244,7 +244,7 @@ class ContextImplTest {
 
     @Test fun `Traverses self, siblings or ancestors`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -256,7 +256,7 @@ class ContextImplTest {
 
     @Test fun `Traverses ancestors, self or siblings`() {
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()
@@ -268,7 +268,7 @@ class ContextImplTest {
     @Test fun `Combines aspects with traversal`() {
         var count      = 0
         val data       = Foo()
-        val root       = ContextImpl()
+        val root       = Context()
         val child1     = root.createChild()
         val child2     = root.createChild()
         val child3     = root.createChild()

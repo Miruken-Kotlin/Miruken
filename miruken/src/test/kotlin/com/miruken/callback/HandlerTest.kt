@@ -3,15 +3,23 @@
 package com.miruken.callback
 
 import com.miruken.assertAsync
-import com.miruken.callback.policy.MethodBinding
-import com.miruken.callback.policy.PolicyMethodBinding
+import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.concurrent.Promise
+import com.miruken.context.Context
+import com.miruken.context.Scoped
+import com.miruken.context.ContextualImpl
+import com.miruken.runtime.checkOpenConformance
 import com.miruken.typeOf
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
 import kotlin.test.*
 
 class HandlerTest {
@@ -24,7 +32,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not handled using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bee()))
     }
 
@@ -34,7 +42,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not handled explicitly using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         assertEquals(HandleResult.NOT_HANDLED_AND_STOP, handler.handle(Bam()))
     }
 
@@ -45,9 +53,28 @@ class HandlerTest {
         assertEquals(1, foo.handled)
     }
 
+    @Test fun `Handles singleton callbacks implicitly`() {
+        val foo = Foo()
+        assertEquals(HandleResult.HANDLED, SingletonHandler.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Handles explicit callbacks implicitly`() {
+        val foo = Foo()
+        assertEquals(HandleResult.HANDLED, ExplicitCompanionHandler.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Handles implicit companion callbacks implicitly`() {
+        val foo = Foo()
+        assertEquals(HandleResult.HANDLED, HandlerAdapter(
+                ImplicitCompanionHandler.Companion).handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
     @Test fun `Handles callbacks implicitly using adapter`() {
         val foo     = Foo()
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(1, foo.handled)
     }
@@ -100,6 +127,19 @@ class HandlerTest {
         assertEquals(HandleResult.HANDLED, handler.handle(baz))
         assertEquals("handlesGenericBazArity", baz.tag)
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(BazTR('M',2)))
+    }
+
+    @Test fun `Handles callbacks generically with dependencies`() {
+        val foo       = Foo()
+        val bar       = Bar()
+        val baztr     = BazTR(bar, foo)
+        val bazt      = BazT<Bar>()
+        val handler   = SpecialHandler()
+        assertEquals(HandleResult.HANDLED,
+                handler.provide(bazt).handle(baztr))
+        assertSame(baztr.stuff, bazt.stuff)
+        assertNotSame(bar, baztr.stuff)
+        assertNotSame(foo, baztr.otherStuff)
     }
 
     @Test fun `Handles explicit generic callbacks`() {
@@ -156,7 +196,7 @@ class HandlerTest {
     }
 
     @Test fun `Indicates not provided using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         val bee     = handler.resolve<Bee>()
         assertNull(bee)
     }
@@ -164,6 +204,29 @@ class HandlerTest {
     @Test fun `Provides callbacks implicitly`() {
         val handler = SimpleHandler()
         val bar     = handler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides singleton callbacks implicitly`() {
+        val bar     = SingletonHandler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides explicit companion callbacks implicitly`() {
+        val bar     = ExplicitCompanionHandler.resolve<Bar>()
+        assertNotNull(bar!!)
+        assertFalse(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+    @Test fun `Provides implicit companion callbacks implicitly`() {
+        val bar = HandlerAdapter(
+                ImplicitCompanionHandler.Companion)
+                .resolve<Bar>()
         assertNotNull(bar!!)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
@@ -179,7 +242,7 @@ class HandlerTest {
     }
 
     @Test fun `Provides callbacks implicitly using adapter`() {
-        val handler = HandlerAdapter(Controller())
+        val handler = HandlerAdapter(ControllerBase())
         val bar     = handler.resolve<Bar>()
         assertNotNull(bar!!)
         assertFalse(bar.hasComposer)
@@ -224,6 +287,15 @@ class HandlerTest {
         assertNotNull(bar!!)
         assertEquals(SpecialBar::class, bar::class)
         assertTrue(bar.hasComposer)
+        assertEquals(1, bar.handled)
+    }
+
+
+    @Test fun `Provides callbacks for interface`() {
+        val handler = SimpleHandler()
+        val bar     = handler.resolve<BarComponent>()
+        assertNotNull(bar!!)
+        assertEquals(Bar::class, bar::class)
         assertEquals(1, bar.handled)
     }
 
@@ -286,9 +358,9 @@ class HandlerTest {
             }
         }
         assertAsync(testName) { done ->
-            handler.resolveAllAsync<Bar>() then {
-                assertEquals(3, it.size)
-                assertTrue(it.map { it.handled to it.hasComposer }
+            handler.resolveAllAsync<Bar>() then { bars ->
+                assertEquals(3, bars.size)
+                assertTrue(bars.map { it.handled to it.hasComposer }
                         .containsAll(listOf(1 to false, 2 to false, 3 to false)))
                 done()
             }
@@ -444,16 +516,16 @@ class HandlerTest {
     }
 
     @Test fun `Provides adapted self implicitly`() {
-        val controller = Controller()
+        val controller = ControllerBase()
         val handler    = HandlerAdapter(controller)
-        val result     = handler.resolve<Controller>()
+        val result     = handler.resolve<ControllerBase>()
         assertSame(controller, result)
     }
 
     @Test fun `Provides adapted self decorated`() {
-        val controller = Controller()
+        val controller = ControllerBase()
         val handler    = HandlerAdapter(controller)
-        val result     = handler.broadcast.resolve<Controller>()
+        val result     = handler.broadcast.resolve<ControllerBase>()
         assertSame(controller, result)
     }
 
@@ -512,79 +584,45 @@ class HandlerTest {
         val handler = FilteringHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(bar))
         assertEquals(2, bar.handled)
-        assertEquals(2, bar.filters.size)
-        assertSame(handler, bar.filters[1])
-        assertTrue { bar.filters[0] is LogFilter }
+        assertEquals(4, bar.filters.size)
+        assertTrue(bar.filters.contains(handler))
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ContravarintFilter>()
+                .count(), 1)
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ExceptionBehavior<*,*>>()
+                .count(), 1)
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<LogFilter<*,*>>()
+                .count(), 1)
     }
 
-    @Test fun `Infers pipeline from response`() {
-        val foo     = Foo()
+    @Test fun `Aborts pipeline`() {
+        val bar     = Bar().apply { handled = 100 }
         val handler = FilteringHandler()
-        val result  = handler.command(foo)
-        assertTrue(result is SpecialFoo)
-        assertEquals(1, foo.filters.size)
-        assertTrue { foo.filters[0] is LogBehavior<*,*> }
+        assertEquals(HandleResult.HANDLED, handler.handle(bar))
+        assertEquals(-99, bar.handled)
     }
 
-    @Test fun `Promotes promise pipeline`() {
-        val foo     = Foo()
-        val handler = FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(foo) then {
-                assertTrue(it is SpecialFoo)
-                done()
-            }
-        }
-        assertEquals(1, foo.filters.size)
-        assertTrue { foo.filters[0] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Infers promise pipeline`() {
-        val boo     = Boo()
-        val handler = FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(boo) then {
-                done()
-            }
-        }
-        assertEquals(1, boo.filters.size)
-        assertTrue { boo.filters[0] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Infers command promise pipeline`() {
+    @Test fun `Skips filters`() {
         val bee     = Bee()
         val handler = FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(bee) then {
-                done()
-            }
-        }
-        assertEquals(1, bee.filters.size)
-        assertTrue { bee.filters[0] is LogBehavior<*,*> }
+        assertEquals(HandleResult.HANDLED, handler.handle(bee))
+        assertEquals(0, bee.filters.size)
     }
 
-    @Test fun `Coerces pipeline`() {
-        val foo     = Foo()
-        val handler = SpecialFilteredHandler() + FilteringHandler()
-        val result  = handler.command(foo)
-        assertTrue(result is SpecialFoo)
-        assertEquals(2, foo.filters.size)
-        assertTrue { foo.filters[0] is LogFilter<*,*> }
-        assertTrue { foo.filters[1] is LogBehavior<*,*> }
-    }
-
-    @Test fun `Coerces promise pipeline`() {
-        val baz     = Baz()
-        val handler = SpecialFilteredHandler() + FilteringHandler()
-        assertAsync(testName) { done ->
-            handler.commandAsync(baz) then {
-                assertTrue(it is SpecialBaz)
-                done()
-            }
-        }
-        assertEquals(2, baz.filters.size)
-        assertTrue { baz.filters[0] is LogFilter<*,*> }
-        assertTrue { baz.filters[1] is LogBehavior<*,*> }
+    @Test fun `Skips non required filters`() {
+        val bar     = Bar()
+        val handler = FilteringHandler()
+        assertEquals(HandleResult.HANDLED, handler.skipFilters().handle(bar))
+        assertEquals(3, bar.filters.size)
+        assertTrue(bar.filters.contains(handler))
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ContravarintFilter>()
+                .count(), 1)
+        assertEquals(bar.filters.asSequence()
+                .filterIsInstance<ExceptionBehavior<*,*>>()
+                .count(), 1)
     }
 
     @Test fun `Propagates rejected filter promise`() {
@@ -599,12 +637,306 @@ class HandlerTest {
         }
     }
 
+    @Test fun `Creates instance implicitly`() {
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        val instance = TypeHandlers.resolve<ControllerBase>()
+        assertNotNull(instance)
+        assertNotSame(instance, TypeHandlers.resolve())
+    }
+
+    @Test fun `Creates generic instance implicitly`() {
+        val view = Screen()
+        val bar  = SpecialBar()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = TypeHandlers
+                .provide(view).provide(bar)
+                .resolve<Controller<Screen, Bar>>()
+        assertNotNull(instance)
+        assertSame(view, instance!!.view)
+        assertSame(bar, instance.model)
+    }
+
+    @Test fun `Infers instance implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        assertEquals(HandleResult.HANDLED,
+                TypeHandlers.infer.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers singleton callbacks implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<SingletonHandler>()
+        assertEquals(HandleResult.HANDLED,
+                TypeHandlers.infer.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers explicit companion callbacks implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<ExplicitCompanionHandler>()
+        assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers implicit companion callbacks implicitly`() {
+        val foo = Foo()
+        HandlerDescriptor.getDescriptor<ImplicitCompanionHandler>()
+        assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
+        assertEquals(1, foo.handled)
+    }
+
+    @Test fun `Infers generic instance implicitly`() {
+        val boo = Boo()
+        val baz = SpecialBaz()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = TypeHandlers.infer
+                .provide(boo).provide(baz)
+                .resolve<Controller<Boo, Baz>>()
+        assertNotNull(instance)
+        assertSame(boo, instance!!.view)
+        assertSame(baz, instance.model)
+    }
+
+    @Test fun `Provides instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        val bar = TypeHandlers.infer.resolve<Bar>()
+        assertNotNull(bar)
+    }
+
+    @Test fun `Provides dependencies implicitly`() {
+        val view = Screen()
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = TypeHandlers.infer
+                .provide(view).resolve<Controller<Screen, Bar>>()
+        assertNotNull(instance)
+        assertSame(view, instance!!.view)
+    }
+
+    @Test fun `Detects circular dependencies`() {
+        val view = Screen()
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        val instance = TypeHandlers.infer
+                .provide(view).resolve<Controller<Screen, Bar>>()
+        assertNull(instance)
+    }
+
+    @Test fun `Creates singleton instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ApplicationBase>()
+        val app = TypeHandlers.resolve<ApplicationBase>()
+        assertNotNull(app)
+        assertSame(app, TypeHandlers.resolve())
+    }
+
+    @Test fun `Creates generic singleton instance implicitly`() {
+        val view    = Screen()
+        val handler = TypeHandlers.infer
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        HandlerDescriptor.getDescriptor<Application<*>>()
+        val app1 = handler.provide(view)
+                .resolve<Application<Controller<Screen, Bar>>>()
+        assertNotNull(app1)
+        assertSame(view, app1!!.rootController.view)
+        assertSame(view, app1.mainScreen)
+        val app2 = handler.provide(view)
+                .resolve<Application<Controller<Screen, Bar>>>()
+        assertSame(app1, app2)
+        val app3 = handler.provide(view)
+                .resolve<App<Controller<Screen, Bar>>>()
+        assertSame(app1, app3)
+    }
+
+    @Test fun `Creates scoped instance implicitly`() {
+        var screen: Screen? = null
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            screen = context.resolve()
+            assertNotNull(screen)
+            assertSame(context, screen!!.context)
+            assertSame(screen, context.resolve())
+            assertFalse(screen!!.closed)
+            context.createChild().use { child ->
+                val screen2 = child.resolve<Screen>()
+                assertNotNull(screen2)
+                assertNotSame(screen, screen2)
+                assertSame(child, screen2!!.context)
+            }
+        }
+        assertTrue(screen!!.closed)
+    }
+
+    @Test fun `Creates scpoed instance covariantly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val view = context.provide(Bar()).resolve<View<Bar>>()
+            assertNotNull(view)
+            assertSame(view, context.resolve())
+        }
+    }
+
+    @Test fun `Creates scoped instance covariantly inferred`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val view = context.infer.resolve<View<Bar>>()
+            assertNotNull(view)
+            assertSame(view, context.resolve())
+        }
+    }
+
+    @Test fun `Creates generic scoped instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val screen1 = context.provide(Foo()).resolve<ScreenModel<Foo>>()
+            assertNotNull(screen1)
+            val screen2 = context.infer.resolve<ScreenModel<Bar>>()
+            assertSame(screen1, context.resolve())
+            assertSame(screen2, context.resolve())
+        }
+    }
+
+    @Test fun `Provides generic scoped instance implicitly`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<ControllerBase>()
+        HandlerDescriptor.getDescriptor<ScreenModelProvider>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val screen1 = context.provide(Foo())
+                    .resolve<ScreenModel<Foo>>()
+            assertNotNull(screen1)
+            val screen2 = context.infer.resolve<ScreenModel<Bar>>()
+            assertNotNull(screen2)
+            assertSame(screen1, context.resolve())
+            assertSame(screen2, context.resolve())
+            assertNull(context.resolve<ScreenModel<Boo>>())
+        }
+    }
+
+    @Test fun `Rejects scoped creation if no context`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        val screen = TypeHandlers.resolve<Screen>()
+        assertNull(screen)
+    }
+
+    @Test fun `Rejects changing managed context`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val screen = context.resolve<Screen>()
+            assertSame(context, screen!!.context)
+            assertFailsWith(IllegalStateException::class,
+                    "Managed instances cannot change context") {
+                screen.context = Context()
+            }
+        }
+    }
+
+    @Test fun `Detaches context when assigned null`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val screen = context.resolve<Screen>()
+            assertSame(context, screen!!.context)
+            screen.context = null
+            assertNotSame(screen, context.resolve()!!)
+            assertTrue(screen.closed)
+        }
+    }
+
+    @Test fun `Rejects scoped dependency in singleton`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        HandlerDescriptor.getDescriptor<LifestyleMismatch>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            assertNull(context.resolve<LifestyleMismatch>())
+        }
+    }
+
+    @Test fun `Selects greediest consructor`() {
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<OverloadedConstructors>()
+        val ctor    = TypeHandlers.resolve<OverloadedConstructors>()
+        assertNotNull(ctor)
+        assertNull(ctor!!.foo)
+        assertNull(ctor.bar)
+        val ctor1   = TypeHandlers.provide(Foo())
+                .resolve<OverloadedConstructors>()
+        assertNotNull(ctor1)
+        assertNotNull(ctor1!!.foo)
+        assertNull(ctor1.bar)
+        val ctor2   = TypeHandlers.provide(Foo()).provide(Bar())
+                .resolve<OverloadedConstructors>()
+        assertNotNull(ctor2)
+        assertNotNull(ctor2!!.foo)
+        assertNotNull(ctor2.bar)
+    }
+
     @Test fun `Ignores options at boundary `() {
         val handler = Handler().withFilters(LogFilter<Any,Any?>())
         val options = FilterOptions()
         assertEquals(HandleResult.HANDLED, handler.handle(options))
-        assertEquals(1, options.providers.size)
-        assertEquals(HandleResult.NOT_HANDLED, handler.stop.handle(FilterOptions()))
+        assertEquals(1, options.providers!!.size)
+        assertEquals(HandleResult.NOT_HANDLED,
+                handler.stop.handle(FilterOptions()))
+    }
+
+    @Test fun `Checks filter open conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[0].createType()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,String>>()
+        val bindings  = mutableMapOf<KTypeParameter, KType>()
+        assertNotNull(openType.checkOpenConformance(otherType, bindings))
+        assertEquals(2, bindings.size)
+        assertEquals(typeOf<Boo>(), bindings.values.first())
+        assertEquals(typeOf<String>(), bindings.values.elementAt(1))
+    }
+
+    @Test fun `Checks filter partial conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.contravariant(typeOf<Boo>()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        val bindings  = mutableMapOf<KTypeParameter, KType>()
+        assertNotNull(openType.checkOpenConformance(otherType, bindings))
+        assertEquals(1, bindings.size)
+        assertEquals(typeOf<Unit>(), bindings.values.first())
+    }
+
+    @Test fun `Rejects filter open conformance`() {
+        val openType = Filtering::class.createType(listOf(
+                KTypeProjection.contravariant(typeOf<Bar>()),
+                KTypeProjection.invariant(
+                        Filtering::class.typeParameters[1].createType()))
+        )
+        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        assertFalse(openType.checkOpenConformance(otherType))
     }
 
     /** Callbacks */
@@ -621,7 +953,11 @@ class HandlerTest {
 
     class FooDecorator(foo: Foo) : Foo()
 
-    open class Bar : Testing()
+    interface BarComponent {
+        val handled: Int
+    }
+
+    open class Bar : Testing(), BarComponent
 
     class SpecialBar : Bar()
 
@@ -652,14 +988,12 @@ class HandlerTest {
         // Handles
 
         @Handles
-        fun handleFooImplicitly(foo: Foo)
-        {
+        fun handleFooImplicitly(foo: Foo) {
             ++foo.handled
         }
 
         @Handles
-        fun handleSpecialFooImplicitly(foo: SpecialFoo) : HandleResult?
-        {
+        fun handleSpecialFooImplicitly(foo: SpecialFoo) : HandleResult? {
             ++foo.handled
             foo.hasComposer = true
             return null
@@ -670,8 +1004,7 @@ class HandlerTest {
                 HandleResult.NOT_HANDLED_AND_STOP
 
         @Handles
-        fun handleBarExplicitly(bar: Bar, composer: Handling): HandleResult?
-        {
+        fun handleBarExplicitly(bar: Bar, composer: Handling): HandleResult? {
             ++bar.handled
             bar.hasComposer = true
             return when {
@@ -695,7 +1028,7 @@ class HandlerTest {
         }
 
         @Handles
-        fun <T,R> handlesGenericBazArity(baz: BazTR<T, R>) : HandleResult? {
+        fun <T,R> handlesGenericBazr(baz: BazTR<T, R>) : HandleResult? {
             if ((baz.stuff as Any)::class == Char::class) return null
             baz.tag = "handlesGenericBazArity"
             return HandleResult.HANDLED
@@ -829,6 +1162,19 @@ class HandlerTest {
         @Handles
         fun handleAnything(cb: Any?) {}
 
+        @Handles
+        fun <T,R> handlesGenericBaz(
+                baztr: BazTR<T, R>,
+                bazt:  BazT<T>,
+                t:     T,
+                r:     R
+        ) : HandleResult? {
+            bazt.stuff       = t
+            baztr.stuff      = t
+            baztr.otherStuff = r
+            return HandleResult.HANDLED
+        }
+
         @Provides
         fun providesManyBars(): List<Bar> {
             return listOf(
@@ -849,7 +1195,7 @@ class HandlerTest {
         fun providesBazExplicitly(
                 inquiry:  Inquiry,
                 composer: Handling,
-                binding:  PolicyMethodBinding
+                binding: PolicyMemberBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(SpecialBaz(), composer)
@@ -886,7 +1232,7 @@ class HandlerTest {
         fun providesBazExplicitly(
                 inquiry:  Inquiry,
                 composer: Handling,
-                binding:  PolicyMethodBinding
+                binding: PolicyMemberBinding
         ) {
             if (inquiry.key == typeOf<Baz>()) {
                 inquiry.resolve(Promise.resolve(SpecialBaz()), composer)
@@ -919,6 +1265,46 @@ class HandlerTest {
         fun <T: Bar> rejectBars(cb: T?): HandleResult? = null
     }
 
+    object SingletonHandler : Handler() {
+        @Handles
+        fun handleFooImplicitly(foo: Foo) {
+            ++foo.handled
+        }
+
+        @Provides
+        fun provideBarImplicitly(): Bar  {
+            return Bar().apply { handled = 1 }
+        }
+    }
+
+    class ImplicitCompanionHandler : Handler() {
+        companion object {
+            @Handles
+            fun handleFooImplicitly(foo: Foo) {
+                ++foo.handled
+            }
+
+            @Provides
+            fun provideBarImplicitly(): Bar  {
+                return Bar().apply { handled = 1 }
+            }
+        }
+    }
+
+    class ExplicitCompanionHandler {
+        companion object : Handler() {
+            @Handles
+            fun handleFooImplicitly(foo: Foo) {
+                ++foo.handled
+            }
+
+            @Provides
+            fun provideBarImplicitly(): Bar  {
+                return Bar().apply { handled = 1 }
+            }
+        }
+    }
+
     class InvalidHandler : Handler() {
         @Handles
         fun reset() = 22
@@ -929,7 +1315,7 @@ class HandlerTest {
         fun add(op1: Int, op2: Int){}
     }
 
-    class Controller {
+    open class ControllerBase @Provides constructor() {
         @Handles
         fun handleFooImplicitly(foo: Foo) {
             ++foo.handled
@@ -945,62 +1331,105 @@ class HandlerTest {
         }
     }
 
+    interface View<TModel> {
+        val model: TModel
+    }
+
+    class Controller<TView, TModel> @Provides constructor(
+            val view:  TView,
+            val model: TModel
+    ) : ControllerBase()
+
+    open class Screen @Provides @Scoped
+        constructor() : ContextualImpl(), AutoCloseable {
+
+        var closed: Boolean = false
+            private set
+
+        override fun close() {
+            closed = true
+        }
+    }
+
+    class ScreenModel<M> @Provides @Scoped
+        constructor(override val model: M): Screen(), View<M>
+
+    object ScreenModelProvider {
+        @Provides @Scoped
+        fun <M> getScreen(model: M) =
+                Promise.resolve(ScreenModel(model))
+    }
+
+    open class ApplicationBase
+        @Provides @Singleton constructor()
+
+    interface App<C: ControllerBase> {
+        val rootController: C
+        val mainScreen:     Screen
+    }
+
+    class Application<C: ControllerBase>
+        @Provides @Singleton constructor(
+                override val rootController: C,
+                override val mainScreen:     Screen
+        ): ApplicationBase(), App<C>
+
+    class LifestyleMismatch
+        @Provides @Singleton constructor(
+            screen: Screen
+        )
+
+    class OverloadedConstructors @Provides constructor() {
+        var foo: Foo? = null
+        var bar: Bar? = null
+
+        @Provides constructor(foo: Foo) : this() {
+            this.foo = foo
+        }
+
+        @Provides constructor(foo: Foo, bar: Bar) : this() {
+            this.foo = foo
+            this.bar = bar
+        }
+    }
+
     class FilteringHandler : Handler(), Filtering<Bar, Unit> {
         override var order: Int? = null
 
         @Handles
-        @AllFilters
+        @Log @Contravarint @Exceptions @Aborting
         fun handleBar(bar: Bar) {
             bar.handled++
         }
 
         @Handles
-        @AllBehaviors
-        fun handleFoo(foo: Foo, composer: Handling): SpecialFoo {
-            return SpecialFoo().apply { hasComposer = true }
+        @Log @SkipFilters
+        fun handleBee(bee: Bee) {
         }
 
         @Handles
-        @AllBehaviors
-        fun handleBoo(boo: Boo, composer: Handling): Promise<Boo> {
-            return Promise.resolve(Boo().apply { hasComposer= true })
-        }
-
-        @Handles
-        @AllBehaviors
-        fun handleStuff(command: Command): Promise<Any?> {
-            if (command.callback is Bee)
-                return Promise.resolve(Bee())
+        fun handleStuff(command: Command): Promise<Any?>? {
+            val callback = command.callback
+            when (callback) {
+                is Bar -> callback.handled = -99
+                else -> return null
+            }
             return Promise.EMPTY
         }
 
         @Provides
-        fun <T: Any, R: Any?> createFilter(inquiry: Inquiry): Filtering<T,R>?
-        {
-            @Suppress("UNCHECKED_CAST")
-            return when (inquiry.keyClass) {
-                null -> null
-                LogFilter::class, Filtering::class -> LogFilter()
-                else ->
-                    inquiry.createKeyInstance() as Filtering<T,R>
-            }
-        }
+        fun <T: Any, R: Any?> forLogging(
+                inquiry: Inquiry
+        ): LogFilter<T,R> = LogFilter()
 
         @Provides
-        fun <T: Any, R: Any?> createBehavior(inquiry: Inquiry): Behavior<T,R>?
-        {
-            @Suppress("UNCHECKED_CAST")
-            return when (inquiry.keyClass) {
-                null -> null
-                Behavior::class -> LogBehavior()
-                else ->
-                    inquiry.createKeyInstance() as Behavior<T,R>
-            }
-        }
+        fun createContravarintFilter() =
+                ContravarintFilter()
 
         @Provides
-        fun <T: Any, R: Any?> forExceptions(inquiry: Inquiry): ExceptionBehavior<T,R>?
-        {
+        fun <T: Any, R: Any?> forExceptions(
+                inquiry: Inquiry
+        ): ExceptionBehavior<T,R>? {
             @Suppress("UNCHECKED_CAST")
             return when (inquiry.keyClass) {
                 ExceptionBehavior::class -> ExceptionBehavior()
@@ -1008,12 +1437,18 @@ class HandlerTest {
             }
         }
 
+        @Provides
+        fun <R: Any?> createAborting(
+                inquiry: Inquiry
+        ): AbortingFilter<R> = AbortingFilter()
+
         override fun next(
                 callback: Bar,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Unit>
-        ) {
+                next:     Next<Unit>,
+                provider: FilteringProvider?
+        ): Promise<Unit> {
             callback.filters.add(this)
             callback.handled++
             return next()
@@ -1022,22 +1457,19 @@ class HandlerTest {
 
     class SpecialFilteredHandler : Handler() {
         @Handles
-        @AllFilters
-        @AllBehaviors
+        @Log @Contravarint @Exceptions
         fun handleFoo(foo: Foo): SpecialFoo {
             return SpecialFoo()
         }
 
         @Handles
-        @AllFilters
-        @AllBehaviors
+        @Log @Contravarint @Exceptions
         fun handleBaz(baz: Baz): Promise<SpecialBaz> {
             return Promise.resolve(SpecialBaz())
         }
 
         @Handles
-        @AllFilters
-        @AllBehaviors
+        @Log @Contravarint @Exceptions
         fun handleBaz(bar: Bar): Promise<SpecialBar> {
             return Promise.resolve(SpecialBar())
         }
@@ -1048,59 +1480,85 @@ class HandlerTest {
         }
     }
 
-    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Filtering::class)
-    annotation class AllFilters
-
-    interface Behavior<in TReq: Any, TResp: Any?>
-        : Filtering<TReq, Promise<TResp>>
-
-    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(Behavior::class)
-    annotation class AllBehaviors
 
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<R>
+                next:     Next<R>,
+                provider: FilteringProvider?
         ) = next()
     }
 
-    class RequestFilterCb<in T: Any> : Filtering<T, Any?> {
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(RequestFilter::class, required = true)
+    annotation class Request
+
+    class RequestCbFilter<in T: Any> : Filtering<T, Any?> {
         override var order: Int? = null
 
         override fun next(
                 callback: T,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Any?>
+                next:     Next<Any?>,
+                provider: FilteringProvider?
         ) = next()
     }
 
-    class RequestFilterRes<T> : Filtering<Any, T> {
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(RequestCbFilter::class, required = true)
+    annotation class RequestCb
+
+    class RequestResFilter<T> : Filtering<Any, T> {
         override var order: Int? = null
 
         override fun next(
                 callback: Any,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<T>
+                next:     Next<T>,
+                provider: FilteringProvider?
         ) = next()
     }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(RequestResFilter::class, required = true)
+    annotation class RequestRes
+
+    class ContravarintFilter : Filtering<Any, Unit> {
+        override var order: Int? = null
+
+        override fun next(
+                callback: Any,
+                binding:  MemberBinding,
+                composer: Handling,
+                next:     Next<Unit>,
+                provider: FilteringProvider?
+        ): Promise<Unit> {
+            val cb = extractTesting(callback)
+            cb?.filters?.add(this)
+            return next()
+        }
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(ContravarintFilter::class, required = true)
+    annotation class Contravarint
 
     class LogFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         override var order: Int? = 1
 
         override fun next(
                 callback: Cb,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Res>
-        ): Res {
+                next:     Next<Res>,
+                provider: FilteringProvider?
+        ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
             println("Filter log $cb")
@@ -1108,36 +1566,52 @@ class HandlerTest {
         }
     }
 
-    class LogBehavior<in Req: Any, Res: Any?> : Behavior<Req, Res> {
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(LogFilter::class)
+    annotation class Log
+
+    class AbortingFilter<R: Any?> : Filtering<Bar, R> {
+        override var order: Int? = 0
+
+        override fun next(
+                callback: Bar,
+                binding:  MemberBinding,
+                composer: Handling,
+                next:     Next<R>,
+                provider: FilteringProvider?
+        ) = when {
+                callback.handled > 99 -> next.abort()
+                else -> next()
+            }
+        }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(AbortingFilter::class, required = true)
+    annotation class Aborting
+
+    class ExceptionBehavior<in Req: Any, Res: Any?> : Filtering<Req, Res> {
         override var order: Int? = 2
 
         override fun next(
                 callback: Req,
-                binding:  MethodBinding,
+                binding:  MemberBinding,
                 composer: Handling,
-                next:     Next<Promise<Res>>
+                next:     Next<Res>,
+                provider: FilteringProvider?
         ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
-            println("Behavior log $cb")
-            return next()
+            val result = next()
+            if (callback is Boo) {
+                return Promise.reject(IllegalStateException("System shutdown"))
+            }
+            return result
         }
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
-    @UseFilter(ExceptionBehavior::class)
+    @UseFilter(ExceptionBehavior::class, required = true)
     annotation class Exceptions
-
-    class ExceptionBehavior<in Req: Any, Res: Any?> : Behavior<Req, Res> {
-        override var order: Int? = 2
-
-        override fun next(
-                callback: Req,
-                binding:  MethodBinding,
-                composer: Handling,
-                next:     Next<Promise<Res>>
-        ) = Promise.reject(IllegalStateException("System shutdown"))
-    }
 
     companion object {
         private fun extractTesting(callback: Any): Testing? {

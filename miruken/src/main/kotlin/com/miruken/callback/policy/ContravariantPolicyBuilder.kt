@@ -1,5 +1,7 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.policy.rules.ExtractArgument
+import com.miruken.callback.policy.rules.TargetArgument
 import com.miruken.typeOf
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
@@ -17,11 +19,11 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
             ExtractArgument(typeOf<E>(), block)
 
     override fun build(): ContravariantPolicy {
-        return ContravariantPolicy(rules, filters, {
+        return ContravariantPolicy(rules, filters) {
             @Suppress("UNCHECKED_CAST")
             if (isCompatibleWith(callbackType, it))
                 targetFunctor(it as C) else null
-        })
+        }
     }
 }
 

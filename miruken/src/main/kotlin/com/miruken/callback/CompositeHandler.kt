@@ -19,11 +19,13 @@ open class CompositeHandler(vararg handlers: Any)
             greedy:       Boolean,
             composer:     Handling
     ) = handlers.fold(
-            super.handleCallback(callback, callbackType, greedy, composer)
+            super.handleCallback(
+                    callback, callbackType, greedy, composer)
     ) { result, handler ->
             if (result.stop || (result.handled && !greedy)) result
             else {
-                result or handler.handle(callback, callbackType, greedy, composer)
+                result or handler.handle(
+                        callback, callbackType, greedy, composer)
             }
     }
 
@@ -50,8 +52,14 @@ open class CompositeHandler(vararg handlers: Any)
     private fun find(target: Any): Handling? {
         for (handler in _handlers) {
             if (handler === target) return handler
-            if (handler is HandlerAdapter && handler.handler === target)
-                return handler
+            when (handler) {
+                is HandlerAdapter ->
+                    if (handler.handler == target)
+                        return handler
+                is GenericWrapper ->
+                    if (handler.value == target)
+                        return handler
+            }
         }
         return null
     }

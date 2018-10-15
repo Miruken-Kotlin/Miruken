@@ -12,7 +12,7 @@ class ContextualImplTest {
 
     @Before
     fun setup() {
-        _rootContext = ContextImpl()
+        _rootContext = Context()
     }
 
     @After
@@ -20,7 +20,7 @@ class ContextualImplTest {
         _rootContext.end()
     }
 
-    class MyService : ContextualImpl<Context>()
+    class MyService : ContextualImpl()
 
     @Test fun `Adds contextual to context when assigned`() {
         val service  = MyService().apply { context = _rootContext }

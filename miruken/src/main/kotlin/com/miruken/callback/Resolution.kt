@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.CallbackPolicy
 import kotlin.reflect.KType
 
@@ -7,11 +8,20 @@ open class Resolution(
         key:              Any,
         val callback:     Any,
         val callbackType: KType?
-) : Inquiry(key, true), ResolvingCallback {
-
+) : Inquiry(key, true, callback as? Inquiry),
+        InferringCallback, FilteringCallback,
+        DispatchingCallbackGuard {
     private var _handled = false
 
-    override fun getResolveCallback() = this
+    override fun inferCallback() = this
+
+    override val canFilter = false
+
+    override fun canDispatch(
+            target:     Any,
+            dispatcher: CallableDispatch
+    ) = (callback as? DispatchingCallbackGuard)
+            ?.canDispatch(target, dispatcher) != false
 
     override fun isSatisfied(
             resolution: Any,
@@ -26,12 +36,12 @@ open class Resolution(
     }
 
     companion object {
-        fun getResolvingCallback(
+        fun getResolving(
                 callback:     Any,
                 callbackType: KType?
         ): Any {
             val handlers = CallbackPolicy
-                    .getCallbackHandlerClasses(callback, callbackType)
+                    .getCallbackHandlers(callback, callbackType)
             if (handlers.isEmpty()) return callback
             val bundle = Bundle(false).apply {
                 add({ it.handle(NoResolving(callback, callbackType)) }) { it }

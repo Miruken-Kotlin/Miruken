@@ -52,8 +52,9 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
             logicalType = unwrapType(logicalType, Promise::class)?.let {
                 flags += PROMISE; it } ?: logicalType
 
-            var componentType = unwrapType(logicalType, Collection::class)?.let {
-                flags += COLLECTION; it } ?: logicalType
+            var componentType = unwrapType(logicalType, Collection::class)
+                    ?.let { flags += COLLECTION; it }
+                    ?: logicalType
 
             if (!(flags has COLLECTION)) {
                 componentType = logicalType.componentType.takeIf {

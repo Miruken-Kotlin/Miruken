@@ -24,9 +24,9 @@ fun Handling.recover(context: Any? = null): Handling {
             try {
                 val result = proceed()
                 if (result.handled) {
-                    (cb?.result as? Promise<*>)?.also {
-                        cb.result = (it.catch(::promisify) then {
-                            it.fold({ it }, { Promise.resolve(it) })
+                    (cb?.result as? Promise<*>)?.also { p ->
+                        cb.result = (p.catch(::promisify) then { r ->
+                            r.fold({ it }, { Promise.resolve(it) })
                         }).unwrap()
                     }
                 }

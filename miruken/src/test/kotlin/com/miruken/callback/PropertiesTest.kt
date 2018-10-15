@@ -2,8 +2,6 @@ package com.miruken.callback
 
 import com.miruken.assertAsync
 import com.miruken.concurrent.Promise
-import com.miruken.container.Managed
-import com.miruken.container.TestContainer
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -169,27 +167,6 @@ class PropertiesTest {
             @Proxy val auction by handler.get<Auction>()
         }
         assertNotNull(instance.auction.buy(2))
-    }
-
-    @Test fun `Delegates container property to handler`() {
-        val handler  = TestContainer()
-        val instance = object {
-            @Managed val foo by handler.get<Foo>()
-        }
-        assertNotNull(instance.foo)
-    }
-
-    @Test fun `Delegates promise container property to handler`() {
-        val handler  = TestContainer()
-        val instance = object {
-            @Managed val foo by handler.getAsync<Foo>()
-        }
-        assertAsync(testName) { done ->
-            instance.foo then {
-                assertNotNull(it)
-                done()
-            }
-        }
     }
 
     @Test fun `Delegates property to handler once`() {

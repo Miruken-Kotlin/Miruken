@@ -6,7 +6,7 @@ interface KeyResolving {
     fun validate(key: Any, typeInfo: TypeInfo) {}
 
     fun resolve(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling

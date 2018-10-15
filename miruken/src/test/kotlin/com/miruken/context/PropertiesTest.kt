@@ -5,8 +5,6 @@ import com.miruken.callback.Handler
 import com.miruken.callback.Key
 import com.miruken.callback.Provides
 import com.miruken.callback.Proxy
-import com.miruken.container.Managed
-import com.miruken.container.TestContainer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -28,7 +26,7 @@ class PropertiesTest {
 
     @Before
     fun setup() {
-        _context = ContextImpl()
+        _context = Context()
     }
 
     @After
@@ -39,7 +37,7 @@ class PropertiesTest {
     @Test fun `Delegates property to context`() {
         val foo = Foo()
         _context.store(foo)
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
         assertSame(foo, instance.foo)
@@ -48,7 +46,7 @@ class PropertiesTest {
     @Test fun `Delegates property to child context`() {
         val foo = Foo()
         _context.store(foo)
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context.createChild() }
         assertSame(foo, instance.foo)
@@ -57,14 +55,14 @@ class PropertiesTest {
     @Test fun `Delegates optional property to context`() {
         val foo = Foo()
         _context.store(foo)
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo?>()
         }.apply { context = _context }
         assertSame(foo, instance.foo)
     }
 
     @Test fun `Ignores missing optional property`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo?>()
         }.apply { context = _context }
         assertNull(instance.foo)
@@ -75,7 +73,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foos by getAll<Foo>()
         }.apply { context = _context }
         assertEquals(3, instance.foos.size)
@@ -86,7 +84,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foos by getArray<Foo>()
         }.apply { context = _context }
         assertEquals(3, instance.foos.size)
@@ -109,7 +107,7 @@ class PropertiesTest {
             @Key("help")
             val criticalHelp = "www.help3.com"
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val primes by get<IntArray>()
             val help by getArray<String>()
         }.apply { context = _context }
@@ -121,7 +119,7 @@ class PropertiesTest {
     }
 
     @Test fun `Uses empty list property if missing`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foos by getAll<Foo>()
         }.apply { context = _context }
         assertEquals(0, instance.foos.size)
@@ -130,7 +128,7 @@ class PropertiesTest {
     @Test fun `Delegates promise property to context`() {
         val foo = Foo()
         _context.store(foo)
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by getAsync<Foo>()
         }.apply { context = _context }
         assertAsync(testName) { done ->
@@ -142,7 +140,7 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates optional promise property to context`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by getAsync<Foo?>()
         }.apply { context = _context }
         assertAsync(testName) { done ->
@@ -158,7 +156,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo())
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by getAllAsync<Foo>()
         }.apply { context = _context }
         assertAsync(testName) { done ->
@@ -174,7 +172,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo())
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by getArrayAsync<Foo>()
         }.apply { context = _context }
         assertAsync(testName) { done ->
@@ -189,31 +187,10 @@ class PropertiesTest {
         _context.addHandlers(object : Handler(), Auction {
             override fun buy(itemId: Long): UUID = UUID.randomUUID()
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             @Proxy val auction by get<Auction>()
         }.apply { context = _context }
         assertNotNull(instance.auction.buy(2))
-    }
-
-    @Test fun `Delegates container property to context`() {
-        _context.addHandlers(TestContainer())
-        val instance = object : ContextualHandler<Context>() {
-            @Managed val foo by get<Foo>()
-        }.apply { context = _context }
-        assertNotNull(instance.foo)
-    }
-
-    @Test fun `Delegates promise container property to context`() {
-        _context.addHandlers(TestContainer())
-        val instance = object : ContextualHandler<Context>() {
-            @Managed val foo by getAsync<Foo>()
-        }.apply { context = _context }
-        assertAsync(testName) { done ->
-            instance.foo then {
-                assertNotNull(it)
-                done()
-            }
-        }
     }
 
     @Test fun `Delegates property to context once`() {
@@ -221,7 +198,7 @@ class PropertiesTest {
             @Provides
             fun provideFoo() = Foo()
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
         assertSame(instance.foo, instance.foo)
@@ -232,7 +209,7 @@ class PropertiesTest {
             @Provides
             fun provideFoo() = Foo()
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by link<Foo>()
         }.apply { context = _context }
         assertNotSame(instance.foo, instance.foo)
@@ -243,13 +220,13 @@ class PropertiesTest {
             @Provides
             fun provideFoo() = Foo()
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
         val foo = instance.foo
         assertSame(foo, instance.foo)
 
-        instance.context = ContextImpl().apply {
+        instance.context = Context().apply {
             addHandlers(object : Handler() {
                 @Provides
                 fun provideFoo() = Foo()
@@ -263,7 +240,7 @@ class PropertiesTest {
             @Provides
             fun provideFoo() = Foo()
         })
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
         _context.end()
@@ -271,7 +248,7 @@ class PropertiesTest {
     }
 
     @Test fun `Rejects property delegation if context unavailable`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }
         assertFailsWith(IllegalStateException::class) {
@@ -280,14 +257,14 @@ class PropertiesTest {
     }
 
     @Test fun `Ignores missing optional property if context unavailable`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo?>()
         }
         assertNull(instance.foo)
     }
 
     @Test fun `Rejects property delegation if missing`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
         assertFailsWith(IllegalStateException::class) {
@@ -296,7 +273,7 @@ class PropertiesTest {
     }
 
     @Test fun `Rejects promise property delegation if missing`() {
-        val instance = object : ContextualHandler<Context>() {
+        val instance = object : ContextualHandler() {
             val foo by getAsync<Foo>()
         }.apply { context = _context }
         assertAsync(testName) { done ->

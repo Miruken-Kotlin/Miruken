@@ -2,12 +2,15 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
+import com.miruken.callback.policy.rules.MethodRule
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 open class BivariantPolicy(
         rules:   List<MethodRule>,
-        filters: List<FilteringProvider>,
+        filters: Collection<FilteringProvider>,
         val output: CovariantPolicy,
         val input:  ContravariantPolicy
 ) : CallbackPolicy(rules, filters, true) {
@@ -21,7 +24,7 @@ open class BivariantPolicy(
             prototype.output, prototype.input)
 
     override fun createKey(
-            bindingInfo: PolicyMethodBindingInfo
+            bindingInfo: PolicyMemberBindingInfo
     ): Pair<Any, Any>? {
         val inKey  = bindingInfo.inKey
         val outKey = bindingInfo.outKey
@@ -58,7 +61,10 @@ open class BivariantPolicy(
         return compatible
     }
 
-    override fun acceptResult(result: Any?, binding: PolicyMethodBinding) =
+    override fun getResultType(callback: Any) =
+            output.getResultType(callback)
+
+    override fun acceptResult(result: Any?, binding: PolicyMemberBinding) =
         output.acceptResult(result, binding)
 
     override fun compare(o1: Any?, o2: Any?): Int {

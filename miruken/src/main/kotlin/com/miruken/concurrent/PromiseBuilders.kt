@@ -19,12 +19,12 @@ fun Promise.Companion.all(input: Collection<Any?>) : Promise<List<Any?>> {
 
     return Promise { resolveChild, rejectChild ->
         promises.forEachIndexed { index, promise ->
-            promise.then({
+            promise.then {
                 fulfilled[index] = it
                 @Suppress("UNCHECKED_CAST")
                 if (pending.incrementAndGet() == promises.size)
                     resolveChild(fulfilled.toList())
-            }).catch {
+            }.catch {
                 rejectChild(it)
             }
         }

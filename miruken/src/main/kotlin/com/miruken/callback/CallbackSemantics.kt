@@ -4,7 +4,7 @@ import com.miruken.Flags
 
 class CallbackSemantics(
         options: Flags<CallbackOptions>) : Composition(),
-    ResolvingCallback, FilteringCallback, BatchingCallback {
+    InferringCallback, FilteringCallback, BatchingCallback {
 
     private var _specified = options
 
@@ -28,7 +28,7 @@ class CallbackSemantics(
     fun isSpecified(options: Flags<CallbackOptions>) =
             _specified has options
 
-    override fun getResolveCallback() = this
+    override fun inferCallback() = this
 
     fun mergeInto(semantics: CallbackSemantics) {
         mergeInto(semantics, CallbackOptions.DUCK)

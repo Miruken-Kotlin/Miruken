@@ -2,12 +2,13 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
+import com.miruken.callback.policy.rules.MethodRule
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
 open class CovariantPolicy(
         rules:   List<MethodRule>,
-        filters: List<FilteringProvider>,
+        filters: Collection<FilteringProvider>,
         private val keyFunctor: (Any) -> Any?
 ) : CallbackPolicy(rules, filters) {
 
@@ -28,6 +29,9 @@ open class CovariantPolicy(
             key:       Any,
             available: Collection<Any>
     ) = available.filter { key != it && isCompatibleWith(key, it) }
+
+    override fun getResultType(callback: Any) =
+            keyFunctor(callback) as? KType?
 
     override fun compare(o1: Any?, o2: Any?) = when {
         o1 == o2 -> 0

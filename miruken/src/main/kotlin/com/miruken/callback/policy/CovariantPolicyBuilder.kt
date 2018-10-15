@@ -1,5 +1,8 @@
 package com.miruken.callback.policy
 
+import com.miruken.callback.policy.rules.ExtractArgument
+import com.miruken.callback.policy.rules.ReturnsKey
+import com.miruken.callback.policy.rules.ReturnsUnit
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType
@@ -15,11 +18,11 @@ class CovariantPolicyBuilder<C: Any>(
             ExtractArgument(typeOf<E>(), block)
 
     override fun build(): CovariantPolicy {
-        return CovariantPolicy(rules, filters, {
+        return CovariantPolicy(rules, filters) {
             @Suppress("UNCHECKED_CAST")
             if (isCompatibleWith(callbackType, it))
                 keyFunctor(it as C) else null
-        })
+        }
     }
 }
 

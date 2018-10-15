@@ -18,9 +18,9 @@ object ProxyKeyResolver : KeyResolver() {
     }
 
     override fun resolveKey(
-            key:      Any,
+            inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling,
             composer: Handling
-    ) = composer.proxy(key as KType)
+    ) = composer.proxy(inquiry.key as KType)
 }

@@ -18,13 +18,13 @@ infix fun <T, S> Promise<T>
 fun <T, S> Promise<T>
         .map(f: (T) -> S,
              t: (Throwable) -> S): Promise<S> =
-        then(f, t).then {
-            it.fold({ it }, { it })
+        then(f, t).then { r ->
+            r.fold({ it }, { it })
         }
 
 infix fun <T> Promise<T>
         .mapError(f: (Throwable) -> T): Promise<T> =
-        catch(f).then { it.fold({ it }, { it }) }
+        catch(f).then { r -> r.fold({ it }, { it }) }
 
 /**
  * apply/<*>/ap
@@ -43,10 +43,10 @@ infix fun <T, S> Promise<T>
 fun <T, S, U> Promise<T>
         .flatMap(f: (T) -> Promise<S>,
                  t: (Throwable) -> U): Promise<Either<U, S>> =
-        then(f, t).then {
-            it.fold(
+        then(f, t).then { r ->
+            r.fold(
                     { Promise.resolve(Either.Left(it)) },
-                    { it.then { Either.Right(it) } })
+                    { it.then { r -> Either.Right(r) } })
         }.unwrap()
 
 infix fun <T: Any> Promise<T>

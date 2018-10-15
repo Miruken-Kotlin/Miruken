@@ -41,7 +41,7 @@ interface Handling : ProtocolAdapter {
             if (semantics.isSpecified(CallbackOptions.BROADCAST)) {
                 options += CallbackOptions.BROADCAST
             }
-            handler = handler.resolving
+            handler = handler.infer
         }
 
         if (options != CallbackOptions.NONE) {

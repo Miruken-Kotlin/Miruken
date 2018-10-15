@@ -3,7 +3,6 @@ package com.miruken.mvc.view
 import com.miruken.callback.Handling
 import com.miruken.context.Context
 import com.miruken.mvc.Controller
-import com.miruken.mvc.Navigate
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.push
 import com.miruken.protocol.Protocol
@@ -37,17 +36,16 @@ inline fun <reified C: Controller> Handling.region(
         crossinline action: (C: Controller) -> Unit
 ): View = object : ViewAdapter() {
     override fun display(region: ViewRegion): ViewLayer {
-        lateinit var layer: ViewLayer
         val stack = region.view<ViewStackView>()
-        Navigate(this@region).push<C> {
+        return push<C> {
             val controllerContext = context!!
             controllerContext.addHandlers(stack)
             action(this)
-            layer = stack.display(ViewRegion(this@region.pushLayer))
+            val layer = stack.display(ViewRegion(this@region.pushLayer))
             layer.closed += { _ -> controllerContext.end() }
             controllerContext.contextEnded += { _ -> layer.close() }
-        }
-        return layer
+            layer
+        } as ViewLayer
     }
 }
 

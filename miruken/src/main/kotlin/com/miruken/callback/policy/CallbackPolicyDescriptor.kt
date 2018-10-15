@@ -1,72 +1,71 @@
 package com.miruken.callback.policy
 
+import com.miruken.addSorted
 import com.miruken.callback.StringKey
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     private val _typed =
-            HashMap<KType, MutableList<PolicyMethodBinding>>()
+            HashMap<KType, MutableList<PolicyMemberBinding>>()
 
     private val _compatible =
-            ConcurrentHashMap<Any, List<PolicyMethodBinding>>()
+            ConcurrentHashMap<Any, List<PolicyMemberBinding>>()
 
     private val _indexed by lazy {
-        HashMap<Any, MutableList<PolicyMethodBinding>>()
+        HashMap<Any, MutableList<PolicyMemberBinding>>()
     }
 
     private val _unknown by lazy {
-        mutableListOf<PolicyMethodBinding>()
+        mutableListOf<PolicyMemberBinding>()
     }
 
-    internal fun add(methodBinding: PolicyMethodBinding) {
-        val key = methodBinding.key
-        when (key) {
+    internal fun add(memberBinding: PolicyMemberBinding) {
+        val key  = memberBinding.key
+        val list = when (key) {
             is KType ->
                 if (key.classifier == Any::class)
-                    _unknown.add(methodBinding)
+                    _unknown
                 else
                     _typed.getOrPut(key) { mutableListOf() }
-                        .add(methodBinding)
-            null, Any::class ->
-                _unknown.add(methodBinding)
-            else ->
-                _indexed.getOrPut(key) { mutableListOf() }
-                    .add(methodBinding)
+            null, Any::class -> _unknown
+            else -> _indexed.getOrPut(key) { mutableListOf() }
         }
+        list.addSorted(memberBinding, PolicyMemberBinding)
     }
 
-    internal fun getInvariantMethods() =
+    internal fun getInvariantMembers() =
         _typed.values.flatMap { it } + _indexed.values.flatMap { it }
 
-    internal fun getInvariantMethods(
+    internal fun getInvariantMembers(
             callback:     Any,
             callbackType: KType?
-    ) = policy.getKey(callback, callbackType)?.let {
-            when (it) {
-                is KType -> _typed[it]
-                is String -> _indexed[it] ?: _indexed[StringKey(it)]
-                else -> _indexed[it]
+    ) = policy.getKey(callback, callbackType)?.let { key ->
+        when (key) {
+                is KType -> _typed[key]
+                is String -> _indexed[key] ?: _indexed[StringKey(key)]
+                else -> _indexed[key]
             }?.filter { it.approve(callback) }
         } ?: emptyList()
 
-    internal fun getCompatibleMethods(
+    internal fun getCompatibleMembers(
             callback:     Any,
             callbackType: KType?
     ) = policy.getKey(callback, callbackType)?.let {
-            _compatible.getOrPut(it) { inferCompatibleMethods(it) }
+            _compatible.getOrPut(it) { inferCompatibleMembers(it) }
         }?.filter { it.approve(callback) } ?: emptyList()
 
-    private fun inferCompatibleMethods(key: Any) =
+    private fun inferCompatibleMembers(key: Any) =
             when (key) {
                 is KType, is KClass<*>, is Class<*> ->
                     policy.getCompatibleKeys(key, _typed.keys).flatMap {
-                        _typed[it] ?: emptyList<PolicyMethodBinding>()
+                        _typed[it] ?: emptyList<PolicyMemberBinding>()
                     }
                 else ->
                     policy.getCompatibleKeys(key, _indexed.keys).flatMap {
-                        _indexed[it] ?: emptyList<PolicyMethodBinding>()
+                        _indexed[it] ?: emptyList<PolicyMemberBinding>()
                     }
-            }.sortedWith(policy.methodBindingComparator) + _unknown
+            }.sortedWith(policy.orderMembers) + _unknown
 }

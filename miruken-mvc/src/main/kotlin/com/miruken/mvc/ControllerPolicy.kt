@@ -1,9 +1,7 @@
 package com.miruken.mvc
 
-import com.miruken.container.Container
 import com.miruken.mvc.policy.DefaultPolicy
 import com.miruken.mvc.view.View
-import com.miruken.protocol.proxy
 import java.lang.ref.WeakReference
 
 class ControllerPolicy(controller: Controller) : DefaultPolicy() {
@@ -14,15 +12,6 @@ class ControllerPolicy(controller: Controller) : DefaultPolicy() {
     }
 
     val controller: Controller? get() = _controller.get()
-
-    fun autoRelease(): ControllerPolicy {
-        autoRelease {
-            controller?.run {
-                context?.proxy<Container>()?.release(this)
-            }
-        }
-        return this
-    }
 }
 
 

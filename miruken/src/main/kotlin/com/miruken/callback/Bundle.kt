@@ -10,11 +10,11 @@ typealias BundleActionAsyncBlock = (Handling) -> Promise<*>
 typealias BundleNotifyBlock      = (HandleResult) -> HandleResult
 
 class Bundle(private val all: Boolean = true) :
-        AsyncCallback, ResolvingCallback, DispatchingCallback {
+        AsyncCallback, InferringCallback, DispatchingCallback {
 
     private val _operations = mutableListOf<Operation>()
     private val _promises   = mutableListOf<Promise<*>>()
-    private var _resolving  = false
+    private var _inferring  = false
 
     private data class Operation(
         val action: BundleActionBlock,
@@ -24,8 +24,8 @@ class Bundle(private val all: Boolean = true) :
 
     val isEmpty get() = _operations.isEmpty()
     val handled get() = _operations.fold(
-            HandleResult.HANDLED, { result, operation ->
-                result and operation.result })
+            HandleResult.HANDLED) { result, operation ->
+        result and operation.result }
 
     override var wantsAsync: Boolean = false
 
@@ -82,12 +82,12 @@ class Bundle(private val all: Boolean = true) :
     infix fun addAsync(action: BundleActionAsyncBlock) =
             addAsync(action, null)
 
-    override fun getResolveCallback(): Any {
-        return if (_resolving) this
+    override fun inferCallback(): Any {
+        return if (_inferring) this
         else Bundle(all).also {
             it._operations.addAll(_operations)
             it.wantsAsync = wantsAsync
-            it._resolving = true
+            it._inferring = true
         }
     }
 
@@ -101,7 +101,7 @@ class Bundle(private val all: Boolean = true) :
             return HandleResult.NOT_HANDLED
 
         var proxy : Handling = ProxyHandler(handler, composer)
-        if (_resolving) proxy = proxy.resolving
+        if (_inferring) proxy = proxy.infer
 
         var handled = HandleResult.HANDLED
         for (operation in _operations) {

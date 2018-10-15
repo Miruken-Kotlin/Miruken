@@ -1,9 +1,9 @@
 package com.miruken.map
 
 import com.miruken.callback.policy.BivariantPolicy
-import com.miruken.callback.policy.PolicyMethodBinding
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.UsePolicy
-import com.miruken.runtime.getTaggedAnnotations
+import com.miruken.runtime.getMetaAnnotations
 import kotlin.reflect.KAnnotatedElement
 
 @Target(AnnotationTarget.FUNCTION)
@@ -11,7 +11,7 @@ import kotlin.reflect.KAnnotatedElement
 annotation class Maps
 
 object MapsPolicy : BivariantPolicy({
-    key { cb: MapFrom -> cb.targetType } target { source } rules {
+    key { cb: Mapping -> cb.targetType } target { source } rules {
         matches (target) returns key
         matches (target, callback) returns key
         matches (callback) returns (key or unit)
@@ -19,19 +19,19 @@ object MapsPolicy : BivariantPolicy({
 }) {
     override fun approve(
             callback: Any,
-            binding:  PolicyMethodBinding
-    ) = (callback as? MapFrom)?.let {
-            val format = it.format ?: return true
+            binding: PolicyMemberBinding
+    ) = (callback as? Mapping)?.let { mapping ->
+        val format = mapping.format ?: return true
             return binding.dispatcher.let {
                 matches(format, it) || matches(format, it.owningClass)
             }
         } ?: false
 
     private fun matches(format: Any, sources: KAnnotatedElement) =
-            sources.getTaggedAnnotations<UseFormatMatcher<*>>().any {
-                val (annotation, match) = it
-                match.any {
-                    it.formatMatcherClass.objectInstance
+            sources.getMetaAnnotations<UseFormatMatcher<*>>().any {
+                val (annotation, matcher) = it
+                matcher.any { match ->
+                    match.formatMatcherClass.objectInstance
                             ?.matches(annotation, format) == true
                 }
             }

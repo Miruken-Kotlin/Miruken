@@ -423,9 +423,9 @@ class BundleTest {
         var handled = HandleResult.NOT_HANDLED
         val pins    = mutableListOf<Pin>()
         var ball: BowlingBall? = null
-        HandlerDescriptor.getDescriptorFor<BowlingGame>()
-        HandlerDescriptor.getDescriptorFor<Lane>()
-        val result = BowlingProvider().resolving.all {
+        HandlerDescriptor.getDescriptor<BowlingGame>()
+        HandlerDescriptor.getDescriptor<Lane>()
+        val result = BowlingProvider().infer.all {
             add { handled = it.handle(ResetPins()) }
             add { pins.addAll(it.resolveAll()) }
             add { ball = it.command(FindBowlingBall(10.0)) as? BowlingBall }
@@ -516,7 +516,7 @@ class BundleTest {
         fun reset(reset: ResetPins, composer: Handling) {
             assertNotNull(composer)
             for (pin in pins) pin.up = true
-            (composer.takeUnless { resolve } ?: composer.resolving)
+            (composer.takeUnless { resolve } ?: composer.infer)
                     .command(FindBowlingBall(5.0))
         }
     }

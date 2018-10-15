@@ -1,5 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallableDispatch
+import com.miruken.callback.policy.bindings.BindingMetadata
+import com.miruken.callback.policy.bindings.BindingScope
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.runtime.ANY_STAR
@@ -13,9 +16,12 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
-open class Inquiry(val key: Any, val many: Boolean = false)
-    : Callback, AsyncCallback, DispatchingCallback {
-
+open class Inquiry(
+        val key:    Any,
+        val many:   Boolean = false,
+        val parent: Inquiry? = null
+) : Callback, AsyncCallback, DispatchingCallback,
+    DispatchingCallbackGuard, BindingScope {
     private var _result: Any? = null
     private val _promises     = mutableListOf<Promise<*>>()
     private val _resolutions  = mutableListOf<Any>()
@@ -26,6 +32,14 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             else -> ANY_STAR
         }
     }
+    var target: Any? = null
+        private set
+
+    var dispatcher: CallableDispatch? = null
+        private set
+
+    override val metadata = BindingMetadata()
+
     override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
@@ -74,18 +88,24 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     override var result: Any?
         get() {
-            if (_result != null) return _result
-            _result = if (isAsync) {
-                Promise.all(_promises) then {
-                    val flat = flatten(_resolutions, it)
+            if (_result == null) {
+                _result = if (isAsync) {
+                    Promise.all(_promises) then {
+                        val flat = flatten(_resolutions, it)
+                        if (many) flat else flat.firstOrNull()
+                    }
+                } else {
+                    val flat = flatten(_resolutions)
                     if (many) flat else flat.firstOrNull()
                 }
-            } else {
-                val flat = flatten(_resolutions)
-                if (many) flat else flat.firstOrNull()
             }
-            if (wantsAsync && _result !is Promise<*>) {
-                _result = Promise.resolve(_result)
+            if (isAsync) {
+                if (!wantsAsync) {
+                    _result = (_result as? Promise<*>)?.get()
+                }
+            } else if (wantsAsync) {
+                _result = _result?.let { Promise.resolve(it) }
+                        ?: Promise.EMPTY
             }
             return _result
         }
@@ -105,14 +125,14 @@ open class Inquiry(val key: Any, val many: Boolean = false)
     ): Boolean {
         val resolved = when {
             !strict && resolution is Collection<*> ->
-                resolution.filterNotNull().fold(false, { s, res ->
-                    include(res, greedy, composer) || s
-                })
+                resolution.filterNotNull().fold(false) { s, res ->
+                    include(res, false, greedy, composer) || s
+                }
             !strict && resolution is Array<*> ->
-                resolution.filterNotNull().fold(false, { s, res ->
-                    include(res, greedy, composer) || s
-                })
-            else -> include(resolution, greedy, composer)
+                resolution.filterNotNull().fold(false) { s, res ->
+                    include(res, false, greedy, composer) || s
+                }
+            else -> include(resolution, strict, greedy, composer)
         }
         if (resolved) _result = null
         return resolved
@@ -120,13 +140,23 @@ open class Inquiry(val key: Any, val many: Boolean = false)
 
     private fun include(
             resolution: Any,
+            strict:     Boolean,
             greedy:     Boolean,
             composer:   Handling
     ): Boolean {
         if (resolution is Promise<*>) {
             isAsync = true
-            _promises.add(resolution.then {
-                it?.takeIf { isSatisfied(it, greedy, composer) }
+            _promises.add(resolution.then { r ->
+                when {
+                    !strict && r is Collection<*> -> r.filter {
+                        it != null && isSatisfied(it, greedy, composer)
+                    }
+                    !strict && r is Array<*> -> r.filter {
+                        it != null && isSatisfied(it, greedy, composer)
+                    }
+                    else ->
+                        r?.takeIf { isSatisfied(it, greedy, composer) }
+                }
             })
         } else if (!isSatisfied(resolution, greedy, composer)) {
             return false
@@ -142,12 +172,31 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer:   Handling
     ): Boolean = true
 
+    override fun canDispatch(
+            target:     Any,
+            dispatcher: CallableDispatch
+    ): Boolean {
+        if (inProgress(target, dispatcher)) return false
+        this.target     = target
+        this.dispatcher = dispatcher
+        return true
+    }
+
     override fun dispatch(
             handler:      Any,
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
+        when (key) {
+            is KType -> (key.classifier as? KClass<*>)?.objectInstance
+            is KClass<*> -> key.objectInstance
+            else -> null
+        }?.also {
+            if (include(it, true, greedy, composer)) {
+                return HandleResult.HANDLED_AND_STOP
+            }
+        }
         val result = if (implied(handler, greedy, composer))
             HandleResult.HANDLED else HandleResult.NOT_HANDLED
         if (result.handled && !greedy) return result
@@ -169,6 +218,15 @@ open class Inquiry(val key: Any, val many: Boolean = false)
             composer:  Handling
     ) = isCompatibleWith(key, item) &&
             resolve(item, false, greedy, composer)
+
+    private fun inProgress(
+            target:     Any,
+            dispatcher: CallableDispatch
+    ): Boolean {
+        return (target === this.target &&
+                dispatcher === this.dispatcher) ||
+                parent?.inProgress(target, dispatcher) == true
+    }
 
     private fun flatten(vararg lists: List<*>): List<Any> {
         val flat = mutableSetOf<Any>()

@@ -1,17 +1,19 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.FilteringProvider
+import com.miruken.callback.policy.rules.*
 import kotlin.reflect.KType
 
 abstract class CallbackPolicyBuilder(val callbackType: KType) {
     private val _rules = mutableListOf<MethodRuleBuilder>()
 
+    val any = ReturnRule.Anything
+
     val filters = mutableListOf<FilteringProvider>()
 
     val callback: CallbackArgument = CallbackArgument(callbackType)
 
-    val rules: List<MethodRule>
-        get() {
+    val rules: List<MethodRule> get() {
         _rules.sortByDescending { it.weight }
         return _rules.map { it.build() }
     }

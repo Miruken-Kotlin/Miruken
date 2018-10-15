@@ -1,6 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.CallbackPolicy
+import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import kotlin.reflect.KType
 
 interface Callback {
@@ -18,8 +20,8 @@ interface BoundingCallback {
     val bounds: Any?
 }
 
-interface ResolvingCallback {
-    fun getResolveCallback(): Any
+interface InferringCallback {
+    fun inferCallback(): Any
 }
 
 interface BatchingCallback {
@@ -28,6 +30,13 @@ interface BatchingCallback {
 
 interface FilteringCallback {
     val canFilter: Boolean
+}
+
+interface DispatchingCallbackGuard {
+    fun canDispatch(
+            target:     Any,
+            dispatcher: CallableDispatch
+    ): Boolean
 }
 
 interface DispatchingCallback {

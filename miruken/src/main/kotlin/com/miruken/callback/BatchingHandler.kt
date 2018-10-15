@@ -14,8 +14,7 @@ class BatchingHandler(
     private val _completed = AtomicInteger(0)
 
     @Provides
-    var batch: Batch? = Batch(*tags)
-        private set
+    private var batch: Batch? = Batch(*tags)
 
     @Provides
     @Suppress("UNCHECKED_CAST")
@@ -31,16 +30,15 @@ class BatchingHandler(
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        return batch?.let {
-            it.takeIf { (callback as? BatchingCallback)
-                ?.canBatch != false }
-                ?.let {
-                    if (_completed.get() > 0 && callback !is Composition)
-                        batch = null
-                    it.handle(callback, callbackType, greedy, composer)
-                            .takeIf { it.stop || it.handled }
+        return batch?.takeIf {
+                (callback as? BatchingCallback)?.canBatch != false
+            }?.let { b ->
+                if (_completed.get() > 0 && callback !is Composition) {
+                    batch = null
                 }
-        } ?: super.handleCallback(
+                b.handle(callback, callbackType, greedy, composer)
+                        .takeIf { it.stop || it.handled }
+            } ?: super.handleCallback(
                 callback, callbackType, greedy, composer)
     }
 

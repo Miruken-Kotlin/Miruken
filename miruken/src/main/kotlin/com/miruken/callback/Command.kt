@@ -10,19 +10,13 @@ import kotlin.reflect.full.createType
 
 open class Command(
         val callback:     Any,
-        val callbackType: KType,
+        val callbackType: KType?,
         val many:         Boolean = false
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
     private val _results = mutableListOf<Any>()
     private var _policy: CallbackPolicy? = null
-
-    init {
-        require(callback::class == callbackType.classifier) {
-            "Callback $callback does not match type $callbackType"
-        }
-    }
 
     override var wantsAsync: Boolean = false
 
@@ -53,20 +47,25 @@ open class Command(
 
     override var result: Any?
         get() {
-            if (_result != null) return _result
-            if (!many) {
-                if (_results.isNotEmpty()) {
-                    _result = _results.first()
+            if (_result == null) {
+                if (!many) {
+                    if (_results.isNotEmpty()) {
+                        _result = _results.first()
+                    }
+                } else if (isAsync) {
+                    _result = Promise.all(_results
+                            .map { Promise.resolve(it) })
+                } else {
+                    _result = _results
                 }
-            } else if (isAsync) {
-                _result = Promise.all(_results
-                        .map { Promise.resolve(it) })
-            } else {
-                _result = _results
             }
-            if (wantsAsync && !isAsync) {
+            if (isAsync) {
+                if (!wantsAsync) {
+                    _result = (_result as? Promise<*>)?.get()
+                }
+            } else if (wantsAsync) {
                 _result = _result?.let { Promise.resolve(it) }
-                    ?: Promise.EMPTY
+                        ?: Promise.EMPTY
             }
             return _result
         }
@@ -91,7 +90,8 @@ open class Command(
             composer:     Handling
     ): HandleResult {
         val size = _results.size
-        return policy!!.dispatch(handler, this, callbackType,
+        return policy!!.dispatch(handler, this,
+                this.callbackType ?: callbackType,
                 greedy, composer, ::respond).otherwise(
                 _results.size > size)
     }
