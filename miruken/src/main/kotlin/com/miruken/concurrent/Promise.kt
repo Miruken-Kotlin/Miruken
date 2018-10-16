@@ -242,7 +242,7 @@ open class Promise<out T>
             Instant.now().plusMillis(timeoutMs) }
         synchronized (_guard) {
             while (!isCompleted &&
-                    deadline?. let { Instant.now() < deadline } != false) {
+                    deadline?.let { Instant.now() < deadline } != false) {
                 if (deadline == null)
                     _guard.wait()
                 else

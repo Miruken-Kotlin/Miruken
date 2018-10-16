@@ -38,7 +38,7 @@ class ContextualPropertyProvider<out T>(
             contextual: Contextual,
             property:   KProperty<*>
     ): ReadOnlyProperty<Contextual, T> {
-        val typeInfo = TypeFlags.parse(property.returnType)
+        val typeInfo = TypeInfo.parse(property.returnType)
         val key      = KeyResolver.getKey(property, typeInfo, property.name)
                 ?: error("Unable to determine key for '$property'")
         return factory(key, typeInfo, contextual)

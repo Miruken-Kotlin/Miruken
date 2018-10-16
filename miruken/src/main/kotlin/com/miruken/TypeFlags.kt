@@ -1,14 +1,5 @@
 package com.miruken
 
-import com.miruken.concurrent.Promise
-import com.miruken.runtime.componentType
-import com.miruken.runtime.isGeneric
-import com.miruken.runtime.isOpenGeneric
-import kotlin.reflect.KClass
-import kotlin.reflect.KType
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.withNullability
-
 sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object NONE       : TypeFlags(0)
     object LAZY       : TypeFlags(1 shl 0)
@@ -21,59 +12,4 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object INTERFACE  : TypeFlags(1 shl 7)
     object GENERIC    : TypeFlags(1 shl 8)
     object OPEN       : TypeFlags(1 shl 9)
-
-    companion object {
-        fun parse(type: KType): TypeInfo {
-            var logicalType = type
-
-            var flags = when {
-                type.isOpenGeneric -> GENERIC + OPEN
-                type.isGeneric -> GENERIC
-                else -> -NONE
-            }
-
-            (type.classifier as? KClass<*>)?.also {
-                if (it.java.isInterface)
-                    flags += INTERFACE
-            }
-
-            // TODO:  Check for @Strict when KType is KAnnotatedElement
-
-            logicalType = logicalType.takeIf { it.isMarkedNullable }?.let {
-                flags += OPTIONAL
-                type.withNullability(false)
-            } ?: logicalType
-
-            logicalType = unwrapType(type, Lazy::class)?.let {
-                flags += LAZY; it }
-                    ?: unwrapType(type, Function0::class)?.let {
-                flags += FUNC; it } ?: logicalType
-
-            logicalType = unwrapType(logicalType, Promise::class)?.let {
-                flags += PROMISE; it } ?: logicalType
-
-            var componentType = unwrapType(logicalType, Collection::class)
-                    ?.let { flags += COLLECTION; it }
-                    ?: logicalType
-
-            if (!(flags has COLLECTION)) {
-                componentType = logicalType.componentType.takeIf {
-                    it != logicalType
-                }?.also { flags += ARRAY } ?: logicalType
-            }
-
-            (componentType.classifier as? KClass<*>)?.also {
-                if (it.javaPrimitiveType != null || it == String::class)
-                    flags += PRIMITIVE
-            }
-
-            return TypeInfo(type, flags, logicalType, componentType)
-        }
-
-        private fun unwrapType(type: KType, criteria: KClass<*>): KType? {
-            return (type.classifier as? KClass<*>)
-                    ?.takeIf { it.isSubclassOf(criteria) }
-                    ?.let { type.arguments[0].type}
-        }
-    }
 }

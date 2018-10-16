@@ -6,7 +6,6 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.CollectResultsBlock
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.concurrent.Promise
-import com.miruken.mapOpenParameters
 import com.miruken.runtime.closeType
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter

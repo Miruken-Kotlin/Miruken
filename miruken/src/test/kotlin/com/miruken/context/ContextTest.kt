@@ -1,13 +1,15 @@
 package com.miruken.context
 
 import com.miruken.callback.*
+import com.miruken.concurrent.ChildCancelMode
+import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
+import com.miruken.protocol.proxy
 import org.junit.Test
 import kotlin.test.*
 
 @Suppress("RemoveExplicitTypeArguments", "UNUSED_VARIABLE")
-class ContextImplTest {
-    class Foo
-
+class ContextTest {
     @Test fun `Starts in the active state`() {
         val context = Context()
         assertEquals(ContextState.ACTIVE, context.state)
@@ -265,6 +267,28 @@ class ContextImplTest {
         assertSame(data, grandChild.xselfSiblingOrAncestor.resolve<Foo>())
     }
 
+    @Test fun `Publishes from root context`() {
+        val data       = Foo()
+        val root       = Context()
+                .apply { Observer().context = this }
+        val child1     = root.createChild()
+                .apply { Observer().context = this }
+        val child2     = root.createChild()
+                .apply { Observer().context = this }
+        val child3     = root.createChild()
+                .apply { Observer().context = this }
+        val grandChild = child3.createChild()
+                .apply { Observer().context = this }
+        child2.publishFromRoot.handle(data)
+        assertEquals(5, data.count)
+    }
+
+    @Test fun `Rejects publish if no root context`() {
+        assertFailsWith(IllegalStateException::class) {
+            Handler().publishFromRoot.handle(Foo())
+        }
+    }
+
     @Test fun `Combines aspects with traversal`() {
         var count      = 0
         val data       = Foo()
@@ -282,5 +306,98 @@ class ContextImplTest {
         assertSame(data, foo(child3.xselfOrDescendant).resolve<Foo>())
         assertSame(data, foo(root.xselfOrDescendant).resolve<Foo>())
         assertSame(4, count)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test fun `Cancels promise when context ends`() {
+        val foo     = Foo()
+        val root    = Context()
+        val promise = Gateway().commandAsync(foo) as Promise<Foo>
+        assertEquals(PromiseState.FULFILLED, promise.state)
+        assertSame(foo, promise.get())
+        assertEquals(1, foo.count)
+
+        val promise2 = Gateway().trackPromise(root)
+                .commandAsync(foo) as Promise<Foo>
+        assertEquals(PromiseState.PENDING, promise2.state)
+        assertEquals(2, foo.count)
+        root.end()
+        assertEquals(PromiseState.CANCELLED, promise2.state)
+        assertEquals(10, foo.count)
+
+        val promise3 = Gateway().trackPromise(root)
+                .commandAsync(foo) as Promise<Foo>
+        assertEquals(PromiseState.FULFILLED, promise3.state)
+        assertSame(foo, promise.get())
+        assertEquals(11, foo.count)
+
+        val promise4 = Gateway().trackPromise(root)
+                .commandAsync(foo) as Promise<Foo>
+        assertEquals(PromiseState.CANCELLED, promise4.state)
+        assertEquals(10, foo.count)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    @Test fun `Cancels proxy promise when context ends`() {
+        val foo     = Foo()
+        val root    = Context().apply {
+            addHandlers(Gateway())
+        }
+        val promise = root.proxy<Api>().send(foo)
+        assertEquals(PromiseState.FULFILLED, promise.state)
+        assertSame(foo, promise.get())
+        assertEquals(1, foo.count)
+
+        val promise2 = root.trackPromise(root)
+                .proxy<Api>().send(foo)
+        assertEquals(PromiseState.PENDING, promise2.state)
+        assertEquals(2, foo.count)
+        root.end()
+        assertEquals(PromiseState.CANCELLED, promise2.state)
+        assertEquals(10, foo.count)
+
+        val promise3 = root.trackPromise(root)
+                .proxy<Api>().send(foo)
+        assertEquals(PromiseState.FULFILLED, promise3.state)
+        assertSame(foo, promise.get())
+        assertEquals(11, foo.count)
+
+        val promise4 = root.trackPromise(root)
+                .proxy<Api>().send(foo)
+        assertEquals(PromiseState.CANCELLED, promise4.state)
+        assertEquals(10, foo.count)
+    }
+
+    class Foo {
+        var count = 0
+    }
+
+    class Observer : ContextualHandler() {
+        @Handles
+        fun handle(foo: Foo, composer: Handling) {
+            val ctx = composer.resolve<Context>()
+            assertSame(context!!.root, ctx)
+            ++foo.count
+        }
+    }
+
+    interface Api {
+        fun send(foo: Foo): Promise<Foo>
+    }
+
+    class Gateway : Handler(), Api {
+        @Handles
+        fun handle(foo: Foo): Promise<Foo> {
+            ++foo.count
+            return if (foo.count % 2 == 0) {
+                Promise<Foo>(ChildCancelMode.ANY) { _, _, cancel ->
+                    cancel { foo.count = 10 }
+                }
+            } else {
+                Promise.resolve(foo)
+            }
+        }
+
+        override fun send(foo: Foo) = handle(foo)
     }
 }

@@ -6,7 +6,7 @@ import java.lang.ref.WeakReference
 class ViewPolicy(view: View) : DefaultPolicy() {
     private val _view = WeakReference(view)
 
-    val view: View? get() = _view.get()
+    val view get() = _view.get()
 }
 
 fun View.track(): View {

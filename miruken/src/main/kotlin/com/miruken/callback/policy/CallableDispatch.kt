@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
+import com.miruken.TypeInfo
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.*
@@ -13,7 +14,7 @@ import kotlin.reflect.jvm.*
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val strict     = annotations.any { it is Strict }
-    val returnInfo = TypeFlags.parse(callable.returnType)
+    val returnInfo = TypeInfo.parse(callable.returnType)
     val arguments  = callable.valueParameters.map { Argument(it) }
 
     init { callable.isAccessible = true }

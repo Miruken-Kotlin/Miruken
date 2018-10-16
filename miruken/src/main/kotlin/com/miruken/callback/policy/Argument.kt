@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
+import com.miruken.TypeInfo
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.ConstraintBuilder
 import com.miruken.callback.policy.bindings.ConstraintProvider
@@ -12,7 +13,7 @@ import kotlin.reflect.full.withNullability
 import kotlin.reflect.jvm.jvmErasure
 
 class Argument(val parameter: KParameter) : KAnnotatedElement {
-    val typeInfo    = TypeFlags.parse(parameter.type)
+    val typeInfo    = TypeInfo.parse(parameter.type)
     val useResolver = KeyResolver.getResolverClass(parameter)
                    ?: impliedProtocolResolver()
 

@@ -11,7 +11,7 @@ class ControllerPolicy(controller: Controller) : DefaultPolicy() {
         track()
     }
 
-    val controller: Controller? get() = _controller.get()
+    val controller get() = _controller.get()
 }
 
 

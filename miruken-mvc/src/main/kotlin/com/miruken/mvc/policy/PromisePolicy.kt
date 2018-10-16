@@ -6,11 +6,9 @@ import java.lang.ref.WeakReference
 class PromisePolicy(promise: Promise<*>) : DefaultPolicy() {
     private val _promise = WeakReference(promise)
 
-    init {
-        track()
-    }
+    init { track() }
 
-    val promise: Promise<*>? get() = _promise.get()
+    val promise get() = _promise.get()
 
     fun autoRelease(): PromisePolicy {
         autoRelease {
