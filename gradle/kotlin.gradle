@@ -1,11 +1,14 @@
 apply plugin: 'org.jetbrains.kotlin.jvm'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+apply plugin: 'java-library'
 
 repositories {
     jcenter()
 }
 
-version = '0.0.1-alpha.9'
+version = '0.0.1-alpha.3'
+//0.0.1-SNAPSHOT
 
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'

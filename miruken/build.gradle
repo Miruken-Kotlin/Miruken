@@ -1,7 +1,5 @@
 apply from: "${rootDir}/gradle/kotlin.gradle"
 
-apply plugin: 'com.jfrog.bintray'
-
 configurations {
     testClasses {
         extendsFrom(testRuntime)
@@ -17,19 +15,29 @@ artifacts {
     testClasses testJar
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            groupId 'com.miruken'
+            artifactId 'miruken'
+        }
+    }
+}
+
 bintray {
     user = System.getenv('BINTRAY_USER')
     key  = System.getenv('BINTRAY_KEY')
-    configurations = ['archives']
+    publications = ['maven']
     publish = true
     pkg {
-        repo = 'Miruken-Kotlin'
+        userOrg = 'Miruken'
+        repo = 'MavenPackages'
         name = 'miruken'
         userOrg = 'miruken'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
         version {
-            desc = 'Miruken Core Kotlin Implementation'
             released = new Date()
         }
     }

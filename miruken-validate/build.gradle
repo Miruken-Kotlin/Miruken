@@ -4,27 +4,37 @@ dependencies {
     compile project(':miruken')
     compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
     testCompile project(path: ':miruken', configuration: 'testClasses')
+    testCompile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+    testCompile group: 'org.glassfish.web', name: 'javax.el', version: '2.2.6'
+    testCompile group: 'org.hibernate.validator', name: 'hibernate-validator', version: '6.0.9.Final'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            groupId 'com.miruken'
+            artifactId 'miruken-validate'
+        }
+    }
 }
 
 bintray {
     user = System.getenv('BINTRAY_USER')
     key  = System.getenv('BINTRAY_KEY')
-    configurations = ['archives']
+    publications = ['maven']
     publish = true
     pkg {
-        repo = 'Miruken-Kotlin'
+        userOrg = 'Miruken'
+        repo = 'MavenPackages'
         name = 'miruken-validate'
         userOrg = 'miruken'
         licenses = ['MIT']
         vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
         version {
-            desc = 'Miruken Validation'
             released = new Date()
         }
     }
 }
 
-testCompile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
-testCompile group: 'org.glassfish.web', name: 'javax.el', version: '2.2.6'
-testCompile group: 'org.hibernate.validator', name: 'hibernate-validator', version: '6.0.9.Final'
 
