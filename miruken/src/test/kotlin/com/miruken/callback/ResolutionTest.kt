@@ -89,7 +89,10 @@ class ResolutionTest {
     }
 
     @Test fun `Skips filters with missing dependencies`() {
-        val handler = Accountant() + FilterProvider()
+        val handler = (Accountant()
+                    + BillingImpl()
+                    + RepositoryProvider()
+                    + FilterProvider())
         handler.infer.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
     }
@@ -130,7 +133,7 @@ class ResolutionTest {
     @Test fun `Provides methods polymorphically`() {
         val provider = (EmailProvider()
                      + OfflineProvider()
-                     + EmailProvider()
+                     + RepositoryProvider()
                      + FilterProvider())
         var id       = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
@@ -141,15 +144,20 @@ class ResolutionTest {
     }
 
     @Test fun `Provides methods strictly`() {
-        val provider = OfflineProvider()
+        val provider = (OfflineProvider()
+                     + BillingImpl()
+                     + RepositoryProvider()
+                     + FilterProvider())
         assertFailsWith(NotHandledException::class) {
             provider.strict.proxy<EmailFeature>().email("22")
         }
     }
 
-    @Test fun `Chains Provided methods strictly`() {
+    @Test fun `Chains provided methods strictly`() {
         val provider = (OfflineProvider()
                      + EmailProvider()
+                     + BillingImpl()
+                     + RepositoryProvider()
                      + FilterProvider())
         val id       = provider.strict.proxy<EmailFeature>().email("22")
         assertEquals(1, id)
@@ -172,14 +180,16 @@ class ResolutionTest {
     @Test fun `Provides methods with no return value`() {
         val provider = (EmailProvider()
                      + BillingProvider(BillingImpl())
-                     + EmailProvider()
+                     + RepositoryProvider()
                      + FilterProvider())
         provider.proxy<EmailFeature>().cancelEmail(1)
     }
 
     @Test fun `Visits all providers`() {
         val provider = (ManyProvider()
-                     +  FilterProvider())
+                     + BillingImpl()
+                     + RepositoryProvider()
+                     + FilterProvider())
         provider.proxy<EmailFeature>().cancelEmail(13)
     }
 
@@ -471,9 +481,11 @@ class ResolutionTest {
 
     class FilterProvider : Handler() {
         @Provides
-        fun <Cb: Any, Res: Any?> providesAudit() = AuditFilter<Cb, Res>()
+        fun <Cb: Any, Res: Any?> providesAudit(): AuditFilter<Cb, Res> =
+                AuditFilter()
 
         @Provides
-        fun <T: Entity, Res: Number> providesBalance() = BalanceFilter<T, Res>()
+        fun <T: Entity, Res: Number> providesBalance(): BalanceFilter<T, Res> =
+                BalanceFilter()
     }
 }

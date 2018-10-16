@@ -7,6 +7,7 @@ import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
+@PolicyDsl
 class CovariantPolicyBuilder<C: Any>(
         callbackType: KType,
         private val keyFunctor: (C) -> Any
@@ -26,12 +27,14 @@ class CovariantPolicyBuilder<C: Any>(
     }
 }
 
+@PolicyDsl
 class CovariantKeyBuilder {
     inline fun <reified C: Any> key(
             noinline keyFunctor: (C) -> Any
     ) = CovariantWithKeyBuilder(keyFunctor, typeOf<C>())
 }
 
+@PolicyDsl
 class CovariantWithKeyBuilder<C: Any>(
         private val keyFunctor:   (C) -> Any,
         private val callbackType: KType

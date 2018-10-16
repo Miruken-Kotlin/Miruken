@@ -37,20 +37,6 @@ class NavigatorTest {
         rootContext.end()
     }
 
-    @Test fun `Navigates to next controller`() {
-        rootContext.next<HelloController> {
-            sayHello("Brenda")
-            assertSame(rootContext, context)
-        }
-    }
-
-    @Test fun `Navigates to push controller`() {
-        rootContext.push<HelloController> {
-            sayHello("Craig")
-            assertSame(rootContext, context?.parent)
-        }
-    }
-
     class HelloController
         @Provides @Scoped
         constructor(): Controller() {
@@ -72,6 +58,20 @@ class NavigatorTest {
         fun sayGoodbye(name: String) {
             println("Goodbye $name")
             endContext()
+        }
+    }
+
+    @Test fun `Navigates to next controller`() {
+        rootContext.next<HelloController> {
+            sayHello("Brenda")
+            assertSame(rootContext, context)
+        }
+    }
+
+    @Test fun `Navigates to push controller`() {
+        rootContext.push<HelloController> {
+            sayHello("Craig")
+            assertSame(rootContext, context?.parent)
         }
     }
 

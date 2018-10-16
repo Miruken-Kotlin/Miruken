@@ -30,7 +30,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                     ?.let { args ->
                         dispatcher.invoke(this, args) as Promise<Res>
                     }
-            } ?: next()
+            } ?: next.abort()
 
     private fun resolveArguments(
             dispatcher: CallableDispatch,

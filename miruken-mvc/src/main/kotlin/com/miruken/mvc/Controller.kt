@@ -18,8 +18,7 @@ open class Controller : ContextualHandler(),
 
     internal var _io: Handling? = null
 
-    @Suppress("LeakingThis")
-    override val policy = ControllerPolicy(this)
+    override val policy by lazy { ControllerPolicy(this) }
 
     // Context
 

@@ -8,6 +8,7 @@ import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
+@PolicyDsl
 class BivariantPolicyBuilder<C: Any, out S: Any>(
         callbackType:  KType,
         targetType:    KType,
@@ -30,12 +31,14 @@ class BivariantPolicyBuilder<C: Any, out S: Any>(
     }
 }
 
+@PolicyDsl
 class BivariantKeyBuilder {
     inline fun <reified C: Any> key(
             noinline keyFunctor: (C) -> Any
     ) = BivariantWithKeyBuilder(keyFunctor, typeOf<C>())
 }
 
+@PolicyDsl
 class BivariantWithKeyBuilder<C: Any>(
         val keyFunctor:   (C) -> Any,
         val callbackType: KType
@@ -46,6 +49,7 @@ class BivariantWithKeyBuilder<C: Any>(
             targetFunctor, callbackType, typeOf<S>())
 }
 
+@PolicyDsl
 class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
         private val keyFunctor:    (C) -> Any,
         private val targetFunctor: C.() -> S,
