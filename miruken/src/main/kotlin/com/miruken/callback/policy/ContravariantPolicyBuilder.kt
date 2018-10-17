@@ -6,7 +6,7 @@ import com.miruken.typeOf
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
 
-@PolicyDsl
+@CalbackPolicyDsl
 class ContravariantPolicyBuilder<C: Any, out S: Any>(
         callbackType: KType,
         targetType:   KType,
@@ -28,7 +28,7 @@ class ContravariantPolicyBuilder<C: Any, out S: Any>(
     }
 }
 
-@PolicyDsl
+@CalbackPolicyDsl
 class ContravariantTargetBuilder {
     inline fun <reified C: Any, reified S: Any> target(
             noinline targetFunctor: (C) -> S
@@ -36,7 +36,7 @@ class ContravariantTargetBuilder {
             targetFunctor, typeOf<C>(), typeOf<S>())
 }
 
-@PolicyDsl
+@CalbackPolicyDsl
 class ContravariantWithTargetBuilder<C: Any, out S: Any>(
         private val targetFunctor: (C) -> S,
         private val callbackType:  KType,

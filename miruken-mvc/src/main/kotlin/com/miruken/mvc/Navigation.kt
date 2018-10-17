@@ -32,6 +32,5 @@ class Navigation<C: Controller>(
 
     companion object {
         val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
-        val GLOBAL_EXECUTE = mutableListOf<(Handling) -> Handling>()
     }
 }

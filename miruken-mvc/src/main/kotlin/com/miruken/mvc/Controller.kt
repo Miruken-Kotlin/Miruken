@@ -1,9 +1,6 @@
 package com.miruken.mvc
 
-import com.miruken.callback.COMPOSER
 import com.miruken.callback.Handling
-import com.miruken.callback.resolve
-import com.miruken.context.Context
 import com.miruken.context.ContextualHandler
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.policy.PolicyOwner
@@ -12,10 +9,10 @@ import com.miruken.mvc.view.ViewRegion
 import com.miruken.mvc.view.addRegion
 import com.miruken.mvc.view.show
 
-@Suppress("PropertyName")
-open class Controller : ContextualHandler(),
+abstract class Controller : ContextualHandler(),
         PolicyOwner<ControllerPolicy> {
 
+    @Suppress("PropertyName")
     internal var _io: Handling? = null
 
     override val policy by lazy { ControllerPolicy(this) }
@@ -27,12 +24,6 @@ open class Controller : ContextualHandler(),
             "${this::class.qualifiedName} is not bound to a context")
 
     protected fun endContext() = context?.end()
-
-    protected fun endCallingContext() {
-        COMPOSER?.resolve<Context>()
-                ?.takeUnless { it == context }
-                ?.end()
-    }
 
     // Render
 

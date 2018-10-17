@@ -1,6 +1,7 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.*
+import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.runtime.getMetaAnnotations
@@ -12,8 +13,12 @@ import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
-class HandlerDescriptor(
-        val handlerClass: KClass<*>
+typealias HandlerDescriptorVisitor =
+        (HandlerDescriptor, PolicyMemberBinding) -> Unit
+
+class HandlerDescriptor private constructor(
+        val handlerClass: KClass<*>,
+        visitor: HandlerDescriptorVisitor? = null
 ) : FilteredObject() {
     private val _instancePolicies = lazy {
         HashMap<CallbackPolicy, CallbackPolicyDescriptor>()
@@ -25,12 +30,22 @@ class HandlerDescriptor(
 
     init {
         validate(handlerClass)
-        addCompatibleMembers()
+        addCompatibleMembers(visitor)
         addFilters(handlerClass.getFilterProviders())
         handlerClass.companionObject?.also {
-            getDescriptor(it)
+            getDescriptor(it, visitor)
         }
     }
+
+    fun getInstancePolicyDescriptor(policy: CallbackPolicy) =
+            _instancePolicies.takeIf { it.isInitialized() }?.let {
+                it.value[policy]
+            }
+
+    fun getTypePolicyDescriptor(policy: CallbackPolicy) =
+            _typePolicies.takeIf { it.isInitialized() }?.let {
+                it.value[policy]
+            }
 
     internal fun dispatch(
             policy:       CallbackPolicy,
@@ -40,7 +55,7 @@ class HandlerDescriptor(
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock? = null
-    ):HandleResult {
+    ): HandleResult {
         var target = receiver
         return when (receiver) {
             is KType -> {
@@ -86,7 +101,7 @@ class HandlerDescriptor(
                 callbackType, composer, this, results)
     }
 
-    private fun addCompatibleMembers() {
+    private fun addCompatibleMembers(visitor: HandlerDescriptorVisitor?) {
         handlerClass.members.filter {
             it.isInstanceCallable }.forEach { member ->
             val dispatch by lazy(LazyThreadSafetyMode.NONE) {
@@ -107,6 +122,7 @@ class HandlerDescriptor(
                     val descriptor = policies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it)
                     }
+                    visitor?.invoke(this, binding)
                     descriptor.add(binding)
                 }
             }
@@ -126,6 +142,7 @@ class HandlerDescriptor(
                     val binding    = it.bindMethod(bindingInfo)
                     val descriptor = _typePolicies.value.getOrPut(it) {
                         CallbackPolicyDescriptor(it) }
+                    visitor?.invoke(this, binding)
                     descriptor.add(binding)
                 }
             }
@@ -133,18 +150,21 @@ class HandlerDescriptor(
     }
 
     companion object {
-        inline fun <reified T> getDescriptor() =
-                getDescriptor(T::class)
+        inline fun <reified T> getDescriptor(
+                noinline visitor: HandlerDescriptorVisitor? = null
+        ) = getDescriptor(T::class, visitor)
 
-        fun getDescriptor(handlerClass: KClass<*>) =
-                try {
-                    DESCRIPTORS.getOrPut(handlerClass) {
-                        lazy { HandlerDescriptor(handlerClass) }
-                    }.value
-                } catch (e: Throwable) {
-                    DESCRIPTORS.remove(handlerClass)
-                    throw e
-                }
+        fun getDescriptor(
+                handlerClass: KClass<*>,
+                visitor: HandlerDescriptorVisitor? = null
+        ) = try {
+            DESCRIPTORS.getOrPut(handlerClass) {
+                lazy { HandlerDescriptor(handlerClass, visitor) }
+            }.value
+        } catch (e: Throwable) {
+            DESCRIPTORS.remove(handlerClass)
+            throw e
+        }
 
         fun resetDescriptors() = DESCRIPTORS.clear()
 

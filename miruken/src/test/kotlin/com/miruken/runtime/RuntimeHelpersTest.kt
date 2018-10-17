@@ -1,34 +1,13 @@
 package com.miruken.runtime
 
-import com.miruken.callback.policy.Argument
-import com.miruken.getMethod
 import com.miruken.typeOf
 import org.junit.Test
-import kotlin.reflect.KClass
-import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.declaredMemberFunctions
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class RuntimeHelpersTest {
-    class Jo<T>
-    fun <T> bar(f:Jo<T>, i:Jo<Int>) {
-    }
-
-    @Test fun `Foo`() {
-        val g = Jo::class
-        val h = g.typeParameters
-        val x = getMethod<RuntimeHelpersTest>("bar")
-        val a1 = Argument(x!!.parameters[1])
-        val t1 = a1.parameterType
-        val c1 = t1.classifier as KClass<*>
-        val a2 = Argument(x.parameters[2])
-        val t2 = a2.parameterType
-        val c2 = t2.classifier as KClass<*>
-    }
-
     @Test fun `Can check KType for Unit`() {
         assertTrue(typeOf<Unit>().isUnit)
     }

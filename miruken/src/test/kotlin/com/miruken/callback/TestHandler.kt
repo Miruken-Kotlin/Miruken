@@ -9,112 +9,143 @@ sealed class TestHandler {
     open class Bar<T>
     open class Baz<T, R>
 
-    class Good : TestHandler() {
+    object Good : TestHandler() {
         @Handles
-        fun handleAny(cb: Any) {}
+        fun handleAny(cb: Any) {
+        }
 
         @Handles
-        fun handleOptionalAny(cb: Any?) {}
+        fun handleOptionalAny(cb: Any?) {
+        }
 
         @Handles
-        fun handlePrimitive(cb: Int) {}
+        fun handlePrimitive(cb: Int) {
+        }
 
         @Handles
-        fun handleInterface(cb: Boo) {}
+        fun handleInterface(cb: Boo) {
+        }
 
         @Handles
-        fun handle(cb: Foo) {}
+        fun handle(cb: Foo) {
+        }
 
         @Handles
         fun handleResult(cb: Foo) = HandleResult.HANDLED
 
         @Handles
-        fun handleComposer(cb: Foo, composer: Handling) {}
+        fun handleComposer(cb: Foo, composer: Handling) {
+        }
 
         @Handles
-        fun handleOptional(cb: Foo?) {}
+        fun handleOptional(cb: Foo?) {
+        }
 
         @Handles
-        fun handlePromise(cb: Promise<Foo>) {}
+        fun handlePromise(cb: Promise<Foo>) {
+        }
 
         @Handles
-        fun handleOptionalPromise(cb: Promise<Foo?>) {}
+        fun handleOptionalPromise(cb: Promise<Foo?>) {
+        }
 
         @Handles
-        fun handleList(cb: List<Foo>) {}
+        fun handleList(cb: List<Foo>) {
+        }
 
         @Handles
-        fun handleLazy(cb: Lazy<Foo>) {}
+        fun handleLazy(cb: Lazy<Foo>) {
+        }
 
         @Handles
-        fun handleFunc(cb: () -> Foo) {}
+        fun handleFunc(cb: () -> Foo) {
+        }
 
         @Handles
-        fun handleCallback(cb: Command) {}
+        fun handleCallback(cb: Command) {
+        }
 
         @Handles
-        fun handleTarget(target: Any, cb: Command) {}
+        fun handleTarget(target: Any, cb: Command) {
+        }
 
         @Handles
-        fun handleTargetComposer(target: Any, cb: Command, composer: Handling) {}
+        fun handleTargetComposer(target: Any, cb: Command, composer: Handling) {
+        }
 
         @Handles
-        fun <T : Foo> handleBoundedGeneric(cb: T) {}
+        fun <T : Foo> handleBoundedGeneric(cb: T) {
+        }
 
         @Handles
-        fun <T : Foo> handleBoundedGenericOptional(cb: T?) {}
+        fun <T : Foo> handleBoundedGenericOptional(cb: T?) {
+        }
 
         @Handles
-        fun <T : Foo> handleBoundedGenericPromise(cb: Promise<T>) {}
+        fun <T : Foo> handleBoundedGenericPromise(cb: Promise<T>) {
+        }
 
         @Handles
-        fun <T : Foo> handleBoundedGenericList(cb: Collection<T>) {}
+        fun <T : Foo> handleBoundedGenericList(cb: Collection<T>) {
+        }
 
         @Handles
-        fun <T : Foo> handleBoundedGenericLazy(cb: Lazy<T>) {}
+        fun <T : Foo> handleBoundedGenericLazy(cb: Lazy<T>) {
+        }
 
         @Handles
         fun <T : Foo> handleBoundedGenericFunc(cb: () -> T) {
         }
 
         @Handles
-        fun <T : Foo, S> handleBoundedPartialGeneric(cb: Baz<T, S>) {}
+        fun <T : Foo, S> handleBoundedPartialGeneric(cb: Baz<T, S>) {
+        }
 
         @Handles
-        fun handleClosedGenericPartial(cb: Bar<String>) {}
+        fun handleClosedGenericPartial(cb: Bar<String>) {
+        }
     }
 
-    class NoParameters : TestHandler() {
+    object NoParameters : TestHandler() {
         @Handles
-        fun handle() {}
+        fun handle() {
+        }
     }
 
-    class NothingParameter : TestHandler() {
+    object NothingParameter : TestHandler() {
         @Handles
-        fun handle(cb: Nothing) {}
+        fun handle(cb: Nothing) {
+        }
     }
 
-    class OpenGenerics : TestHandler() {
+    object OpenGenerics : TestHandler() {
         @Handles
-        fun <T> handleOpenGeneric(cb: T) {}
+        fun <T> handleOpenGeneric(cb: T) {
+        }
 
         @Handles
-        fun <T> handleOpenGenericOptional(cb: T?) {}
+        fun <T> handleOpenGenericOptional(cb: T?) {
+        }
 
         @Handles
-        fun <T> handleOpenGenericPromise(cb: Promise<T>) {}
+        fun <T> handleOpenGenericPromise(cb: Promise<T>) {
+        }
 
         @Handles
-        fun <T> handleOpenGenericList(cb: Collection<T>) {}
+        fun <T> handleOpenGenericList(cb: Collection<T>) {
+        }
 
         @Handles
-        fun <T> handleOpenGenericLazy(cb: Lazy<T>) {}
+        fun <T> handleOpenGenericLazy(cb: Lazy<T>) {
+        }
 
         @Handles
-        fun <T> handleOpenGenericFunc(cb: () -> T) {}
+        fun <T> handleOpenGenericFunc(cb: () -> T) {
+        }
 
         @Handles
-        fun <T> handleOpenGenericPartial(cb: Bar<T>) {}
+        fun <T> handleOpenGenericPartial(cb: Bar<T>) {
+        }
     }
 }
 

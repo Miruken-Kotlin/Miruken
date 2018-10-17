@@ -1,9 +1,9 @@
 package com.miruken.callback.policy
 
-import com.miruken.callback.Handling
-import com.miruken.callback.TestHandler
-import com.miruken.callback.TestProvider
+import com.miruken.callback.*
+import com.miruken.callback.policy.bindings.MemberBinding
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
@@ -35,6 +35,7 @@ class HandlerDescriptorTest {
 
     @Test fun `Obtains same descriptor per Handler class`() {
         val descriptor = HandlerDescriptor.getDescriptor<TestHandler.Good>()
+        assertEquals(TestHandler.Good::class, descriptor.handlerClass)
         assertSame(descriptor, HandlerDescriptor.getDescriptor<TestHandler.Good>())
     }
 
@@ -86,5 +87,23 @@ class HandlerDescriptorTest {
         assertFailsWith(PolicyRejectedException::class) {
             HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
         }
+    }
+
+    @Test fun `Visits all descriptor member bindings`() {
+        val bindings = mutableListOf<MemberBinding>()
+        HandlerDescriptor.getDescriptor<VisitHandler> { descriptor, binding ->
+            assertSame(VisitHandler::class, descriptor.handlerClass)
+            bindings.add(binding)
+        }
+        assertEquals(3, bindings.size)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    class VisitHandler @Provides constructor() : Handler() {
+        @Handles
+        fun hello(foo: Foo) {}
+
+        @Provides
+        val foo = Foo()
     }
 }

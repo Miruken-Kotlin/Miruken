@@ -36,10 +36,10 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
         list.addSorted(memberBinding, PolicyMemberBinding)
     }
 
-    internal fun getInvariantMembers() =
+    fun getInvariantMembers() =
         _typed.values.flatMap { it } + _indexed.values.flatMap { it }
 
-    internal fun getInvariantMembers(
+    fun getInvariantMembers(
             callback:     Any,
             callbackType: KType?
     ) = policy.getKey(callback, callbackType)?.let { key ->
@@ -50,7 +50,7 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
             }?.filter { it.approve(callback) }
         } ?: emptyList()
 
-    internal fun getCompatibleMembers(
+    fun getCompatibleMembers(
             callback:     Any,
             callbackType: KType?
     ) = policy.getKey(callback, callbackType)?.let {

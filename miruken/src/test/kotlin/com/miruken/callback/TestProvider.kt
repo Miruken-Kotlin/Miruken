@@ -8,7 +8,7 @@ sealed class TestProvider {
     open class Bar<T>
     open class Baz<T, R>
 
-    class Good : TestProvider() {
+    object Good : TestProvider() {
         @Provides
         fun provideAny(): Any = Foo()
 
@@ -19,7 +19,8 @@ sealed class TestProvider {
         fun provide(): Foo = Foo()
 
         @Provides
-        fun provideCallback(cb: Inquiry) {}
+        fun provideCallback(cb: Inquiry) {
+        }
 
         @Provides
         fun provideCallbackReturn(cb: Inquiry) = Foo()
@@ -81,17 +82,17 @@ sealed class TestProvider {
             get() = Foo()
     }
 
-    class ReturnsNothing : TestProvider() {
+    object ReturnsNothing : TestProvider() {
         @Provides
         fun provide(): Nothing = throw Exception()
     }
 
-    class ReturnsNothingWithCallback : TestProvider() {
+    object ReturnsNothingWithCallback : TestProvider() {
         @Provides
         fun provide(cb: Inquiry): Nothing = throw Exception()
     }
 
-    class ReturnsUnit : TestProvider() {
+    object ReturnsUnit : TestProvider() {
         @Provides
         fun provideNothing() = Unit
     }

@@ -1,8 +1,8 @@
 package com.miruken.callback.policy.rules
 
-import com.miruken.callback.policy.PolicyDsl
+import com.miruken.callback.policy.CalbackPolicyDsl
 
-@PolicyDsl
+@CalbackPolicyDsl
 class MethodRuleBuilder(vararg val argumentRules: ArgumentRule) {
     private var returnRule: ReturnRule? = null
 
