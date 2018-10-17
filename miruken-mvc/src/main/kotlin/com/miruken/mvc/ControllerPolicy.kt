@@ -1,7 +1,7 @@
 package com.miruken.mvc
 
 import com.miruken.mvc.policy.DefaultPolicy
-import com.miruken.mvc.view.View
+import com.miruken.mvc.view.Viewing
 import java.lang.ref.WeakReference
 
 class ControllerPolicy(controller: Controller) : DefaultPolicy() {
@@ -30,7 +30,7 @@ fun Controller.release(): Controller {
     return this
 }
 
-fun Controller.dependsOn(dependency: View): Controller {
+fun Controller.dependsOn(dependency: Viewing): Controller {
     policy.addDependency(dependency.policy)
     return this
 }

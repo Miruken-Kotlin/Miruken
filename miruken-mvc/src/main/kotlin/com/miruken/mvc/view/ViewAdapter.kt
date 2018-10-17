@@ -1,6 +1,6 @@
 package com.miruken.mvc.view
 
-abstract class ViewAdapter : View {
+abstract class ViewAdapter : Viewing {
     @Suppress("LeakingThis")
     override var policy = ViewPolicy(this)
 

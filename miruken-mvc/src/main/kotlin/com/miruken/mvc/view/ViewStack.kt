@@ -1,6 +1,6 @@
 package com.miruken.mvc.view
 
-interface ViewStack : ViewRegion {
+interface ViewStack : ViewingRegion {
     fun pushLayer(): () -> Unit
     fun unwindLayers()
 }

@@ -4,8 +4,8 @@ import com.miruken.callback.Handling
 import com.miruken.context.ContextualHandler
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.policy.PolicyOwner
-import com.miruken.mvc.view.View
-import com.miruken.mvc.view.ViewRegion
+import com.miruken.mvc.view.Viewing
+import com.miruken.mvc.view.ViewingRegion
 import com.miruken.mvc.view.addRegion
 import com.miruken.mvc.view.show
 
@@ -27,36 +27,36 @@ abstract class Controller : ContextualHandler(),
 
     // Render
 
-    protected inline fun <reified V: View> show(
+    protected inline fun <reified V: Viewing> show(
             noinline init: (V.() -> Unit)? = null
     ) = region(io).show(init)
 
-    protected inline fun <reified V: View> show(
+    protected inline fun <reified V: Viewing> show(
             handler:       Handling,
             noinline init: (V.() -> Unit)? = null
     ) = region(handler).show(init)
 
-    protected fun show(view: View) =
+    protected fun show(view: Viewing) =
             view.display(region(io))
 
-    protected fun show(handler: Handling, view: View) =
+    protected fun show(handler: Handling, view: Viewing) =
             view.display(region(handler))
 
-    protected inline fun <reified V: View> overlay(
+    protected inline fun <reified V: Viewing> overlay(
             noinline init: (V.() -> Unit)? = null
     ) = region(io.pushLayer).show(init)
 
-    protected inline fun <reified V: View> overlay(
+    protected inline fun <reified V: Viewing> overlay(
             handler: Handling,
             noinline init: (V.() -> Unit)? = null
     ) = region(handler.pushLayer).show(init)
 
     protected fun region(handler: Handling) =
-            ViewRegion(handler)
+            ViewingRegion(handler)
 
     protected fun addRegion(
-        region: ViewRegion,
-        init:   (ViewRegion.() -> Unit)? = null
+            region: ViewingRegion,
+            init:   (ViewingRegion.() -> Unit)? = null
     ) = context?.addRegion(region)?.apply {
             init?.invoke(region(this))
         }

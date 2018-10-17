@@ -2,9 +2,9 @@ package com.miruken.mvc
 
 import com.miruken.callback.*
 import com.miruken.context.Context
-import com.miruken.mvc.view.ViewRegion
+import com.miruken.mvc.view.ViewingRegion
 
-class Navigator(mainRegion: ViewRegion) : CompositeHandler() {
+class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
     init {
         addHandlers(mainRegion)

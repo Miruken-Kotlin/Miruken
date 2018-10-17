@@ -11,37 +11,41 @@ import com.miruken.protocol.proxy
 import com.miruken.typeOf
 
 @Protocol
-interface ViewRegion {
-    fun view(viewKey: Any, init: (View.() -> Unit)? = null): View
-    fun show(view: View): ViewLayer
+interface ViewingRegion {
+    fun view(
+            viewKey: Any,
+            init:    (Viewing.() -> Unit)? = null
+    ): Viewing
+
+    fun show(view: Viewing): ViewLayer
 
     companion object {
-        val PROTOCOL = typeOf<ViewRegion>()
+        val PROTOCOL = typeOf<ViewingRegion>()
         operator fun invoke(adapter: ProtocolAdapter) =
-                adapter.proxy(PROTOCOL) as ViewRegion
+                adapter.proxy(PROTOCOL) as ViewingRegion
     }
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified V: View> ViewRegion.view(
+inline fun <reified V: Viewing> ViewingRegion.view(
         noinline init: (V.() -> Unit)? = null
-) = view(typeOf<V>(), init as (View.() -> Unit)?) as V
+) = view(typeOf<V>(), init as (Viewing.() -> Unit)?) as V
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified V: View> ViewRegion.show(
+inline fun <reified V: Viewing> ViewingRegion.show(
         noinline init: (V.() -> Unit)? = null
-) = show(view(typeOf<V>(), init as (View.() -> Unit)?))
+) = show(view(typeOf<V>(), init as (Viewing.() -> Unit)?))
 
 inline fun <reified C: Controller> Handling.region(
         crossinline action: (C: Controller) -> Unit
-): View = object : ViewAdapter() {
-    override fun display(region: ViewRegion): ViewLayer {
+): Viewing = object : ViewAdapter() {
+    override fun display(region: ViewingRegion): ViewLayer {
         val stack = region.view<ViewStackView>()
         return push<C> {
             val controllerContext = context!!
             controllerContext.addHandlers(stack)
             action(this)
-            val layer = stack.display(ViewRegion(this@region.pushLayer))
+            val layer = stack.display(ViewingRegion(this@region.pushLayer))
             layer.closed += { _ -> controllerContext.end() }
             controllerContext.contextEnded += { _ -> layer.close() }
             layer
@@ -49,7 +53,7 @@ inline fun <reified C: Controller> Handling.region(
     }
 }
 
-fun Context.addRegion(region: ViewRegion): Context {
+fun Context.addRegion(region: ViewingRegion): Context {
     val child = createChild()
     child.addHandlers(region)
     return child

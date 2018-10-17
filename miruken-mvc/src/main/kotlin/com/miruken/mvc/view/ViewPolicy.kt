@@ -3,31 +3,31 @@ package com.miruken.mvc.view
 import com.miruken.mvc.policy.DefaultPolicy
 import java.lang.ref.WeakReference
 
-class ViewPolicy(view: View) : DefaultPolicy() {
+class ViewPolicy(view: Viewing) : DefaultPolicy() {
     private val _view = WeakReference(view)
 
     val view get() = _view.get()
 }
 
-fun View.track(): View {
+fun Viewing.track(): Viewing {
     policy.track()
     return this
 }
 
-fun View.retain(): View {
+fun Viewing.retain(): Viewing {
     policy.retain()
     return this
 }
 
-fun View.release(): View {
+fun Viewing.release(): Viewing {
     policy.release()
     return this
 }
 
-fun View.dependsOn(dependency: View): View {
+fun Viewing.dependsOn(dependency: Viewing): Viewing {
     policy.addDependency(dependency.policy)
     return this
 }
 
-fun View.doesDependOn(dependency: View) =
+fun Viewing.doesDependOn(dependency: Viewing) =
         policy.isDependency(dependency.policy)
