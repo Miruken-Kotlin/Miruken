@@ -6,6 +6,6 @@ abstract class ViewAdapter : Viewing {
 
     override var viewModel: Any? = null
 
-    var layer: ViewLayer? = null
+    var layer: ViewingLayer? = null
         protected set
 }

@@ -3,7 +3,7 @@ package com.miruken.mvc.option
 import com.miruken.callback.Handling
 import com.miruken.callback.Options
 import com.miruken.callback.withOptions
-import com.miruken.mvc.view.ViewLayer
+import com.miruken.mvc.view.ViewingLayer
 import java.lang.IndexOutOfBoundsException
 
 class LayerOptions : Options<LayerOptions>() {
@@ -11,9 +11,9 @@ class LayerOptions : Options<LayerOptions>() {
     var overlay:   Boolean? = null
     var unload:    Boolean? = null
     var immediate: Boolean? = null
-    var selector:  ((List<ViewLayer>) -> ViewLayer)? = null
+    var selector:  ((List<ViewingLayer>) -> ViewingLayer)? = null
 
-    fun choose(viewLayers: List<ViewLayer>) =
+    fun choose(viewLayers: List<ViewingLayer>) =
             selector?.invoke(viewLayers)
 
     override fun mergeInto(other: LayerOptions) {
@@ -50,7 +50,7 @@ val Handling.displayImmediate get() =
         layer = LayerOptions().apply { immediate = true }
     })
 
-fun Handling.layer(viewLayer: ViewLayer) =
+fun Handling.layer(viewLayer: ViewingLayer) =
     withOptions(RegionOptions().apply {
         layer = LayerOptions().apply {
             selector = { layers ->

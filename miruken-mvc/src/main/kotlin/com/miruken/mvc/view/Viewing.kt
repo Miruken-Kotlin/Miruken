@@ -6,6 +6,6 @@ interface Viewing : PolicyOwner<ViewPolicy> {
 
     var viewModel: Any?
 
-    fun display(region: ViewingRegion): ViewLayer
+    fun display(region: ViewingRegion): ViewingLayer
 }
 

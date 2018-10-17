@@ -2,7 +2,7 @@ package com.miruken.mvc
 
 import com.miruken.callback.notHandled
 import com.miruken.mvc.view.Viewing
-import com.miruken.mvc.view.ViewLayer
+import com.miruken.mvc.view.ViewingLayer
 import com.miruken.mvc.view.ViewingRegion
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -14,7 +14,7 @@ class TestViewRegion : ViewingRegion {
             createInstance() as? Viewing
         } ?: notHandled()
 
-    override fun show(view: Viewing): ViewLayer {
+    override fun show(view: Viewing): ViewingLayer {
         notHandled()
     }
 }

@@ -13,6 +13,12 @@ interface Stash {
 inline fun <reified T: Any> Stash.get(): T? =
         get(typeOf<T>()) as? T
 
+inline fun <reified T: Any> Stash.put(data: T) =
+        put(typeOf<T>(), data)
+
+inline fun <reified T: Any> Stash.drop() =
+        drop(typeOf<T>())
+
 class StashImpl(
         private val root: Boolean = false
 ) : Handler(), Stash {

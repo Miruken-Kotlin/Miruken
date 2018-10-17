@@ -17,7 +17,7 @@ interface ViewingRegion {
             init:    (Viewing.() -> Unit)? = null
     ): Viewing
 
-    fun show(view: Viewing): ViewLayer
+    fun show(view: Viewing): ViewingLayer
 
     companion object {
         val PROTOCOL = typeOf<ViewingRegion>()
@@ -39,7 +39,7 @@ inline fun <reified V: Viewing> ViewingRegion.show(
 inline fun <reified C: Controller> Handling.region(
         crossinline action: (C: Controller) -> Unit
 ): Viewing = object : ViewAdapter() {
-    override fun display(region: ViewingRegion): ViewLayer {
+    override fun display(region: ViewingRegion): ViewingLayer {
         val stack = region.view<ViewStackView>()
         return push<C> {
             val controllerContext = context!!
@@ -49,7 +49,7 @@ inline fun <reified C: Controller> Handling.region(
             layer.closed += { _ -> controllerContext.end() }
             controllerContext.contextEnded += { _ -> layer.close() }
             layer
-        } as ViewLayer
+        } as ViewingLayer
     }
 }
 
