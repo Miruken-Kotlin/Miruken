@@ -40,7 +40,7 @@ inline fun <reified C: Controller> Handling.region(
         crossinline action: (C: Controller) -> Unit
 ): Viewing = object : ViewAdapter() {
     override fun display(region: ViewingRegion): ViewingLayer {
-        val stack = region.view<ViewStackView>()
+        val stack = region.view<ViewingStackView>()
         return push<C> {
             val controllerContext = context!!
             controllerContext.addHandlers(stack)
