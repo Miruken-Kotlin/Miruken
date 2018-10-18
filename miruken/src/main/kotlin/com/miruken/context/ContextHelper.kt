@@ -3,6 +3,8 @@ package com.miruken.context
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 
+val Context.async get() = trackPromise(this)
+
 fun Handling.trackPromise(context: Context) =
         filter { callback, _, _, proceed ->
             proceed().also { result -> result success {
