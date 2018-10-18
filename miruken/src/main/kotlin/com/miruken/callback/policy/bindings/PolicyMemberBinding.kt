@@ -66,6 +66,7 @@ class PolicyMemberBinding(
             }
             bindings
         }
+
         val resultType = with (dispatcher.returnInfo) {
             if (flags has TypeFlags.OPEN) {
                 componentType.closeType(typeBindings.value)
