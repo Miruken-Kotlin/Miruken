@@ -3,7 +3,10 @@ package com.miruken.context
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 
-val Context.async get() = trackPromise(this)
+val Handling.async get() = trackPromise(
+        (this as? Context) ?: resolve()
+            ?: error("Async support requires a Context")
+)
 
 fun Handling.trackPromise(context: Context) =
         filter { callback, _, _, proceed ->

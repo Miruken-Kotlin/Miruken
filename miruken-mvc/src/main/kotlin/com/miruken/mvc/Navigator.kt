@@ -16,7 +16,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             composer:   Handling
     ): Any? {
         val context = composer.resolve<Context>()
-            ?: error("A context is required for controller navigation")
+            ?: error("A context is required for navigation")
 
         val style            = navigation.style
         val initiator        = context.xselfOrChild.resolve<Navigation<*>>()

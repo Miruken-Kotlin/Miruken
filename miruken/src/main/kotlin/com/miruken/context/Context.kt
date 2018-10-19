@@ -89,8 +89,9 @@ open class Context() :
         return result
     }
 
-    fun store(data: Any) {
+    fun store(data: Any): Context {
         addHandlers(data)
+        return this
     }
 
     fun createChild(): Context {
