@@ -23,6 +23,18 @@ fun Handling.trackPromise(context: Context) =
             }}
         }
 
+fun Handling.dispose(closeable: AutoCloseable) =
+        ((this as? Context) ?: resolve()
+            ?: error("Async support requires a Context")).also {
+            it.contextEnded += { _ ->
+                try {
+                    closeable.close()
+                } catch (e: Throwable) {
+                    // don't care
+                }
+            }
+        }
+
 val Handling.publishFromRoot get() =
     resolve<Context>()?.root?.publish
             ?: error("The root context could not be found")

@@ -1,3 +1,3 @@
 package com.miruken.mediate
 
-interface Request<out TResponse: Any>
+interface Request<out TResponse: Any?>

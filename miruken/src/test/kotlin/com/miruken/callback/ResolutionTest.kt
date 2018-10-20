@@ -481,11 +481,11 @@ class ResolutionTest {
 
     class FilterProvider : Handler() {
         @Provides
-        fun <Cb: Any, Res: Any?> providesAudit(): AuditFilter<Cb, Res> =
-                AuditFilter()
+        fun <Cb: Any, Res: Any?> providesAudit():
+                AuditFilter<Cb, Res> = AuditFilter()
 
         @Provides
-        fun <T: Entity, Res: Number> providesBalance(): BalanceFilter<T, Res> =
-                BalanceFilter()
+        fun <T: Entity, Res: Number> providesBalance():
+                BalanceFilter<T, Res> = BalanceFilter()
     }
 }

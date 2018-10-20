@@ -26,11 +26,11 @@ fun Handling.send(
 }
 
 @Suppress("UNCHECKED_CAST")
-inline fun <TResp: Any, reified T: Request<TResp>>
+inline fun <TResp: Any?, reified T: Request<TResp>>
         Handling.send(request: T): Promise<TResp> =
         send(request, typeOf<T>())
 
-fun <TResp: Any> Handling.send(
+fun <TResp: Any?> Handling.send(
         request:     Request<TResp>,
         requestType: KType
 ): Promise<TResp> {
