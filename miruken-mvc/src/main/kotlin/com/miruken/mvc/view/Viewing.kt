@@ -1,8 +1,6 @@
 package com.miruken.mvc.view
 
-import com.miruken.mvc.policy.PolicyOwner
-
-interface Viewing : PolicyOwner<ViewPolicy> {
+interface Viewing {
 
     var viewModel: Any?
 

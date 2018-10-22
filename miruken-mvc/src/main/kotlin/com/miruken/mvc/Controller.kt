@@ -3,19 +3,15 @@ package com.miruken.mvc
 import com.miruken.callback.Handling
 import com.miruken.context.ContextualHandler
 import com.miruken.mvc.option.pushLayer
-import com.miruken.mvc.policy.PolicyOwner
 import com.miruken.mvc.view.Viewing
 import com.miruken.mvc.view.ViewingRegion
 import com.miruken.mvc.view.addRegion
 import com.miruken.mvc.view.show
 
-abstract class Controller : ContextualHandler(),
-        PolicyOwner<ControllerPolicy> {
+abstract class Controller : ContextualHandler() {
 
     @Suppress("PropertyName")
     internal var _io: Handling? = null
-
-    override val policy by lazy { ControllerPolicy(this) }
 
     // Context
 
@@ -98,7 +94,6 @@ abstract class Controller : ContextualHandler(),
         handler.goBack()
 
     override fun cleanUp() {
-        policy.release()
         context = null
         _io     = null
     }

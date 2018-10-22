@@ -13,28 +13,38 @@ fun Handling.trackPromise(context: Context) =
             proceed().also { result -> result success {
                 val cb = callback as? Callback
                 (cb?.result as? Promise<*>)?.also { promise ->
-                    if (context.state == ContextState.ACTIVE) {
-                        promise.finally(context.contextEnded
-                                .register { _ -> promise.cancel() })
-                    } else {
-                        promise.cancel()
-                    }
+                    context.track(promise)
                 }
             }}
         }
 
-fun Handling.dispose(closeable: AutoCloseable) =
-        ((this as? Context) ?: resolve()
-            ?: error("Async support requires a Context")).also {
-            it.contextEnded += { _ ->
-                try {
-                    closeable.close()
-                } catch (e: Throwable) {
-                    // don't care
-                }
+fun Handling.track(promise: Promise<*>): Handling {
+    ((this as? Context) ?: resolve()
+        ?: error("Tracking support requires a Context")).also {
+        if (it.state == ContextState.ACTIVE) {
+            promise.finally(it.contextEnded
+                    .register { _ -> promise.cancel() })
+        } else {
+            promise.cancel()
+        }
+    }
+    return this
+}
+
+fun Handling.dispose(closeable: AutoCloseable): Handling {
+    ((this as? Context) ?: resolve()
+        ?: error("Disposal support requires a Context")).also {
+        it.contextEnded += { _ ->
+            try {
+                closeable.close()
+            } catch (e: Throwable) {
+                // don't care
             }
         }
+    }
+    return this
+}
 
-val Handling.publishFromRoot get() =
+val Handling.publishFromRoot: Handling get() =
     resolve<Context>()?.root?.publish
             ?: error("The root context could not be found")

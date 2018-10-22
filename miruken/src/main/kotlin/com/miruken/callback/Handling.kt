@@ -57,6 +57,8 @@ interface Handling : ProtocolAdapter {
     }
 }
 
+// TODO: create star projection type if callback class is subclass of T
+
 inline fun <reified T: Any> Handling.handle(
         callback: T,
         greedy:   Boolean   = false,

@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.MemberBinding
+import io.github.classgraph.ClassGraph
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -96,6 +97,26 @@ class HandlerDescriptorTest {
             bindings.add(binding)
         }
         assertEquals(3, bindings.size)
+    }
+
+    @Test fun `Scans classpath`() {
+        val handling = Handling::class.java.name
+        ClassGraph()
+                .enableClassInfo()
+                .enableExternalClasses()
+                .whitelistPackages(
+                        VisitHandler::class.java.`package`.name,
+                        Handling::class.java.`package`.name
+                )
+                .blacklistClasses(
+                        Batch::class.java.name
+                )
+                .scan().use { scan ->
+                    val handlers = scan.getClassesImplementing(handling)
+                    for (handler in handlers) {
+
+                    }
+                }
     }
 
     @Suppress("UNUSED_PARAMETER")

@@ -19,24 +19,17 @@ artifacts {
     testClasses testJar
 }
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
             groupId 'com.miruken'
             artifactId 'miruken'
+            pom.withXml {
+                def properties = asNode().appendNode('properties')
+                properties.appendNode('maven.compiler.source', '1.8')
+                properties.appendNode('maven.compiler.target', '1.8')
+            }
         }
     }
 }

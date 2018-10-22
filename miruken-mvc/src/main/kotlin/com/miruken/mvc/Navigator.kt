@@ -6,9 +6,7 @@ import com.miruken.mvc.view.ViewingRegion
 
 class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
-    init {
-        addHandlers(mainRegion)
-    }
+    init { addHandlers(mainRegion) }
 
     @Handles
     fun <C: Controller> navigate(
@@ -52,7 +50,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         }
 
         try {
-            // Propagate composer options
+            // Propagate options (i.e. animation)
             val io = childContext.xself + composer
             bindIO(io, controller!!)
             try {
@@ -89,11 +87,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     private fun getController(
             controllerKey: Any,
             context:       Context
-    ): Controller? {
-        val controller = context.resolve(controllerKey) as? Controller
-                ?: return null
-        context.contextEnded += { _ -> controller.release() }
-        controller.context = context
-        return controller
-    }
+    ) = (context.resolve(controllerKey) as? Controller)?.also {
+            it.context = context
+        }
 }

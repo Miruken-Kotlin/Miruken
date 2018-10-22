@@ -15,7 +15,7 @@ import kotlin.reflect.jvm.*
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val strict     = annotations.any { it is Strict }
     val returnInfo = TypeInfo.parse(callable.returnType)
-    val arguments  = callable.valueParameters.map { Argument(it) }
+    val arguments  = callable.valueParameters.map(::Argument)
 
     init { callable.isAccessible = true }
 
