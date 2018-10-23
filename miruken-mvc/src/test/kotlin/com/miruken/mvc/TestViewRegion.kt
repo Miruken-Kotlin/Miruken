@@ -14,7 +14,5 @@ class TestViewRegion : ViewingRegion {
             createInstance() as? Viewing
         } ?: notHandled()
 
-    override fun show(view: Viewing): ViewingLayer {
-        notHandled()
-    }
+    override fun show(view: Viewing) = TestViewLayer(view)
 }

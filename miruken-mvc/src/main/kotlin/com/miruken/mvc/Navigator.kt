@@ -3,6 +3,7 @@ package com.miruken.mvc
 import com.miruken.callback.*
 import com.miruken.context.Context
 import com.miruken.mvc.view.ViewingRegion
+import com.miruken.typeOf
 
 class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
@@ -42,7 +43,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
-        childContext.addHandlers(navigation)
+        childContext.addHandlers(GenericWrapper(
+                navigation, typeOf<Navigation<*>>()))
 
         if (initiator != null && style == NavigationStyle.NEXT) {
             navigation.back = navigation
@@ -60,6 +62,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         } catch(e: Throwable) {
             childContext.end()
+            throw e
         }
 
         return true

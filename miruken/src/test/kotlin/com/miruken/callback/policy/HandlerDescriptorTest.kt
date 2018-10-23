@@ -92,8 +92,8 @@ class HandlerDescriptorTest {
 
     @Test fun `Visits all descriptor member bindings`() {
         val bindings = mutableListOf<MemberBinding>()
-        HandlerDescriptor.getDescriptor<VisitHandler> { descriptor, binding ->
-            assertSame(VisitHandler::class, descriptor.handlerClass)
+        HandlerDescriptor.getDescriptor<ExampleHandler> { descriptor, binding ->
+            assertSame(ExampleHandler::class, descriptor.handlerClass)
             bindings.add(binding)
         }
         assertEquals(3, bindings.size)
@@ -102,14 +102,10 @@ class HandlerDescriptorTest {
     @Test fun `Scans classpath`() {
         val handling = Handling::class.java.name
         ClassGraph()
-                .enableClassInfo()
-                .enableExternalClasses()
+                .enableAllInfo()
                 .whitelistPackages(
-                        VisitHandler::class.java.`package`.name,
+                        ExampleHandler::class.java.`package`.name,
                         Handling::class.java.`package`.name
-                )
-                .blacklistClasses(
-                        Batch::class.java.name
                 )
                 .scan().use { scan ->
                     val handlers = scan.getClassesImplementing(handling)
@@ -120,7 +116,7 @@ class HandlerDescriptorTest {
     }
 
     @Suppress("UNUSED_PARAMETER")
-    class VisitHandler @Provides constructor() : Handler() {
+    class ExampleHandler @Provides constructor() : Handler() {
         @Handles
         fun hello(foo: Foo) {}
 

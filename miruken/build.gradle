@@ -1,7 +1,7 @@
 apply from: "${rootDir}/gradle/kotlin.gradle"
 
 dependencies {
-    compile group: 'io.github.classgraph', name: 'classgraph', version: '4.4.1'
+    testCompile group: 'io.github.classgraph', name: 'classgraph', version: '4.4.7'
 }
 
 configurations {

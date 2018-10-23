@@ -19,7 +19,7 @@ abstract class Controller : ContextualHandler() {
         _io ?: context ?: error(
             "${this::class.qualifiedName} is not bound to a context")
 
-    protected fun endContext() = context?.end()
+    fun endContext() = context?.end()
 
     // Render
 

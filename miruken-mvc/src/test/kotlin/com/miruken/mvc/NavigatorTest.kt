@@ -1,8 +1,6 @@
 package com.miruken.mvc
 
-import com.miruken.callback.Provides
-import com.miruken.callback.TypeHandlers
-import com.miruken.callback.handle
+import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.context.Context
 import com.miruken.context.Scoped
@@ -12,10 +10,7 @@ import com.miruken.mvc.option.unloadRegion
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class NavigatorTest {
     private lateinit var rootContext: Context
@@ -49,6 +44,11 @@ class NavigatorTest {
                 options
             }
         }
+
+        fun render(): Navigation<*>? {
+            show<TestView>()
+            return io.resolve()
+        }
     }
 
     class GoodbyeController
@@ -64,7 +64,7 @@ class NavigatorTest {
     @Test fun `Navigates to next controller`() {
         rootContext.next<HelloController> {
             sayHello("Brenda")
-            assertSame(rootContext, context)
+            assertSame(rootContext, context?.parent)
         }
     }
 
@@ -96,6 +96,14 @@ class NavigatorTest {
     @Test fun `Fails navigation if no context`() {
         assertFailsWith(IllegalStateException::class) {
             navigator.next<HelloController> { sayHello("hi") }
+        }
+    }
+
+    @Test fun `Renders a view`() {
+        rootContext.next<HelloController> {
+            val navigation = render()
+            assertNotNull(navigation)
+            assertSame(this, navigation!!.controller)
         }
     }
 }

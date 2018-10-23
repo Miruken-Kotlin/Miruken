@@ -1,7 +1,6 @@
 package com.miruken.callback.policy
 
 import com.miruken.callback.*
-import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.runtime.getMetaAnnotations
@@ -108,7 +107,7 @@ class HandlerDescriptor private constructor(
                 CallableDispatch(member)
             }
             for ((annotation, usePolicies) in member
-                    .getMetaAnnotations<UsePolicy>()) {
+                    .getMetaAnnotations<UsePolicy>(false)) {
                 usePolicies.single().policy?.also {
                     val rule = it.match(dispatch) ?:
                         throw PolicyRejectedException(it, member,
@@ -133,7 +132,7 @@ class HandlerDescriptor private constructor(
                 CallableDispatch(constructor)
             }
             for ((annotation, usePolicies) in constructor
-                    .getMetaAnnotations<UsePolicy>()) {
+                    .getMetaAnnotations<UsePolicy>(false)) {
                 usePolicies.single().policy?.also {
                     val bindingInfo = PolicyMemberBindingInfo(
                             null, dispatch, annotation, false).apply {

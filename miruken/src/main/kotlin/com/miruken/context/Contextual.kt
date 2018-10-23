@@ -24,3 +24,5 @@ fun Contextual.getContext(required: Boolean = false) =
         } else {
             null
         }
+
+fun Contextual.requireContext() = getContext(true)!!
