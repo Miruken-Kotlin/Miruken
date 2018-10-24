@@ -12,17 +12,15 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     @Handles
     fun <C: Controller> navigate(
             navigation: Navigation<C>,
+            initiator:  Navigation<*>?,
+            context:    Context,
             composer:   Handling
     ): Any? {
-        val context = composer.resolve<Context>()
-            ?: error("A context is required for navigation")
-
         val style            = navigation.style
-        val initiator        = context.xselfOrChild.resolve<Navigation<*>>()
         val initiatorContext = initiator?.controller?.context
         var parentContext    = context
 
-        if (initiator != null && style == NavigationStyle.NEXT) {
+        if (initiator != null && style != NavigationStyle.PUSH) {
             parentContext = initiatorContext?.parent ?: return null
         }
 
@@ -31,10 +29,10 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
         try {
             @Suppress("UNCHECKED_CAST")
-            controller = getController(
-                    navigation.controllerKey,
-                    childContext)?.let { it as C }
-                    ?: return null
+            controller = (childContext.infer.resolve(
+                    navigation.controllerKey) as? C)?.also {
+                it.context = childContext
+            } ?: return null
         } catch(e: Throwable) {
             return null
         } finally {
@@ -43,41 +41,45 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
-        childContext.addHandlers(GenericWrapper(
-                navigation, typeOf<Navigation<*>>()))
+        // TODO: typeOf() does not support type variables yet
+        // TODO:   i.e. Navigation<C>  C => TypeVariable
+        // TODO: so we use Navigation<*> instead
+
+        val io = (childContext.xself + composer).let {
+            if (style == NavigationStyle.PARTIAL) {
+                it.provide(navigation as Navigation<*>)
+            } else {
+                childContext.addHandlers(GenericWrapper(
+                        navigation, typeOf<Navigation<*>>()))
+                it
+            }
+        }
 
         if (initiator != null && style == NavigationStyle.NEXT) {
             navigation.back = navigation
             initiatorContext?.end()
         }
 
+        // Propagate options (i.e. animation)
+        bindIO(io, controller!!)
+
         try {
-            // Propagate options (i.e. animation)
-            val io = childContext.xself + composer
-            bindIO(io, controller!!)
-            try {
-                navigation.invokeOn(controller)
-            } finally {
-                bindIO(null, controller)
-            }
+            navigation.invokeOn(controller)
         } catch(e: Throwable) {
             childContext.end()
             throw e
+        } finally {
+            bindIO(null, controller)
         }
-
         return true
     }
 
     @Handles
-    fun <C: Controller> navigate(
-            goBack:   GoBack,
-            composer: Handling
-    ): Any? = composer.resolve<Navigation<*>>()?.back?.also {
-        composer.handle(it) success {
-            goBack.setResult(it.clearResult())
-            return true
-        }
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun navigate(goBack: GoBack, composer: Handling) =
+            composer.resolve<Navigation<*>>()?.back?.let {
+                composer.handle(it)
+            }
 
     private fun bindIO(io: Handling?, controller: Controller) {
         controller._io = io?.let {
@@ -86,11 +88,4 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
     }
-
-    private fun getController(
-            controllerKey: Any,
-            context:       Context
-    ) = (context.resolve(controllerKey) as? Controller)?.also {
-            it.context = context
-        }
 }

@@ -60,32 +60,32 @@ abstract class Controller : ContextualHandler() {
     // Navigate
 
     protected inline fun <reified C: Controller> next(
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = io.next(action)
 
     protected inline fun <reified C: Controller> next(
             handler:         Handling,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = handler.next(action)
 
     protected inline fun <reified C: Controller> push(
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = io.push(action)
 
     protected inline fun <reified C: Controller> push(
             handler:         Handling,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = handler.next(action)
 
     protected inline fun <reified C: Controller> navigate(
             style:           NavigationStyle,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = io.navigate(action, style)
 
     protected inline fun <reified C: Controller> navigate(
             style:           NavigationStyle,
             handler:         Handling,
-            noinline action: C.() -> Any?
+            noinline action: C.() -> Unit
     ) = handler.navigate(action, style)
 
     protected fun goBack() = io.goBack()

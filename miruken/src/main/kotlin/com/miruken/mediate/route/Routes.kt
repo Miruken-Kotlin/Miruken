@@ -5,7 +5,7 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 
-class Routes<Res: Any>(
+class RoutesFilter<Res: Any>(
         vararg val schemes: String
 ) : Filtering<Routed<Res>, Res> {
 
@@ -21,3 +21,19 @@ class Routes<Res: Any>(
         return next()
     }
 }
+
+object RoutesFactory : FilteringProviderFactory {
+    override fun createProvider(
+            annotation: Annotation
+    ): FilteringProvider {
+        val routes = annotation as Routes
+        require(routes.schemes.isNotEmpty()) {
+            "Schemes cannot be empty"
+        }
+        return FilterInstanceProvider(
+            RoutesFilter<Any>(*routes.schemes))
+    }
+}
+
+@UseFilterProviderFactory(RoutesFactory::class)
+annotation class Routes(vararg val schemes: String)

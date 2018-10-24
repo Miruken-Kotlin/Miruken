@@ -45,9 +45,19 @@ class NavigatorTest {
             }
         }
 
-        fun render(): Navigation<*>? {
+        fun partial() {
+            val navigation = io.resolve<Navigation<*>>()
+            assertNotNull(navigation)
+            assertSame(this, navigation!!.controller)
+            assertNull(context!!.resolve<Navigation<*>>())
+        }
+
+        fun render() {
             show<TestView>()
-            return io.resolve()
+            val navigation = io.resolve<Navigation<*>>()
+            assertNotNull(navigation)
+            assertSame(this, navigation!!.controller)
+            assertSame(navigation, context!!.resolve()!!)
         }
     }
 
@@ -71,6 +81,13 @@ class NavigatorTest {
     @Test fun `Navigates to push controller`() {
         rootContext.push<HelloController> {
             sayHello("Craig")
+            assertSame(rootContext, context?.parent)
+        }
+    }
+
+    @Test fun `Navigates to partial controller`() {
+        rootContext.partial<HelloController> {
+            partial()
             assertSame(rootContext, context?.parent)
         }
     }
@@ -100,10 +117,6 @@ class NavigatorTest {
     }
 
     @Test fun `Renders a view`() {
-        rootContext.next<HelloController> {
-            val navigation = render()
-            assertNotNull(navigation)
-            assertSame(this, navigation!!.controller)
-        }
+        rootContext.next<HelloController> { render() }
     }
 }

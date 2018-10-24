@@ -40,16 +40,17 @@ inline fun <reified C: Controller> Handling.region(
         crossinline action: (C: Controller) -> Unit
 ): Viewing = object : ViewAdapter() {
     override fun display(region: ViewingRegion): ViewingLayer {
+        lateinit var layer: ViewingLayer
         val stack = region.view<ViewingStackView>()
-        return push<C> {
+        push<C> {
             val controllerContext = context!!
             controllerContext.addHandlers(stack)
             action(this)
-            val layer = stack.display(ViewingRegion(this@region.pushLayer))
+            layer = stack.display(ViewingRegion(this@region.pushLayer))
             layer.closed += { _ -> controllerContext.end() }
             controllerContext.contextEnded += { _ -> layer.close() }
-            layer
-        } as ViewingLayer
+        }
+        return layer
     }
 }
 
