@@ -35,17 +35,17 @@ publishing {
 }
 
 bintray {
-    user = System.getenv('BINTRAY_USER')
-    key  = System.getenv('BINTRAY_KEY')
+    user         = System.getenv('BINTRAY_USER')
+    key          = System.getenv('BINTRAY_KEY')
     publications = ['maven']
-    publish = true
+    publish      = true
     pkg {
-        userOrg = 'Miruken'
-        repo = 'MavenPackages'
-        name = 'miruken'
-        userOrg = 'miruken'
+        userOrg  = 'Miruken'
+        repo     = 'MavenPackages'
+        name     = 'miruken'
+        userOrg  = 'miruken'
         licenses = ['MIT']
-        vcsUrl = 'https://github.com/Miruken-Kotlin/Miruken.git'
+        vcsUrl   = 'https://github.com/Miruken-Kotlin/Miruken.git'
         version {
             released = new Date()
         }

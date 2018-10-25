@@ -17,9 +17,10 @@ class HandleMethodBinding(
 
     override val returnType = method.genericReturnType.toKType()
 
-    override val skipFilters =
-        method.getAnnotation(SkipFilters::class.java) != null ||
-        method.declaringClass.getAnnotation(SkipFilters::class.java) != null
+    override val skipFilters = SkipFilters::class.java.let {
+        method.getAnnotation(it) != null ||
+                method.declaringClass.getAnnotation(it) != null
+    }
 
     val filterProviders by lazy {
         method.getFilterProviders() +
@@ -93,7 +94,7 @@ class HandleMethodBinding(
     ): List<Pair<Filtering<Any,Any?>, FilteringProvider>>? {
         val filterType = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(HandleMethod.TYPE),
-                KTypeProjection.invariant(handleMethod.resultType!!)))
+                KTypeProjection.invariant(handleMethod.resultType)))
         return composer.getOrderedFilters(
                 filterType, this, sequenceOf(
                         filterProviders,

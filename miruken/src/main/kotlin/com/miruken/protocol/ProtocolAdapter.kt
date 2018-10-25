@@ -6,7 +6,6 @@ import java.lang.reflect.Proxy
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
-@FunctionalInterface
 interface ProtocolAdapter {
     fun dispatch(
             protocol: KType,

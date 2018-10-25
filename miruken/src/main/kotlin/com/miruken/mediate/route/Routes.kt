@@ -7,12 +7,12 @@ import com.miruken.concurrent.Promise
 
 class RoutesFilter<Res: Any>(
         vararg val schemes: String
-) : Filtering<Routed<Res>, Res> {
+) : Filtering<RoutedRequest<Res>, Res> {
 
     override var order: Int? = Stage.LOGGING - 1
 
     override fun next(
-            callback: Routed<Res>,
+            callback: RoutedRequest<Res>,
             binding:  MemberBinding,
             composer: Handling,
             next:     Next<Res>,

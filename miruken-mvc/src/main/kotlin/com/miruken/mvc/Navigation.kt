@@ -1,5 +1,6 @@
 package com.miruken.mvc
 
+import com.miruken.callback.FilteringCallback
 import com.miruken.callback.Handling
 import java.lang.ref.WeakReference
 
@@ -13,7 +14,9 @@ class Navigation<C: Controller>(
         val controllerKey: Any,
         val action:        C.() -> Unit,
         val style:         NavigationStyle
-) {
+): FilteringCallback {
+    override val canFilter = false
+
     private var _controller: WeakReference<C>? = null
 
     var back: Navigation<*>? = null

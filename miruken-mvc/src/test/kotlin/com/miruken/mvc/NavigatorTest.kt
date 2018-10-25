@@ -53,7 +53,7 @@ class NavigatorTest {
         }
 
         fun render() {
-            show<TestView>()
+            assertNotNull(show<TestView>())
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
             assertSame(this, navigation!!.controller)

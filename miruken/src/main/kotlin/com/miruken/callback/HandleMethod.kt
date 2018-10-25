@@ -20,8 +20,8 @@ open class HandleMethod(
         val semantics: CallbackSemantics = CallbackSemantics.NONE
 ) : Callback, InferringCallback, DispatchingCallback {
 
-    override var result:     Any?   = null
-    override val resultType: KType? = method.genericReturnType.toKType()
+    override var result:     Any?  = null
+    override val resultType: KType = method.genericReturnType.toKType()
     override val policy:     CallbackPolicy? get() = null
     var          exception:  Throwable? = null
 
@@ -35,10 +35,11 @@ open class HandleMethod(
             composer:     Handling
     ) = getTarget(handler)?.let { target ->
         val targetClass = target::class
-        targetClass.matchMethod(method)?.let {
-            BINDINGS.getOrPut(method to targetClass) {
+        BINDINGS.getOrPut(method to targetClass) {
+            targetClass.matchMethod(method)?.let {
                 HandleMethodBinding(method, it)
-            }}?.dispatch(target, this, composer)
+            }
+        }?.dispatch(target, this, composer)
     } ?: HandleResult.NOT_HANDLED
 
     private fun getTarget(target: Any): Any? {

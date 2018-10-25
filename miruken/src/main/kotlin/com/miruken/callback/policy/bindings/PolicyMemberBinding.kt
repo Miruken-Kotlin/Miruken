@@ -67,18 +67,24 @@ class PolicyMemberBinding(
             bindings
         }
 
-        val resultType = with (dispatcher.returnInfo) {
-            if (flags has TypeFlags.OPEN) {
-                componentType.closeType(typeBindings.value)
-                        ?: return HandleResult.NOT_HANDLED
-            } else {
-                logicalType
+        val canFilter = (callback as? FilteringCallback)?.canFilter != false
+
+        val filters = if (canFilter) {
+            val resultType = with (dispatcher.returnInfo) {
+                if (flags has TypeFlags.OPEN) {
+                    componentType.closeType(typeBindings.value)
+                            ?: return HandleResult.NOT_HANDLED
+                } else {
+                    logicalType
+                }
             }
+            resolveFilters(handler, filterCallback,
+                    callbackType, resultType, composer, descriptor)
+                    ?: return HandleResult.NOT_HANDLED
+        } else {
+            emptyList()
         }
 
-        val filters = resolveFilters(handler, filterCallback,
-                callbackType, resultType, composer, descriptor)
-                ?: return HandleResult.NOT_HANDLED
         val result  = if (filters.isEmpty()) {
             val args = resolveArguments(callback, ruleArgs,
                     callbackType, composer, typeBindings)
@@ -134,9 +140,6 @@ class PolicyMemberBinding(
             composer:     Handling,
             descriptor:   HandlerDescriptor
     ): List<Pair<Filtering<Any,Any?>, FilteringProvider>>? {
-        if ((callback as? FilteringCallback)?.canFilter == false) {
-            return emptyList()
-        }
         val cbType = callbackType ?: callbackArg?.parameterType
                 ?: callback::class.starProjectedType
 

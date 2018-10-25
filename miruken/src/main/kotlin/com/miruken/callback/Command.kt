@@ -12,7 +12,9 @@ open class Command(
         val callback:     Any,
         val callbackType: KType?,
         val many:         Boolean = false
-) : Callback, AsyncCallback, DispatchingCallback {
+) : Callback, AsyncCallback,
+        FilteringCallback, BatchingCallback,
+        DispatchingCallback {
 
     private var _result: Any? = null
     private val _results = mutableListOf<Any>()
@@ -22,6 +24,12 @@ open class Command(
 
     final override var isAsync: Boolean = false
         private set
+
+    override val canFilter: Boolean
+        get() = (callback as? FilteringCallback)?.canFilter != false
+
+    override val canBatch: Boolean
+        get() = (callback as? BatchingCallback)?.canBatch != false
 
     override fun getCallbackKey() = callbackType
 

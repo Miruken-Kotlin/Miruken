@@ -31,9 +31,7 @@ inline fun <reified C: Controller> Handling.navigate(
     }
 }
 
-fun Handling.goBack() {
-    val goBack = GoBack()
-    handle(goBack) otherwise {
+fun Handling.goBack() =
+    handle(GoBack()) otherwise {
         error("Navigation backwards not handled")
     }
-}
