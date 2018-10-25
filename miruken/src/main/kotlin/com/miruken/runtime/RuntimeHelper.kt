@@ -296,7 +296,9 @@ inline fun <reified T: Annotation> AnnotatedElement
 
 fun KClass<*>.matchMethod(method: Method): Method? {
     return try {
-        java.getMethod(method.name, *method.parameterTypes)
+        java.getMethod(method.name, *method.parameterTypes)?.apply {
+            isAccessible = true
+        }
     } catch (e: NoSuchMethodError) {
         null
     }

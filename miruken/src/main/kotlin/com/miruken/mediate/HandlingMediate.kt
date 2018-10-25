@@ -11,7 +11,7 @@ inline fun <reified T: Any> Handling.send(request: T) =
 
 fun Handling.send(
         request:     Any,
-        requestType: KType
+        requestType: KType?
 ): Promise<*> {
     val command = Command(request, requestType).apply {
         wantsAsync = true
@@ -32,7 +32,7 @@ inline fun <TResp: Any?, reified T: Request<TResp>>
 
 fun <TResp: Any?> Handling.send(
         request:     Request<TResp>,
-        requestType: KType
+        requestType: KType?
 ): Promise<TResp> {
     val command = Command(request, requestType).apply {
         wantsAsync = true

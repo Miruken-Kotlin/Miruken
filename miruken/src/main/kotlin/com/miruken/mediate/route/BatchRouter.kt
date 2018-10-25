@@ -3,6 +3,8 @@ package com.miruken.mediate.route
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
+import com.miruken.fold
+import com.miruken.mediate.schedule.Concurrent
 import com.miruken.mediate.schedule.Publish
 import com.miruken.mediate.send
 
@@ -10,10 +12,7 @@ class BatchRouter : Handler(), Batching {
     private val _groups = mutableMapOf<String, MutableList<Request>>()
 
     @Handles
-    fun route(
-            routed:  Routed,
-            command: Command
-    ): Promise<Any?> {
+    fun route(routed: Routed, command: Command): Promise<Any?> {
         val route   = routed.route
         val message = routed.message
                 .takeUnless { command.many } ?:
@@ -40,9 +39,26 @@ class BatchRouter : Handler(), Batching {
                     }
                 }
             } else {
-
+                val messages = requests.map { it.message }
+                composer.send(Concurrent(messages).routeTo(uri)) then {
+                    val responses = it.responses
+                    for (i in responses.size until requests.size) {
+                        requests[i].promise.cancel()
+                    }
+                    uri to responses.mapIndexed { index, response ->
+                        response.fold({ ex ->
+                            requests[index].reject(ex)
+                            ex
+                        }, { result ->
+                            requests[index].resolve(result)
+                            result
+                        })
+                    }
+                }
             }
-        })
+        }).also {
+            _groups.clear()
+        }
 
     private class Request(val message: Any) {
         lateinit var resolve: (Any?) -> Unit

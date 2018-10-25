@@ -20,7 +20,7 @@ class OnewayHandlerTest {
         val handler = StockQuoteHandler() + OnewayHandler()
         assertAsync(testName) { done ->
             val getQuote = GetStockQuote("AAPL")
-            handler.send(getQuote.oneway()) then {
+            handler.send(getQuote.oneway) then {
                 assertEquals(1, StockQuoteHandler.called)
                 done()
             }

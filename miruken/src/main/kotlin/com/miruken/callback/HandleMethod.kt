@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 
-open class HandleMethod(
+class HandleMethod(
         val protocol:  KType,
         val method:    Method,
         val arguments: Array<Any?>,

@@ -9,5 +9,5 @@ data class Oneway<TResp: Any>(
         val requestType: KType
 )
 
-inline fun <TResp: Any, reified T: Request<TResp>>
-        T.oneway(): Oneway<TResp> = Oneway(this, typeOf<T>())
+inline val <TResp: Any, reified T: Request<TResp>>
+        T.oneway: Oneway<TResp> get ()= Oneway(this, typeOf<T>())
