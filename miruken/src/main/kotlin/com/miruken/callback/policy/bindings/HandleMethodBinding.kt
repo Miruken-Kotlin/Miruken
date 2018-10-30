@@ -50,8 +50,8 @@ class HandleMethodBinding(
                 }
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.first.next(handleMethod, this, comp, { c,p ->
-                        next((c ?: comp).skipFilters(), p ?: true)
+                    pipeline.first.next(handleMethod, this, comp,
+                            { c,p -> next((c ?: comp), p ?: true)
                     }, pipeline.second)
                 }
             })(composer, true).let { result ->

@@ -3,7 +3,7 @@ package com.miruken.callback.policy.bindings
 import com.miruken.callback.FilteringProviderFactory
 import kotlin.reflect.KClass
 
-class Qualifier(
+open class Qualifier(
         val qualifierClass: KClass<out Annotation>
 ) : BindingConstraint {
 
@@ -11,7 +11,7 @@ class Qualifier(
             metadata.set(qualifierClass, null)
 
     override fun matches(metadata: BindingMetadata) =
-            metadata.has(qualifierClass)
+            metadata.isEmpty() || metadata.has(qualifierClass)
 
     companion object {
         inline operator fun <reified T: Annotation> invoke() =

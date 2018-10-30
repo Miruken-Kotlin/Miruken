@@ -2,7 +2,6 @@ package com.miruken.mvc
 
 import com.miruken.callback.Handling
 import com.miruken.callback.handle
-import com.miruken.mvc.option.pushLayer
 import com.miruken.typeOf
 
 inline fun <reified C: Controller> Handling.next(
@@ -22,16 +21,13 @@ inline fun <reified C: Controller> Handling.navigate(
                  style:  NavigationStyle
 ) {
     val navigation = Navigation(typeOf<C>(), action, style)
-    val handler    = when (style) {
-        NavigationStyle.PUSH -> pushLayer
-        else -> this
-    }
-    handler.handle(navigation) otherwise  {
+    handle(navigation) otherwise  {
         error("Navigation $style to ${C::class} not handled")
     }
 }
 
-fun Handling.goBack() =
-    handle(GoBack()) otherwise {
+fun Handling.goBack() {
+    handle(Navigation.GoBack()) otherwise {
         error("Navigation backwards not handled")
     }
+}

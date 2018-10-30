@@ -12,7 +12,10 @@ enum class ContextState {
     ENDED
 }
 
-data class ContextEvent(val context: Context)
+data class ContextEvent(
+        val context: Context,
+        val reason:  Any? = null
+)
 
 open class Context() :
         CompositeHandler(), HandlingAxis,
@@ -34,10 +37,10 @@ open class Context() :
     val hasChildren: Boolean
         get() = children.isNotEmpty()
 
-    val contextEnding       = Event<ContextEvent>()
-    val contextEnded        = Event<ContextEvent>()
-    val childContextEnding  = Event<ContextEvent>()
-    val childContextEnded   = Event<ContextEvent>()
+    val contextEnding      = Event<ContextEvent>()
+    val contextEnded       = Event<ContextEvent>()
+    val childContextEnding = Event<ContextEvent>()
+    val childContextEnded  = Event<ContextEvent>()
 
     val root: Context get() {
         var root: Context = this
@@ -97,23 +100,23 @@ open class Context() :
     fun createChild(): Context {
         requireActive()
         val child = Context(this)
-        child.contextEnding += { (ctx) ->
-            childContextEnding { ContextEvent(ctx) }
+        child.contextEnding += { ev ->
+            childContextEnding { ev }
         }
-        child.contextEnded += { (ctx) ->
-            _children.remove(ctx)
-            childContextEnded { ContextEvent(ctx) }
+        child.contextEnded += { ev ->
+            _children.remove(ev.context)
+            childContextEnded { ev }
         }
         _children.add(child)
         return child
     }
 
-    fun unwindToRoot(): Context {
+    fun unwindToRoot(reason: Any? = null): Context {
         var current: Context? = this
         while (current != null) {
             val parent = current.parent
             if (parent == null)  {
-                current.unwind()
+                current.unwind(reason)
                 return current
             }
             current = parent
@@ -121,20 +124,22 @@ open class Context() :
         return this
     }
 
-    fun unwind(): Context {
-        for (child in children) child.end()
+    fun unwind(reason: Any? = null): Context {
+        for (child in children) {
+            child.end(reason ?: Unwinded)
+        }
         return this
     }
 
-    fun end() {
+    fun end(reason: Any? = null) {
         if (state != ContextState.ACTIVE) return
         state = ContextState.ENDING
-        contextEnding { ContextEvent(this) }
+        contextEnding { ContextEvent(this, reason) }
         try {
-            unwind()
+            unwind(reason)
         } finally {
             state = ContextState.ENDED
-            contextEnded { ContextEvent(this) }
+            contextEnded { ContextEvent(this, reason) }
             contextEnding.clear()
             contextEnded.clear()
             childContextEnding.clear()
@@ -142,10 +147,16 @@ open class Context() :
         }
     }
 
-    override fun close() = end()
+    override fun close() = end(Closed)
 
     private fun requireActive() {
         if (state !== ContextState.ACTIVE)
             error("The context has already ended")
+    }
+
+    companion object {
+        object AlreadyEnded
+        object Unwinded
+        object Closed
     }
 }

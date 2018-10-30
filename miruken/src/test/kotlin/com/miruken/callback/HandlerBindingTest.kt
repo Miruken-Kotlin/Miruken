@@ -21,12 +21,12 @@ class HandlerBindingTest {
         HandlerDescriptor.getDescriptor<Hospital>()
     }
 
-    @Test fun `Resolves instance without constraints`() {
+    @Test fun `Resolves instance without name`() {
         val configuration = _handler.resolve<Configuration>()
         assertNotNull(configuration)
     }
 
-    @Test fun `Resolves all instances without constraints`() {
+    @Test fun `Resolves all instances without name`() {
         val configurations = _handler.resolveAll<Configuration>()
         assertEquals(2, configurations.size)
     }
@@ -81,6 +81,11 @@ class HandlerBindingTest {
         assertEquals(1, programmers.size)
         assertEquals("Paul", programmers[0].firstName)
         assertEquals("Allen", programmers[0].lastName)
+    }
+
+    @Test fun `Resolves all instances without constraints`() {
+        val people = PersonProvider.resolveAll<Person>()
+        assertEquals(2, people.size)
     }
 
     @Test fun `Injects dependency based on qualifier`() {

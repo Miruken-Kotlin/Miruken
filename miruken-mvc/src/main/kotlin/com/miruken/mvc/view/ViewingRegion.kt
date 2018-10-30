@@ -17,6 +17,8 @@ interface ViewingRegion {
             init:    (Viewing.() -> Unit)? = null
     ): Viewing
 
+    fun createViewStack(): ViewingStackView
+
     fun show(view: Viewing): ViewingLayer
 
     companion object {
@@ -41,9 +43,10 @@ inline fun <reified C: Controller> Handling.region(
 ): Viewing = object : ViewAdapter() {
     override fun display(region: ViewingRegion): ViewingLayer {
         lateinit var layer: ViewingLayer
-        val stack = region.view<ViewingStackView>()
+        val stack = region.createViewStack()
         push<C> {
-            val controllerContext = context!!
+            val controllerContext = context ?:
+                    error("Region navigation seemed to have failed")
             controllerContext.addHandlers(stack)
             action(this)
             layer = stack.display(ViewingRegion(this@region.pushLayer))

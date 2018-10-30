@@ -28,10 +28,10 @@ class Navigation<C: Controller>(
         controller.action()
     }
 
+    class GoBack
 
     companion object {
         val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
     }
 }
 
-class GoBack

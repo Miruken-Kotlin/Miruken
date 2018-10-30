@@ -37,6 +37,7 @@ class RoutedTest {
                 _handler.send(GetStockQuote("GOOGL")
                         .routeTo("pass-through")) then { quote ->
                     assertEquals("GOOGL", quote.symbol)
+                    assertEquals(1, StockQuoteHandler.called)
                     done()
                 }
             }

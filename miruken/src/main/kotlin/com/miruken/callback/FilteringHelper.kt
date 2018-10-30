@@ -77,10 +77,9 @@ object FilterComparator :
 
 fun KAnnotatedElement.getFilterProviders() =
         (getMetaAnnotations<UseFilterProvider>()
-                .flatMap { it.second }
-                .mapNotNull {
-                    it.provideBy.objectInstance
-                } +
+                .flatMap    { it.second }
+                .flatMap    { it.provideBy.asList() }
+                .mapNotNull { it.objectInstance } +
          getMetaAnnotations<UseFilterProviderFactory>()
                 .flatMap { it.second
                     it.second.mapNotNull { f ->
@@ -98,10 +97,9 @@ fun KAnnotatedElement.getFilterProviders() =
 
 fun AnnotatedElement.getFilterProviders() =
         (getMetaAnnotations<UseFilterProvider>()
-                .flatMap { it.second }
-                .mapNotNull {
-                    it.provideBy.objectInstance
-                } +
+                .flatMap    { it.second }
+                .flatMap    { it.provideBy.asList() }
+                .mapNotNull { it.objectInstance } +
          getMetaAnnotations<UseFilterProviderFactory>()
                 .flatMap {
                     it.second.mapNotNull { f ->

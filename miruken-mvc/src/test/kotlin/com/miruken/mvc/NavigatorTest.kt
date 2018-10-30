@@ -25,6 +25,7 @@ class NavigatorTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<HelloController>()
         HandlerDescriptor.getDescriptor<GoodbyeController>()
+        HandlerDescriptor.getDescriptor<PartialController>()
     }
 
     @After
@@ -38,18 +39,14 @@ class NavigatorTest {
 
         fun sayHello(name: String): RegionOptions? {
             println("Hello $name")
-            push<GoodbyeController> { sayGoodbye(name) }
-            val options = RegionOptions()
-            return io.handle(options, true).success {
-                options
-            }
-        }
-
-        fun partial() {
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
-            assertSame(this, navigation!!.controller)
-            assertNull(context!!.resolve<Navigation<*>>())
+            push<GoodbyeController> { sayGoodbye(name) }
+            return io.getOptions(RegionOptions())
+        }
+
+        fun compose() {
+            partial<PartialController> { render() }
         }
 
         fun render() {
@@ -67,7 +64,25 @@ class NavigatorTest {
 
         fun sayGoodbye(name: String) {
             println("Goodbye $name")
-            endContext()
+        }
+    }
+
+    class PartialController
+    @Provides @Scoped
+    constructor() : Controller() {
+
+        fun render() {
+            val navigation = io.resolve<Navigation<*>>()
+            assertSame(this, navigation!!.controller)
+            assertNotNull(navigation)
+            val initiator = context!!.resolve<Navigation<*>>()
+            assertSame(this, initiator!!.controller)
+        }
+    }
+
+    @Test fun `Fails navigation if no context`() {
+        assertFailsWith(IllegalStateException::class) {
+            navigator.next<HelloController> { sayHello("hi") }
         }
     }
 
@@ -86,9 +101,9 @@ class NavigatorTest {
     }
 
     @Test fun `Navigates to partial controller`() {
-        rootContext.partial<HelloController> {
-            partial()
-            assertSame(rootContext, context?.parent)
+        rootContext.next<HelloController> {
+            compose()
+            assertNull(context)
         }
     }
 
@@ -96,8 +111,9 @@ class NavigatorTest {
         rootContext.unloadRegion
                 .next<HelloController> {
                     val options = sayHello("Lauren")
-                    assertTrue(options?.layer?.push != true)
-                    assertEquals(options?.layer?.unload, true)
+                    assertNotNull(options?.layer)
+                    assertNull(options!!.layer!!.push)
+                    assertEquals(options.layer!!.unload, true)
                 }
     }
 
@@ -105,15 +121,10 @@ class NavigatorTest {
         rootContext.displayImmediate
                 .push<HelloController> {
                     val options = sayHello("Matthew")
-                    assertEquals(options?.layer?.push, true)
-                    assertEquals(options?.layer?.immediate, true)
+                    assertNotNull(options?.layer)
+                    assertEquals(options!!.layer!!.push, true)
+                    assertEquals(options.layer!!.immediate, true)
                 }
-    }
-
-    @Test fun `Fails navigation if no context`() {
-        assertFailsWith(IllegalStateException::class) {
-            navigator.next<HelloController> { sayHello("hi") }
-        }
     }
 
     @Test fun `Renders a view`() {

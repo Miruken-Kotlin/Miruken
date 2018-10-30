@@ -216,7 +216,7 @@ open class Inquiry(
             item:      Any,
             greedy:    Boolean,
             composer:  Handling
-    ) = isCompatibleWith(key, item) &&
+    ) = metadata.isEmpty() && isCompatibleWith(key, item) &&
             resolve(item, false, greedy, composer)
 
     private fun inProgress(

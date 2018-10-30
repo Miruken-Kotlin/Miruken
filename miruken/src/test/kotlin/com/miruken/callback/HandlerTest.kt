@@ -7,6 +7,7 @@ import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.PolicyRejectedException
+import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context
 import com.miruken.context.Scoped
@@ -754,7 +755,7 @@ class HandlerTest {
         assertSame(app1, app3)
     }
 
-    @Test fun `Creates scoped instance implicitly`() {
+    @Test fun `Returns same scoped instance without qualifier`() {
         var screen: Screen? = null
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Screen>()
@@ -767,6 +768,29 @@ class HandlerTest {
             assertFalse(screen!!.closed)
             context.createChild().use { child ->
                 val screen2 = child.resolve<Screen>()
+                assertNotNull(screen2)
+                assertSame(screen, screen2)
+                assertSame(child.parent, screen2!!.context)
+            }
+        }
+        assertTrue(screen!!.closed)
+    }
+
+    @Test fun `Creates scoped instance implicitly`() {
+        var screen: Screen? = null
+        HandlerDescriptor.resetDescriptors()
+        HandlerDescriptor.getDescriptor<Screen>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            screen = context.resolve()
+            assertNotNull(screen)
+            assertSame(context, screen!!.context)
+            assertSame(screen, context.resolve())
+            assertFalse(screen!!.closed)
+            context.createChild().use { child ->
+                val screen2 = child.resolve<Screen> {
+                    require(Qualifier<Scoped>())
+                }
                 assertNotNull(screen2)
                 assertNotSame(screen, screen2)
                 assertSame(child, screen2!!.context)

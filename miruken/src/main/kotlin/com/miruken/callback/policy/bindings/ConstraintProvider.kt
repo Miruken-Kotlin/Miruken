@@ -4,7 +4,7 @@ import com.miruken.callback.FilteringProvider
 import com.miruken.callback.Handling
 import kotlin.reflect.KType
 
-class ConstraintProvider(
+open class ConstraintProvider(
         val constraint: BindingConstraint
 ): FilteringProvider {
     private val _constraint = listOf(ConstraintFilter<Any>())

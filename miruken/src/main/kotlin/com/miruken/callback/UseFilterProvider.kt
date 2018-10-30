@@ -4,4 +4,4 @@ import kotlin.reflect.KClass
 
 @Target(AnnotationTarget.ANNOTATION_CLASS)
 annotation class UseFilterProvider(
-        val provideBy: KClass<out FilteringProvider>)
+        vararg val provideBy: KClass<out FilteringProvider>)

@@ -1,6 +1,8 @@
 package com.miruken.mvc.option
 
+import com.miruken.callback.Handling
 import com.miruken.callback.Options
+import com.miruken.callback.withOptions
 
 class RegionOptions : Options<RegionOptions>() {
     var tag:   Any?          = null
@@ -15,3 +17,5 @@ class RegionOptions : Options<RegionOptions>() {
         }
     }
 }
+
+fun Handling.regionOptions(options: RegionOptions) = withOptions(options)

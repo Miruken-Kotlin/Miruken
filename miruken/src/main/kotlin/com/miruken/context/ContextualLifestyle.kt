@@ -1,7 +1,9 @@
 package com.miruken.context
 
 import com.miruken.callback.*
+import com.miruken.callback.policy.bindings.ConstraintProvider
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.bindings.Qualifier
 import java.util.concurrent.ConcurrentHashMap
 
 class ContextualLifestyle<Res> : Lifestyle<Res>() {
@@ -19,7 +21,6 @@ class ContextualLifestyle<Res> : Lifestyle<Res>() {
             val instance = next().get()
             if (instance is Contextual) {
                 instance.context = context
-                context.removeHandlers(instance)
                 val undo = instance.contextChanging.register(::changeContext)
                 context.contextEnded += { event ->
                     _cache.remove(event.context)
@@ -63,7 +64,13 @@ object ContextualLifestyleProvider : LifestyleProvider({
     ContextualLifestyle<Any>()
 })
 
+object ScopeQualifierProvider : ConstraintProvider(
+        Qualifier(Scoped::class)
+)
+
 @Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION,
         AnnotationTarget.PROPERTY)
-@UseFilterProvider(ContextualLifestyleProvider::class)
+@UseFilterProvider(
+        ContextualLifestyleProvider::class,
+        ScopeQualifierProvider::class)
 annotation class Scoped

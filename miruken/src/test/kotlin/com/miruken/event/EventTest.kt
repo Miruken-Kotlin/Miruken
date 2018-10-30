@@ -44,6 +44,19 @@ class EventTest {
         assertEquals(listOf("Starting App..."), trace)
     }
 
+    @Test fun `Can unregister from event in handler`() {
+        val event = Event<String>()
+        val trace = mutableListOf<String>()
+        lateinit var unregister: () -> Unit
+        unregister = event register { s ->
+            trace.add(s)
+            unregister()
+        }
+        event("Starting App...")
+        event("Terminating App...")
+        assertEquals(listOf("Starting App..."), trace)
+    }
+
     @Test fun `Can clear all event handlers`() {
         val event      = Event<String>()
         val trace      = mutableListOf<String>()

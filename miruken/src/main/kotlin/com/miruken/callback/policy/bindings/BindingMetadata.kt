@@ -5,7 +5,7 @@ class BindingMetadata {
 
     var name: String? = null
 
-    fun isEmpty() = name == null || _values.isEmpty()
+    fun isEmpty() = name == null && _values.isEmpty()
 
     fun has(key: Any) = _values.containsKey(key)
 
