@@ -22,6 +22,11 @@ open class Trampoline(
             greedy:       Boolean,
             composer:     Handling
     ) = callback?.let {
-        Handler.dispatch(handler, it, this.callbackType, greedy, composer)
+        when (handler) {
+            is Handling -> handler.handle(it, this.callbackType,
+                    greedy, composer)
+            else -> Handler.dispatch(handler, it, this.callbackType,
+                    greedy, composer)
+        }
     } ?: HandleResult.NOT_HANDLED
 }

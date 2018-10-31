@@ -14,12 +14,11 @@ class NoBatchingHandler(handler: Handling): DecoratedHandler(handler) {
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        val inquiry = ((callback as? Composition)?.callback
-                ?: callback) as? Inquiry
-        if (inquiry?.keyClass == Batch::class) {
-            return HandleResult.NOT_HANDLED
+        val inquiry = callback as? Inquiry
+        return if (inquiry?.keyClass == Batch::class) {
+            HandleResult.NOT_HANDLED
+        } else {
+            super.handleCallback(callback, callbackType, greedy, composer)
         }
-        return super.handleCallback(
-                callback, callbackType, greedy, composer)
     }
 }

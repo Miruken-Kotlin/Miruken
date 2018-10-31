@@ -12,12 +12,12 @@ class BoundingHandler(
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        val bounded = ((callback as? Composition)
-                ?.callback ?: callback) as? BoundingCallback
-        if (bounded != null && bounded.bounds == bounds)
-            return HandleResult.NOT_HANDLED
-        return super.handleCallback(
-                callback, callbackType, greedy, composer)
+        val bounded = callback as? BoundingCallback
+        return if (bounded != null && bounded.bounds == bounds) {
+            HandleResult.NOT_HANDLED
+        } else {
+            super.handleCallback(callback, callbackType, greedy, composer)
+        }
     }
 }
 
