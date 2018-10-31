@@ -76,7 +76,7 @@ abstract class Controller : ContextualHandler() {
     protected inline fun <reified C: Controller> push(
             handler:         Handling,
             noinline action: C.() -> Unit
-    ) = handler.next(action)
+    ) = handler.push(action)
 
     protected inline fun <reified C: Controller> partial(
             noinline action: C.() -> Unit
