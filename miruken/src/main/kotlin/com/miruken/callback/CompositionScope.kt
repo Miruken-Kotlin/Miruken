@@ -1,7 +1,6 @@
 package com.miruken.callback
 
 import kotlin.reflect.KType
-import kotlin.reflect.full.createType
 
 class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
@@ -14,10 +13,6 @@ class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
             Composition::class -> callback
             else -> Composition(callback, callbackType)
         }
-        return super.handleCallback(wrapped, TYPE, greedy, composer)
-    }
-
-    companion object {
-        val TYPE = CompositionScope::class.createType()
+        return super.handleCallback(wrapped, callbackType, greedy, composer)
     }
 }

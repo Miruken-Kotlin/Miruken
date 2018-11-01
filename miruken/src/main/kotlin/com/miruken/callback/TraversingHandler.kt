@@ -13,7 +13,15 @@ class TraversingHandler(
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling?
-    ) = handler.handle(axis, callback, callbackType, greedy, composer)
+    ): HandleResult {
+        return when (callback) {
+            !is Composition ->
+                handler.handle(axis, callback, callbackType, greedy, composer)
+            else -> handler.handle(callback, callbackType, greedy, composer)
+        } otherwise {
+            super.handle(callback, callbackType, greedy, composer)
+        }
+    }
 
     override fun handle(
             axis:         TraversingAxis,
@@ -21,5 +29,6 @@ class TraversingHandler(
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling?
-    ) = handler.handle(axis, callback, callbackType, greedy, composer)
+    ): HandleResult =
+            handler.handle(axis, callback, callbackType, greedy, composer)
 }

@@ -14,16 +14,15 @@ class OptionsHandler<T: Options<T>>(
             callbackType: KType?,
             greedy:       Boolean,
             composer:     Handling
-    ) = (callback.takeIf {
-            isCompatibleWith(optionsType, it) }?.let {
+    ) = ((callback.takeIf {
+            isCompatibleWith(optionsType, it)
+        } ?: Composition.get(callback, optionsType))?.let {
             @Suppress("UNCHECKED_CAST")
             options.mergeInto(it as T)
             HandleResult.HANDLED
-        } ?: super.handleCallback(
-            callback, callbackType, greedy, composer))
-            .otherwise {
-                handler.handle(callback, callbackType, greedy, composer)
-            }
+        } ?: HandleResult.NOT_HANDLED).otherwise(greedy) {
+            handler.handle(callback, callbackType, greedy, composer)
+        }
 }
 
 inline fun <reified T: Options<T>> Handling.withOptions(options: T) =
