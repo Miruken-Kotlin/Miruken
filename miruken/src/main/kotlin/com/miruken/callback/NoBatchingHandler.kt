@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import kotlin.reflect.KType
 
-class NoBatching(callback: Any)
+class NoBatch(callback: Any)
     : Trampoline(callback), BatchingCallback {
     override val canBatch = false
 }
@@ -20,6 +20,6 @@ class NoBatchingHandler(handler: Handling): DecoratedHandler(handler) {
             return HandleResult.NOT_HANDLED
         }
         return super.handleCallback(
-                callback, callbackType, greedy, composer)
+                NoBatch(callback), callbackType, greedy, composer)
     }
 }

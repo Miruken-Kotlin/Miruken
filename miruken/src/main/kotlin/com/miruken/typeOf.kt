@@ -59,4 +59,6 @@ fun Type.toKTypeProjection(): KTypeProjection = when (this) {
 fun Type.toKType(): KType =
         if (this == Void.TYPE) UNIT_TYPE else toKTypeProjection().type!!
 
-val UNIT_TYPE = Unit::class.starProjectedType
+val UNIT_TYPE by lazy(LazyThreadSafetyMode.NONE) {
+    Unit::class.starProjectedType
+}

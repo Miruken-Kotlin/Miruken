@@ -28,4 +28,6 @@ fun KClass<out Filtering<*,*>>.getFilteringInterface() =
         if (this == Filtering::class) FILTERING_STAR else
         allInterfaces.single { it.classifier == Filtering::class }
 
-val FILTERING_STAR = Filtering::class.starProjectedType
+val FILTERING_STAR by lazy(LazyThreadSafetyMode.NONE) {
+    Filtering::class.starProjectedType
+}

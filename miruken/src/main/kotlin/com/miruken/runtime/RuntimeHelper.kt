@@ -1,12 +1,10 @@
 package com.miruken.runtime
 
-import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.toKType
 import com.miruken.typeOf
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.*
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.jvmErasure
@@ -324,7 +322,18 @@ fun Collection<*>.toTypedArray(componentType: Class<*>): Any {
     return array
 }
 
-val ANY_STAR        = Any::class.starProjectedType
-val ANY_TYPE        = typeOf<Any>().withNullability(true)
-val COLLECTION_TYPE = typeOf<Collection<Any>>().withNullability(true)
-val PROMISE_TYPE    = typeOf<Promise<Any>>().withNullability(true)
+val ANY_STAR by lazy(LazyThreadSafetyMode.NONE) {
+    Any::class.starProjectedType
+}
+
+val ANY_TYPE by lazy(LazyThreadSafetyMode.NONE) {
+    typeOf<Any>().withNullability(true)
+}
+
+val COLLECTION_TYPE by lazy(LazyThreadSafetyMode.NONE) {
+    typeOf<Collection<Any>>().withNullability(true)
+}
+
+val PROMISE_TYPE by lazy(LazyThreadSafetyMode.NONE) {
+    typeOf<Promise<Any>>().withNullability(true)
+}
