@@ -8,7 +8,6 @@ interface KeyResolving {
     fun resolve(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler:  Handling
     ): Any?
 }

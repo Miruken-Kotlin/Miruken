@@ -63,7 +63,7 @@ open class LinkProperty<out T>(
             wantsAsync = flags has TypeFlags.PROMISE
         }
         return validateProperty(property, key, resolver.resolve(
-                inquiry, typeInfo, handler, handler)) as T
+                inquiry, typeInfo, handler)) as T
     }
 }
 

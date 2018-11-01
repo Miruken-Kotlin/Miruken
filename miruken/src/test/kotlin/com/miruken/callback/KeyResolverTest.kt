@@ -50,7 +50,7 @@ class KeyResolverTest {
     }
 
     @Test fun `Fails if unresolved promise dependency`() {
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith(IllegalStateException::class) {
             val handler = InventoryHandler()
             handler.command(CancelOrder(Order()))
         }

@@ -46,42 +46,35 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         }
         val parent   = callback as? Inquiry
         val resolved = arrayOfNulls<Any?>(arguments.size)
-        return composer.all {
-            loop@ for (i in 2 until resolved.size) {
-                val argument      = arguments[i]
-                val argumentClass = argument.typeInfo.logicalType.jvmErasure
-                when {
-                    argumentClass == Handling::class ->
-                        resolved[i] = composer
-                    argumentClass.isSubclassOf(MemberBinding::class) ->
-                        resolved[i] = binding
-                    argumentClass.isSubclassOf(FilteringProvider::class)->
-                        resolved[i] = provider
-                    else -> {
-                        val inquiry  = argument.getInquiry(parent)
-                                ?: return@all HandleResult.NOT_HANDLED
-                        val typeInfo = argument.typeInfo
-                        val optional = typeInfo.flags has TypeFlags.OPTIONAL
-                        val resolver = KeyResolver.getResolver(
-                                argument.useResolver, composer)
-                        if (resolver == null) {
-                            if (optional) continue@loop
-                            return@all HandleResult.NOT_HANDLED
-                        }
-                        resolver.validate(inquiry, typeInfo)
-                        add({ resolved[i] = resolver.resolve(
-                                    inquiry, typeInfo, it, composer) }
-                        ) { result ->
-                            if (optional) HandleResult.HANDLED else result
-                        }
-                    }
+
+        for (i in 2 until resolved.size) {
+            val argument      = arguments[i]
+            val argumentClass = argument.typeInfo.logicalType.jvmErasure
+            when {
+                argumentClass == Handling::class ->
+                    resolved[i] = composer
+                argumentClass.isSubclassOf(MemberBinding::class) ->
+                    resolved[i] = binding
+                argumentClass.isSubclassOf(FilteringProvider::class)->
+                    resolved[i] = provider
+                else -> {
+                    val inquiry = argument.getInquiry(parent)
+                            ?: return null
+                    val typeInfo = argument.typeInfo
+                    val resolver = KeyResolver.getResolver(
+                            argument.useResolver, composer) ?: return null
+                    resolver.validate(inquiry, typeInfo)
+                    resolved[i] = resolver.resolve(
+                            inquiry, typeInfo, composer) ?:
+                            if (typeInfo.flags has TypeFlags.OPTIONAL)
+                                null else return null
                 }
             }
-        } success {
-            resolved[0] = callback
-            resolved[1] = next
-            resolved
         }
+
+        resolved[0] = callback
+        resolved[1] = next
+        return resolved
     }
 
     private fun getDynamicNext(binding: MemberBinding): CallableDispatch? {

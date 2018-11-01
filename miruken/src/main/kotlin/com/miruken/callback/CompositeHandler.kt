@@ -22,8 +22,9 @@ open class CompositeHandler(vararg handlers: Any)
             super.handleCallback(
                     callback, callbackType, greedy, composer)
     ) { result, handler ->
-            if (result.stop || (result.handled && !greedy)) result
-            else {
+            if (result.stop || (result.handled && !greedy)) {
+                return@fold result
+            } else {
                 result or handler.handle(
                         callback, callbackType, greedy, composer)
             }

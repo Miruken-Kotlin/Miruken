@@ -33,7 +33,7 @@ open class Command(
 
     override fun getCallbackKey() = callbackType
 
-    override var policy: CallbackPolicy?
+    override var policy: CallbackPolicy
         get() = _policy ?: HandlesPolicy
         set(value) { _policy = value }
 
@@ -98,7 +98,7 @@ open class Command(
             composer:     Handling
     ): HandleResult {
         val size = _results.size
-        return policy!!.dispatch(handler, this,
+        return policy.dispatch(handler, this,
                 this.callbackType ?: callbackType,
                 greedy, composer, ::respond).otherwise(
                 _results.size > size)

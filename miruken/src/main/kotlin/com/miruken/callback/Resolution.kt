@@ -36,21 +36,7 @@ open class Resolution(
     }
 
     companion object {
-        fun getResolving(
-                callback:     Any,
-                callbackType: KType?
-        ): Any {
-            val handlers = CallbackPolicy
-                    .getCallbackHandlers(callback, callbackType)
-            if (handlers.isEmpty()) return callback
-            val bundle = Bundle(false).apply {
-                add({ it.handle(NoResolving(callback, callbackType)) }) { it }
-            }
-            handlers.forEach { handler ->
-                bundle add { it.handle(Resolution(
-                        handler, callback, callbackType)) }
-            }
-            return bundle
-        }
+        fun getResolving(callback: Any, callbackType: KType?) =
+                Inference(callback, callbackType)
     }
 }

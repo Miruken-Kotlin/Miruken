@@ -163,23 +163,6 @@ class MappingTest {
         assertEquals(entity.name, data.name)
     }
 
-    @Test fun `Performs bundled mapping`() {
-        val entity  = PlayerEntity(4, "Michel Platini")
-        val player  = PlayerData(12, "Roberto Carlose")
-        val result  = (ExplicitMapping() + EntityMapping()).all {
-            add {
-                val data = it.map<PlayerData>(entity)
-                assertEquals(entity.id, data!!.id)
-                assertEquals(entity.name, data.name)
-            }
-            add {
-                val json = it.map<String>(player, "application/json")
-                assertEquals("{id:12,name:'Roberto Carlose'}", json)
-            }
-        }
-        assertEquals(HandleResult.HANDLED, result)
-    }
-
     open class Entity(var id: Int)
 
     class PlayerEntity(id: Int, var name: String) : Entity(id)

@@ -15,28 +15,25 @@ open class KeyResolver : KeyResolving {
     override fun resolve(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler: Handling
     ) = when {
         typeInfo.flags has TypeFlags.LAZY ->
-            resolveKeyLazy(inquiry, typeInfo, composer)
+            resolveKeyLazy(inquiry, typeInfo, handler)
         typeInfo.flags has TypeFlags.FUNC ->
-            resolveKeyFunc(inquiry, typeInfo, composer)
-        else -> resolveKeyInfer(inquiry, typeInfo, handler, composer)
+            resolveKeyFunc(inquiry, typeInfo, handler)
+        else -> resolveKeyInfer(inquiry, typeInfo, handler)
     }
 
     open fun resolveKey(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler:  Handling
     ) = handler.resolve(inquiry)
 
     open fun resolveKeyAsync(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler:  Handling
     ) = handler.resolveAsync(inquiry) then {
         check (it != null ||
                 typeInfo.componentType.isMarkedNullable) {
@@ -48,61 +45,52 @@ open class KeyResolver : KeyResolving {
     open fun resolveKeyAll(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler: Handling
     ) = handler.resolveAll(inquiry)
 
     private fun resolveKeyAllArray(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler:  Handling
     ) = resolveKeyAll(
-            inquiry, typeInfo, handler, composer)
+            inquiry, typeInfo, handler)
             .toTypedArray(typeInfo.componentType.jvmErasure)
 
     open fun resolveKeyAllAsync(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler:  Handling
     ) = handler.resolveAllAsync(inquiry)
 
     private fun resolveKeyAllArrayAsync(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler:  Handling
     ) = resolveKeyAllAsync(
-            inquiry, typeInfo, handler, composer) then {
+            inquiry, typeInfo, handler) then {
         it.toTypedArray(typeInfo.componentType.jvmErasure)
     }
 
     private fun resolveKeyLazy(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            composer: Handling
+            handler: Handling
     ) = lazy(LazyThreadSafetyMode.NONE) {
-        // ** MUST ** use composer, composer since
-        // handler may be invalidated at this point
-        resolveKeyInfer(inquiry, typeInfo, composer, composer)
+        resolveKeyInfer(inquiry, typeInfo, handler)
     }
 
     private fun resolveKeyFunc(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            composer: Handling
+            handler: Handling
     ): () -> Any? = {
-        // ** MUST ** use composer, composer since
-        // handler may be invalidated at this point
-        resolveKeyInfer(inquiry, typeInfo, composer, composer)
+        resolveKeyInfer(inquiry, typeInfo, handler)
     }
 
     private fun resolveKeyInfer(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler:  Handling,
-            composer: Handling
+            handler: Handling
     ): Any? {
         val flags = typeInfo.flags
         return when {
@@ -110,21 +98,21 @@ open class KeyResolver : KeyResolving {
                 when {
                     inquiry.wantsAsync ->
                         resolveKeyAllAsync(
-                                inquiry, typeInfo, handler, composer)
+                                inquiry, typeInfo, handler)
                     else -> resolveKeyAll(
-                            inquiry, typeInfo, handler, composer)
+                            inquiry, typeInfo, handler)
                 }
             flags has TypeFlags.ARRAY ->
                 when {
                     inquiry.wantsAsync ->
                         resolveKeyAllArrayAsync(
-                                inquiry, typeInfo, handler, composer)
+                                inquiry, typeInfo, handler)
                     else -> resolveKeyAllArray(
-                            inquiry, typeInfo, handler, composer)
+                            inquiry, typeInfo, handler)
                 }
             inquiry.wantsAsync -> resolveKeyAsync(
-                    inquiry, typeInfo, handler, composer)
-            else -> resolveKey(inquiry, typeInfo, handler, composer)
+                    inquiry, typeInfo, handler)
+            else -> resolveKey(inquiry, typeInfo, handler)
         }
     }
 
@@ -148,15 +136,15 @@ open class KeyResolver : KeyResolving {
 
         fun getResolver(
                 annotatedElement: KAnnotatedElement,
-                composer:         Handling
-        ) = getResolver(getResolverClass(annotatedElement), composer)
+                handler:         Handling
+        ) = getResolver(getResolverClass(annotatedElement), handler)
 
         fun getResolver(
                 resolverClass: KClass<out KeyResolving>?,
-                composer:      Handling
+                handler:      Handling
         ) = if (resolverClass == null) DefaultResolver
             else resolverClass.objectInstance
-                ?: composer.resolve(resolverClass) as? KeyResolving
+                ?: handler.resolve(resolverClass) as? KeyResolving
 
         fun getResolverClass(annotatedElement: KAnnotatedElement) =
                 annotatedElement.getFirstMetaAnnotation<UseKeyResolver>()

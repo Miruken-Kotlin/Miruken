@@ -62,7 +62,7 @@ open class LinkProperty<out T>(
                 wantsAsync = flags has TypeFlags.PROMISE
             }
             validateProperty(property, key, it.resolve(
-                    inquiry, typeInfo, context, context)) as T
+                    inquiry, typeInfo, context)) as T
         } ?: if (optional) (null as T) else
             error("Unable to resolve '$property' with key '$key'")
     }

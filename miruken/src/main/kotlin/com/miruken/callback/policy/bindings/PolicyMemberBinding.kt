@@ -171,50 +171,44 @@ class PolicyMemberBinding(
         val parent   = callback as? Inquiry
         val resolved = ruleArguments.copyOf(arguments.size)
 
-        return composer.all {
-            loop@ for (i in ruleArguments.size until arguments.size) {
-                val argument      = arguments[i]
-                val typeInfo      = argument.typeInfo
-                val logicalType   = typeInfo.logicalType
-                val argumentClass = logicalType.jvmErasure
-                when (argumentClass) {
-                    Handling::class -> resolved[i] = composer
-                    MemberBinding::class,
-                    PolicyMemberBinding::class ->
-                        resolved[i] = this@PolicyMemberBinding
-                    KType::class -> {
-                        if (callbackType == null) {
-                            val flags = typeInfo.flags
-                            if (!(flags has TypeFlags.OPTIONAL))
-                                return@all HandleResult.NOT_HANDLED
-                        } else {
-                            resolved[i] = callbackType
-                        }
-                    }
-                    else -> {
-                        if (argument.isOpen && typeBindings.value.isEmpty()) {
-                            return@all HandleResult.NOT_HANDLED
-                        }
-                        val inquiry = argument.getInquiry(
-                                parent, typeBindings.value)
-                            ?: return@all HandleResult.NOT_HANDLED
-                        val optional = typeInfo.flags has TypeFlags.OPTIONAL
-                        val resolver = KeyResolver.getResolver(
-                                argument.useResolver, composer)
-                        if (resolver == null) {
-                            if (optional) continue@loop
-                            return@all HandleResult.NOT_HANDLED
-                        }
-                        resolver.validate(inquiry.key, typeInfo)
-                        add({ resolved[i] = resolver.resolve(
-                                inquiry, typeInfo, it, composer) }
-                        ) { result ->
-                            if (optional) HandleResult.HANDLED else result
-                        }
+        for (i in ruleArguments.size until arguments.size) {
+            val argument      = arguments[i]
+            val typeInfo      = argument.typeInfo
+            val logicalType   = typeInfo.logicalType
+            val argumentClass = logicalType.jvmErasure
+            when (argumentClass) {
+                Handling::class -> resolved[i] = composer
+                MemberBinding::class,
+                PolicyMemberBinding::class ->
+                    resolved[i] = this
+                KType::class -> {
+                    if (callbackType == null) {
+                        val flags = typeInfo.flags
+                        if (!(flags has TypeFlags.OPTIONAL))
+                            return null
+                    } else {
+                        resolved[i] = callbackType
                     }
                 }
+                else -> {
+                    if (argument.isOpen && typeBindings.value.isEmpty()) {
+                        return null
+                    }
+                    val inquiry = argument.getInquiry(
+                            parent, typeBindings.value)
+                        ?: return null
+                    val resolver = KeyResolver.getResolver(
+                            argument.useResolver, composer) ?: return null
+                    resolver.validate(inquiry.key, typeInfo)
+                    resolved[i] = resolver.resolve(
+                            inquiry, typeInfo, composer) ?:
+                            if (typeInfo.flags has TypeFlags.OPTIONAL)
+                                null else return null
+                }
             }
-        } success { resolved }
+        }
+
+        return resolved
     }
 
     companion object OrderByArity : Comparator<PolicyMemberBinding> {
