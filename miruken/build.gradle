@@ -2,6 +2,8 @@ apply from: "${rootDir}/gradle/kotlin.gradle"
 
 dependencies {
     testCompile group: 'io.github.classgraph', name: 'classgraph', version: '4.4.7'
+    testCompile group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.9.7'
+    testCompile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.9.7'
 }
 
 configurations {
