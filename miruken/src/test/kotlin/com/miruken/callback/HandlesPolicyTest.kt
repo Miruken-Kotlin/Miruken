@@ -1,10 +1,11 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.*
+import com.miruken.callback.policy.UsePolicy
+import com.miruken.callback.policy.policy
 import com.miruken.getMethod
-import com.miruken.runtime.*
-import org.junit.*
-import kotlin.test.assertTrue
+import com.miruken.runtime.getMetaAnnotations
+import org.junit.Test
+import kotlin.test.assertEquals
 
 class HandlesPolicyTest {
     class Foo
@@ -18,6 +19,6 @@ class HandlesPolicyTest {
     @Test fun `Gets HandlesPolicy from @Handles annotation`() {
         val member  = getMethod<MyHandler>("handleFoo")
         val handles = member!!.getMetaAnnotations<UsePolicy>().first()
-        assertTrue(handles.second.single().policy == HandlesPolicy)
+        assertEquals(handles.second.single().policy, HandlesPolicy)
     }
 }

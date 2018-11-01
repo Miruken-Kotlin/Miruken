@@ -23,7 +23,7 @@ fun Handling.track(promise: Promise<*>): Handling {
         ?: error("Tracking support requires a Context")).also {
         if (it.state == ContextState.ACTIVE) {
             promise.finally(it.contextEnded
-                    .register { _ -> promise.cancel() })
+                    .register { promise.cancel() })
         } else {
             promise.cancel()
         }
@@ -34,7 +34,7 @@ fun Handling.track(promise: Promise<*>): Handling {
 fun Handling.dispose(closeable: AutoCloseable): Handling {
     ((this as? Context) ?: resolve()
         ?: error("Disposal support requires a Context")).also {
-        it.contextEnded += { _ ->
+        it.contextEnded += {
             try {
                 closeable.close()
             } catch (e: Throwable) {

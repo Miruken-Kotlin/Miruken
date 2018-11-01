@@ -88,8 +88,7 @@ abstract class CallbackPolicy(
 
     val orderMembers : Comparator<PolicyMemberBinding> =
             Comparator { a, b ->
-                val order = compare(a.key, b.key)
-                when (order) {
+                when (val order = compare(a.key, b.key)) {
                     0 -> b.dispatcher.arity - a.dispatcher.arity
                     else -> order
                 }

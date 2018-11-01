@@ -93,8 +93,8 @@ class UseFiltersFilterProviderTest {
             KClass<out Filtering<*,*>>.compatible(): Boolean {
         val filterType   = typeOf<T>()
         val typeBindings = mutableMapOf<KTypeParameter, KType>()
-        return getFilteringInterface().let {
-            isCompatibleWith(it, filterType, typeBindings) &&
+        return getFilteringInterface().let { f ->
+            isCompatibleWith(f, filterType, typeBindings) &&
                    typeParameters.all { typeBindings.containsKey(it) }
         }
     }

@@ -23,8 +23,7 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     }
 
     internal fun add(memberBinding: PolicyMemberBinding) {
-        val key  = memberBinding.key
-        val list = when (key) {
+        val list = when (val key = memberBinding.key) {
             is KType ->
                 if (key.classifier == Any::class)
                     _unknown
@@ -37,7 +36,7 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     }
 
     fun getInvariantMembers() =
-        _typed.values.flatMap { it } + _indexed.values.flatMap { it }
+        _typed.values.flatten() + _indexed.values.flatten()
 
     fun getInvariantMembers(
             callback:     Any,

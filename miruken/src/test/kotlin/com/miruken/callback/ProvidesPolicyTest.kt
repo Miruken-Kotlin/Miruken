@@ -1,10 +1,11 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.*
+import com.miruken.callback.policy.UsePolicy
+import com.miruken.callback.policy.policy
 import com.miruken.getMethod
 import com.miruken.runtime.getMetaAnnotations
 import org.junit.Test
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 class ProvidesPolicyTest {
     class Foo
@@ -19,6 +20,6 @@ class ProvidesPolicyTest {
     fun `Gets ProvidesPolicy from @Provides annotation`() {
         val member   = getMethod<MyProvider>("provideFoo")
         val provides = member!!.getMetaAnnotations<UsePolicy>().first()
-        assertTrue(provides.second.single().policy == ProvidesPolicy)
+        assertEquals(provides.second.single().policy, ProvidesPolicy)
     }
 }

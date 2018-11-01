@@ -25,7 +25,7 @@ class ClassArgument(
         return super.matches(argument, context) &&
                 aliases.zip(parameterType.arguments) { alias, arg ->
                     alias.isNullOrEmpty() || (arg.type != null &&
-                            context.addAlias(alias!!, arg.type!!))
+                            context.addAlias(alias, arg.type!!))
                 }.all { it }
     }
 }

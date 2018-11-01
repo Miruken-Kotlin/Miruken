@@ -35,12 +35,12 @@ class HandlerBindingTest {
         val local = _handler.resolve<Configuration> { named("local") }
         assertNotNull(local)
         assertTrue(local is LocalConfiguration)
-        assertEquals("http://localhost/Server", local!!.serverUrl)
+        assertEquals("http://localhost/Server", local.serverUrl)
 
         val remote = _handler.resolve<Configuration> { named("remote") }
         assertNotNull(remote)
         assertTrue(remote is RemoteConfiguration)
-        assertEquals("http://remote/Server", remote!!.serverUrl)
+        assertEquals("http://remote/Server", remote.serverUrl)
     }
 
     @Test fun `Resolves all named instance`() {
@@ -54,7 +54,7 @@ class HandlerBindingTest {
     @Test fun `Injects dependency based on name`() {
         val client = _handler.resolve<Client>()
         assertNotNull(client)
-        assertEquals("http://localhost/Server", client!!.local.serverUrl)
+        assertEquals("http://localhost/Server", client.local.serverUrl)
         assertEquals("http://remote/Server", client.remote.serverUrl)
     }
 
@@ -63,14 +63,14 @@ class HandlerBindingTest {
             require(Qualifier<Doctor>())
         }
         assertNotNull(doctor)
-        assertEquals("Jack", doctor!!.firstName)
+        assertEquals("Jack", doctor.firstName)
         assertEquals("Zigler", doctor.lastName)
 
         val programmer = PersonProvider.resolve<Person> {
             require(Qualifier<Programmer>())
         }
         assertNotNull(programmer)
-        assertEquals("Paul", programmer!!.firstName)
+        assertEquals("Paul", programmer.firstName)
         assertEquals("Allen", programmer.lastName)
     }
 
@@ -92,7 +92,7 @@ class HandlerBindingTest {
         val handler  = PersonProvider + _handler
         val hosptial = handler.resolve<Hospital>()
         assertNotNull(hosptial)
-        assertEquals("Jack", hosptial!!.doctor.firstName)
+        assertEquals("Jack", hosptial.doctor.firstName)
         assertEquals("Zigler", hosptial.doctor.lastName)
         assertEquals("Paul", hosptial.programmer.firstName)
         assertEquals("Allen", hosptial.programmer.lastName)

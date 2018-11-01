@@ -263,7 +263,7 @@ class HandlerTest {
         assertAsync(testName) { done ->
             handler.resolveAsync<Bar>() then {
                 assertNotNull(it)
-                assertFalse(it!!.hasComposer)
+                assertFalse(it.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -275,7 +275,7 @@ class HandlerTest {
         assertAsync(testName) { done ->
             handler.resolveAsync<Bar>() then {
                 assertNotNull(it)
-                assertFalse(it!!.hasComposer)
+                assertFalse(it.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -451,7 +451,7 @@ class HandlerTest {
             handler.aspectBefore({ _, _ -> true })
                     .resolveAsync<Bar>() then {
                 assertNotNull(it)
-                assertFalse(it!!.hasComposer)
+                assertFalse(it.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -463,7 +463,7 @@ class HandlerTest {
         val bar     = handler.aspectBefore({ _, _ -> Promise.TRUE })
                 .resolve<Bar>()
         assertNotNull(bar)
-        assertFalse(bar!!.hasComposer)
+        assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
 
@@ -473,7 +473,7 @@ class HandlerTest {
             handler.aspectBefore({ _, _ -> Promise.TRUE })
                     .resolveAsync<Bar>() then {
                 assertNotNull(it)
-                assertFalse(it!!.hasComposer)
+                assertFalse(it.hasComposer)
                 assertEquals(1, it.handled)
                 done()
             }
@@ -642,7 +642,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         val instance = TypeHandlers.resolve<ControllerBase>()
         assertNotNull(instance)
-        assertNotSame(instance, TypeHandlers.resolve())
+        assertNotSame(instance, TypeHandlers.resolve()!!)
     }
 
     @Test fun `Creates generic instance implicitly`() {
@@ -653,7 +653,7 @@ class HandlerTest {
                 .provide(view).provide(bar)
                 .resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
-        assertSame(view, instance!!.view)
+        assertSame(view, instance.view)
         assertSame(bar, instance.model)
     }
 
@@ -696,7 +696,7 @@ class HandlerTest {
                 .provide(boo).provide(baz)
                 .resolve<Controller<Boo, Baz>>()
         assertNotNull(instance)
-        assertSame(boo, instance!!.view)
+        assertSame(boo, instance.view)
         assertSame(baz, instance.model)
     }
 
@@ -715,7 +715,7 @@ class HandlerTest {
         val instance = TypeHandlers.infer
                 .provide(view).resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
-        assertSame(view, instance!!.view)
+        assertSame(view, instance.view)
     }
 
     @Test fun `Detects circular dependencies`() {
@@ -732,7 +732,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ApplicationBase>()
         val app = TypeHandlers.resolve<ApplicationBase>()
         assertNotNull(app)
-        assertSame(app, TypeHandlers.resolve())
+        assertSame(app, TypeHandlers.resolve()!!)
     }
 
     @Test fun `Creates generic singleton instance implicitly`() {
@@ -745,7 +745,7 @@ class HandlerTest {
         val app1 = handler.provide(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
-        assertSame(view, app1!!.rootController.view)
+        assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
         val app2 = handler.provide(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
@@ -770,7 +770,7 @@ class HandlerTest {
                 val screen2 = child.resolve<Screen>()
                 assertNotNull(screen2)
                 assertSame(screen, screen2)
-                assertSame(child.parent, screen2!!.context)
+                assertSame(child.parent, screen2.context)
             }
         }
         assertTrue(screen!!.closed)
@@ -793,7 +793,7 @@ class HandlerTest {
                 }
                 assertNotNull(screen2)
                 assertNotSame(screen, screen2)
-                assertSame(child, screen2!!.context)
+                assertSame(child, screen2.context)
             }
         }
         assertTrue(screen!!.closed)
@@ -806,7 +806,7 @@ class HandlerTest {
             context.addHandlers(TypeHandlers)
             val view = context.provide(Bar()).resolve<View<Bar>>()
             assertNotNull(view)
-            assertSame(view, context.resolve())
+            assertSame(view, context.resolve()!!)
         }
     }
 
@@ -818,7 +818,7 @@ class HandlerTest {
             context.addHandlers(TypeHandlers)
             val view = context.infer.resolve<View<Bar>>()
             assertNotNull(view)
-            assertSame(view, context.resolve())
+            assertSame(view, context.resolve()!!)
         }
     }
 
@@ -831,7 +831,7 @@ class HandlerTest {
             val screen1 = context.provide(Foo()).resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
             val screen2 = context.infer.resolve<ScreenModel<Bar>>()
-            assertSame(screen1, context.resolve())
+            assertSame(screen1, context.resolve()!!)
             assertSame(screen2, context.resolve())
         }
     }
@@ -847,8 +847,8 @@ class HandlerTest {
             assertNotNull(screen1)
             val screen2 = context.infer.resolve<ScreenModel<Bar>>()
             assertNotNull(screen2)
-            assertSame(screen1, context.resolve())
-            assertSame(screen2, context.resolve())
+            assertSame(screen1, context.resolve()!!)
+            assertSame(screen2, context.resolve()!!)
             assertNull(context.resolve<ScreenModel<Boo>>())
         }
     }
@@ -902,17 +902,17 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<OverloadedConstructors>()
         val ctor    = TypeHandlers.resolve<OverloadedConstructors>()
         assertNotNull(ctor)
-        assertNull(ctor!!.foo)
+        assertNull(ctor.foo)
         assertNull(ctor.bar)
         val ctor1   = TypeHandlers.provide(Foo())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor1)
-        assertNotNull(ctor1!!.foo)
+        assertNotNull(ctor1.foo)
         assertNull(ctor1.bar)
         val ctor2   = TypeHandlers.provide(Foo()).provide(Bar())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor2)
-        assertNotNull(ctor2!!.foo)
+        assertNotNull(ctor2.foo)
         assertNotNull(ctor2.bar)
     }
 

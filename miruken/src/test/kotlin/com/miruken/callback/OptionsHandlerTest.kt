@@ -3,8 +3,7 @@ package com.miruken.callback
 import com.miruken.typeOf
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertNotEquals
 
 class OptionsHandlerTest {
     @Test fun `Ignores unknown options`() {
@@ -16,19 +15,19 @@ class OptionsHandlerTest {
         val handler = Handler()
                 .withOptions(MyOptions().apply { debug = true })
         val options = MyOptions()
-        assertFalse(options.debug == true)
+        assertNotEquals(options.debug, true)
         assertEquals(HandleResult.HANDLED, handler.handle(options))
-        assertTrue(options.debug == true)
+        assertEquals(options.debug, true)
     }
 
     @Test fun `Matches expected options when composed`() {
         val handler = Handler()
                 .withOptions(MyOptions().apply { debug = true })
         val options = MyOptions()
-        assertFalse(options.debug == true)
+        assertNotEquals(options.debug, true)
         assertEquals(HandleResult.HANDLED, handler.handle(
                 Composition(options, typeOf<MyOptions>())))
-        assertTrue(options.debug == true)
+        assertEquals(options.debug, true)
     }
 
     class MyOptions : Options<MyOptions>() {

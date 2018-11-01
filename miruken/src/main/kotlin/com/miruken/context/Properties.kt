@@ -76,7 +76,7 @@ class GetProperty<out T>(
     private var _value: T? = null
 
     init {
-        contextual.contextChanged += { _ -> _value = null }
+        contextual.contextChanged += { _value = null }
     }
 
     override fun getValue(thisRef: Contextual, property: KProperty<*>): T {

@@ -11,27 +11,22 @@ class Event<T> {
     private val _index    = AtomicInteger(0)
     private val _handlers = ConcurrentHashMap<Int, EventHandler<T>>()
 
-    infix fun register(handler: EventHandler<T>): () -> Unit {
+    infix fun handle(handler: EventHandler<T>): () -> Unit {
         val next = _index.incrementAndGet()
         _handlers[next] = handler
         return { _handlers.remove(next) }
     }
 
-    infix fun register(handler: EventConsumer<T>) =
-            register { _, event -> handler.accept(event) }
+    infix fun consume(consumer: EventConsumer<T>) =
+            handle { _, event -> consumer.accept(event) }
 
     infix fun register(handler: (T) -> Unit) =
-            register { _, event -> handler(event) }
+            handle { _, event -> handler(event) }
 
-    operator fun plusAssign(handler: EventHandler<T>) {
-        _handlers[_index.incrementAndGet()] = handler
+    operator fun plusAssign(handler: (T) -> Unit) {
+        _handlers[_index.incrementAndGet()] =
+                { _, event -> handler(event) }
     }
-
-    operator fun plusAssign(handler: EventConsumer<T>) =
-            plusAssign { _, event -> handler.accept(event) }
-
-    operator fun plusAssign(handler: (T) -> Unit) =
-            plusAssign { _, event -> handler(event) }
 
     operator fun invoke(event: T) {
         for (handler in _handlers.values)

@@ -1,10 +1,7 @@
 package com.miruken.validate
 
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class ValidationResultTest {
     @Test fun `Adds simple error`() {
@@ -13,9 +10,9 @@ class ValidationResultTest {
         assertEquals("name can't be empty", outcome["name"])
         assertEquals("name | name can't be empty", outcome.error)
         assertTrue(outcome.culprits.contains("name"))
-        assertTrue(outcome.getResults("name")
+        assertEquals(outcome.getResults("name")
                 .filterIsInstance<ValidationResult.Error>()
-                .single().error == "name can't be empty")
+                .single().error, "name can't be empty")
     }
 
     @Test fun `Adds simple named error with`() {
@@ -36,9 +33,9 @@ class ValidationResultTest {
         assertFalse(company!!.isValid)
         assertEquals("name can't be empty", company["name"])
         assertTrue(company.culprits.contains("name"))
-        assertTrue(outcome.getResults("company")
+        assertSame(outcome.getResults("company")
                 .filterIsInstance<ValidationResult.Outcome>()
-                .single() === company)
+                .single(), company)
     }
 
     @Test fun `Adds indexed error`() {

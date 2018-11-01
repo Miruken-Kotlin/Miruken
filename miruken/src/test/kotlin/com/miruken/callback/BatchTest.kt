@@ -42,9 +42,9 @@ class BatchTest {
                     assertEquals("Hello batch", it)
                     ++count
                 }
-            } then {
-                assertEquals(1, it.size)
-                assertEquals(listOf("Hello"), it[0])
+            } then { result ->
+                assertEquals(1, result.size)
+                assertEquals(listOf("Hello"), result[0])
                 handler.proxy<Emailing>().sendConfirm("Hello") then {
                     assertEquals("Hello", it)
                     ++count
@@ -66,8 +66,8 @@ class BatchTest {
                 }
             } catch {
                 assertEquals("Can't send message", it.message)
-                handler.proxy<Emailing>().failConfirm("Hello") catch {
-                    assertEquals("Can't send message", it.message)
+                handler.proxy<Emailing>().failConfirm("Hello") catch { t ->
+                    assertEquals("Can't send message", t.message)
                     ++count
                     done()
                 }
@@ -103,9 +103,9 @@ class BatchTest {
                     assertEquals("Hello batch", it)
                     ++count
                 }
-            } then {
-                assertEquals(1, it.size)
-                assertEquals(listOf("Hello"), it[0])
+            } then { result ->
+                assertEquals(1, result.size)
+                assertEquals(listOf("Hello"), result[0])
                 handler.proxy<Emailing>().sendConfirm("Hello") then {
                     assertEquals("Hello", it)
                     ++count

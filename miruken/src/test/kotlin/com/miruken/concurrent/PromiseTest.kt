@@ -15,36 +15,36 @@ class PromiseTest {
 
     @Test fun `Starts in pending state`() {
         val promise = Promise<String> { _, _ -> }
-        assertTrue(promise.state === PromiseState.PENDING)
+        assertEquals(promise.state, PromiseState.PENDING)
     }
 
     @Test fun `Creates resolved promise`() {
         val promise =  Promise.resolve("Hello")
-        assertTrue(promise.state === PromiseState.FULFILLED)
+        assertEquals(promise.state, PromiseState.FULFILLED)
     }
 
     @Test fun `Creates rejected promise`() {
         val promise = Promise.reject(Exception("Error"))
-        assertTrue(promise.state === PromiseState.REJECTED)
+        assertEquals(promise.state, PromiseState.REJECTED)
     }
 
     @Test fun `Creates cancellable promise`() {
         val promise = Promise<String> { _, _, _ -> }
-        assertTrue(promise.state === PromiseState.PENDING)
+        assertEquals(promise.state, PromiseState.PENDING)
     }
 
     @Test fun `Resolves promise`() {
         val promise = Promise<String> { resolve, _ ->
             resolve("Hello")
         }
-        assertTrue(promise.state === PromiseState.FULFILLED)
+        assertEquals(promise.state, PromiseState.FULFILLED)
     }
 
     @Test fun `Rejects promise`() {
         val promise = Promise<String> { _, reject ->
             reject(Exception("Rejected"))
         }
-        assertTrue(promise.state === PromiseState.REJECTED)
+        assertEquals(promise.state, PromiseState.REJECTED)
     }
 
     @Test fun `Adopts resolved promise statically`() {
@@ -54,7 +54,7 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue(promise.state === PromiseState.FULFILLED)
+        assertEquals(promise.state, PromiseState.FULFILLED)
         assertTrue(called)
     }
 
@@ -66,7 +66,7 @@ class PromiseTest {
             called = true
             throw it
         }
-        assertTrue(promise.state === PromiseState.REJECTED)
+        assertSame(promise.state, PromiseState.REJECTED)
         assertTrue(called)
     }
 
@@ -77,7 +77,7 @@ class PromiseTest {
             assertEquals("Hello", it)
             called = true
         }
-        assertTrue(promise.state === PromiseState.FULFILLED)
+        assertSame(promise.state, PromiseState.FULFILLED)
         assertTrue(called)
     }
 
@@ -89,7 +89,7 @@ class PromiseTest {
             called = true
             throw it
         }
-        assertTrue(promise.state === PromiseState.REJECTED)
+        assertSame(promise.state, PromiseState.REJECTED)
         assertTrue(called)
     }
 
@@ -175,8 +175,8 @@ class PromiseTest {
             ++called
             19
         }.then {
-            it mapLeft {
-              assertEquals(19, it)
+            it mapLeft { result ->
+              assertEquals(19, result)
               ++called
             }
         }
@@ -189,8 +189,8 @@ class PromiseTest {
             { it.toString() },
             { fail("Should skip") }
         ).then {
-            it map {
-                assertEquals("22", it)
+            it map { result ->
+                assertEquals("22", result)
                 ++called
             }
         }
@@ -232,8 +232,8 @@ class PromiseTest {
                 ++called
             }
         ).then {
-            it mapLeft {
-                assertEquals(1, it)
+            it mapLeft { result ->
+                assertEquals(1, result)
                 ++called
             }
         }
@@ -274,14 +274,14 @@ class PromiseTest {
         Promise.resolve("Hello")
          .catch { }
          .then {
-             it map {
-                 assertEquals("Hello", it)
+             it map { result ->
+                 assertEquals("Hello", result)
                  ++called
                  "Goodbye"
              }
         }.then {
-            it map {
-                assertEquals("Goodbye", it)
+            it map { result ->
+                assertEquals("Goodbye", result)
                 ++called
             }
         }
@@ -349,8 +349,8 @@ class PromiseTest {
                 { Promise.resolve(it.toString()) },
                 { fail("Should skip") }
         ).then {
-            it.map {
-                assertEquals("22", it)
+            it.map { result ->
+                assertEquals("22", result)
                 ++called
             }
         }
@@ -460,7 +460,7 @@ class PromiseTest {
         var called    = false
         var cancelled = false
         val promise = Promise.resolve("String")
-            .then { _ -> throw CancellationException() }
+            .then { throw CancellationException() }
             .finally { called = true }
         promise.cancelled { cancelled = true }
         assertEquals(PromiseState.CANCELLED, promise.state)
@@ -488,8 +488,8 @@ class PromiseTest {
             ++called
             19
         } then {
-            it.mapLeft {
-                assertEquals(19, it)
+            it.mapLeft { result ->
+                assertEquals(19, result)
                 ++called
             }
         }
@@ -501,7 +501,7 @@ class PromiseTest {
         val promises = (1..5).map { Promise.resolve(it) }
         Promise.all(promises) then {
             assertEquals(promises.size, it.size)
-            assertTrue(it == (1..5).toList())
+            assertEquals(it, (1..5).toList())
             called = true
         }
         assertTrue(called)

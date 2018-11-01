@@ -172,11 +172,10 @@ class PolicyMemberBinding(
         val resolved = ruleArguments.copyOf(arguments.size)
 
         for (i in ruleArguments.size until arguments.size) {
-            val argument      = arguments[i]
-            val typeInfo      = argument.typeInfo
-            val logicalType   = typeInfo.logicalType
-            val argumentClass = logicalType.jvmErasure
-            when (argumentClass) {
+            val argument    = arguments[i]
+            val typeInfo    = argument.typeInfo
+            val logicalType = typeInfo.logicalType
+            when (logicalType.jvmErasure) {
                 Handling::class -> resolved[i] = composer
                 MemberBinding::class,
                 PolicyMemberBinding::class ->

@@ -184,7 +184,7 @@ open class Promise<out T>
                     @Suppress("UNCHECKED_CAST")
                     if (result is Promise<*>) {
                         result.then(
-                            { _ -> resolveChild(_result as T) },
+                            { resolveChild(_result as T) },
                             rejectChild)
                     } else {
                         resolveChild(_result as T)

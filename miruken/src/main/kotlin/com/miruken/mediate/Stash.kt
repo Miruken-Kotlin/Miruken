@@ -1,10 +1,13 @@
 package com.miruken.mediate
 
-import com.miruken.callback.*
+import com.miruken.callback.Handler
+import com.miruken.callback.Inquiry
+import com.miruken.callback.Provides
+import com.miruken.callback.notHandled
 import com.miruken.concurrent.Promise
-import com.miruken.protocol.proxy
 import com.miruken.typeOf
-import kotlin.reflect.KType
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 interface Stash {
     fun get(key: Any): Any?

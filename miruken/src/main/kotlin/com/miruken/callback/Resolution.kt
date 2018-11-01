@@ -1,7 +1,6 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.CallableDispatch
-import com.miruken.callback.policy.CallbackPolicy
 import kotlin.reflect.KType
 
 open class Resolution(

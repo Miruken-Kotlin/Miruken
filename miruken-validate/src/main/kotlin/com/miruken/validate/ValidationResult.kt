@@ -22,15 +22,15 @@ sealed class ValidationResult {
 
         fun getCulprits(validatorName: String) =
                 _errors.filter {
-                    it.value.errors?.any {
-                        it.validatorName == validatorName } == true
+                    it.value.errors?.any { err ->
+                        err.validatorName == validatorName } == true
                 }.map { it.key }
 
         override val error: String
             get() = synchronized(_errors) {
                 _errors.map { (key, err) ->
-                    ("$key | " + (err.errors?.let {
-                        it.joinToString("; ") { it.error } +
+                    ("$key | " + (err.errors?.let { e ->
+                        e.joinToString("; ") { it.error } +
                                 (err.cascade?.run { "\n" + error } ?: "")
                     } ?: (err.cascade?.error ?: "")))
                 }.joinToString("\n")
@@ -41,8 +41,8 @@ sealed class ValidationResult {
             return when (outcome) {
                 this -> synchronized(_errors) {
                     _errors[key]?.let { err ->
-                        err.errors?.let {
-                            it.joinToString("; ") { it.error } +
+                        err.errors?.let { e ->
+                            e.joinToString("; ") { it.error } +
                                     (err.cascade?.run { "\n" + error } ?: "")
                         } ?: (err.cascade?.error ?: "")
                     } ?: ""

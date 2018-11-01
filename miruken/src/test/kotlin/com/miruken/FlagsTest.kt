@@ -1,9 +1,7 @@
 package com.miruken
 
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class FlagsTest {
     sealed class Direction(value: Long) : Flags<Direction>(value) {
@@ -57,18 +55,18 @@ class FlagsTest {
         val flags1 = -Direction.LEFT
         val flags2 = -Direction.RIGHT
         val flags3 = flags1 + flags2
-        assertTrue(Direction.LEFT == flags1)
-        assertFalse(Direction.LEFT == flags2)
-        assertFalse(Direction.LEFT == flags3)
+        assertEquals(Direction.LEFT, flags1)
+        assertNotEquals(Direction.LEFT, flags2)
+        assertNotEquals(Direction.LEFT, flags3)
     }
 
     @Test fun `Flags support exact equality`() {
         val flags1 = -Direction.LEFT
         val flags2 = -Direction.RIGHT
         val flags3 = flags1 + flags2
-        assertTrue(Direction.LEFT === flags1)
-        assertFalse(Direction.LEFT === flags2)
-        assertFalse(Direction.LEFT === flags3)
+        assertSame(Direction.LEFT, flags1)
+        assertNotEquals(Direction.LEFT, flags2)
+        assertNotEquals(Direction.LEFT, flags3)
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.CallbackPolicy
-import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import kotlin.reflect.KType
 
 interface Callback {

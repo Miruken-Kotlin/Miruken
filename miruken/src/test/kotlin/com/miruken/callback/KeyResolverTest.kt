@@ -67,7 +67,7 @@ class KeyResolverTest {
             handler.commandAsync(RefundOrder(orderId = 2)) then {
                 val order = it as? Order
                 assertNotNull(order)
-                assertEquals(2, order!!.id)
+                assertEquals(2, order.id)
                 done()
             }
         }
@@ -99,7 +99,7 @@ class KeyResolverTest {
                 @Suppress("UNCHECKED_CAST")
                 val orders = it as? List<Order>
                 assertNotNull(orders)
-                assertEquals(2, orders!!.size)
+                assertEquals(2, orders.size)
                 done()
             }
         }
@@ -223,8 +223,8 @@ class KeyResolverTest {
             change.order.status = OrderStatus.PENDING
             return repository.then {
                 it.save(change.order)
-                getOrders() then {
-                    assertEquals(0, it.size)
+                getOrders() then { orders ->
+                    assertEquals(0, orders.size)
                     UUID.randomUUID()
                 }
             }.unwrap()
@@ -239,8 +239,8 @@ class KeyResolverTest {
             cancel.order.status = OrderStatus.CANCELLED
             return getOrders.value.then {
                 assertEquals(0, it.size)
-                repository then {
-                    it.save(cancel.order)
+                repository then { repo ->
+                    repo.save(cancel.order)
                 }
             }.unwrap()
         }
