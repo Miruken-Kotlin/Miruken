@@ -1,5 +1,6 @@
 package com.miruken.api.route
 
+import com.miruken.api.NamedType
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
@@ -60,7 +61,7 @@ class BatchRouter : Handler(), Batching {
             _groups.clear()
         }
 
-    private class Request(val message: Any) {
+    private class Request(val message: NamedType) {
         lateinit var resolve: (Any?) -> Unit
             private set
         lateinit var reject:  (Throwable) -> Unit
