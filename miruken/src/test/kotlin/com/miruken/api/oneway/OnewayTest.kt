@@ -3,8 +3,8 @@ package com.miruken.api.oneway
 import com.miruken.api.JacksonHelper
 import com.miruken.assertAsync
 import com.miruken.callback.plus
-import com.miruken.api.cache.GetStockQuote
-import com.miruken.api.cache.StockQuoteHandler
+import com.miruken.api.GetStockQuote
+import com.miruken.api.StockQuoteHandler
 import com.miruken.api.send
 import org.junit.Rule
 import org.junit.Test
@@ -28,7 +28,7 @@ class OnewayTest {
         }
     }
 
-    @Test fun `Serializes oneway request`() {
+    @Test fun `Serializes oneway request into json`() {
         val request = GetStockQuote("AAPL").oneway
         val json     = JacksonHelper.json.writeValueAsString(request)
         assertEquals("{\"\$type\":\"Miruken.Mediate.Oneway.Oneway`1[[GetStockQuote]],Miruken.Mediate\",\"request\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"}}", json)

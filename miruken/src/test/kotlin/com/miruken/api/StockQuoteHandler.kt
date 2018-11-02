@@ -1,4 +1,4 @@
-package com.miruken.api.cache
+package com.miruken.api
 
 import com.miruken.callback.Handler
 import com.miruken.callback.Handles

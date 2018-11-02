@@ -1,11 +1,10 @@
-package com.miruken.api.cache
-
-import com.miruken.api.Request
+package com.miruken.api
 
 data class StockQuote(
         val symbol: String,
-        val value:  Double
-)
+        val value:  Double,
+        override val typeName: String = "StockQuote"
+): NamedType
 
 data class GetStockQuote(
         val symbol: String,

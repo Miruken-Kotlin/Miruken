@@ -4,8 +4,8 @@ import com.miruken.api.JacksonHelper
 import com.miruken.assertAsync
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
-import com.miruken.api.cache.GetStockQuote
-import com.miruken.api.cache.StockQuoteHandler
+import com.miruken.api.GetStockQuote
+import com.miruken.api.StockQuoteHandler
 import com.miruken.api.oneway.oneway
 import com.miruken.api.send
 import org.junit.Before
@@ -55,7 +55,7 @@ class RoutedTest {
         }
     }
 
-    @Test fun `Serializes routed request`() {
+    @Test fun `Serializes routed request into json`() {
         val request = GetStockQuote("AAPL").routeTo("http://server/api")
         val json    = JacksonHelper.json.writeValueAsString(request)
         assertEquals("{\"\$type\":\"Miruken.Mediate.Route.RoutedRequest`1[[GetStockQuote]],Miruken.Mediate\",\"message\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"},\"route\":\"http://server/api\"}", json)
