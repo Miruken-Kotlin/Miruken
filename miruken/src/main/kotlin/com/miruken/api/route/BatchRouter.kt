@@ -1,13 +1,13 @@
 package com.miruken.api.route
 
 import com.miruken.api.NamedType
-import com.miruken.callback.*
-import com.miruken.concurrent.Promise
-import com.miruken.concurrent.all
-import com.miruken.fold
+import com.miruken.api.fold
 import com.miruken.api.schedule.Concurrent
 import com.miruken.api.schedule.Publish
 import com.miruken.api.send
+import com.miruken.callback.*
+import com.miruken.concurrent.Promise
+import com.miruken.concurrent.all
 
 class BatchRouter : Handler(), Batching {
     private val _groups = mutableMapOf<String, MutableList<Request>>()

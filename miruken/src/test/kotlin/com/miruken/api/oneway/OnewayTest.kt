@@ -30,7 +30,7 @@ class OnewayTest {
 
     @Test fun `Serializes oneway request into json`() {
         val request = GetStockQuote("AAPL").oneway
-        val json     = JacksonHelper.json.writeValueAsString(request)
+        val json     = JacksonHelper.mapper.writeValueAsString(request)
         assertEquals("{\"\$type\":\"Miruken.Mediate.Oneway.Oneway`1[[GetStockQuote]],Miruken.Mediate\",\"request\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"}}", json)
     }
 }

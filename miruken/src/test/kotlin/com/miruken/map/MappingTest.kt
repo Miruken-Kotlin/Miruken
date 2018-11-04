@@ -48,10 +48,10 @@ class MappingTest {
     @Test fun `Performs mapping explicitly`() {
         val player  = PlayerData(3, "Franz Beckenbauer")
         val json    = _explicit.map<String>(
-                player, "application/json")
+                player, "application/mapper")
         assertEquals("{id:3,name:'Franz Beckenbauer'}", json)
         val data    = _explicit.map<PlayerData>(
-                json!!, "application/json")
+                json!!, "application/mapper")
         assertEquals(3, data!!.id)
         assertEquals("Franz Beckenbauer", player.name)
     }
@@ -60,10 +60,10 @@ class MappingTest {
         val player  = PlayerData(3, "Franz Beckenbauer")
         assertAsync(testName) { done ->
             _explicit.mapAsync<String>(
-                    player, "application/json") then {
+                    player, "application/mapper") then {
                 assertEquals("{id:3,name:'Franz Beckenbauer'}", it)
                 val data = _explicit.map<PlayerData>(
-                        it!!, "application/json")
+                        it!!, "application/mapper")
                 assertEquals(3, data!!.id)
                 assertEquals("Franz Beckenbauer", player.name)
                 done()
@@ -238,11 +238,11 @@ class MappingTest {
     }
 
     class ExplicitMapping : Handler() {
-        @Maps @Format("application/json")
+        @Maps @Format("application/mapper")
         fun toJsonPlayer(player: PlayerData) =
                 "{id:${player.id},name:'${player.name}'}"
 
-        @Maps @Format("application/json")
+        @Maps @Format("application/mapper")
         fun fromJsonPlayer(json: String): PlayerData {
             var id:   Int?    = null
             var name: String? = null

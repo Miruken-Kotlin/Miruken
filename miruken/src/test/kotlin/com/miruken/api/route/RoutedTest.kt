@@ -57,7 +57,7 @@ class RoutedTest {
 
     @Test fun `Serializes routed request into json`() {
         val request = GetStockQuote("AAPL").routeTo("http://server/api")
-        val json    = JacksonHelper.json.writeValueAsString(request)
+        val json    = JacksonHelper.mapper.writeValueAsString(request)
         assertEquals("{\"\$type\":\"Miruken.Mediate.Route.RoutedRequest`1[[GetStockQuote]],Miruken.Mediate\",\"message\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"},\"route\":\"http://server/api\"}", json)
     }
 

@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 class SequentialTest {
     @Test fun `Serializes sequential request into json`() {
         val request = Sequential(listOf(GetStockQuote("AAPL")))
-        val json    = JacksonHelper.json.writeValueAsString(request)
+        val json    = JacksonHelper.mapper.writeValueAsString(request)
         assertEquals("{\"\$type\":\"Miruken.Mediate.Schedule.Sequential,Miruken.Mediate\",\"requests\":[{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"}]}", json)
     }
 }

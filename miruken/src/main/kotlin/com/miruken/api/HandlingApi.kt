@@ -6,11 +6,11 @@ import com.miruken.typeOf
 import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T: Any> Handling.send(request: T) =
+inline fun <reified T: NamedType> Handling.send(request: T) =
         send(request, typeOf<T>())
 
 fun Handling.send(
-        request:     Any,
+        request:     NamedType,
         requestType: KType?
 ): Promise<*> {
     val command = Command(request, requestType).apply {
