@@ -6,6 +6,7 @@ import com.miruken.api.StockQuote
 import com.miruken.api.Try
 import com.miruken.api.fold
 import org.junit.Test
+import java.lang.IllegalStateException
 import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
@@ -53,6 +54,29 @@ class ScheduleResultTest {
         assertEquals(1, result.responses.size)
         result.responses[0].fold({
             assertEquals("Bad stuff", it.message)
+        }, {
+            fail("Expected a failure")
+        })
+    }
+
+    @Test fun `Deserializes mixed scheduled results from json`() {
+        JacksonHelper.register<StockQuote>("StockQuote")
+        val mixed  = ScheduleResult(listOf(
+                Try.Success(StockQuote("MSFT", 106.16)),
+                Try.error(IllegalStateException("Missing order"))))
+        val json    = JacksonHelper.mapper.writeValueAsString(mixed)
+        val result  = JacksonHelper.mapper.readValue<ScheduleResult>(json)
+        assertEquals(2, result.responses.size)
+        result.responses[0].fold({
+            fail("Expected a successful result")
+        }, {
+            val stockQuote = it as? StockQuote
+            assertNotNull(stockQuote)
+            assertEquals("MSFT", stockQuote.symbol)
+            assertEquals(106.16, stockQuote.value)
+        })
+        result.responses[1].fold({
+            assertEquals("Missing order", it.message)
         }, {
             fail("Expected a failure")
         })
