@@ -6,9 +6,13 @@ import com.miruken.api.send
 
 class Sequential (
     override val requests: List<NamedType>,
-    override val typeName: String =
-            "Miruken.Mediate.Schedule.Sequential,Miruken.Mediate"
-) : Scheduled
+    override val typeName: String = Sequential.typeName
+) : Scheduled {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Schedule.Sequential,Miruken.Mediate"
+    }
+}
 
 fun Handling.sequential(requests: List<NamedType>) =
         send(Sequential(requests))

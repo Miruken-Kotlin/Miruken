@@ -18,8 +18,13 @@ data class RoutedMessage(
         override val route:       String,
         override val tag:         String? = null,
         override val typeName:    String =
-                "Miruken.Mediate.Route.RoutedMessage`1[[${message.typeName}]],Miruken.Mediate"
-) : Routed
+                RoutedMessage.typeName.format(message.typeName)
+) : Routed {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Route.RoutedMessage`1[[%s]],Miruken.Mediate"
+    }
+}
 
 data class RoutedRequest<TResp: Any>(
         override val message:     Request<TResp>,
@@ -27,8 +32,13 @@ data class RoutedRequest<TResp: Any>(
         override val route:       String,
         override val tag:         String? = null,
         override val typeName:    String =
-                "Miruken.Mediate.Route.RoutedRequest`1[[${message.typeName}]],Miruken.Mediate"
-) : Request<TResp>, Routed
+                RoutedRequest.typeName.format(message.typeName)
+) : Request<TResp>, Routed {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Route.RoutedRequest`1[[%s]],Miruken.Mediate"
+    }
+}
 
 inline fun <reified T: NamedType>
         T.routeTo(route: String, tag: String? = null

@@ -10,6 +10,9 @@ inline operator fun <reified T: Handling,
 inline fun <reified T: Any> Handling.provide(value: T) =
         CascadeHandler(Provider(value, typeOf<T>()), this)
 
+inline fun <reified T: Any> Handling.with(value: T) =
+        CascadeHandler(Provider(value, typeOf<T>()), this)
+
 inline fun <reified T: Any> T.toHandler(): Handling {
     return if (this::class.isGeneric)
         GenericWrapper(this, typeOf<T>())

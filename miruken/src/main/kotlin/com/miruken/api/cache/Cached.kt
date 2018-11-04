@@ -1,5 +1,6 @@
 package com.miruken.api.cache
 
+import com.miruken.api.NamedType
 import com.miruken.api.Request
 import com.miruken.typeOf
 import java.time.Duration
@@ -10,23 +11,38 @@ data class Cached<TResp: Any>(
         val requestType: KType,
         val timeToLive:  Duration? = null,
         override val typeName: String =
-                "Miruken.Mediate.Cache.Cached`1[[${request.typeName}]],Miruken.Mediate"
-) : Request<TResp>
+                Cached.typeName.format(request.typeName)
+) : Request<TResp> {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Cache.Cached`1[[%s]],Miruken.Mediate"
+    }
+}
 
 data class Refresh<TResp: Any>(
         val request:     Request<TResp>,
         val requestType: KType,
         val timeToLive:  Duration? = null,
         override val typeName: String =
-                "Miruken.Mediate.Cache.Refresh`1[[${request.typeName}]],Miruken.Mediate"
-) : Request<TResp>
+                Refresh.typeName.format(request.typeName)
+) : Request<TResp> {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Cache.Refresh`1[[%s]],Miruken.Mediate"
+    }
+}
 
 data class Invalidate<TResp: Any>(
         val request:     Request<TResp>,
         val requestType: KType,
         override val typeName: String =
-                "Miruken.Mediate.Cache.Invalidate`1[[${request.typeName}]],Miruken.Mediate"
-) : Request<TResp?>
+                Invalidate.typeName.format(request.typeName)
+) : Request<TResp?> {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Cache.Invalidate`1[[%s]],Miruken.Mediate"
+    }
+}
 
 inline fun <TResp: Any, reified T: Request<TResp>>
         T.cache(timeToLive: Duration? = null

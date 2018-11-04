@@ -29,6 +29,11 @@ object JacksonHelper {
             .registerModule(JavaTimeModule())
             .registerModule(MirukenModule)
 
+    inline fun <reified T: NamedType> register(namedType: T) {
+        val actualType = (jacksonTypeRef<T>().type as Class<*>).enclosingClass
+        register(namedType.typeName, actualType)
+    }
+
     inline fun <reified T> register(typeId: String) =
             register(typeId, jacksonTypeRef<T>().type)
 

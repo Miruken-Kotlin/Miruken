@@ -6,9 +6,13 @@ import com.miruken.api.send
 
 class Parallel(
     override val requests: List<NamedType>,
-    override val typeName: String =
-            "Miruken.Mediate.Schedule.Parallel,Miruken.Mediate"
-) : Scheduled
+    override val typeName: String = Parallel.typeName
+) : Scheduled {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Schedule.Parallel,Miruken.Mediate"
+    }
+}
 
 fun Handling.parallel(requests: List<NamedType>) =
         send(Parallel(requests))

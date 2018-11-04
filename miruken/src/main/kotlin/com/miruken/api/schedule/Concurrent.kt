@@ -6,9 +6,13 @@ import com.miruken.api.send
 
 data class Concurrent(
         override val requests: List<NamedType>,
-        override val typeName: String =
+        override val typeName: String = Concurrent.typeName
+) : Scheduled {
+    companion object : NamedType {
+        override val typeName =
                 "Miruken.Mediate.Schedule.Concurrent,Miruken.Mediate"
-) : Scheduled
+    }
+}
 
 fun Handling.concurrent(requests: List<NamedType>) =
         send(Concurrent(requests))

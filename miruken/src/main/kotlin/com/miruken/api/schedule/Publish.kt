@@ -2,7 +2,12 @@ package com.miruken.api.schedule
 
 import com.miruken.api.NamedType
 
-data class Publish(val message: Any) : NamedType {
-    override val typeName: String
-        get() = "Miruken.Mediate.Schedule.Publish,Miruken.Mediate"
+data class Publish(
+        val          message:  NamedType,
+        override val typeName: String = Publish.typeName
+) : NamedType {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Schedule.Publish,Miruken.Mediate"
+    }
 }

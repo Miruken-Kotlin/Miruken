@@ -6,12 +6,8 @@ import com.miruken.api.StockQuote
 import com.miruken.api.Try
 import com.miruken.api.fold
 import org.junit.Test
-import java.lang.IllegalStateException
-import kotlin.system.measureNanoTime
-import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class ScheduleResultTest {
@@ -30,7 +26,7 @@ class ScheduleResultTest {
     }
 
     @Test fun `Deserializes scheduled result from json`() {
-        JacksonHelper.register<StockQuote>("StockQuote")
+        JacksonHelper.register(StockQuote)
         val success = ScheduleResult(listOf(
                 Try.Success(StockQuote("GOOGL", 1071.49))))
         val json    = JacksonHelper.mapper.writeValueAsString(success)
@@ -60,7 +56,7 @@ class ScheduleResultTest {
     }
 
     @Test fun `Deserializes mixed scheduled results from json`() {
-        JacksonHelper.register<StockQuote>("StockQuote")
+        JacksonHelper.register(StockQuote)
         val mixed  = ScheduleResult(listOf(
                 Try.Success(StockQuote("MSFT", 106.16)),
                 Try.error(IllegalStateException("Missing order"))))

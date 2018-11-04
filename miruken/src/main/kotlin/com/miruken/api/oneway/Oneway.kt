@@ -9,8 +9,13 @@ data class Oneway<TResp: Any>(
         val request:     Request<TResp>,
         val requestType: KType,
         override val typeName: String =
-                "Miruken.Mediate.Oneway.Oneway`1[[${request.typeName}]],Miruken.Mediate"
-) : NamedType
+                Oneway.typeName.format(request.typeName)
+) : NamedType {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Oneway.Oneway`1[[%s]],Miruken.Mediate"
+    }
+}
 
 inline val <TResp: Any, reified T: Request<TResp>>
         T.oneway: Oneway<TResp> get ()= Oneway(this, typeOf<T>())
