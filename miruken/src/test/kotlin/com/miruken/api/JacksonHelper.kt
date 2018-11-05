@@ -31,11 +31,14 @@ object JacksonHelper {
             .registerModule(MirukenModule)
 
     inline fun <reified T: NamedType> register(namedType: T) {
-        val actualType = (jacksonTypeRef<T>().type as Class<*>).enclosingClass
-        register(namedType.typeName, actualType)
+        jacksonTypeRef<T>().type.let {
+            (it as? Class<*>)?.enclosingClass ?: it
+        }?.also {
+            register(namedType.typeName, it)
+        }
     }
 
-    inline fun <reified T> register(typeId: String) =
+    inline fun <reified T: Any> register(typeId: String) =
             register(typeId, jacksonTypeRef<T>().type)
 
     fun register(typeId: String, type: Type) {
