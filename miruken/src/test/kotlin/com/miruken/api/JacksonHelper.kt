@@ -21,7 +21,8 @@ import java.lang.reflect.Type
 import kotlin.reflect.KType
 
 object JacksonHelper {
-    private val typeIdMapping = mutableMapOf<String, JavaType>()
+    private val idToTypeMapping = mutableMapOf<String, JavaType>()
+    private val typeToIdMapping = mutableMapOf<Type, String>()
 
     val mapper: ObjectMapper = jacksonObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -38,8 +39,12 @@ object JacksonHelper {
             register(typeId, jacksonTypeRef<T>().type)
 
     fun register(typeId: String, type: Type) {
-        typeIdMapping[typeId] = TypeFactory.defaultInstance()
+        require(typeId.isNotBlank()) {
+            "Type Identifier for $type cannot be empty"
+        }
+        idToTypeMapping[typeId] = TypeFactory.defaultInstance()
                 .constructType(type)
+        typeToIdMapping[type] = typeId
     }
 
     object MirukenModule : SimpleModule() {
@@ -73,23 +78,23 @@ object JacksonHelper {
         }
 
         object NamedTypeIdResolver : TypeIdResolverBase() {
-            override fun idFromValue(value: Any): String? {
-                val typeName = (value as? NamedType)?.typeName
-                check(!typeName.isNullOrBlank()) {
-                    "${value::class.qualifiedName} requires a valid typeName"
-                }
-                return typeName
-            }
+            override fun idFromValue(value: Any) =
+                idFromValueAndType(value, value::class.java)
 
             override fun idFromValueAndType(
                     value:         Any,
                     suggestedType: Class<*>?
-            ) = idFromValue(value)
+            ): String? {
+                val typeName = (value as? NamedType)?.typeName
+                if (!typeName.isNullOrBlank()) return typeName
+                return suggestedType?.let { typeToIdMapping[it] } ?:
+                        error("${value::class} requires a valid typeName")
+            }
 
             override fun typeFromId(
                     context: DatabindContext,
                     id:      String?
-            ) = typeIdMapping[id]
+            ) = idToTypeMapping[id]
 
             override fun getMechanism() = JsonTypeInfo.Id.NAME
         }
