@@ -60,5 +60,6 @@ inline fun <reified C: Controller> Handling.region(
 fun Context.addRegion(region: ViewingRegion): Context {
     val child = createChild()
     child.addHandlers(region)
+    child.contextEnded += { (ctx, _) -> ctx.removeHandlers(region)}
     return child
 }

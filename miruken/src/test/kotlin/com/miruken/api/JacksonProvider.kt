@@ -17,18 +17,25 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.miruken.api.schedule.ScheduleResult
 import java.lang.reflect.Type
 import kotlin.reflect.KType
 
-object JacksonHelper {
+object JacksonProvider {
     private val idToTypeMapping = mutableMapOf<String, JavaType>()
     private val typeToIdMapping = mutableMapOf<Type, String>()
 
-    val mapper: ObjectMapper = jacksonObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .registerModule(JavaTimeModule())
-            .registerModule(MirukenModule)
+    init {
+        register(ScheduleResult)
+    }
+
+    val mapper: ObjectMapper by lazy {
+        jacksonObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .registerModule(JavaTimeModule())
+                .registerModule(MirukenModule)
+    }
 
     inline fun <reified T: NamedType> register(namedType: T) {
         jacksonTypeRef<T>().type.let {

@@ -2,12 +2,16 @@ package com.miruken.api
 
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
+import com.miruken.context.Contextual
+import com.miruken.context.requireContext
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
-@Suppress("UNCHECKED_CAST")
 inline fun <reified T: NamedType> Handling.send(request: T) =
         send(request, typeOf<T>())
+
+inline fun <reified T: NamedType> Contextual.send(request: T) =
+        requireContext().send(request, typeOf<T>())
 
 fun Handling.send(
         request:     NamedType,
@@ -25,12 +29,20 @@ fun Handling.send(
     }
 }
 
-@Suppress("UNCHECKED_CAST")
-inline fun <TResp: Any?, reified T: Request<TResp>>
+fun Contextual.send(
+        request:     NamedType,
+        requestType: KType?
+) = requireContext().send(request, requestType)
+
+inline fun <TResp: NamedType?, reified T: Request<TResp>>
         Handling.send(request: T): Promise<TResp> =
         send(request, typeOf<T>())
 
-fun <TResp: Any?> Handling.send(
+inline fun <TResp: NamedType?, reified T: Request<TResp>>
+        Contextual.send(request: T) =
+        requireContext().send(request, typeOf<T>())
+
+fun <TResp: NamedType?> Handling.send(
         request:     Request<TResp>,
         requestType: KType?
 ): Promise<TResp> {
@@ -47,8 +59,16 @@ fun <TResp: Any?> Handling.send(
     }
 }
 
+fun <TResp: NamedType> Contextual.send(
+        request:     Request<TResp>,
+        requestType: KType?
+) = requireContext().send(request, requestType)
+
+inline fun <reified T: NamedType> Handling.publish(notification: T) =
+        publish(notification, typeOf<T>())
+
 fun Handling.publish(
-        notification:     Any,
+        notification:     NamedType,
         notificationType: KType
 ): Promise<*> {
     val command = Command(notification, notificationType, true).apply {
@@ -62,3 +82,8 @@ fun Handling.publish(
         Promise.reject(e)
     }
 }
+
+fun Contextual.publish(
+        notification:     NamedType,
+        notificationType: KType
+) = requireContext().publish(notification, notificationType)

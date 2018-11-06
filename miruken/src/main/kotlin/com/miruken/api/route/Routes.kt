@@ -1,11 +1,12 @@
 package com.miruken.api.route
 
 import com.miruken.Stage
+import com.miruken.api.NamedType
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 
-class RoutesFilter<Res: Any>(
+class RoutesFilter<Res: NamedType>(
         vararg val schemes: String
 ) : Filtering<RoutedRequest<Res>, Res> {
 
@@ -31,7 +32,7 @@ object RoutesFactory : FilteringProviderFactory {
             "Schemes cannot be empty"
         }
         return FilterInstanceProvider(
-            RoutesFilter<Any>(*routes.schemes))
+            RoutesFilter<NamedType>(*routes.schemes))
     }
 }
 

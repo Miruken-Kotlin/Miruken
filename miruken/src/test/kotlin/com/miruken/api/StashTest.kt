@@ -73,10 +73,11 @@ class StashTest {
         CANCELLED
     }
 
-    class Order {
-        var id:     Int?        = null
-        var status: OrderStatus = OrderStatus.CREATED
-    }
+    data class Order(
+        var id:     Int?        = null,
+        var status: OrderStatus = OrderStatus.CREATED,
+        override val typeName: String = "Order"
+    ): NamedType
 
     data class CancelOrder(
             val orderId: Int,

@@ -10,7 +10,7 @@ import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 
 class BatchRouter : Handler(), Batching {
-    private val _groups = mutableMapOf<String, MutableList<Request>>()
+    private val _groups = mutableMapOf<String, MutableList<Pending>>()
 
     @Handles
     fun route(routed: Routed, command: Command): Promise<Any?> {
@@ -18,7 +18,7 @@ class BatchRouter : Handler(), Batching {
         val message = routed.message
                 .takeUnless { command.many } ?:
             Publish(routed.message)
-        val request = Request(message)
+        val request = Pending(message)
         if (_groups[route]?.add(request) == null) {
             _groups[route] = mutableListOf(request)
         }
@@ -61,7 +61,7 @@ class BatchRouter : Handler(), Batching {
             _groups.clear()
         }
 
-    private class Request(val message: NamedType) {
+    private class Pending(val message: NamedType) {
         lateinit var resolve: (Any?) -> Unit
             private set
         lateinit var reject:  (Throwable) -> Unit

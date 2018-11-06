@@ -1,12 +1,12 @@
 package com.miruken.api.cache
 
 import com.miruken.api.NamedType
+import com.miruken.api.send
 import com.miruken.callback.Handler
 import com.miruken.callback.Handles
 import com.miruken.callback.Handling
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
-import com.miruken.api.send
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -20,10 +20,10 @@ class CachedHandler : Handler() {
             val lastUpdate: Instant)
 
     @Handles
-    fun <TResponse: Any> cache(
-        request:  Cached<TResponse>,
+    fun <TResp: NamedType> cache(
+        request:  Cached<TResp>,
         composer: Handling
-    ): Promise<TResponse> {
+    ): Promise<TResp> {
         @Suppress("UNCHECKED_CAST")
         return _cache.compute(request.request) { key, cached ->
             cached?.takeUnless {
@@ -36,26 +36,26 @@ class CachedHandler : Handler() {
                     }
                 }
             } ?: refreshResponse(key, request.requestType, composer)
-        }!!.response as Promise<TResponse>
+        }!!.response as Promise<TResp>
     }
 
     @Handles
-    fun <TResponse: Any> refresh(
-            request:  Refresh<TResponse>,
+    fun <TResp: NamedType> refresh(
+            request:  Refresh<TResp>,
             composer: Handling
-    ): Promise<TResponse> {
+    ): Promise<TResp> {
         @Suppress("UNCHECKED_CAST")
         return _cache.compute(request.request) { key, _ ->
             refreshResponse(key, request.requestType, composer)
-        }!!.response as Promise<TResponse>
+        }!!.response as Promise<TResp>
     }
 
     @Handles
     @Suppress("UNCHECKED_CAST")
-    fun <TResponse: Any> invalidate(
-            request:  Invalidate<TResponse>
+    fun <TResp: NamedType> invalidate(
+            request:  Invalidate<TResp>
     ) = (_cache.remove(request.request)?.response
-                ?: Promise.EMPTY) as Promise<TResponse>
+                ?: Promise.EMPTY) as Promise<TResp>
 
     private fun refreshResponse(
             request:     NamedType,

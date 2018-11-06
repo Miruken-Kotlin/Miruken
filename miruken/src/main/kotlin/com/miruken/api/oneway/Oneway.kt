@@ -5,7 +5,7 @@ import com.miruken.api.Request
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
-data class Oneway<TResp: Any>(
+data class Oneway<TResp: NamedType>(
         val request:     Request<TResp>,
         val requestType: KType,
         override val typeName: String =
@@ -17,5 +17,5 @@ data class Oneway<TResp: Any>(
     }
 }
 
-inline val <TResp: Any, reified T: Request<TResp>>
+inline val <TResp: NamedType, reified T: Request<TResp>>
         T.oneway: Oneway<TResp> get ()= Oneway(this, typeOf<T>())

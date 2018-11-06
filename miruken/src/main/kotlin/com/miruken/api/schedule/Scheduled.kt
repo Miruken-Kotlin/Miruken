@@ -9,5 +9,11 @@ interface Scheduled : Request<ScheduleResult> {
 }
 
 data class ScheduleResult(
-        val responses: List<Try<Throwable, NamedType>>
-)
+        val responses: List<Try<Throwable, NamedType>>,
+        override val typeName: String = ScheduleResult.typeName
+) : NamedType {
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Mediate.Schedule.ScheduleResult,Miruken.Mediate"
+    }
+}

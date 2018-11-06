@@ -26,7 +26,7 @@ data class RoutedMessage(
     }
 }
 
-data class RoutedRequest<TResp: Any>(
+data class RoutedRequest<TResp: NamedType>(
         override val message:     Request<TResp>,
         override val messageType: KType?,
         override val route:       String,
@@ -44,6 +44,6 @@ inline fun <reified T: NamedType>
         T.routeTo(route: String, tag: String? = null
 ): RoutedMessage = RoutedMessage(this, typeOf<T>(), route, tag)
 
-inline fun <TResp: Any, reified T: Request<TResp>>
+inline fun <TResp: NamedType, reified T: Request<TResp>>
         T.routeTo(route: String, tag: String? = null
 ): RoutedRequest<TResp> = RoutedRequest(this, typeOf<T>(), route, tag)

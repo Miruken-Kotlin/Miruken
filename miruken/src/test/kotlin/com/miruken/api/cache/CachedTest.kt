@@ -1,7 +1,7 @@
 package com.miruken.api.cache
 
 import com.miruken.api.GetStockQuote
-import com.miruken.api.JacksonHelper
+import com.miruken.api.JacksonProvider
 import com.miruken.api.StockQuoteHandler
 import com.miruken.api.send
 import com.miruken.assertAsync
@@ -133,7 +133,7 @@ class CachedTest {
 
     @Test fun `Serializes cached request into json`() {
         val request  = GetStockQuote("AAPL").cache(Duration.ofDays(1))
-        val json     = JacksonHelper.mapper.writeValueAsString(request)
+        val json     = JacksonProvider.mapper.writeValueAsString(request)
         assertEquals("{\"\$type\":\"Miruken.Mediate.Cache.Cached`1[[GetStockQuote]],Miruken.Mediate\",\"request\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"},\"timeToLive\":86400.000000000}", json)
     }
 }
