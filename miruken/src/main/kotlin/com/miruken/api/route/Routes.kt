@@ -1,25 +1,40 @@
 package com.miruken.api.route
 
 import com.miruken.Stage
-import com.miruken.api.NamedType
+import com.miruken.api.send
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
+import java.net.URI
 
-class RoutesFilter<Res: NamedType>(
+class RoutesFilter<Res: Any?>(
         vararg val schemes: String
-) : Filtering<RoutedRequest<Res>, Res> {
+) : Filtering<Routed, Res> {
 
     override var order: Int? = Stage.LOGGING - 1
 
     override fun next(
-            callback: RoutedRequest<Res>,
+            callback: Routed,
             binding:  MemberBinding,
             composer: Handling,
             next:     Next<Res>,
             provider: FilteringProvider?
     ): Promise<Res> {
-        return next()
+        if (schemes.indexOf(getScheme(callback.route)) >= 0) {
+            val batch = composer.getBatcherFor(null) { BatchRouter() }
+            if (batch != null) {
+                @Suppress("UNCHECKED_CAST")
+                return batch.enableFilters().send(callback) as Promise<Res>
+            }
+            return next(composer.enableFilters())
+        }
+        return next.abort()
+    }
+
+    private fun getScheme(route: String) = try {
+        URI(route).run { scheme ?: path }
+    } catch (t: Throwable) {
+        null
     }
 }
 
@@ -32,7 +47,7 @@ object RoutesFactory : FilteringProviderFactory {
             "Schemes cannot be empty"
         }
         return FilterInstanceProvider(
-            RoutesFilter<NamedType>(*routes.schemes))
+            RoutesFilter<Any?>(*routes.schemes))
     }
 }
 

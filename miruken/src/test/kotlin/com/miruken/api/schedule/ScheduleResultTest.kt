@@ -6,11 +6,16 @@ import com.miruken.api.StockQuote
 import com.miruken.api.Try
 import com.miruken.api.fold
 import org.junit.Test
+import java.net.URI
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
 class ScheduleResultTest {
+    @Test fun `parse url`() {
+        var uri = URI("accessControl:hello")
+    }
+
     @Test fun `Serializes scheduled result into json`() {
         val result = ScheduleResult(listOf(
                 Try.Success(StockQuote("AAPL", 207.48))))

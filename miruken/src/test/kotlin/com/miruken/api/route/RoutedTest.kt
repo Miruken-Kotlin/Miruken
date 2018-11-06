@@ -72,13 +72,12 @@ class RoutedTest {
         }
     }
 
+    @Routes("trash")
     class Trash : Handler() {
         @Handles
-        fun route(request: Routed) =
-            Promise.EMPTY.takeIf { request.route == scheme }
-
-        companion object {
-            const val scheme = "trash"
+        fun route(request: Routed): Promise<*> {
+            println("Trashed $request")
+            return Promise.EMPTY
         }
     }
 }
