@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class ContextualHandler :
         Handler(), Contextual, AutoCloseable {
     private var _context: Context? = null
-    private  val _closed           = AtomicBoolean()
+    private val _closed = AtomicBoolean()
 
     override val contextChanging = Event<ContextChangingEvent>()
     override val contextChanged  = Event<ContextChangedEvent>()

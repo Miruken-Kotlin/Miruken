@@ -1,15 +1,18 @@
 package com.miruken.mvc
 
 import com.miruken.callback.Handling
-import com.miruken.context.ContextualHandler
-import com.miruken.context.requireContext
+import com.miruken.context.*
+import com.miruken.event.Event
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.view.Viewing
 import com.miruken.mvc.view.ViewingRegion
 import com.miruken.mvc.view.addRegion
 import com.miruken.mvc.view.show
+import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class Controller : ContextualHandler() {
+abstract class Controller : Contextual, AutoCloseable {
+    private var _context: Context? = null
+    private val _closed = AtomicBoolean()
 
     @Suppress("PropertyName")
     internal var _io: Handling? = null
@@ -19,6 +22,26 @@ abstract class Controller : ContextualHandler() {
     protected val io get() =
         _io ?: context ?: error(
             "${this::class.qualifiedName} is not bound to a context")
+
+    override var context: Context?
+        get() = _context
+        set(value) {
+            if (_context == value) return
+            val changingEvent = ContextChangingEvent(this, _context, value)
+            contextChanging {
+                ContextChangingEvent(this, _context, value)
+            }
+            _context?.removeHandlers(this)
+            val oldContext = _context
+            _context = changingEvent.newContext
+            _context?.insertHandlers(0, this)
+            contextChanged {
+                ContextChangedEvent(this, oldContext, _context)
+            }
+        }
+
+    override val contextChanging = Event<ContextChangingEvent>()
+    override val contextChanged  = Event<ContextChangedEvent>()
 
     fun endContext() = context?.end(this)
 
@@ -103,8 +126,16 @@ abstract class Controller : ContextualHandler() {
     protected fun goBack(handler: Handling) =
         handler.goBack()
 
-    override fun cleanUp() {
-        context = null
-        _io     = null
+
+    override fun close() {
+        if (_closed.compareAndSet(false, true)) {
+            contextChanging.clear()
+            contextChanged.clear()
+            context = null
+            _io     = null
+            cleanUp()
+        }
     }
+
+    open fun cleanUp() {}
 }
