@@ -7,7 +7,7 @@ repositories {
     jcenter()
 }
 
-version = '0.0.2-alpha.0006'
+version = '0.0.2-alpha.0007'
 //0.0.1-SNAPSHOT
 
 dependencies {
