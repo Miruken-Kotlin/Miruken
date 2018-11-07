@@ -11,18 +11,13 @@ import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.withNullability
 
 abstract class TypeReference<T> protected constructor() {
-    var type: Type
-        private set
+    val type: Type =
+            (javaClass.genericSuperclass as? ParameterizedType)
+            ?.actualTypeArguments?.get(0)
+            ?: error("TypeReference constructed withou type information")
 
     val kotlinType by lazy(LazyThreadSafetyMode.NONE) {
-        javaClass.genericSuperclass.toKType()
-                .arguments.single().type!!
-    }
-
-    init {
-        type = (javaClass.genericSuperclass as? ParameterizedType)?.let {
-            it.actualTypeArguments[0]
-        } ?: error("TypeReference constructed withou type information")
+        type.toKType().arguments.single().type!!
     }
 
     companion object {
@@ -46,6 +41,11 @@ abstract class TypeReference<T> protected constructor() {
             Unit::class.starProjectedType
         }
     }
+
+    override fun equals(other: Any?) =
+            (other as? TypeReference<*>)?.type == type
+
+    override fun hashCode() = type.hashCode()
 }
 
 fun KClass<*>.toInvariantFlexibleProjection(

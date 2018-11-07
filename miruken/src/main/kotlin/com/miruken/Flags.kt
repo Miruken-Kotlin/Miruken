@@ -30,7 +30,7 @@ open class Flags<T: Flags<T>>(val value: Long) {
 
     @Suppress("UNCHECKED_CAST")
     override fun equals(other: Any?): Boolean =
-            (other as? Flags<T>)?.value == value
+            other === this || (other as? Flags<T>)?.value == value
 
     override fun hashCode(): Int = value.hashCode()
 
