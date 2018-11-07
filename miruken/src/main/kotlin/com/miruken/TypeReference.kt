@@ -50,6 +50,7 @@ abstract class TypeReferenceImpl : TypeReference {
 
 abstract class SuperTypeReference<T>
     protected constructor() : TypeReferenceImpl() {
+
     override val type: Type =
             (javaClass.genericSuperclass as? ParameterizedType)
             ?.actualTypeArguments?.get(0)
