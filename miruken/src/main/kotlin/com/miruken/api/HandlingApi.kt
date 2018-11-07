@@ -2,11 +2,16 @@ package com.miruken.api
 
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
+import com.miruken.context.Contextual
+import com.miruken.context.requireContext
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
 inline fun <reified T: NamedType> Handling.send(request: T) =
         send(request, typeOf<T>())
+
+inline fun <reified T: NamedType> Contextual.send(request: T) =
+        requireContext().send(request)
 
 fun Handling.send(
         request:     NamedType,
@@ -24,9 +29,17 @@ fun Handling.send(
     }
 }
 
+fun Contextual.send(
+        request:     NamedType,
+        requestType: KType?
+) = requireContext().send(request, requestType)
+
 inline fun <TResp: NamedType?, reified T: Request<TResp>>
         Handling.send(request: T): Promise<TResp> =
         send(request, typeOf<T>())
+
+inline fun <TResp: NamedType?, reified T: Request<TResp>>
+        Contextual.send(request: T) = requireContext().send(request)
 
 fun <TResp: NamedType?> Handling.send(
         request:     Request<TResp>,
@@ -45,8 +58,16 @@ fun <TResp: NamedType?> Handling.send(
     }
 }
 
+fun <TResp: NamedType?> Contextual.send(
+        request:     Request<TResp>,
+        requestType: KType?
+) = requireContext().send(request, requestType)
+
 inline fun <reified T: NamedType> Handling.publish(notification: T) =
         publish(notification, typeOf<T>())
+
+inline fun <reified T: NamedType> Contextual.publish(notification: T) =
+        requireContext().publish(notification)
 
 fun Handling.publish(
         notification:     NamedType,
@@ -63,3 +84,8 @@ fun Handling.publish(
         Promise.reject(e)
     }
 }
+
+fun Contextual.publish(
+        notification:     NamedType,
+        notificationType: KType
+) = requireContext().publish(notification, notificationType)
