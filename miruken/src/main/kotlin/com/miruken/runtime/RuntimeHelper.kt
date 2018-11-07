@@ -1,6 +1,6 @@
 package com.miruken.runtime
 
-import com.miruken.concurrent.Promise
+import com.miruken.TypeReference
 import com.miruken.toKType
 import com.miruken.typeOf
 import java.lang.reflect.AnnotatedElement
@@ -204,7 +204,7 @@ val KType.isNothing get() = classifier == Nothing::class
 
 val KType.componentType: KType?
     get() = when {
-        isSubtypeOf(COLLECTION_TYPE) -> /* Nothing??? */
+        isSubtypeOf(TypeReference.COLLECTION_TYPE) -> /* Nothing??? */
             arguments.singleOrNull()?.type ?: this
         classifier is KClass<*> -> {
             val javaClass = (classifier as KClass<*>).javaObjectType
@@ -226,7 +226,7 @@ val KType.isOpenGeneric: Boolean
 val KType.isOpenGenericDefinition: Boolean
     get() = arguments.isNotEmpty() && arguments.all { arg ->
         (arg.type?.classifier as? KTypeParameter)
-            ?.upperBounds?.all { it == ANY_TYPE } == true }
+            ?.upperBounds?.all { it == TypeReference.ANY_TYPE } == true }
 
 inline val KClass<*>.isGeneric
     get() = typeParameters.isNotEmpty()
@@ -322,18 +322,3 @@ fun Collection<*>.toTypedArray(componentType: Class<*>): Any {
     return array
 }
 
-val ANY_STAR by lazy(LazyThreadSafetyMode.NONE) {
-    Any::class.starProjectedType
-}
-
-val ANY_TYPE by lazy(LazyThreadSafetyMode.NONE) {
-    typeOf<Any>().withNullability(true)
-}
-
-val COLLECTION_TYPE by lazy(LazyThreadSafetyMode.NONE) {
-    typeOf<Collection<Any>>().withNullability(true)
-}
-
-val PROMISE_TYPE by lazy(LazyThreadSafetyMode.NONE) {
-    typeOf<Promise<Any>>().withNullability(true)
-}

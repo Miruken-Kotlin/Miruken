@@ -1,11 +1,11 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.bindings.BindingMetadata
 import com.miruken.callback.policy.bindings.BindingScope
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
-import com.miruken.runtime.ANY_STAR
 import com.miruken.runtime.isCompatibleWith
 import java.lang.reflect.Modifier
 import kotlin.reflect.KClass
@@ -29,7 +29,7 @@ open class Inquiry(
         when (key) {
             is KType -> key
             is KClass<*> -> key.starProjectedType
-            else -> ANY_STAR
+            else -> TypeReference.ANY_STAR
         }
     }
     var target: Any? = null

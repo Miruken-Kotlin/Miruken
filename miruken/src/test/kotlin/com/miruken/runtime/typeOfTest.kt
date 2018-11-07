@@ -1,6 +1,6 @@
 package com.miruken.runtime
 
-import com.miruken.UNIT_TYPE
+import com.miruken.TypeReference
 import com.miruken.typeOf
 import org.junit.Test
 import kotlin.reflect.KType
@@ -23,12 +23,12 @@ class typeOfTest {
 
     @Test fun `Can obtain component KType of Unit`() {
         val unitType = typeOf<Unit>()
-        assertTrue(unitType.isSubtypeOf(UNIT_TYPE))
+        assertTrue(unitType.isSubtypeOf(TypeReference.UNIT_TYPE))
     }
 
     @Test fun `Can obtain component KType of Any`() {
         val anyType = typeOf<Any>()
-        assertTrue(anyType.isSubtypeOf(ANY_TYPE))
+        assertTrue(anyType.isSubtypeOf(TypeReference.ANY_TYPE))
     }
 
     @Test fun `Can obtain component KType of List`() {

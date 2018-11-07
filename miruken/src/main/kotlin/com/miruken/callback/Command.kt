@@ -1,9 +1,9 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
-import com.miruken.runtime.ANY_TYPE
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
@@ -41,7 +41,7 @@ open class Command(
 
     override val resultType: KType?
         get() {
-            var resultType = ANY_TYPE
+            var resultType = TypeReference.ANY_TYPE
             if (many) {
                 resultType = List::class.createType(listOf(
                         KTypeProjection.invariant(resultType)))

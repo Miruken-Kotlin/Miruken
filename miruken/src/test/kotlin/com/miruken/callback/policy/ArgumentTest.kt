@@ -1,10 +1,10 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
+import com.miruken.TypeReference
 import com.miruken.callback.TestHandler
 import com.miruken.concurrent.Promise
 import com.miruken.getMethod
-import com.miruken.runtime.ANY_TYPE
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KTypeParameter
@@ -243,8 +243,8 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(ANY_TYPE, argument.parameterType))
-        assertTrue(isCompatibleWith(ANY_TYPE, argument.typeInfo.logicalType))
+        assertTrue(isCompatibleWith(TypeReference.ANY_TYPE, argument.parameterType))
+        assertTrue(isCompatibleWith(TypeReference.ANY_TYPE, argument.typeInfo.logicalType))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))

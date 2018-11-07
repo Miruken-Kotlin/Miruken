@@ -1,8 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
-import com.miruken.runtime.PROMISE_TYPE
 import kotlin.reflect.full.isSubtypeOf
 
 typealias AspectBeforeBlock = (Any, Handling) -> Any?
@@ -42,7 +42,7 @@ fun Handling.aspect(
                 return@filter HandleResult.HANDLED
             }
             if (state == false) {
-                if (cb?.resultType?.isSubtypeOf(PROMISE_TYPE) == true) {
+                if (cb?.resultType?.isSubtypeOf(TypeReference.PROMISE_TYPE) == true) {
                     cb.result = Promise.reject(RejectedException(callback))
                     return@filter HandleResult.HANDLED
                 }
