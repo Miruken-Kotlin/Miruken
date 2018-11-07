@@ -1,5 +1,6 @@
 package com.miruken.mvc
 
+import com.miruken.TypeReference
 import com.miruken.callback.notHandled
 import com.miruken.event.Event
 import com.miruken.mvc.view.Viewing
@@ -10,6 +11,7 @@ import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.jvm.jvmErasure
 
 class TestViewRegion : ViewingStackView {
     override var viewModel: Any? = null
@@ -17,9 +19,12 @@ class TestViewRegion : ViewingStackView {
     override fun createViewStack() = TestViewRegion()
 
     override fun view(viewKey: Any, init: (Viewing.() -> Unit)?) =
-        ((viewKey as? KType)?.classifier as? KClass<*>)?.run {
-            createInstance() as? Viewing
-        } ?: notHandled()
+            (when (viewKey) {
+                is KType -> viewKey.jvmErasure.createInstance()
+                is KClass<*> -> viewKey.createInstance()
+                is TypeReference -> (viewKey.type as Class<*>).newInstance()
+                else -> null
+            } as? Viewing) ?: notHandled()
 
     override fun show(view: Viewing) = Layer(view)
 

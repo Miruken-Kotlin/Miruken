@@ -1,10 +1,9 @@
 package com.miruken.validate
 
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
-import com.miruken.runtime.ANY_TYPE
-import com.miruken.runtime.PROMISE_TYPE
 import com.miruken.validate.scopes.Everything
 import javax.validation.groups.Default
 import kotlin.reflect.KClass
@@ -12,7 +11,7 @@ import kotlin.reflect.KType
 
 class Validation(
         val         target:     Any,
-        private val targetType: KType? = null,
+        private val targetType: TypeReference? = null,
         vararg      scopes:     KClass<*>
 ) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
@@ -32,7 +31,11 @@ class Validation(
     override fun getCallbackKey() = targetType
 
     override val resultType: KType?
-        get() = if (wantsAsync || isAsync) PROMISE_TYPE else ANY_TYPE
+        get() = if (wantsAsync || isAsync) {
+            TypeReference.PROMISE_TYPE
+        } else {
+            TypeReference.ANY_TYPE
+        }
 
     override var result: Any?
         get() {
@@ -76,7 +79,7 @@ class Validation(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = policy.dispatch(handler, this, callbackType,

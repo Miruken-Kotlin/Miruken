@@ -1,5 +1,6 @@
 package com.miruken.validate
 
+import com.miruken.TypeReference
 import com.miruken.callback.Handling
 import com.miruken.callback.aspectBefore
 import com.miruken.callback.getOptions
@@ -7,11 +8,10 @@ import com.miruken.callback.handle
 import com.miruken.concurrent.Promise
 import com.miruken.typeOf
 import kotlin.reflect.KClass
-import kotlin.reflect.KType
 
 fun Handling.validate(
         target:        Any,
-        targetType:    KType?,
+        targetType:    TypeReference?,
         vararg scopes: KClass<*>
 ): ValidationResult.Outcome {
     val options    = getOptions(ValidationOptions())
@@ -26,7 +26,7 @@ fun Handling.validate(
 
 fun Handling.validateAsync(
         target:        Any,
-        targetType:    KType?,
+        targetType:    TypeReference?,
         vararg scopes: KClass<*>
 ): Promise<ValidationResult.Outcome> {
     val options    = getOptions(ValidationOptions())
