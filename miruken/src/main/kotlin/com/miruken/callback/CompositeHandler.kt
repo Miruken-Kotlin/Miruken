@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import kotlin.reflect.KType
+import com.miruken.TypeReference
 
 open class CompositeHandler(vararg handlers: Any)
     : Handler(), CompositeHandling {
@@ -15,7 +15,7 @@ open class CompositeHandler(vararg handlers: Any)
 
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = handlers.fold(

@@ -1,8 +1,8 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.kTypeOf
 import com.miruken.runtime.isCompatibleWith
-import com.miruken.typeOf
 import org.junit.Test
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -91,7 +91,7 @@ class UseFiltersFilterProviderTest {
 
     private inline fun <reified T: Filtering<*,*>>
             KClass<out Filtering<*,*>>.compatible(): Boolean {
-        val filterType   = typeOf<T>()
+        val filterType   = kTypeOf<T>()
         val typeBindings = mutableMapOf<KTypeParameter, KType>()
         return getFilteringInterface().let { f ->
             isCompatibleWith(f, filterType, typeBindings) &&

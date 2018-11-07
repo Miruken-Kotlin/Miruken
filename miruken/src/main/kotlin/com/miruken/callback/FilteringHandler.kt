@@ -1,8 +1,8 @@
 package com.miruken.callback
 
-import kotlin.reflect.KType
+import com.miruken.TypeReference
 
-typealias FilterBlock = (Any, KType?, Handling, () -> HandleResult) -> HandleResult
+typealias FilterBlock = (Any, TypeReference?, Handling, () -> HandleResult) -> HandleResult
 
 class FilteringHandler(
         handler:               Handling,
@@ -11,7 +11,7 @@ class FilteringHandler(
 ) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {

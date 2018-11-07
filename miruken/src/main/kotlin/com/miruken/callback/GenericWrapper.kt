@@ -1,12 +1,12 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.TypedValue
 import com.miruken.runtime.isCompatibleWith
-import kotlin.reflect.KType
 
 class GenericWrapper(
         override val value: Any,
-        override val type:  KType
+        override val type: TypeReference
 ) : Handler(), TypedValue {
     private val _handler = value as? Handling
             ?: HandlerAdapter(value)
@@ -18,7 +18,7 @@ class GenericWrapper(
 
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = super.handleCallback(callback, callbackType, greedy, composer)

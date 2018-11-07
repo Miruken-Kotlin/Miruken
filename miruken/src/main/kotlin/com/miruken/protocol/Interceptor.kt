@@ -1,14 +1,14 @@
 package com.miruken.protocol
 
+import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import kotlin.reflect.KType
 
 class Interceptor(
         private val adapter:  ProtocolAdapter,
-        private val protocol: KType
+        private val protocol: TypeReference
 ) : InvocationHandler {
     override fun invoke(
             proxy:  Any,

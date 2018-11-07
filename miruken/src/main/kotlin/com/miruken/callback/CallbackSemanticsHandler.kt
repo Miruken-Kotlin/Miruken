@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.Flags
-import kotlin.reflect.KType
+import com.miruken.TypeReference
 
 class CallbackSemanticsHandler(
         handler: Handling,
@@ -12,7 +12,7 @@ class CallbackSemanticsHandler(
 
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {

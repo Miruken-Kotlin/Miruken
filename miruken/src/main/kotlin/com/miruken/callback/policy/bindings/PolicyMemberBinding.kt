@@ -1,6 +1,7 @@
 package com.miruken.callback.policy.bindings
 
 import com.miruken.TypeFlags
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.CollectResultsBlock
@@ -38,7 +39,7 @@ class PolicyMemberBinding(
     fun dispatch(
             handler:      Any,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             composer:     Handling,
             descriptor:   HandlerDescriptor,
             results:      CollectResultsBlock?
@@ -59,7 +60,7 @@ class PolicyMemberBinding(
             val bindings = mutableMapOf<KTypeParameter, KType>()
             if (callbackType != null) {
                 callbackArg?.typeInfo?.mapOpenParameters(
-                        callbackType, bindings)
+                        callbackType.kotlinType, bindings)
             }
             policy.getResultType(callback)?.also {
                 dispatcher.returnInfo.mapOpenParameters(it, bindings)
@@ -135,12 +136,13 @@ class PolicyMemberBinding(
     private fun resolveFilters(
             handler:      Any,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             resultType:   KType,
             composer:     Handling,
             descriptor:   HandlerDescriptor
     ): List<Pair<Filtering<Any,Any?>, FilteringProvider>>? {
-        val cbType = callbackType ?: callbackArg?.parameterType
+        val cbType = callbackType?.kotlinType
+                ?: callbackArg?.parameterType
                 ?: callback::class.starProjectedType
 
         val filterType = Filtering::class.createType(listOf(
@@ -160,7 +162,7 @@ class PolicyMemberBinding(
     private fun resolveArguments(
             callback:      Any,
             ruleArguments: Array<Any?>,
-            callbackType:  KType?,
+            callbackType:  TypeReference?,
             composer:      Handling,
             typeBindings:  Lazy<MutableMap<KTypeParameter, KType>>
     ): Array<Any?>? {
@@ -181,6 +183,15 @@ class PolicyMemberBinding(
                 PolicyMemberBinding::class ->
                     resolved[i] = this
                 KType::class -> {
+                    if (callbackType == null) {
+                        val flags = typeInfo.flags
+                        if (!(flags has TypeFlags.OPTIONAL))
+                            return null
+                    } else {
+                        resolved[i] = callbackType.kotlinType
+                    }
+                }
+                TypeReference::class -> {
                     if (callbackType == null) {
                         val flags = typeInfo.flags
                         if (!(flags has TypeFlags.OPTIONAL))

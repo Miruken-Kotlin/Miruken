@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import kotlin.reflect.KType
+import com.miruken.TypeReference
 
 class NoBatch(callback: Any)
     : Trampoline(callback), BatchingCallback {
@@ -10,7 +10,7 @@ class NoBatch(callback: Any)
 class NoBatchingHandler(handler: Handling): DecoratedHandler(handler) {
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {

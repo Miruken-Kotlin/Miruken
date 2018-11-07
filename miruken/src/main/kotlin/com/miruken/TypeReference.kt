@@ -2,6 +2,7 @@ package com.miruken
 
 import com.miruken.concurrent.Promise
 import java.lang.reflect.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -9,16 +10,11 @@ import kotlin.reflect.KVariance
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.withNullability
+import kotlin.reflect.jvm.javaType
 
-abstract class TypeReference<T> protected constructor() {
-    val type: Type =
-            (javaClass.genericSuperclass as? ParameterizedType)
-            ?.actualTypeArguments?.get(0)
-            ?: error("TypeReference constructed withou type information")
-
-    val kotlinType by lazy(LazyThreadSafetyMode.NONE) {
-        type.toKType().arguments.single().type!!
-    }
+interface TypeReference {
+    val type:       Type
+    val kotlinType: KType
 
     companion object {
         val ANY_STAR by lazy(LazyThreadSafetyMode.NONE) {
@@ -26,27 +22,61 @@ abstract class TypeReference<T> protected constructor() {
         }
 
         val ANY_TYPE by lazy(LazyThreadSafetyMode.NONE) {
-            typeOf<Any>().withNullability(true)
+            typeOf<Any>().kotlinType.withNullability(true)
         }
 
         val COLLECTION_TYPE by lazy(LazyThreadSafetyMode.NONE) {
-            typeOf<Collection<Any>>().withNullability(true)
+            typeOf<Collection<Any>>().kotlinType.withNullability(true)
         }
 
         val PROMISE_TYPE by lazy(LazyThreadSafetyMode.NONE) {
-            typeOf<Promise<Any>>().withNullability(true)
+            typeOf<Promise<Any>>().kotlinType.withNullability(true)
         }
 
         val UNIT_TYPE by lazy(LazyThreadSafetyMode.NONE) {
             Unit::class.starProjectedType
         }
     }
+}
+
+abstract class TypeReferenceImpl : TypeReference {
+    override fun toString() = "TypeReference: $type"
 
     override fun equals(other: Any?) =
-            (other as? TypeReference<*>)?.type == type
+            (other as? TypeReference)?.type == type
 
     override fun hashCode() = type.hashCode()
 }
+
+abstract class SuperTypeReference<T>
+    protected constructor() : TypeReferenceImpl() {
+    override val type: Type =
+            (javaClass.genericSuperclass as? ParameterizedType)
+            ?.actualTypeArguments?.get(0)
+            ?: error("TypeReference constructed withou type information")
+
+    override val kotlinType: KType get() =
+        TypeToKTypeMapping.getOrPut(type) {
+            javaClass.genericSuperclass.toKType().arguments.single().type!!
+        }
+}
+
+class GivenTypeReference(kotlinType: KType) : TypeReferenceImpl() {
+    override val type: Type
+
+    override val kotlinType: KType get() = TypeToKTypeMapping[type]!!
+
+    init {
+        type = when (val javaType = kotlinType.javaType) {
+            is Class<*> -> javaType
+            is ParameterizedType -> javaType.rawType
+            else -> error("Unable to determin java type from kotlin type '$kotlinType'")
+        }
+        TypeToKTypeMapping.putIfAbsent(type, kotlinType)
+    }
+}
+
+private val TypeToKTypeMapping = ConcurrentHashMap<Type, KType>()
 
 fun KClass<*>.toInvariantFlexibleProjection(
         arguments: List<KTypeProjection> = emptyList()

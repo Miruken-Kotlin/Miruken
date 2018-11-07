@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.miruken.TypeReference
 import com.miruken.api.schedule.ScheduleResult
 import java.lang.reflect.Type
 import kotlin.reflect.KType
@@ -65,7 +66,11 @@ object JacksonProvider {
 
             setMixInAnnotation(
                     KType::class.java,
-                    IgnoreKTypeMixin::class.java)
+                    IgnoreMixin::class.java)
+
+            setMixInAnnotation(
+                    TypeReference::class.java,
+                    IgnoreMixin::class.java)
 
             addSerializer(Throwable::class.java, ThrowableSerializer())
             addDeserializer(Throwable::class.java, ThrowableDeserializer())
@@ -75,7 +80,7 @@ object JacksonProvider {
         }
 
         @JsonIgnoreType
-        interface IgnoreKTypeMixin
+        interface IgnoreMixin
 
         @JsonTypeInfo(
                 use      = JsonTypeInfo.Id.NAME,

@@ -1,17 +1,17 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 class OptionsHandler<T: Options<T>>(
         private val options:     T,
-        private val optionsType: KType,
+        private val optionsType: TypeReference,
         handler:                 Handling
 ) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = ((callback.takeIf {

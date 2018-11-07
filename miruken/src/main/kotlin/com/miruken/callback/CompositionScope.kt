@@ -1,12 +1,12 @@
 package com.miruken.callback
 
-import kotlin.reflect.KType
-import kotlin.reflect.full.createType
+import com.miruken.TypeReference
+import com.miruken.typeOf
 
 class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
@@ -18,6 +18,6 @@ class CompositionScope(handler: Handling) : DecoratedHandler(handler) {
     }
 
     companion object {
-        val TYPE = CompositionScope::class.createType()
+        val TYPE = typeOf<CompositionScope>()
     }
 }

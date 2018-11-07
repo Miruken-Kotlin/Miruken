@@ -1,20 +1,20 @@
 package com.miruken.api.route
 
+import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.Request
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 interface Routed : NamedType{
     val message:     NamedType
-    val messageType: KType?
+    val messageType: TypeReference?
     val route:       String
     val tag:         String?
 }
 
 data class RoutedMessage(
         override val message:     NamedType,
-        override val messageType: KType?,
+        override val messageType: TypeReference?,
         override val route:       String,
         override val tag:         String? = null,
         override val typeName:    String =
@@ -28,7 +28,7 @@ data class RoutedMessage(
 
 data class RoutedRequest<TResp: NamedType>(
         override val message:     Request<TResp>,
-        override val messageType: KType?,
+        override val messageType: TypeReference?,
         override val route:       String,
         override val tag:         String? = null,
         override val typeName:    String =

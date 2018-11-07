@@ -1,11 +1,11 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.CallbackPolicy
-import kotlin.reflect.KType
 
 class Inference(
         callback:     Any,
-        callbackType: KType?
+        callbackType: TypeReference?
 ) : Trampoline(callback, callbackType),
         InferringCallback {
 
@@ -22,7 +22,7 @@ class Inference(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = _inferred.fold(
@@ -41,7 +41,7 @@ class Inference(
 class InferringHandler(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
@@ -50,10 +50,12 @@ class InferringHandler(handler: Handling) : DecoratedHandler(handler) {
         return handler.handle(resolving, resolvingType, greedy, composer)
     }
 
-    private fun getInferCallback(callback: Any, callbackType: KType?) =
-            when (callback) {
-                is InferringCallback -> callback.inferCallback()
-                else -> Resolution.getResolving(callback, callbackType)
-            }
+    private fun getInferCallback(
+            callback:     Any,
+            callbackType: TypeReference?
+    ) = when (callback) {
+        is InferringCallback -> callback.inferCallback()
+        else -> Resolution.getResolving(callback, callbackType)
+    }
 }
 

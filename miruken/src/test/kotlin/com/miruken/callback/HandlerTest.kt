@@ -2,6 +2,7 @@
 
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.assertAsync
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.policy.bindings.MemberBinding
@@ -12,6 +13,7 @@ import com.miruken.concurrent.Promise
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.context.ContextualImpl
+import com.miruken.kTypeOf
 import com.miruken.runtime.checkOpenConformance
 import com.miruken.typeOf
 import org.junit.Rule
@@ -205,21 +207,21 @@ class HandlerTest {
     @Test fun `Provides callbacks implicitly`() {
         val handler = SimpleHandler()
         val bar     = handler.resolve<Bar>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
 
     @Test fun `Provides singleton callbacks implicitly`() {
         val bar     = SingletonHandler.resolve<Bar>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
 
     @Test fun `Provides explicit companion callbacks implicitly`() {
         val bar     = ExplicitCompanionHandler.resolve<Bar>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
@@ -228,7 +230,7 @@ class HandlerTest {
         val bar = HandlerAdapter(
                 ImplicitCompanionHandler.Companion)
                 .resolve<Bar>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
@@ -236,7 +238,7 @@ class HandlerTest {
     @Test fun `Provides interface callbacks`() {
         val handler = InterfaceHandler()
         val testing = handler.resolve<Testing>()
-        assertNotNull(testing!!)
+        assertNotNull(testing)
         assertTrue(testing is Bar)
         assertFalse(testing.hasComposer)
         assertEquals(3, testing.handled)
@@ -245,7 +247,7 @@ class HandlerTest {
     @Test fun `Provides callbacks implicitly using adapter`() {
         val handler = HandlerAdapter(ControllerBase())
         val bar     = handler.resolve<Bar>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertFalse(bar.hasComposer)
         assertEquals(1, bar.handled)
     }
@@ -253,7 +255,7 @@ class HandlerTest {
     @Test fun `Provides callbacks implicitly with composer`() {
         val handler = SimpleHandler()
         val boo     = handler.resolve<Boo>()
-        assertNotNull(boo!!)
+        assertNotNull(boo)
         assertEquals(Boo::class, boo::class)
         assertTrue(boo.hasComposer)
     }
@@ -285,7 +287,7 @@ class HandlerTest {
     @Test fun `Provides callbacks covariantly`() {
         val handler = SimpleHandler()
         val bar     = handler.resolve<SpecialBar>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertEquals(SpecialBar::class, bar::class)
         assertTrue(bar.hasComposer)
         assertEquals(1, bar.handled)
@@ -295,7 +297,7 @@ class HandlerTest {
     @Test fun `Provides callbacks for interface`() {
         val handler = SimpleHandler()
         val bar     = handler.resolve<BarComponent>()
-        assertNotNull(bar!!)
+        assertNotNull(bar)
         assertEquals(Bar::class, bar::class)
         assertEquals(1, bar.handled)
     }
@@ -379,7 +381,7 @@ class HandlerTest {
     @Test fun `Provides callbacks explicitly`() {
         val handler = SimpleHandler()
         val baz     = handler.resolve<Baz>()
-        assertNotNull(baz!!)
+        assertNotNull(baz)
         assertEquals(SpecialBaz::class, baz::class)
         assertFalse(baz.hasComposer)
     }
@@ -387,7 +389,7 @@ class HandlerTest {
     @Test fun `Provides many callbacks explicitly`() {
         val handler = SpecialHandler()
         val baz     = handler.resolve<Baz>()
-        assertNotNull(baz!!)
+        assertNotNull(baz)
         assertEquals(SpecialBaz::class, baz::class)
         assertFalse(baz.hasComposer)
         val bazs    = handler.resolveAll<Baz>()
@@ -400,14 +402,14 @@ class HandlerTest {
     @Test fun `Provides callbacks generically`() {
         val handler = SimpleHandler()
         val baz     = handler.resolve<BazT<Int>>()
-        assertNotNull(baz!!)
+        assertNotNull(baz)
         assertEquals("providesGenericBaz", baz.tag)
     }
 
     @Test fun `Provides callbacks generically using arity`() {
         val handler = SimpleHandler()
         val baz     = handler.resolve<BazTR<Int, String>>()
-        assertNotNull(baz!!)
+        assertNotNull(baz)
         assertEquals("providesGenericBazArity", baz.tag)
     }
 
@@ -549,7 +551,7 @@ class HandlerTest {
 
     @Test fun `Can override providers`() {
         val handler = Handler()
-        val foo     = handler.provide(Foo()).resolve<Foo>()
+        val foo     = handler.with(Foo()).resolve<Foo>()
         assertNotNull(foo)
     }
 
@@ -557,7 +559,7 @@ class HandlerTest {
         val foo1    = Foo()
         val foo2    = Foo()
         val handler = Handler()
-        val foos    = handler.provide(listOf(foo1, foo2))
+        val foos    = handler.with(listOf(foo1, foo2))
                 .resolveAll<Foo>()
         assertTrue(foos.containsAll(listOf(foo1, foo2)))
     }
@@ -576,7 +578,7 @@ class HandlerTest {
 
     @Test fun `Ignores providers that don't match`() {
         val handler = Handler()
-        val foo     = handler.provide(Bar()).resolve<Foo>()
+        val foo     = handler.with(Bar()).resolve<Foo>()
         assertNull(foo)
     }
 
@@ -650,7 +652,7 @@ class HandlerTest {
         val bar  = SpecialBar()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers
-                .provide(view).provide(bar)
+                .with(view).with(bar)
                 .resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
         assertSame(view, instance.view)
@@ -693,7 +695,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers.infer
-                .provide(boo).provide(baz)
+                .with(boo).with(baz)
                 .resolve<Controller<Boo, Baz>>()
         assertNotNull(instance)
         assertSame(boo, instance.view)
@@ -713,7 +715,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers.infer
-                .provide(view).resolve<Controller<Screen, Bar>>()
+                .with(view).resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
         assertSame(view, instance.view)
     }
@@ -723,7 +725,7 @@ class HandlerTest {
         HandlerDescriptor.resetDescriptors()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers.infer
-                .provide(view).resolve<Controller<Screen, Bar>>()
+                .with(view).resolve<Controller<Screen, Bar>>()
         assertNull(instance)
     }
 
@@ -742,15 +744,15 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ControllerBase>()
         HandlerDescriptor.getDescriptor<Controller<*,*>>()
         HandlerDescriptor.getDescriptor<Application<*>>()
-        val app1 = handler.provide(view)
+        val app1 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
         assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
-        val app2 = handler.provide(view)
+        val app2 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
-        val app3 = handler.provide(view)
+        val app3 = handler.with(view)
                 .resolve<App<Controller<Screen, Bar>>>()
         assertSame(app1, app3)
     }
@@ -804,7 +806,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
-            val view = context.provide(Bar()).resolve<View<Bar>>()
+            val view = context.with(Bar()).resolve<View<Bar>>()
             assertNotNull(view)
             assertSame(view, context.resolve()!!)
         }
@@ -828,7 +830,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
-            val screen1 = context.provide(Foo()).resolve<ScreenModel<Foo>>()
+            val screen1 = context.with(Foo()).resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
             val screen2 = context.infer.resolve<ScreenModel<Bar>>()
             assertSame(screen1, context.resolve()!!)
@@ -842,7 +844,7 @@ class HandlerTest {
         HandlerDescriptor.getDescriptor<ScreenModelProvider>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
-            val screen1 = context.provide(Foo())
+            val screen1 = context.with(Foo())
                     .resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
             val screen2 = context.infer.resolve<ScreenModel<Bar>>()
@@ -904,12 +906,12 @@ class HandlerTest {
         assertNotNull(ctor)
         assertNull(ctor.foo)
         assertNull(ctor.bar)
-        val ctor1   = TypeHandlers.provide(Foo())
+        val ctor1   = TypeHandlers.with(Foo())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor1)
         assertNotNull(ctor1.foo)
         assertNull(ctor1.bar)
-        val ctor2   = TypeHandlers.provide(Foo()).provide(Bar())
+        val ctor2   = TypeHandlers.with(Foo()).with(Bar())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor2)
         assertNotNull(ctor2.foo)
@@ -932,34 +934,34 @@ class HandlerTest {
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,String>>()
+        val otherType = kTypeOf<HandlerTest.ExceptionBehavior<Boo,String>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
         assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(2, bindings.size)
-        assertEquals(typeOf<Boo>(), bindings.values.first())
-        assertEquals(typeOf<String>(), bindings.values.elementAt(1))
+        assertEquals(kTypeOf<Boo>(), bindings.values.first())
+        assertEquals(kTypeOf<String>(), bindings.values.elementAt(1))
     }
 
     @Test fun `Checks filter partial conformance`() {
         val openType = Filtering::class.createType(listOf(
-                KTypeProjection.contravariant(typeOf<Boo>()),
+                KTypeProjection.contravariant(kTypeOf<Boo>()),
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        val otherType = kTypeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
         assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(1, bindings.size)
-        assertEquals(typeOf<Unit>(), bindings.values.first())
+        assertEquals(TypeReference.UNIT_TYPE, bindings.values.first())
     }
 
     @Test fun `Rejects filter open conformance`() {
         val openType = Filtering::class.createType(listOf(
-                KTypeProjection.contravariant(typeOf<Bar>()),
+                KTypeProjection.contravariant(kTypeOf<Bar>()),
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = typeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        val otherType = kTypeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
         assertFalse(openType.checkOpenConformance(otherType))
     }
 
@@ -1039,7 +1041,7 @@ class HandlerTest {
 
         @Handles
         fun <T> handlesConcreteBaz(baz: BazT<Foo>, type: KType) {
-            assertEquals(typeOf<BazT<Foo>>(), type)
+            assertEquals(kTypeOf<BazT<Foo>>(), type)
             baz.tag = "handlesConcreteBaz"
             baz.stuff?.handled = 2
         }

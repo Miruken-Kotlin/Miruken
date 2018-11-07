@@ -1,10 +1,10 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
 import com.miruken.protocol.proxy
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.reflect.KType
 
 class BatchingHandler(
         handler: Handling,
@@ -26,7 +26,7 @@ class BatchingHandler(
 
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {

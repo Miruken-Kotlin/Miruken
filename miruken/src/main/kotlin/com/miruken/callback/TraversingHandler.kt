@@ -1,7 +1,7 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.graph.TraversingAxis
-import kotlin.reflect.KType
 
 class TraversingHandler(
         val handler: HandlingAxis,
@@ -10,7 +10,7 @@ class TraversingHandler(
 
     override fun handle(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling?
     ): HandleResult {
@@ -26,7 +26,7 @@ class TraversingHandler(
     override fun handle(
             axis:         TraversingAxis,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling?
     ): HandleResult =

@@ -1,10 +1,10 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.policy.rules.*
-import kotlin.reflect.KType
 
-abstract class CallbackPolicyBuilder(val callbackType: KType) {
+abstract class CallbackPolicyBuilder(val callbackType: TypeReference) {
     private val _rules = mutableListOf<MethodRuleBuilder>()
 
     val any = ReturnRule.Anything

@@ -1,22 +1,20 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.protocol.ProtocolAdapter
 import com.miruken.typeOf
 import java.lang.reflect.Method
-import kotlin.reflect.KType
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.jvm.jvmErasure
 
 interface Handling : ProtocolAdapter {
     fun handle(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean   = false,
             composer:     Handling? = null
     ): HandleResult
 
     override fun dispatch(
-            protocol: KType,
+            protocol: TypeReference,
             method:   Method,
             args:     Array<Any?>
     ): Any? {
@@ -25,19 +23,20 @@ interface Handling : ProtocolAdapter {
         val semantics = CallbackSemantics()
         handler.handle(semantics, true)
 
-        val protocolClass = protocol.jvmErasure
+        val protocolClass = protocol.type as Class<*>
+        val annotations   = protocolClass.annotations
 
         if (!semantics.isSpecified(CallbackOptions.DUCK) &&
-                protocolClass.findAnnotation<Duck>() != null) {
+                annotations.filterIsInstance<Duck>().isNotEmpty()) {
             options += CallbackOptions.DUCK
         }
 
         if (!semantics.isSpecified(CallbackOptions.STRICT) &&
-                protocolClass.findAnnotation<Strict>() != null) {
+                annotations.filterIsInstance<Strict>().isNotEmpty()) {
             options += CallbackOptions.STRICT
         }
 
-        if (protocolClass.findAnnotation<Resolving>() != null) {
+        if (annotations.filterIsInstance<Resolving>().isNotEmpty()) {
             if (semantics.isSpecified(CallbackOptions.BROADCAST)) {
                 options += CallbackOptions.BROADCAST
             }
@@ -56,8 +55,6 @@ interface Handling : ProtocolAdapter {
         } ?: handleMethod.result
     }
 }
-
-// TODO: create star projection type if callback class is subclass of T
 
 inline fun <reified T: Any> Handling.handle(
         callback: T,

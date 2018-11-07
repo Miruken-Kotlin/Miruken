@@ -1,11 +1,11 @@
 package com.miruken.callback.policy.rules
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.Argument
-import kotlin.reflect.KType
 
 class ExtractArgument<C, out R: Any>(
-        private val extractType: KType,
-        private val extract:    C.() -> R
+        private val extractType: TypeReference,
+        private val extract:     C.() -> R
 ): ArgumentRule {
 
     override fun matches(

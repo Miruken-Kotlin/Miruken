@@ -1,15 +1,15 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.rules.ExtractArgument
 import com.miruken.callback.policy.rules.ReturnsKey
 import com.miruken.callback.policy.rules.ReturnsUnit
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 @CalbackPolicyDsl
 class CovariantPolicyBuilder<C: Any>(
-        callbackType: KType,
+        callbackType: TypeReference,
         private val keyFunctor: (C) -> Any
 ) : CallbackPolicyBuilder(callbackType) {
     val key  = ReturnsKey
@@ -37,7 +37,7 @@ class CovariantKeyBuilder {
 @CalbackPolicyDsl
 class CovariantWithKeyBuilder<C: Any>(
         private val keyFunctor:   (C) -> Any,
-        private val callbackType: KType
+        private val callbackType: TypeReference
 ) {
     infix fun rules(
             define: CovariantPolicyBuilder<C>.() -> Unit

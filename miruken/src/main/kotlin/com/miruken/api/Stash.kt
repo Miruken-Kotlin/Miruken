@@ -5,7 +5,7 @@ import com.miruken.callback.Inquiry
 import com.miruken.callback.Provides
 import com.miruken.callback.notHandled
 import com.miruken.concurrent.Promise
-import com.miruken.typeOf
+import com.miruken.kTypeOf
 import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
@@ -34,13 +34,13 @@ class StashImpl(
 }
 
 inline fun <reified T: Any> Stash.get(): T? =
-        get(typeOf<T>()) as? T
+        get(kTypeOf<T>()) as? T
 
 inline fun <reified T: Any> Stash.put(data: T) =
-        put(typeOf<T>(), data)
+        put(kTypeOf<T>(), data)
 
 inline fun <reified T: Any> Stash.drop() =
-        drop(typeOf<T>())
+        drop(kTypeOf<T>())
 
 inline fun <reified T: Any> Stash.tryGet(): T? =
         try {

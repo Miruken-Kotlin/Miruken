@@ -7,6 +7,7 @@ import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName

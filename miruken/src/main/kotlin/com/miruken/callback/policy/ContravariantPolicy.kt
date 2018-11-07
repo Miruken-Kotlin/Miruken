@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.HandleResult
@@ -24,11 +25,13 @@ open class ContravariantPolicy(
             prototype.rules, prototype.filters, prototype.targetFunctor
     )
 
-    override fun getKey(callback: Any, callbackType: KType?): Any? =
+    override fun getKey(callback: Any, callbackType: TypeReference?): Any? =
             (callback as? Callback)?.getCallbackKey() ?:
             targetFunctor(callback)?.let {
                 when (it) {
-                    is KType, is KClass<*> -> it
+                    is KType,
+                    is KClass<*>,
+                    is TypeReference -> it
                     else -> it::class
                 }
             } ?: callbackType ?: callback::class

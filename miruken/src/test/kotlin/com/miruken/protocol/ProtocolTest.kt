@@ -1,8 +1,8 @@
 package com.miruken.protocol
 
+import com.miruken.TypeReference
 import org.junit.Test
 import java.lang.reflect.Method
-import kotlin.reflect.KType
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -45,7 +45,7 @@ class ProtocolTest {
 
     class PassThroughAdapter(private val target: Any): ProtocolAdapter {
         override fun dispatch(
-                protocol: KType,
+                protocol: TypeReference,
                 method:   Method,
                 args:     Array<Any?>
         ): Any? = method.invoke(target, *args)

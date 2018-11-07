@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import kotlin.reflect.KType
+import com.miruken.TypeReference
 
 class CascadeHandler(handlerA: Any, handlerB: Any) : Handler() {
     private val _handlerA = handlerA.toHandler()
@@ -8,7 +8,7 @@ class CascadeHandler(handlerA: Any, handlerB: Any) : Handler() {
 
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = super.handleCallback(callback, callbackType, greedy, composer)

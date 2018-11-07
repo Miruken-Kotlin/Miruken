@@ -1,5 +1,6 @@
 package com.miruken.map
 
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import kotlin.reflect.KType
@@ -8,10 +9,10 @@ import kotlin.reflect.full.createType
 
 class Mapping(
         val source:     Any,
-        val targetType: KType,
-        val sourceType: KType? = null,
-        val target:     Any?   = null,
-        val format:     Any?   = null
+        val targetType: TypeReference,
+        val sourceType: TypeReference? = null,
+        val target:     Any?              = null,
+        val format:     Any?              = null
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
@@ -26,10 +27,10 @@ class Mapping(
     override fun getCallbackKey() =
             sourceType?.let { targetType to it }
 
-    override val resultType: KType? = targetType
+    override val resultType: KType? = targetType.kotlinType
             .takeIf { !wantsAsync && !isAsync }
             ?: Promise::class.createType(listOf(
-                    KTypeProjection.invariant(targetType)))
+                    KTypeProjection.invariant(targetType.kotlinType)))
 
     override var result: Any?
         get() {
@@ -56,7 +57,7 @@ class Mapping(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = MapsPolicy.dispatch(handler, this,
@@ -66,10 +67,10 @@ class Mapping(
 
 fun Handling.map(
         source:     Any,
-        targetType: KType,
-        sourceType: KType? = null,
-        target:     Any?   = null,
-        format:     Any?   = null
+        targetType: TypeReference,
+        sourceType: TypeReference? = null,
+        target:     Any?              = null,
+        format:     Any?              = null
 ): Any? {
     val mapping = Mapping(source, targetType,
             sourceType, target, format)

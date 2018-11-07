@@ -1,5 +1,6 @@
 package com.miruken.api.cache
 
+import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.send
 import com.miruken.callback.Handler
@@ -10,7 +11,6 @@ import com.miruken.concurrent.PromiseState
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KType
 
 class CachedHandler : Handler() {
     private val _cache = ConcurrentHashMap<NamedType, CacheResponse>()
@@ -59,7 +59,7 @@ class CachedHandler : Handler() {
 
     private fun refreshResponse(
             request:     NamedType,
-            requestType: KType,
+            requestType: TypeReference,
             composer:    Handling
     ) = CacheResponse(
         composer.send(request, requestType),

@@ -1,12 +1,12 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.CallableDispatch
-import kotlin.reflect.KType
 
 open class Resolution(
         key:              Any,
         val callback:     Any,
-        val callbackType: KType?
+        val callbackType: TypeReference?
 ) : Inquiry(key, true, callback as? Inquiry),
         InferringCallback, FilteringCallback,
         DispatchingCallbackGuard {
@@ -35,7 +35,7 @@ open class Resolution(
     }
 
     companion object {
-        fun getResolving(callback: Any, callbackType: KType?) =
+        fun getResolving(callback: Any, callbackType: TypeReference?) =
                 Inference(callback, callbackType)
     }
 }

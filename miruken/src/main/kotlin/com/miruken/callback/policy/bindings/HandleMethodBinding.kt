@@ -93,7 +93,7 @@ class HandleMethodBinding(
             composer:     Handling
     ): List<Pair<Filtering<Any,Any?>, FilteringProvider>>? {
         val filterType = Filtering::class.createType(listOf(
-                KTypeProjection.invariant(HandleMethod.TYPE),
+                KTypeProjection.invariant(HandleMethod.TYPE.kotlinType),
                 KTypeProjection.invariant(handleMethod.resultType)))
         return composer.getOrderedFilters(
                 filterType, this, sequenceOf(

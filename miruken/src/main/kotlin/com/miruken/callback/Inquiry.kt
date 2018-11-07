@@ -29,6 +29,7 @@ open class Inquiry(
         when (key) {
             is KType -> key
             is KClass<*> -> key.starProjectedType
+            is TypeReference -> key.kotlinType
             else -> TypeReference.ANY_STAR
         }
     }
@@ -68,6 +69,12 @@ open class Inquiry(
                 if (key.isInterface || key.isPrimitive ||
                         Modifier.isAbstract(key.modifiers)) null
                 else key.newInstance()
+            is TypeReference -> {
+                val clazz = key.type as Class<*>
+                if (clazz.isInterface || clazz.isPrimitive ||
+                        Modifier.isAbstract(clazz.modifiers)) null
+                else clazz.newInstance()
+            }
             else -> null
         }
     }
@@ -184,13 +191,14 @@ open class Inquiry(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
         when (key) {
             is KType -> (key.classifier as? KClass<*>)?.objectInstance
             is KClass<*> -> key.objectInstance
+            is TypeReference -> (key.type as? Class<*>)?.kotlin?.objectInstance
             else -> null
         }?.also {
             if (include(it, true, greedy, composer)) {

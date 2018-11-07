@@ -1,12 +1,13 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
 import kotlin.reflect.KType
 
 open class Composition(
         callback:     Any?   = null,
-        callbackType: KType? = null
+        callbackType: TypeReference? = null
 ) : Trampoline(callback, callbackType),
         Callback, InferringCallback,
         FilteringCallback, BatchingCallback {
@@ -44,8 +45,8 @@ open class Composition(
 
         fun get(callback: Any, key: Any) =
                 (callback as? Composition)?.let { c ->
-                    c.callback?.takeIf {
-                        isCompatibleWith(key, c.callbackType ?: it)
+                    c.callback?.takeIf { isCompatibleWith(
+                            key, c.callbackType ?: it)
                     }
             }
     }

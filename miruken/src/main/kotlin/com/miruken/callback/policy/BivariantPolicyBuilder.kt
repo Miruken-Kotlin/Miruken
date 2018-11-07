@@ -1,17 +1,17 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.rules.ExtractArgument
 import com.miruken.callback.policy.rules.ReturnsKey
 import com.miruken.callback.policy.rules.ReturnsUnit
 import com.miruken.callback.policy.rules.TargetArgument
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 @CalbackPolicyDsl
 class BivariantPolicyBuilder<C: Any, out S: Any>(
-        callbackType:  KType,
-        targetType:    KType,
+        callbackType:  TypeReference,
+        targetType:    TypeReference,
         targetFunctor: C.() -> S,
         private val output: CovariantPolicy,
         private val input:  ContravariantPolicy
@@ -41,7 +41,7 @@ class BivariantKeyBuilder {
 @CalbackPolicyDsl
 class BivariantWithKeyBuilder<C: Any>(
         val keyFunctor:   (C) -> Any,
-        val callbackType: KType
+        val callbackType: TypeReference
 ) {
     inline infix fun <reified S: Any> target(
             noinline targetFunctor: C.() -> S
@@ -53,8 +53,8 @@ class BivariantWithKeyBuilder<C: Any>(
 class BivariantWithKeyTargetBuilder<C: Any, out S: Any>(
         private val keyFunctor:    (C) -> Any,
         private val targetFunctor: C.() -> S,
-        private val callbackType:  KType,
-        private val targetType:    KType
+        private val callbackType:  TypeReference,
+        private val targetType:    TypeReference
 ) {
     infix fun rules(
             define: BivariantPolicyBuilder<C,S>.() -> Unit

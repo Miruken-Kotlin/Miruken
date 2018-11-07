@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.TypedValue
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.bindings.HandleMethodBinding
@@ -7,14 +8,14 @@ import com.miruken.runtime.isCompatibleWith
 import com.miruken.runtime.isTopLevelInterfaceOf
 import com.miruken.runtime.matchMethod
 import com.miruken.toKType
+import com.miruken.typeOf
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.full.createType
 
 class HandleMethod(
-        val protocol:  KType,
+        val protocol:  TypeReference,
         val method:    Method,
         val arguments: Array<Any?>,
         val semantics: CallbackSemantics = CallbackSemantics.NONE
@@ -30,7 +31,7 @@ class HandleMethod(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = getTarget(handler)?.let { target ->
@@ -47,9 +48,10 @@ class HandleMethod(
         return when {
             semantics.hasOption(CallbackOptions.STRICT) -> {
                 typedTarget?.takeIf {
-                    protocol.isTopLevelInterfaceOf(it.type)
+                    protocol.kotlinType.isTopLevelInterfaceOf(
+                            it.type.kotlinType)
                 }?.value ?: target.takeIf {
-                    protocol.isTopLevelInterfaceOf(target::class)
+                    protocol.kotlinType.isTopLevelInterfaceOf(target::class)
                 }
             }
             semantics.hasOption(CallbackOptions.DUCK) -> {
@@ -66,7 +68,7 @@ class HandleMethod(
     }
 
     companion object {
-        val TYPE = HandleMethod::class.createType()
+        val TYPE = typeOf<HandleMethod>()
 
         private val BINDINGS = ConcurrentHashMap<
                 Pair<Method, KClass<*>>, HandleMethodBinding?>()

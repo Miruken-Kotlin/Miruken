@@ -1,14 +1,14 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.graph.TraversingAxis
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 interface HandlingAxis : Handling {
     fun handle(
             axis:         TraversingAxis,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean = false,
             composer:     Handling? = null
     ) : HandleResult

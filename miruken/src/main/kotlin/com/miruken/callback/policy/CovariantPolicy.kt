@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.policy.rules.MethodRule
@@ -20,7 +21,7 @@ open class CovariantPolicy(
             prototype.rules, prototype.filters, prototype.keyFunctor
     )
 
-    override fun getKey(callback: Any, callbackType: KType?): Any? =
+    override fun getKey(callback: Any, callbackType: TypeReference?): Any? =
             (callback as? Callback)?.getCallbackKey()
                     ?: keyFunctor(callback)
                     ?: callbackType
@@ -31,7 +32,11 @@ open class CovariantPolicy(
     ) = available.filter { key != it && isCompatibleWith(key, it) }
 
     override fun getResultType(callback: Any) =
-            keyFunctor(callback) as? KType?
+            when (val key = keyFunctor(callback)) {
+                is KType -> key
+                is TypeReference -> key.kotlinType
+                else -> null
+            }
 
     override fun compare(o1: Any?, o2: Any?) = when {
         o1 == o2 -> 0

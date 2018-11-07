@@ -1,11 +1,11 @@
 package com.miruken.api
 
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.context.Contextual
 import com.miruken.context.requireContext
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 inline fun <reified T: NamedType> Handling.send(request: T) =
         send(request, typeOf<T>())
@@ -15,7 +15,7 @@ inline fun <reified T: NamedType> Contextual.send(request: T) =
 
 fun Handling.send(
         request:     NamedType,
-        requestType: KType?
+        requestType: TypeReference?
 ): Promise<*> {
     val command = Command(request, requestType).apply {
         wantsAsync = true
@@ -31,7 +31,7 @@ fun Handling.send(
 
 fun Contextual.send(
         request:     NamedType,
-        requestType: KType?
+        requestType: TypeReference?
 ) = requireContext().send(request, requestType)
 
 inline fun <TResp: NamedType?, reified T: Request<TResp>>
@@ -43,7 +43,7 @@ inline fun <TResp: NamedType?, reified T: Request<TResp>>
 
 fun <TResp: NamedType?> Handling.send(
         request:     Request<TResp>,
-        requestType: KType?
+        requestType: TypeReference?
 ): Promise<TResp> {
     val command = Command(request, requestType).apply {
         wantsAsync = true
@@ -60,7 +60,7 @@ fun <TResp: NamedType?> Handling.send(
 
 fun <TResp: NamedType?> Contextual.send(
         request:     Request<TResp>,
-        requestType: KType?
+        requestType: TypeReference?
 ) = requireContext().send(request, requestType)
 
 inline fun <reified T: NamedType> Handling.publish(notification: T) =
@@ -71,7 +71,7 @@ inline fun <reified T: NamedType> Contextual.publish(notification: T) =
 
 fun Handling.publish(
         notification:     NamedType,
-        notificationType: KType
+        notificationType: TypeReference?
 ): Promise<*> {
     val command = Command(notification, notificationType, true).apply {
         wantsAsync = true
@@ -87,5 +87,5 @@ fun Handling.publish(
 
 fun Contextual.publish(
         notification:     NamedType,
-        notificationType: KType
+        notificationType: TypeReference?
 ) = requireContext().publish(notification, notificationType)

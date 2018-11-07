@@ -1,12 +1,12 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.Callback
 import com.miruken.callback.FilteringProvider
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.callback.policy.rules.MethodRule
 import com.miruken.runtime.isCompatibleWith
-import kotlin.reflect.KType
 
 open class BivariantPolicy(
         rules:   List<MethodRule>,
@@ -32,7 +32,7 @@ open class BivariantPolicy(
             outKey to inKey else null
     }
 
-    override fun getKey(callback: Any, callbackType: KType?): Any? =
+    override fun getKey(callback: Any, callbackType: TypeReference?): Any? =
             (callback as? Callback)?.getCallbackKey()
                     ?: output.getKey(callback, callbackType) to
                        input.getKey(callback, callbackType)

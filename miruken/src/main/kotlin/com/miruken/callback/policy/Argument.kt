@@ -2,6 +2,7 @@ package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.ConstraintBuilder
 import com.miruken.callback.policy.bindings.ConstraintProvider
@@ -39,9 +40,9 @@ class Argument(val parameter: KParameter) : KAnnotatedElement {
         }
     }
 
-    fun satisfies(type: KType) =
+    fun satisfies(type: TypeReference) =
         parameterType.classifier != Nothing::class &&
-            parameterType.isSubtypeOf(type.withNullability(true))
+            parameterType.isSubtypeOf(type.kotlinType.withNullability(true))
 
     fun getInquiry(
             parent:       Inquiry? = null,

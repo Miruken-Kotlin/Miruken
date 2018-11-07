@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.CallbackPolicy
 import kotlin.reflect.KType
@@ -43,7 +44,7 @@ interface DispatchingCallback {
 
     fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult

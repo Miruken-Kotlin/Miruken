@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
@@ -50,7 +51,7 @@ class HandlerDescriptor private constructor(
             policy:       CallbackPolicy,
             receiver:     Any,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock? = null
@@ -88,7 +89,7 @@ class HandlerDescriptor private constructor(
             members:      Collection<PolicyMemberBinding>,
             receiver:     Any,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock?
@@ -170,25 +171,25 @@ class HandlerDescriptor private constructor(
         fun getInstanceHandlers(
                 policy:       CallbackPolicy,
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ) = getHandlerTypes(policy, callback, callbackType, true, false)
 
         fun getTypeHandlers(
                 policy:       CallbackPolicy,
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ) = getHandlerTypes(policy, callback, callbackType, false, true)
 
         fun getCallbackHandlers(
                 policy:       CallbackPolicy,
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ) = getHandlerTypes(policy, callback, callbackType, true, true)
 
         private fun getHandlerTypes(
                 policy:       CallbackPolicy,
                 callback:     Any,
-                callbackType: KType?  = null,
+                callbackType: TypeReference? = null,
                 instances:    Boolean = false,
                 types:        Boolean = false
         ) = DESCRIPTORS.values.mapNotNull { handler ->

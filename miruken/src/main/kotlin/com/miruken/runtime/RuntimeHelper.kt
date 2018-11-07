@@ -57,6 +57,8 @@ fun isCompatibleWith(
                         (leftSide.arguments.isEmpty() ||
                                 leftSide.isOpenGeneric)
             }
+            is TypeReference ->
+                isCompatibleWith(leftSide, rightSide.kotlinType)
             else -> {
                 val rightClass = rightSide::class
                 leftSide.jvmErasure.isSuperclassOf(rightClass) &&
@@ -77,6 +79,8 @@ fun isCompatibleWith(
                         rightSide.typeParameters.isEmpty() &&
                         leftSide.java.isAssignableFrom(rightSide)
             }
+            is TypeReference ->
+                isCompatibleWith(leftSide, rightSide.kotlinType)
             else -> {
                 val rightClass = rightSide::class
                 leftSide.typeParameters.isEmpty() &&
@@ -95,11 +99,15 @@ fun isCompatibleWith(
                 leftSide == rightSide ||
                         leftSide.isAssignableFrom(rightSide)
             }
+            is TypeReference ->
+                isCompatibleWith(leftSide, rightSide.kotlinType)
             else -> {
                 val rightClass = rightSide::class
                 leftSide.isAssignableFrom(rightClass.java)
             }
         }
+        is TypeReference ->
+            isCompatibleWith(leftSide.kotlinType, rightSide)
         else -> false
     }
 }
@@ -257,7 +265,7 @@ fun KType.isTopLevelInterfaceOf(type: KType): Boolean =
         type.allTopLevelInterfaces.contains(this)
 
 inline fun <reified T: Any> KType.isTopLevelInterfaceOf() =
-        typeOf<T>().allTopLevelInterfaces.contains(this)
+        typeOf<T>().kotlinType.allTopLevelInterfaces.contains(this)
 
 fun KType.isTopLevelInterfaceOf(clazz: KClass<*>) =
         clazz.allTopLevelInterfaces.contains(this)

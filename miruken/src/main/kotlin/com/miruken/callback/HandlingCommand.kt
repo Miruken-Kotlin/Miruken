@@ -1,8 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.command(callback: T) =
@@ -10,7 +10,7 @@ inline fun <reified T: Any> Handling.command(callback: T) =
 
 fun Handling.command(
         callback:     Any,
-        callbackType: KType
+        callbackType: TypeReference
 ): Any? {
     val command = Command(callback, callbackType)
     handle(command) failure {
@@ -26,7 +26,7 @@ inline fun <reified T: Any> Handling.commandAsync(callback: T) =
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAsync(
         callback:     Any,
-        callbackType: KType
+        callbackType: TypeReference
 ): Promise<Any> {
     val command = Command(callback, callbackType).apply {
         wantsAsync = true
@@ -47,7 +47,7 @@ inline fun <reified T: Any> Handling.commandAll(callback: T) =
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAll(
         callback:     Any,
-        callbackType: KType
+        callbackType: TypeReference
 ): List<Any> {
     val command = Command(callback, callbackType, true)
     handle(command, true) failure {
@@ -63,7 +63,7 @@ inline fun <reified T: Any> Handling.commandAllAsync(callback: T) =
 @Suppress("UNCHECKED_CAST")
 fun Handling.commandAllAsync(
         callback:     Any,
-        callbackType: KType
+        callbackType: TypeReference
 ): Promise<List<Any>> {
     val command = Command(callback, callbackType, true).apply {
         wantsAsync = true

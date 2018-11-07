@@ -1,5 +1,6 @@
 package com.miruken.runtime
 
+import com.miruken.kTypeOf
 import com.miruken.typeOf
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -9,25 +10,25 @@ import kotlin.test.assertTrue
 
 class RuntimeHelpersTest {
     @Test fun `Can check KType for Unit`() {
-        assertTrue(typeOf<Unit>().isUnit)
+        assertTrue(kTypeOf<Unit>().isUnit)
     }
 
     @Test fun `Non generic types are closed`() {
-        assertFalse(typeOf<String>().isOpenGeneric)
+        assertFalse(kTypeOf<String>().isOpenGeneric)
     }
 
     @Test fun `Determines if generic type is closed`() {
-        assertFalse(typeOf<List<String>>().isOpenGeneric)
+        assertFalse(kTypeOf<List<String>>().isOpenGeneric)
     }
 
     @Test fun `Obtains component type of collection`() {
-        val componentType = typeOf<List<Int>>().componentType
-        assertEquals(typeOf<Int>(), componentType)
+        val componentType = kTypeOf<List<Int>>().componentType
+        assertEquals(kTypeOf<Int>(), componentType)
     }
 
     @Test fun `Obtains component type of array`() {
-        val componentType = typeOf<Array<String>>().componentType
-        assertEquals(typeOf<String>(), componentType)
+        val componentType = kTypeOf<Array<String>>().componentType
+        assertEquals(kTypeOf<String>(), componentType)
     }
 
     @Test fun `Converts untyped collection into typed array`() {
@@ -48,36 +49,36 @@ class RuntimeHelpersTest {
     }
 
     @Test fun `gets all interfaces of type`() {
-        val allInterfaces = typeOf<BazImpl>().allInterfaces
+        val allInterfaces = kTypeOf<BazImpl>().allInterfaces
         assertEquals(7, allInterfaces.size)
         assertTrue(allInterfaces.containsAll(listOf(
-                typeOf<Baz>(), typeOf<Foo>(), typeOf<Bar>(),
-                typeOf<Boo>(), typeOf<List<String>>(),
-                typeOf<Collection<String>>(), typeOf<Iterable<String>>()
+                kTypeOf<Baz>(), kTypeOf<Foo>(), kTypeOf<Bar>(),
+                kTypeOf<Boo>(), kTypeOf<List<String>>(),
+                kTypeOf<Collection<String>>(), kTypeOf<Iterable<String>>()
         )))
     }
 
     @Test fun `gets all top-level interfaces of type`() {
-        var topLevelInterfaces = typeOf<Baz>().allTopLevelInterfaces
+        var topLevelInterfaces = kTypeOf<Baz>().allTopLevelInterfaces
         assertEquals(2, topLevelInterfaces.size)
         assertTrue(topLevelInterfaces.containsAll(listOf(
-                typeOf<Bar>(), typeOf<Foo>()
+                kTypeOf<Bar>(), kTypeOf<Foo>()
         )))
-        topLevelInterfaces = typeOf<BazImpl>().allTopLevelInterfaces
+        topLevelInterfaces = kTypeOf<BazImpl>().allTopLevelInterfaces
         assertEquals(3, topLevelInterfaces.size)
         assertTrue(topLevelInterfaces.containsAll(listOf(
-                typeOf<Baz>(), typeOf<Boo>(), typeOf<List<String>>()
+                kTypeOf<Baz>(), kTypeOf<Boo>(), kTypeOf<List<String>>()
         )))
     }
 
     @Test fun `Determines if top-level interface`() {
-        assertFalse(typeOf<Bar>().isTopLevelInterfaceOf<Bar>())
-        assertTrue(typeOf<Bar>().isTopLevelInterfaceOf<BarImpl>())
-        assertTrue(typeOf<Baz>().isTopLevelInterfaceOf<BazImpl>())
-        assertTrue(typeOf<Boo>().isTopLevelInterfaceOf<BazImpl>())
-        assertFalse(typeOf<Bar>().isTopLevelInterfaceOf<BazImpl>())
-        assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BarImpl>())
-        assertFalse(typeOf<Foo>().isTopLevelInterfaceOf<BazImpl>())
+        assertFalse(kTypeOf<Bar>().isTopLevelInterfaceOf<Bar>())
+        assertTrue(kTypeOf<Bar>().isTopLevelInterfaceOf<BarImpl>())
+        assertTrue(kTypeOf<Baz>().isTopLevelInterfaceOf<BazImpl>())
+        assertTrue(kTypeOf<Boo>().isTopLevelInterfaceOf<BazImpl>())
+        assertFalse(kTypeOf<Bar>().isTopLevelInterfaceOf<BazImpl>())
+        assertFalse(kTypeOf<Foo>().isTopLevelInterfaceOf<BarImpl>())
+        assertFalse(kTypeOf<Foo>().isTopLevelInterfaceOf<BazImpl>())
         //var x = typeOf<BamImpl<Int>>().allTopLevelInterfaces
         //assertTrue(typeOf<Bam<Int>>().isTopLevelInterfaceOf<BamImpl<Int>>())
     }

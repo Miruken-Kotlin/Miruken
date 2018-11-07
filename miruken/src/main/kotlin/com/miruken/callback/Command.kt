@@ -10,7 +10,7 @@ import kotlin.reflect.full.createType
 
 open class Command(
         val callback:     Any,
-        val callbackType: KType?,
+        val callbackType: TypeReference?,
         val many:         Boolean = false
 ) : Callback, AsyncCallback,
         FilteringCallback, BatchingCallback,
@@ -93,7 +93,7 @@ open class Command(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {

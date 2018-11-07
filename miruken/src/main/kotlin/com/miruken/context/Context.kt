@@ -1,10 +1,10 @@
 package com.miruken.context
 
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.event.Event
 import com.miruken.graph.Traversing
 import com.miruken.graph.TraversingAxis
-import kotlin.reflect.KType
 
 enum class ContextState {
     ACTIVE,
@@ -51,7 +51,7 @@ open class Context() :
 
     override fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
@@ -66,7 +66,7 @@ open class Context() :
     override fun handle(
             axis:         TraversingAxis,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling?
     ): HandleResult {

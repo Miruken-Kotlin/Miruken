@@ -1,11 +1,12 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.CallableDispatch
 import kotlin.reflect.KType
 
 open class Trampoline(
-        val callback: Any?,
-        val callbackType: KType? = null
+        val callback:     Any?,
+        val callbackType: TypeReference? = null
 ) : DispatchingCallback, DispatchingCallbackGuard {
     override val policy get() =
         (callback as? DispatchingCallback)?.policy
@@ -18,7 +19,7 @@ open class Trampoline(
 
     override fun dispatch(
             handler:      Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = callback?.let {

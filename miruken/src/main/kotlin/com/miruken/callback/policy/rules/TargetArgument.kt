@@ -1,19 +1,19 @@
 package com.miruken.callback.policy.rules
 
 import com.miruken.TypeFlags
+import com.miruken.TypeReference
 import com.miruken.callback.policy.Argument
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
-import kotlin.reflect.KType
 
 class TargetArgument<in C, out R: Any>(
-        private val callbackType: KType,
-        private val targetType:   KType,
+        private val callbackType: TypeReference,
+        private val targetType:   TypeReference,
         private val target:       (C) -> R
 ) : ArgumentRule {
 
     override fun matches(
             argument: Argument,
-            context: RuleContext
+            context:  RuleContext
     ) = !argument.satisfies(callbackType) &&  // CallbackArgument matches
                     argument.satisfies(targetType)
 

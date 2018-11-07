@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.GivenTypeReference
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
 import com.miruken.protocol.proxy
@@ -21,5 +22,10 @@ object ProxyKeyResolver : KeyResolver() {
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling
-    ) = handler.proxy(inquiry.key as KType)
+    ): Any {
+        val typeReference = (inquiry.key as? KType)?.let {
+            GivenTypeReference(it)
+        } ?: error("Expected inquiry.key to be a KType")
+        return handler.proxy(typeReference)
+    }
 }

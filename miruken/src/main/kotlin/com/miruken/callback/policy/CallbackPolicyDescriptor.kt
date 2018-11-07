@@ -1,10 +1,10 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.addSorted
 import com.miruken.callback.StringKey
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
@@ -40,10 +40,11 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
 
     fun getInvariantMembers(
             callback:     Any,
-            callbackType: KType?
+            callbackType: TypeReference?
     ) = policy.getKey(callback, callbackType)?.let { key ->
         when (key) {
                 is KType -> _typed[key]
+                is TypeReference -> _typed[key.kotlinType]
                 is String -> _indexed[key] ?: _indexed[StringKey(key)]
                 else -> _indexed[key]
             }?.filter { it.approve(callback) }
@@ -51,15 +52,21 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
 
     fun getCompatibleMembers(
             callback:     Any,
-            callbackType: KType?
+            callbackType: TypeReference?
     ) = policy.getKey(callback, callbackType)?.let {
             _compatible.getOrPut(it) { inferCompatibleMembers(it) }
         }?.filter { it.approve(callback) } ?: emptyList()
 
+    // TODO:  For now all keys will be KType until we transition to TypeReference
+
     private fun inferCompatibleMembers(key: Any) =
             when (key) {
-                is KType, is KClass<*>, is Class<*> ->
+                is KType ->
                     policy.getCompatibleKeys(key, _typed.keys).flatMap {
+                        _typed[it] ?: emptyList<PolicyMemberBinding>()
+                    }
+                is TypeReference ->
+                    policy.getCompatibleKeys(key.kotlinType, _typed.keys).flatMap {
                         _typed[it] ?: emptyList<PolicyMemberBinding>()
                     }
                 else ->

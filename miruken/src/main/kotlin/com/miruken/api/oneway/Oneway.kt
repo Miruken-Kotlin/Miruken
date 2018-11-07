@@ -1,13 +1,13 @@
 package com.miruken.api.oneway
 
+import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.Request
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 data class Oneway<TResp: NamedType>(
         val request:     Request<TResp>,
-        val requestType: KType,
+        val requestType: TypeReference,
         override val typeName: String =
                 Oneway.typeName.format(request.typeName)
 ) : NamedType {

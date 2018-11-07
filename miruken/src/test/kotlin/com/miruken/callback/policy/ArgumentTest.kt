@@ -1,12 +1,9 @@
 package com.miruken.callback.policy
 
-import com.miruken.TypeFlags
-import com.miruken.TypeReference
+import com.miruken.*
 import com.miruken.callback.TestHandler
 import com.miruken.concurrent.Promise
-import com.miruken.getMethod
 import com.miruken.runtime.isCompatibleWith
-import com.miruken.typeOf
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.withNullability
 import kotlin.test.*
@@ -22,7 +19,7 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Foo>(), argument.parameterType)
+        assertEquals(kTypeOf<Foo>(), argument.parameterType)
         assertEquals(argument.parameterType, argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
@@ -38,7 +35,7 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Int>(), argument.parameterType)
+        assertEquals(kTypeOf<Int>(), argument.parameterType)
         assertEquals(argument.parameterType, argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
@@ -54,7 +51,7 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Boo>(), argument.parameterType)
+        assertEquals(kTypeOf<Boo>(), argument.parameterType)
         assertEquals(argument.parameterType, argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
@@ -69,7 +66,7 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Foo>().withNullability(true), argument.parameterType)
+        assertEquals(kTypeOf<Foo>().withNullability(true), argument.parameterType)
         assertEquals(argument.parameterType.withNullability(false), argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
@@ -83,8 +80,8 @@ class ArgumentTest {
         val promise  = handle!!.parameters.component2()
         val argument = Argument(promise)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Promise<Foo>>(), argument.parameterType)
-        assertEquals(typeOf<Foo>(), argument.typeInfo.logicalType)
+        assertEquals(kTypeOf<Promise<Foo>>(), argument.parameterType)
+        assertEquals(kTypeOf<Foo>(), argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertTrue(flags.has(TypeFlags.PROMISE))
@@ -97,7 +94,7 @@ class ArgumentTest {
         val promise  = handle!!.parameters.component2()
         val argument = Argument(promise)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Foo>().withNullability(true),
+        assertEquals(kTypeOf<Foo>().withNullability(true),
                 argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
@@ -111,9 +108,9 @@ class ArgumentTest {
         val list     = handle!!.parameters.component2()
         val argument = Argument(list)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<List<Foo>>(), argument.parameterType)
-        assertEquals(typeOf<List<Foo>>(), argument.typeInfo.logicalType)
-        assertEquals(typeOf<Foo>(), argument.typeInfo.componentType)
+        assertEquals(kTypeOf<List<Foo>>(), argument.parameterType)
+        assertEquals(kTypeOf<List<Foo>>(), argument.typeInfo.logicalType)
+        assertEquals(kTypeOf<Foo>(), argument.typeInfo.componentType)
         assertTrue(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -126,8 +123,8 @@ class ArgumentTest {
         val lazy     = handle!!.parameters.component2()
         val argument = Argument(lazy)
         val flags    = argument.typeInfo.flags
-        assertEquals(typeOf<Lazy<Foo>>(), argument.parameterType)
-        assertEquals(typeOf<Foo>(), argument.typeInfo.logicalType)
+        assertEquals(kTypeOf<Lazy<Foo>>(), argument.parameterType)
+        assertEquals(kTypeOf<Foo>(), argument.typeInfo.logicalType)
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertTrue(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -140,10 +137,10 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Foo>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), argument.parameterType))
         val classifier = argument.typeInfo.logicalType.classifier as? KTypeParameter
         assertNotNull(classifier!!)
-        assertTrue(classifier.upperBounds.contains(typeOf<Foo>()))
+        assertTrue(classifier.upperBounds.contains(kTypeOf<Foo>()))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -156,10 +153,10 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Foo>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), argument.parameterType))
         val classifier = argument.typeInfo.logicalType.classifier as? KTypeParameter
         assertNotNull(classifier!!)
-        assertTrue(classifier.upperBounds.contains(typeOf<Foo>()))
+        assertTrue(classifier.upperBounds.contains(kTypeOf<Foo>()))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -172,8 +169,8 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Promise<Foo>>(), argument.parameterType))
-        assertTrue(isCompatibleWith(typeOf<Foo>(), argument.typeInfo.logicalType))
+        assertTrue(isCompatibleWith(kTypeOf<Promise<Foo>>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), argument.typeInfo.logicalType))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertTrue(flags.has(TypeFlags.PROMISE))
@@ -186,9 +183,9 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Collection<Foo>>(), argument.parameterType))
-        assertTrue(isCompatibleWith(typeOf<Collection<Foo>>(), argument.typeInfo.logicalType))
-        assertTrue(isCompatibleWith(typeOf<Foo>(), argument.typeInfo.componentType))
+        assertTrue(isCompatibleWith(kTypeOf<Collection<Foo>>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Collection<Foo>>(), argument.typeInfo.logicalType))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), argument.typeInfo.componentType))
         assertTrue(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -201,8 +198,8 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Lazy<Foo>>(), argument.parameterType))
-        assertTrue(isCompatibleWith(typeOf<Foo>(), argument.typeInfo.logicalType))
+        assertTrue(isCompatibleWith(kTypeOf<Lazy<Foo>>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), argument.typeInfo.logicalType))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertTrue(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -215,8 +212,8 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Function0<Foo>>(), argument.parameterType))
-        assertTrue(isCompatibleWith(typeOf<Foo>(), argument.typeInfo.logicalType))
+        assertTrue(isCompatibleWith(kTypeOf<Function0<Foo>>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), argument.typeInfo.logicalType))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertTrue(flags.has(TypeFlags.FUNC))
         assertFalse(flags.has(TypeFlags.PROMISE))
@@ -229,8 +226,8 @@ class ArgumentTest {
         val callback = handle!!.parameters.component2()
         val argument = Argument(callback)
         val flags    = argument.typeInfo.flags
-        assertTrue(isCompatibleWith(typeOf<Any>(), argument.parameterType))
-        assertTrue(isCompatibleWith(typeOf<Any>(), argument.typeInfo.logicalType))
+        assertTrue(isCompatibleWith(kTypeOf<Any>(), argument.parameterType))
+        assertTrue(isCompatibleWith(kTypeOf<Any>(), argument.typeInfo.logicalType))
         assertFalse(flags.has(TypeFlags.COLLECTION))
         assertFalse(flags.has(TypeFlags.LAZY))
         assertFalse(flags.has(TypeFlags.PROMISE))

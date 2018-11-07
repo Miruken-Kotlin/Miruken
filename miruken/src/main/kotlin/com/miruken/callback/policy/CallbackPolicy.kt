@@ -1,5 +1,6 @@
 package com.miruken.callback.policy
 
+import com.miruken.TypeReference
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
@@ -26,7 +27,7 @@ abstract class CallbackPolicy(
     open fun createKey(bindingInfo: PolicyMemberBindingInfo) =
             bindingInfo.inKey ?: bindingInfo.outKey
 
-    abstract fun getKey(callback: Any, callbackType: KType?): Any?
+    abstract fun getKey(callback: Any, callbackType: TypeReference?): Any?
 
     abstract fun getCompatibleKeys(
             key:       Any,
@@ -51,7 +52,7 @@ abstract class CallbackPolicy(
     fun dispatch(
             handler:      Any,
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock? = null
@@ -70,6 +71,7 @@ abstract class CallbackPolicy(
             is KType -> o2.arguments.size - o1.arguments.size
             is KClass<*> -> o2.typeParameters.size - o1.arguments.size
             is Class<*> -> o2.typeParameters.size - o1.arguments.size
+            is TypeReference -> (o2.type as Class<*>).typeParameters.size - o1.arguments.size
             else -> 0
         }
         is KClass<*> -> when (o2) {
@@ -82,6 +84,16 @@ abstract class CallbackPolicy(
             is KType -> o2.arguments.size - o1.typeParameters.size
             is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
             else -> 0
+        }
+        is TypeReference -> {
+            val clazz = o1.type as Class<*>
+            when (o2) {
+                is KType -> o2.arguments.size - clazz.typeParameters.size
+                is KClass<*> -> o2.typeParameters.size - clazz.typeParameters.size
+                is Class<*> -> o2.typeParameters.size - clazz.typeParameters.size
+                is TypeReference -> (o2.type as Class<*>).typeParameters.size - clazz.typeParameters.size
+                else -> 0
+            }
         }
         else -> 0
     }
@@ -101,7 +113,7 @@ abstract class CallbackPolicy(
 
         fun getInstanceHandlers(
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ): List<KType> {
             val policy = getCallbackPolicy(callback)
             return HandlerDescriptor.getInstanceHandlers(
@@ -110,7 +122,7 @@ abstract class CallbackPolicy(
 
         fun getTypeHandlers(
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ): List<KType> {
             val policy = getCallbackPolicy(callback)
             return HandlerDescriptor.getTypeHandlers(
@@ -119,7 +131,7 @@ abstract class CallbackPolicy(
 
         fun getCallbackHandlers(
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ): List<KType> {
             val policy = getCallbackPolicy(callback)
             return HandlerDescriptor.getCallbackHandlers(
@@ -128,7 +140,7 @@ abstract class CallbackPolicy(
 
         fun getCallbackMethods(
                 callback:     Any,
-                callbackType: KType? = null
+                callbackType: TypeReference? = null
         ): List<PolicyMemberBinding> {
             val policy = getCallbackPolicy(callback)
             return policy.getKey(callback, callbackType)?.let {

@@ -1,11 +1,11 @@
 package com.miruken.callback
 
-import kotlin.reflect.KType
+import com.miruken.TypeReference
 
 open class Handler : Handling {
     override fun handle(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling?
     ): HandleResult {
@@ -17,7 +17,7 @@ open class Handler : Handling {
 
     protected open fun handleCallback(
             callback:     Any,
-            callbackType: KType?,
+            callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ) = dispatch(this, callback, callbackType, greedy, composer)
@@ -26,7 +26,7 @@ open class Handler : Handling {
         fun dispatch(
                 handler:      Any,
                 callback:     Any,
-                callbackType: KType?,
+                callbackType: TypeReference?,
                 greedy:       Boolean,
                 composer:     Handling
         ) = when {
