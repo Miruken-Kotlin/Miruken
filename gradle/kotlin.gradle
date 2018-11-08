@@ -8,12 +8,11 @@ repositories {
 }
 
 version = '0.0.2-alpha.0013'
-//0.0.1-SNAPSHOT
 
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    compile 'org.jetbrains.kotlin:kotlin-reflect'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.jetbrains.kotlin:kotlin-test-junit'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
