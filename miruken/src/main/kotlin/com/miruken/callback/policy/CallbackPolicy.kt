@@ -5,7 +5,6 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.callback.policy.rules.MethodRule
-import kotlin.reflect.KClass
 import kotlin.reflect.KType
 
 typealias CollectResultsBlock = (Any, Boolean) -> Boolean
@@ -66,36 +65,10 @@ abstract class CallbackPolicy(
                         greedy, composer, results)
     }
 
-    protected fun compareGenericArity(o1: Any?, o2: Any?) = when (o1) {
-        is KType -> when (o2) {
-            is KType -> o2.arguments.size - o1.arguments.size
-            is KClass<*> -> o2.typeParameters.size - o1.arguments.size
-            is Class<*> -> o2.typeParameters.size - o1.arguments.size
-            is TypeReference -> (o2.type as Class<*>).typeParameters.size - o1.arguments.size
-            else -> 0
-        }
-        is KClass<*> -> when (o2) {
-            is KType -> o2.arguments.size - o1.typeParameters.size
-            is KClass<*> -> o2.typeParameters.size - o1.typeParameters.size
-            is Class<*> -> o2.typeParameters.size -o1.typeParameters.size
-            else -> 0
-        }
-        is Class<*> -> when (o2) {
-            is KType -> o2.arguments.size - o1.typeParameters.size
-            is Class<*> -> o2.typeParameters.size - o1.typeParameters.size
-            else -> 0
-        }
-        is TypeReference -> {
-            val clazz = o1.type as Class<*>
-            when (o2) {
-                is KType -> o2.arguments.size - clazz.typeParameters.size
-                is KClass<*> -> o2.typeParameters.size - clazz.typeParameters.size
-                is Class<*> -> o2.typeParameters.size - clazz.typeParameters.size
-                is TypeReference -> (o2.type as Class<*>).typeParameters.size - clazz.typeParameters.size
-                else -> 0
-            }
-        }
-        else -> 0
+    protected fun compareGenericArity(o1: Any?, o2: Any?): Int {
+        val type2 = TypeReference.getKType(o2) ?: return 0
+        val type1 = TypeReference.getKType(o1) ?: return 0
+        return type2.arguments.size - type1.arguments.size
     }
 
     val orderMembers : Comparator<PolicyMemberBinding> =

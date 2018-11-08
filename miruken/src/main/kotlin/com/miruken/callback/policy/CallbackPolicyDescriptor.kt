@@ -23,14 +23,15 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
     }
 
     internal fun add(memberBinding: PolicyMemberBinding) {
-        val list = when (val key = memberBinding.key) {
-            is KType ->
-                if (key.classifier == Any::class)
-                    _unknown
-                else
-                    _typed.getOrPut(key) { mutableListOf() }
-            null, Any::class -> _unknown
-            else -> _indexed.getOrPut(key) { mutableListOf() }
+        val key  = memberBinding.key
+        val list = when (val type = TypeReference.getKType(key) ?: key) {
+            is KType -> if (type.classifier == Any::class) {
+                _unknown
+            } else {
+                _typed.getOrPut(type) { mutableListOf() }
+            }
+            null -> _unknown
+            else -> _indexed.getOrPut(key!!) { mutableListOf() }
         }
         list.addSorted(memberBinding, PolicyMemberBinding)
     }
@@ -42,10 +43,9 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
             callback:     Any,
             callbackType: TypeReference?
     ) = policy.getKey(callback, callbackType)?.let { key ->
-        when (key) {
-                is KType -> _typed[key]
-                is TypeReference -> _typed[key.kotlinType]
-                is String -> _indexed[key] ?: _indexed[StringKey(key)]
+        when (val type = TypeReference.getKType(key) ?: key) {
+                is KType -> _typed[type]
+                is String -> _indexed[type] ?: _indexed[StringKey(type)]
                 else -> _indexed[key]
             }?.filter { it.approve(callback) }
         } ?: emptyList()
@@ -57,16 +57,10 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
             _compatible.getOrPut(it) { inferCompatibleMembers(it) }
         }?.filter { it.approve(callback) } ?: emptyList()
 
-    // TODO:  For now all keys will be KType until we transition to TypeReference
-
     private fun inferCompatibleMembers(key: Any) =
-            when (key) {
+            when (val type = TypeReference.getKType(key)) {
                 is KType ->
-                    policy.getCompatibleKeys(key, _typed.keys).flatMap {
-                        _typed[it] ?: emptyList<PolicyMemberBinding>()
-                    }
-                is TypeReference ->
-                    policy.getCompatibleKeys(key.kotlinType, _typed.keys).flatMap {
+                    policy.getCompatibleKeys(type, _typed.keys).flatMap {
                         _typed[it] ?: emptyList<PolicyMemberBinding>()
                     }
                 else ->

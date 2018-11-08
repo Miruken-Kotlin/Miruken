@@ -17,6 +17,22 @@ interface TypeReference {
     val kotlinType: KType
 
     companion object {
+        fun getType(key: Any?): Type? = when(key) {
+            is Type -> key
+            is KType -> key.javaType
+            is KClass<*> -> key.java
+            is TypeReference -> key.type
+            else -> null
+        }
+
+        fun getKType(key: Any?): KType? = when(key) {
+            is KType -> key
+            is KClass<*> -> key.starProjectedType
+            is TypeReference -> key.kotlinType
+            is Type ->  TypeToKTypeMapping.getOrPut(key) { key.toKType() }
+            else -> null
+        }
+
         val ANY_STAR by lazy(LazyThreadSafetyMode.NONE) {
             Any::class.starProjectedType
         }
