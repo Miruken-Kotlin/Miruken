@@ -7,7 +7,7 @@ repositories {
     jcenter()
 }
 
-version = mirukenVersion
+version = packageVersion
 
 dependencies {
     implementation     'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
