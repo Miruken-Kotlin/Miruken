@@ -1,7 +1,7 @@
 package com.miruken.api.oneway
 
 import com.miruken.api.JacksonProvider
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.callback.plus
 import com.miruken.api.GetStockQuote
 import com.miruken.api.StockQuoteHandler

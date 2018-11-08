@@ -1,6 +1,6 @@
 package com.miruken.map
 
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.typeOf

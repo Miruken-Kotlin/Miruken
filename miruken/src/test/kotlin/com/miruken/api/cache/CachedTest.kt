@@ -4,7 +4,7 @@ import com.miruken.api.GetStockQuote
 import com.miruken.api.JacksonProvider
 import com.miruken.api.StockQuoteHandler
 import com.miruken.api.send
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.callback.Handling
 import com.miruken.callback.plus
 import com.miruken.concurrent.Promise

@@ -7,7 +7,13 @@ repositories {
     jcenter()
 }
 
-version = '0.0.2-alpha.0013'
+version      = '0.0.2-alpha.0013'
+ext.org      = 'miruken'
+ext.group_id = 'com.miruken'
+ext.repo     = 'MavenPackages'
+ext.vcs_url  = 'https://github.com/Miruken-Kotlin/Miruken.git'
+ext.license  = 'MIT'
+
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'

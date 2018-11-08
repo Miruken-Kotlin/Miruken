@@ -1,4 +1,4 @@
-package com.miruken
+package com.miruken.test
 
 import org.junit.rules.TestName
 import java.util.concurrent.CountDownLatch

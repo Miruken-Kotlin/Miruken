@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.UsePolicy
 import com.miruken.callback.policy.policy
-import com.miruken.getMethod
+import com.miruken.test.getMethod
 import com.miruken.runtime.getMetaAnnotations
 import org.junit.Test
 import kotlin.test.assertEquals

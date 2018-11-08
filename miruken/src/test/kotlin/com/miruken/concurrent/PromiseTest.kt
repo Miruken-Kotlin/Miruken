@@ -1,6 +1,7 @@
 package com.miruken.concurrent
 
 import com.miruken.*
+import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.rules.TestName
 import java.time.Duration

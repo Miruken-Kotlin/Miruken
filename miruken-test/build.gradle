@@ -1,13 +1,11 @@
 apply from: "${rootDir}/gradle/kotlin.gradle"
 
-dependencies {
-    testImplementation project(':miruken-test')
-    testImplementation 'io.github.classgraph:classgraph:4.4.7'
-    testImplementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.7'
-    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.7'
+dependencies{
+    implementation 'junit:junit:4.12'
+    implementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
-def artifact_name = "miruken"
+def artifact_name = "miruken-test"
 
 publishing {
     publications {

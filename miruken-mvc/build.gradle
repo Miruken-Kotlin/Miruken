@@ -4,12 +4,14 @@ dependencies {
     implementation project(':miruken')
 }
 
+def artifact_name = "miruken-mvc"
+
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            groupId 'com.miruken'
-            artifactId 'miruken-mvc'
+            groupId group_id
+            artifactId artifact_name
             pom.withXml {
                 def properties = asNode().appendNode('properties')
                 properties.appendNode('maven.compiler.source', '1.8')
@@ -25,12 +27,11 @@ bintray {
     publications = ['maven']
     publish      = true
     pkg {
-        userOrg  = 'Miruken'
-        repo     = 'MavenPackages'
-        name     = 'miruken-mvc'
-        userOrg  = 'miruken'
-        licenses = ['MIT']
-        vcsUrl   = 'https://github.com/Miruken-Kotlin/Miruken.git'
+        userOrg  = org
+        repo     = repo
+        name     = artifact_name
+        licenses = [license]
+        vcsUrl   = vcs_url
         version {
             released = new Date()
         }

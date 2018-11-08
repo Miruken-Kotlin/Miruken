@@ -4,6 +4,7 @@ import com.miruken.*
 import com.miruken.callback.TestHandler
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.isCompatibleWith
+import com.miruken.test.getMethod
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.withNullability
 import kotlin.test.*

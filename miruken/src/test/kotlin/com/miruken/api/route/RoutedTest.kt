@@ -1,7 +1,7 @@
 package com.miruken.api.route
 
 import com.miruken.api.JacksonProvider
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.api.GetStockQuote

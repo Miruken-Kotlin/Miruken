@@ -1,6 +1,6 @@
 package com.miruken.callback
 
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
 import org.junit.Before

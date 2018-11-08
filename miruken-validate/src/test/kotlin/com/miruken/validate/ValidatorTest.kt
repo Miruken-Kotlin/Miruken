@@ -1,6 +1,6 @@
 package com.miruken.validate
 
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.callback.Handler
 import com.miruken.callback.plus
 import com.miruken.concurrent.Promise

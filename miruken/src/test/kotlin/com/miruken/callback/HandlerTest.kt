@@ -3,7 +3,7 @@
 package com.miruken.callback
 
 import com.miruken.TypeReference
-import com.miruken.assertAsync
+import com.miruken.test.assertAsync
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
