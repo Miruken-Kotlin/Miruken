@@ -15,7 +15,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            groupId mirukenGroupId
+            groupId    mirukenGroupId
             artifactId artifactName
             pom.withXml {
                 def properties = asNode().appendNode('properties')
