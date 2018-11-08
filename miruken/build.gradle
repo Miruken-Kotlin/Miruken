@@ -7,14 +7,14 @@ dependencies {
     testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.7'
 }
 
-def artifact_name = "miruken"
+def artifactName = 'miruken'
 
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            groupId group_id
-            artifactId artifact_name
+            groupId mirukenGroupId
+            artifactId artifactName
             pom.withXml {
                 def properties = asNode().appendNode('properties')
                 properties.appendNode('maven.compiler.source', '1.8')
@@ -30,11 +30,11 @@ bintray {
     publications = ['maven']
     publish      = true
     pkg {
-        userOrg  = org
-        repo     = repo
-        name     = artifact_name
-        licenses = [license]
-        vcsUrl   = vcs_url
+        name     = artifactName
+        userOrg  = mirukenOrg
+        repo     = mirukenRepo
+        licenses = [mirukenLicense]
+        vcsUrl   = mirukenVcsUrl
         version {
             released = new Date()
         }
