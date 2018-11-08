@@ -1,3 +1,3 @@
 package com.miruken.api
 
-interface Request<out TResp: Any?> : NamedType
+interface Request<out TResp: NamedType?> : NamedType

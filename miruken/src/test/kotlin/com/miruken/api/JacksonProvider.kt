@@ -18,13 +18,18 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.miruken.TypeReference
+import com.miruken.api.Try
 import com.miruken.api.schedule.ScheduleResult
 import java.lang.reflect.Type
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.full.allSupertypes
+import kotlin.reflect.full.companionObjectInstance
 
 object JacksonProvider {
-    private val idToTypeMapping = mutableMapOf<String, JavaType>()
-    private val typeToIdMapping = mutableMapOf<Type, String>()
+    private val idToTypeMapping = ConcurrentHashMap<String, JavaType>()
+    private val typeToIdMapping = ConcurrentHashMap<Type, String>()
 
     init {
         register(ScheduleResult)
@@ -61,16 +66,16 @@ object JacksonProvider {
     object MirukenModule : SimpleModule() {
         init {
             setMixInAnnotation(
-                    NamedType::class.java,
-                    NamedTypeMixin::class.java)
-
-            setMixInAnnotation(
                     KType::class.java,
                     IgnoreMixin::class.java)
 
             setMixInAnnotation(
                     TypeReference::class.java,
                     IgnoreMixin::class.java)
+
+            setMixInAnnotation(
+                    NamedType::class.java,
+                    NamedTypeMixin::class.java)
 
             addSerializer(Throwable::class.java, ThrowableSerializer())
             addDeserializer(Throwable::class.java, ThrowableDeserializer())
@@ -94,16 +99,19 @@ object JacksonProvider {
 
         object NamedTypeIdResolver : TypeIdResolverBase() {
             override fun idFromValue(value: Any) =
-                idFromValueAndType(value, value::class.java)
+                    idFromValueAndType(value, value::class.java)
 
             override fun idFromValueAndType(
                     value:         Any,
                     suggestedType: Class<*>?
             ): String? {
                 val typeName = (value as? NamedType)?.typeName
-                if (!typeName.isNullOrBlank()) return typeName
+                if (!typeName.isNullOrBlank()) {
+                    registerResponseTypeId(value)
+                    return typeName
+                }
                 return suggestedType?.let { typeToIdMapping[it] } ?:
-                        error("${value::class} requires a valid typeName")
+                error("${value::class} requires a valid typeName")
             }
 
             override fun typeFromId(
@@ -112,13 +120,30 @@ object JacksonProvider {
             ) = idToTypeMapping[id]
 
             override fun getMechanism() = JsonTypeInfo.Id.NAME
+
+            private fun registerResponseTypeId(value: Any) {
+                (value::class.allSupertypes.firstOrNull {
+                    it.classifier == Request::class
+                }) ?.arguments?.first()?.type?.also { responseType ->
+                    (responseType.classifier as? KClass<*>)?.also { nt ->
+                        val companion = nt.companionObjectInstance as? NamedType
+                        companion?.typeName?.takeUnless { it.isBlank() }?.also {
+                            idToTypeMapping.computeIfAbsent(it) { typeName ->
+                                val javaType = nt.java
+                                typeToIdMapping[nt.java] = typeName
+                                TypeFactory.defaultInstance().constructType(javaType)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        class TrySerializer : StdSerializer<Try<*,*>>(
+        class TrySerializer : StdSerializer<Try<*, *>>(
                 Try::class.java
         ) {
             override fun serialize(
-                    value:    Try<*,*>?,
+                    value:    Try<*, *>?,
                     gen:      JsonGenerator,
                     provider: SerializerProvider) {
                 if (value == null) return
@@ -134,7 +159,7 @@ object JacksonProvider {
             }
         }
 
-        class TryDeserializer : StdDeserializer<Try<*,*>>(
+        class TryDeserializer : StdDeserializer<Try<*, *>>(
                 Try::class.java
         ), ContextualDeserializer {
             private lateinit var _tryType: JavaType
@@ -144,28 +169,28 @@ object JacksonProvider {
                     property: BeanProperty?
             ): JsonDeserializer<*> {
                 val tryType = ctxt.contextualType ?: property?.type
-                        ?: error("Unable to determine Try parameters")
+                ?: error("Unable to determine Try parameters")
                 return TryDeserializer().apply { _tryType = tryType }
             }
 
             override fun deserialize(
                     parser: JsonParser,
                     ctxt:   DeserializationContext
-            ): Try<*,*>? {
+            ): Try<*, *>? {
                 val tree    = parser.codec.readTree<JsonNode>(parser)
                 val isError = tree.get("isLeft")?.booleanValue()
                         ?: ctxt.reportInputMismatch(this,
-                            "Expected field 'isLeft' was missing")
+                                "Expected field 'isLeft' was missing")
 
                 val value   = tree.get("value")
                         ?: ctxt.reportInputMismatch(this,
-                        "Expected field 'value' was missing")
+                                "Expected field 'value' was missing")
 
                 return when (isError) {
                     true -> Try.error(value.traverse(parser.codec)
                             .readValueAs(_tryType.containedType(0).rawClass)
-                                as Throwable)
-                    false ->Try.result(value.traverse(parser.codec)
+                            as Throwable)
+                    false -> Try.result(value.traverse(parser.codec)
                             .readValueAs(_tryType.containedType(1).rawClass))
                 }
             }
