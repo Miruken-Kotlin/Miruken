@@ -45,6 +45,8 @@ abstract class Controller : Contextual, AutoCloseable {
 
     fun endContext() = context?.end(this)
 
+    val async get() = requireContext().async
+
     // Render
 
     protected inline fun <reified V: Viewing> show(
