@@ -123,11 +123,10 @@ abstract class Controller : Contextual, AutoCloseable {
             noinline action: C.() -> Unit
     ) = handler.navigate(action, style)
 
-    protected fun goBack() = requireContext().goBack()
+    fun goBack() = requireContext().goBack()
 
     protected fun goBack(handler: Handling) =
         handler.goBack()
-
 
     override fun close() {
         if (_closed.compareAndSet(false, true)) {
