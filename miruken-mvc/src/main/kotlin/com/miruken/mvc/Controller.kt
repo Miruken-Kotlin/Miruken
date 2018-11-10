@@ -85,27 +85,42 @@ abstract class Controller : Contextual, AutoCloseable {
 
     // Navigate
 
-    protected inline fun <reified C: Controller> next(
-            noinline action: C.() -> Unit
-    ) = requireContext().next(action)
+    protected inline fun <reified C: Controller> next() =
+            requireContext().next<C>()
+
+    protected inline fun <reified C: Controller> next(handler: Handling ) =
+            handler.next<C>()
+
+    protected inline fun <reified C: Controller> next(noinline action: C.() -> Unit) =
+            requireContext().next(action)
 
     protected inline fun <reified C: Controller> next(
             handler:         Handling,
             noinline action: C.() -> Unit
     ) = handler.next(action)
 
-    protected inline fun <reified C: Controller> push(
-            noinline action: C.() -> Unit
-    ) = requireContext().push(action)
+    protected inline fun <reified C: Controller> push() =
+            requireContext().push<C>()
+
+    protected inline fun <reified C: Controller> push(handler: Handling) =
+            handler.push<C>()
+
+    protected inline fun <reified C: Controller> push(noinline action: C.() -> Unit) =
+            requireContext().push(action)
 
     protected inline fun <reified C: Controller> push(
             handler:         Handling,
             noinline action: C.() -> Unit
     ) = handler.push(action)
 
-    protected inline fun <reified C: Controller> partial(
-            noinline action: C.() -> Unit
-    ) = requireContext().partial(action)
+    protected inline fun <reified C: Controller> partial() =
+            requireContext().partial<C>()
+
+    protected inline fun <reified C: Controller> partial(handler: Handling) =
+            handler.partial<C>()
+
+    protected inline fun <reified C: Controller> partial(noinline action: C.() -> Unit) =
+            requireContext().partial(action)
 
     protected inline fun <reified C: Controller> partial(
             handler:         Handling,
@@ -113,20 +128,28 @@ abstract class Controller : Contextual, AutoCloseable {
     ) = handler.partial(action)
 
     protected inline fun <reified C: Controller> navigate(
-            style:           NavigationStyle,
+            style: NavigationStyle
+    ) = requireContext().navigate<C>(style)
+
+    protected inline fun <reified C: Controller> navigate(
+            style:   NavigationStyle,
+            handler: Handling
+    ) = handler.navigate<C>(style)
+
+    protected inline fun <reified C: Controller> navigate(
+            style:   NavigationStyle,
             noinline action: C.() -> Unit
-    ) = requireContext().navigate(action, style)
+    ) = requireContext().navigate(style, action)
 
     protected inline fun <reified C: Controller> navigate(
             style:           NavigationStyle,
             handler:         Handling,
             noinline action: C.() -> Unit
-    ) = handler.navigate(action, style)
+    ) = handler.navigate(style, action)
 
     fun goBack() = requireContext().goBack()
 
-    protected fun goBack(handler: Handling) =
-        handler.goBack()
+    protected fun goBack(handler: Handling) = handler.goBack()
 
     override fun close() {
         if (_closed.compareAndSet(false, true)) {

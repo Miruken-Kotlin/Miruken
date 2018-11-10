@@ -2,6 +2,7 @@ package com.miruken.mvc
 
 import com.miruken.callback.FilteringCallback
 import com.miruken.callback.Handling
+import com.miruken.callback.TargetAction
 import java.lang.ref.WeakReference
 
 enum class NavigationStyle {
@@ -12,7 +13,7 @@ enum class NavigationStyle {
 
 class Navigation<C: Controller>(
         val controllerKey: Any,
-        val action:        C.() -> Unit,
+        val action:        TargetAction<C>,
         val style:         NavigationStyle
 ): FilteringCallback {
     override val canFilter = false
@@ -23,15 +24,12 @@ class Navigation<C: Controller>(
 
     val controller get() = _controller?.get()
 
-    fun invokeOn(controller: C) {
+    fun invokeOn(controller: C): Boolean {
         _controller = WeakReference(controller)
-        controller.action()
+        return controller.action(controller.context!!)
     }
 
     class GoBack
-
-    companion object {
-        val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
-    }
 }
 
+val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()

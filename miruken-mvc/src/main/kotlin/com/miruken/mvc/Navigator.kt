@@ -66,7 +66,10 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         child.addHandlers(GenericWrapper(
                 navigation, typeOf<Navigation<*>>()))
         try {
-            navigation.invokeOn(controller)
+            if (!navigation.invokeOn(controller)) {
+                child.end()
+                return null
+            }
             if (style != NavigationStyle.PUSH) {
                 initiator?.controller?.context?.end(initiator)
             }
@@ -93,7 +96,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             composer:   Handling?
     ) {
         controller._io = (io ?: controller.context)?.let {
-            Navigation.GLOBAL_PREPARE.foldRight(it) {
+            GLOBAL_PREPARE.foldRight(it) {
                 filter, pipe -> filter(pipe)
             }
         }?.let {

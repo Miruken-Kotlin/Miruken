@@ -44,7 +44,7 @@ inline fun <reified C: Controller> Handling.region(
     override fun display(region: ViewingRegion): ViewingLayer {
         lateinit var layer: ViewingLayer
         val stack = region.createViewStack()
-        push<C> {
+        (push<C>()) {
             val controllerContext = context ?:
                     error("Region navigation seemed to have failed")
             controllerContext.addHandlers(stack)
