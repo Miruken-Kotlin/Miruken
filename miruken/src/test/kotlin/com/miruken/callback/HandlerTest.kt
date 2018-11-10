@@ -3,18 +3,18 @@
 package com.miruken.callback
 
 import com.miruken.TypeReference
-import com.miruken.test.assertAsync
 import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
-import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context
-import com.miruken.context.Scoped
 import com.miruken.context.ContextualImpl
+import com.miruken.context.Scoped
 import com.miruken.kTypeOf
 import com.miruken.runtime.checkOpenConformance
+import com.miruken.test.assertAsync
 import com.miruken.typeOf
 import org.junit.Rule
 import org.junit.Test

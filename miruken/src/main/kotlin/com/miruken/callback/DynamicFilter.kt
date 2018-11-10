@@ -58,7 +58,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                 argumentClass.isSubclassOf(FilteringProvider::class)->
                     resolved[i] = provider
                 else -> {
-                    val inquiry = argument.getInquiry(parent)
+                    val inquiry = argument.createInquiry(parent)
                             ?: return null
                     val typeInfo = argument.typeInfo
                     val resolver = KeyResolver.getResolver(

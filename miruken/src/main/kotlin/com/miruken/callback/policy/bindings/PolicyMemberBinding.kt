@@ -177,7 +177,7 @@ class PolicyMemberBinding(
             val argument    = arguments[i]
             val typeInfo    = argument.typeInfo
             val logicalType = typeInfo.logicalType
-            when (logicalType.jvmErasure) {
+            when (logicalType.classifier) {
                 Handling::class -> resolved[i] = composer
                 MemberBinding::class,
                 PolicyMemberBinding::class ->
@@ -204,7 +204,7 @@ class PolicyMemberBinding(
                     if (argument.isOpen && typeBindings.value.isEmpty()) {
                         return null
                     }
-                    val inquiry = argument.getInquiry(
+                    val inquiry = argument.createInquiry(
                             parent, typeBindings.value)
                         ?: return null
                     val resolver = KeyResolver.getResolver(

@@ -1,5 +1,6 @@
 package com.miruken
 
+import com.miruken.callback.Inquiry
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.checkOpenConformance
 import com.miruken.runtime.componentType
@@ -17,6 +18,14 @@ data class TypeInfo(
         val logicalType:   KType,
         val componentType: KType
 ) {
+    fun createInquiry(
+            key:    Any,
+            parent: Inquiry? = null
+    ) = Inquiry(key, flags has TypeFlags.COLLECTION ||
+            flags has TypeFlags.ARRAY, parent).apply {
+        wantsAsync = flags has TypeFlags.PROMISE
+    }
+
     fun mapOpenParameters(
             closedType:    KType,
             typeBindings:  MutableMap<KTypeParameter, KType>? = null

@@ -33,8 +33,7 @@ open class Composition(
     override fun inferCallback(): Any {
         val resolve = (callback as? InferringCallback)?.inferCallback()
         if (resolve === callback || callback === null) return this
-        return Composition(resolve ?: Resolution
-                .getResolving(callback, callbackType),
+        return Composition(resolve ?: Inference.get(callback, callbackType),
                 callbackType)
     }
 

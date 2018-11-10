@@ -44,15 +44,12 @@ class Argument(val parameter: KParameter) : KAnnotatedElement {
         parameterType.classifier != Nothing::class &&
             parameterType.isSubtypeOf(type.kotlinType.withNullability(true))
 
-    fun getInquiry(
+    fun createInquiry(
             parent:       Inquiry? = null,
             typeBindings: Map<KTypeParameter, KType>? = null
     ) = KeyResolver.getKey(parameter, typeInfo,
                 parameter.name, typeBindings)?.let {
-        val flags = typeInfo.flags
-        Inquiry(it, flags has TypeFlags.COLLECTION ||
-                flags has TypeFlags.ARRAY, parent).apply {
-            wantsAsync = flags has TypeFlags.PROMISE
+        typeInfo.createInquiry(it, parent).apply {
             constraints?.invoke(ConstraintBuilder(this))
         }
     }

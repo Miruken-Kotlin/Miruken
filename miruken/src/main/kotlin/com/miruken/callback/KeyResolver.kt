@@ -15,7 +15,7 @@ open class KeyResolver : KeyResolving {
     override fun resolve(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler: Handling
+            handler:  Handling
     ) = when {
         typeInfo.flags has TypeFlags.LAZY ->
             resolveKeyLazy(inquiry, typeInfo, handler)
@@ -37,7 +37,7 @@ open class KeyResolver : KeyResolving {
     ) = handler.resolveAsync(inquiry) then {
         check (it != null ||
                 typeInfo.componentType.isMarkedNullable) {
-            "Unable to resolve key ${inquiry.key}"
+            "Unable to resolve key '${inquiry.key}'"
         }
         it
     }
@@ -45,7 +45,7 @@ open class KeyResolver : KeyResolving {
     open fun resolveKeyAll(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler: Handling
+            handler:  Handling
     ) = handler.resolveAll(inquiry)
 
     private fun resolveKeyAllArray(
@@ -74,7 +74,7 @@ open class KeyResolver : KeyResolving {
     private fun resolveKeyLazy(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler: Handling
+            handler:  Handling
     ) = lazy(LazyThreadSafetyMode.NONE) {
         resolveKeyInfer(inquiry, typeInfo, handler)
     }
@@ -82,7 +82,7 @@ open class KeyResolver : KeyResolving {
     private fun resolveKeyFunc(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler: Handling
+            handler:  Handling
     ): () -> Any? = {
         resolveKeyInfer(inquiry, typeInfo, handler)
     }
@@ -90,7 +90,7 @@ open class KeyResolver : KeyResolving {
     private fun resolveKeyInfer(
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
-            handler: Handling
+            handler:  Handling
     ): Any? {
         val flags = typeInfo.flags
         return when {
@@ -116,7 +116,7 @@ open class KeyResolver : KeyResolving {
         }
     }
 
-    companion object {
+    companion object : KeyResolver() {
         fun getKey(
                 annotatedElement: KAnnotatedElement,
                 typeInfo:         TypeInfo,
@@ -142,14 +142,12 @@ open class KeyResolver : KeyResolving {
         fun getResolver(
                 resolverClass: KClass<out KeyResolving>?,
                 handler:      Handling
-        ) = if (resolverClass == null) DefaultResolver
+        ) = if (resolverClass == null) this
             else resolverClass.objectInstance
                 ?: handler.resolve(resolverClass) as? KeyResolving
 
         fun getResolverClass(annotatedElement: KAnnotatedElement) =
                 annotatedElement.getFirstMetaAnnotation<UseKeyResolver>()
                         ?.keyResolverClass
-
-        object DefaultResolver : KeyResolver()
     }
 }

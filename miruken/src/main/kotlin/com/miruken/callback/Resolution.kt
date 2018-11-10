@@ -33,9 +33,4 @@ open class Resolution(
         ).handled || _handled
         return _handled
     }
-
-    companion object {
-        fun getResolving(callback: Any, callbackType: TypeReference?) =
-                Inference(callback, callbackType)
-    }
 }

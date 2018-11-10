@@ -16,8 +16,6 @@ class Inference(
         }
     }
 
-    override val policy: CallbackPolicy? = null
-
     override fun inferCallback() = this
 
     override fun dispatch(
@@ -26,8 +24,7 @@ class Inference(
             greedy:       Boolean,
             composer:     Handling
     ) = _inferred.fold(
-            super.dispatch(
-                    handler, callbackType, greedy, composer)
+            super.dispatch(handler, callbackType, greedy, composer)
     ) { result, infer ->
         if (result.stop || (result.handled && !greedy)) {
             return@fold result
@@ -36,26 +33,31 @@ class Inference(
                     handler, callbackType, greedy, composer)
         }
     }
+
+    companion object {
+        fun get(callback: Any, callbackType: TypeReference?) =
+                Inference(callback, callbackType)
+    }
 }
 
-class InferringHandler(handler: Handling) : DecoratedHandler(handler) {
+class InferDecorator(handler: Handling) : DecoratedHandler(handler) {
     override fun handleCallback(
             callback:     Any,
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        val resolving     = getInferCallback(callback, callbackType)
-        val resolvingType = if (resolving === callback) callbackType else null
-        return handler.handle(resolving, resolvingType, greedy, composer)
+        val inference     = getInference(callback, callbackType)
+        val inferenceType = if (inference === callback) callbackType else null
+        return handler.handle(inference, inferenceType, greedy, composer)
     }
 
-    private fun getInferCallback(
+    private fun getInference(
             callback:     Any,
             callbackType: TypeReference?
     ) = when (callback) {
         is InferringCallback -> callback.inferCallback()
-        else -> Resolution.getResolving(callback, callbackType)
+        else -> Inference.get(callback, callbackType)
     }
 }
 

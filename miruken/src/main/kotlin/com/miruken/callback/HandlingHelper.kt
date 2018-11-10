@@ -1,5 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.TypeFlags
+import com.miruken.TypeInfo
+import com.miruken.TypeReference
 import com.miruken.runtime.isGeneric
 import com.miruken.typeOf
 
@@ -18,6 +21,17 @@ inline fun <reified T: Any> T.toHandler(): Handling {
         GenericWrapper(this, typeOf<T>())
     else
         this as? Handling ?: HandlerAdapter(this)
+}
+
+fun Handling.resolveArgs(vararg types: TypeReference): List<Any?>? {
+    return types.map { key ->
+        val type     = key.kotlinType
+        val typeInfo = TypeInfo.parse(type)
+        val inquiry  = typeInfo.createInquiry(type)
+        KeyResolver.resolve(inquiry, typeInfo, this)
+                ?: if (typeInfo.flags has TypeFlags.OPTIONAL)
+                    null else return null
+    }
 }
 
 val COMPOSER get() = threadComposer.get()

@@ -4,10 +4,10 @@ import com.miruken.callback.policy.bindings.ConstraintBuilder
 import com.miruken.concurrent.Promise
 import com.miruken.typeOf
 
-val Handling.infer get() = InferringHandler(this)
+val Handling.infer get() = InferDecorator(this)
 
 val Handling.inferAll get() = CallbackSemanticsHandler(
-        InferringHandler(this), CallbackOptions.BROADCAST)
+        InferDecorator(this), CallbackOptions.BROADCAST)
 
 fun Handling.resolve(
         key:         Any,
