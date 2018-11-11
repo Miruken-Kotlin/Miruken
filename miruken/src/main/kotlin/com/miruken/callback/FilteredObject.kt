@@ -5,7 +5,7 @@ abstract class FilteredObject : Filtered {
         mutableSetOf<FilteringProvider>()
     }
 
-    override val filters: Collection<FilteringProvider>
+    final override val filters: Collection<FilteringProvider>
         get() = _filters
 
     final override fun addFilters(

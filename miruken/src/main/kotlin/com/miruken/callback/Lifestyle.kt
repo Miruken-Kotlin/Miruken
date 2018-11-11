@@ -30,7 +30,7 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
 open class LifestyleProvider(
         private val initializer: () -> Lifestyle<*>
 ): FilteringProvider {
-    override val required = true
+    final override val required = true
 
     override fun getFilters(
             binding:    MemberBinding,

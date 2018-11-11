@@ -1,6 +1,5 @@
 package com.miruken.callback
 
-import com.miruken.TypeFlags
 import com.miruken.TypeInfo
 import com.miruken.concurrent.Promise
 import kotlin.properties.ReadOnlyProperty
@@ -56,12 +55,7 @@ open class LinkProperty<out T>(
 ) : ReadOnlyProperty<Any, T> {
     @Suppress("UNCHECKED_CAST")
     override fun getValue(thisRef: Any, property: KProperty<*>): T {
-        val flags   = typeInfo.flags
-        val inquiry =  Inquiry(key,
-                flags has TypeFlags.COLLECTION ||
-                flags has TypeFlags.ARRAY).apply {
-            wantsAsync = flags has TypeFlags.PROMISE
-        }
+        val inquiry = typeInfo.createInquiry(key)
         return validateProperty(property, key, resolver.resolve(
                 inquiry, typeInfo, handler)) as T
     }

@@ -1,13 +1,13 @@
 package com.miruken.api.route
 
-import com.miruken.api.JacksonProvider
-import com.miruken.test.assertAsync
-import com.miruken.callback.*
-import com.miruken.concurrent.Promise
 import com.miruken.api.GetStockQuote
+import com.miruken.api.JacksonProvider
 import com.miruken.api.StockQuoteHandler
 import com.miruken.api.oneway.oneway
 import com.miruken.api.send
+import com.miruken.callback.*
+import com.miruken.concurrent.Promise
+import com.miruken.test.assertAsync
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -17,14 +17,14 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class RoutedTest {
-    private lateinit var _handler: Handling
+    private lateinit var handler: Handling
 
     @Rule
     @JvmField val testName = TestName()
 
     @Before
     fun setup() {
-        _handler = (StockQuoteHandler() +
+        handler = (StockQuoteHandler() +
                     PassThrough() +
                     Trash())
         StockQuoteHandler.called = 0
@@ -32,10 +32,10 @@ class RoutedTest {
 
     @Test fun `Routes request`() {
         assertAsync(testName) { done ->
-            _handler.send(GetStockQuote("GOOGL")
+            handler.send(GetStockQuote("GOOGL")
                     .oneway.routeTo("trash")) then {
                 assertNull(it)
-                _handler.send(GetStockQuote("GOOGL")
+                handler.send(GetStockQuote("GOOGL")
                         .routeTo("pass-through")) then { quote ->
                     assertEquals("GOOGL", quote.symbol)
                     assertEquals(1, StockQuoteHandler.called)
@@ -47,7 +47,7 @@ class RoutedTest {
 
     @Test fun `Fails missing route`() {
         assertAsync(testName) { done ->
-            _handler.send(GetStockQuote("GOOGL")
+            handler.send(GetStockQuote("GOOGL")
                     .routeTo("nowhere")) catch { e ->
                 assertTrue(e is NotHandledException)
                 done()

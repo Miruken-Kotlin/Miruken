@@ -67,33 +67,39 @@ abstract class TypeReferenceImpl : TypeReference {
 abstract class SuperTypeReference<T>
     protected constructor() : TypeReferenceImpl() {
 
-    override val type: Type =
+    final override val type: Type =
             (javaClass.genericSuperclass as? ParameterizedType)
             ?.actualTypeArguments?.get(0)
             ?: error("TypeReference constructed withou type information")
 
-    override val kotlinType: KType get() =
+    final override val kotlinType: KType =
         TypeToKTypeMapping.getOrPut(type) {
             javaClass.genericSuperclass.toKType().arguments.single().type!!
         }
 }
 
-class GivenTypeReference(kotlinType: KType) : TypeReferenceImpl() {
+class GivenTypeReference(
+        override val kotlinType: KType
+) : TypeReferenceImpl() {
     override val type: Type
-
-    override val kotlinType: KType get() = TypeToKTypeMapping[type]!!
 
     init {
         type = when (val javaType = kotlinType.javaType) {
             is Class<*> -> javaType
             is ParameterizedType -> javaType.rawType
-            else -> error("Unable to determin java type from kotlin type '$kotlinType'")
+            else -> error("Unable to determine java type from kotlin type '$kotlinType'")
         }
         TypeToKTypeMapping.putIfAbsent(type, kotlinType)
     }
 }
 
 private val TypeToKTypeMapping = ConcurrentHashMap<Type, KType>()
+
+fun Type.toKType(): KType = if (this == Void.TYPE) {
+    TypeReference.UNIT_TYPE
+} else {
+    toKTypeProjection().type!!
+}
 
 fun KClass<*>.toInvariantFlexibleProjection(
         arguments: List<KTypeProjection> = emptyList()
@@ -132,10 +138,4 @@ fun Type.toKTypeProjection(): KTypeProjection = when (this) {
             listOf(genericComponentType.toKTypeProjection()))
     is TypeVariable<*> -> TODO() // TODO
     else -> throw IllegalArgumentException("Unsupported type: $this")
-}
-
-fun Type.toKType(): KType = if (this == Void.TYPE) {
-    TypeReference.UNIT_TYPE
-} else {
-    toKTypeProjection().type!!
 }

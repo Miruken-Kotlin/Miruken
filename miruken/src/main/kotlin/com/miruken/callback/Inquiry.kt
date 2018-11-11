@@ -39,14 +39,14 @@ open class Inquiry(
     var dispatcher: CallableDispatch? = null
         private set
 
-    override val metadata = BindingMetadata()
+    final override val metadata = BindingMetadata()
 
-    override var wantsAsync: Boolean = false
+    final override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
         private set
 
-    override val policy get() = ProvidesPolicy
+    final override val policy get() = ProvidesPolicy
 
     val resolutions: List<Any> get() = _resolutions.toList()
 

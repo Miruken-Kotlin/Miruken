@@ -12,9 +12,9 @@ open class Resolution(
         DispatchingCallbackGuard {
     private var _handled = false
 
-    override fun inferCallback() = this
+    final override fun inferCallback() = this
 
-    override val canFilter = false
+    final override val canFilter = false
 
     override fun canDispatch(
             target:     Any,

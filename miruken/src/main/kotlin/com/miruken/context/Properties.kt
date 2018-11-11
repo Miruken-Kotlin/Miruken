@@ -1,8 +1,8 @@
 package com.miruken.context
 
-import com.miruken.TypeFlags
 import com.miruken.TypeInfo
-import com.miruken.callback.*
+import com.miruken.callback.KeyResolver
+import com.miruken.callback.validateProperty
 import com.miruken.concurrent.Promise
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
@@ -55,12 +55,7 @@ open class LinkProperty<out T>(
         val context  = thisRef.getContext(!optional) ?: return null as T
         return KeyResolver.getResolver(property, context)?.let {
             it.validate(key, typeInfo)
-            val flags   = typeInfo.flags
-            val inquiry =  Inquiry(key,
-                    flags has TypeFlags.COLLECTION ||
-                    flags has TypeFlags.ARRAY).apply {
-                wantsAsync = flags has TypeFlags.PROMISE
-            }
+            val inquiry = typeInfo.createInquiry(key)
             validateProperty(property, key, it.resolve(
                     inquiry, typeInfo, context)) as T
         } ?: if (optional) (null as T) else
