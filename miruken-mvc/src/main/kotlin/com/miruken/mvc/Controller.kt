@@ -151,13 +151,20 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected fun goBack(handler: Handling) = handler.goBack()
 
-    override fun close() {
+    val disposing = Event<Controller>()
+    val disposed  = Event<Controller>()
+
+    final override fun close() {
         if (_closed.compareAndSet(false, true)) {
+            disposing(this)
             contextChanging.clear()
             contextChanged.clear()
             context = null
             _io     = null
             cleanUp()
+            disposed(this)
+            disposing.clear()
+            disposed.clear()
         }
     }
 

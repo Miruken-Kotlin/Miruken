@@ -177,6 +177,7 @@ class PolicyMemberBinding(
             val argument    = arguments[i]
             val typeInfo    = argument.typeInfo
             val logicalType = typeInfo.logicalType
+            val optional    = typeInfo.flags has TypeFlags.OPTIONAL
             when (logicalType.classifier) {
                 Handling::class -> resolved[i] = composer
                 MemberBinding::class,
@@ -184,18 +185,14 @@ class PolicyMemberBinding(
                     resolved[i] = this
                 KType::class -> {
                     if (callbackType == null) {
-                        val flags = typeInfo.flags
-                        if (!(flags has TypeFlags.OPTIONAL))
-                            return null
+                        if (!optional) return null
                     } else {
                         resolved[i] = callbackType.kotlinType
                     }
                 }
                 TypeReference::class -> {
                     if (callbackType == null) {
-                        val flags = typeInfo.flags
-                        if (!(flags has TypeFlags.OPTIONAL))
-                            return null
+                        if (!optional) return null
                     } else {
                         resolved[i] = callbackType
                     }
@@ -212,8 +209,7 @@ class PolicyMemberBinding(
                     resolver.validate(inquiry.key, typeInfo)
                     resolved[i] = resolver.resolve(
                             inquiry, typeInfo, composer) ?:
-                            if (typeInfo.flags has TypeFlags.OPTIONAL)
-                                null else return null
+                            if (optional) null else return null
                 }
             }
         }
