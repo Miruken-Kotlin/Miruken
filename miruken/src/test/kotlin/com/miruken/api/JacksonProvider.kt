@@ -14,13 +14,15 @@ import com.fasterxml.jackson.databind.jsontype.impl.TypeIdResolverBase
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.fasterxml.jackson.databind.type.TypeFactory
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.miruken.TypeReference
 import com.miruken.api.Try
 import com.miruken.api.schedule.ScheduleResult
 import java.lang.reflect.Type
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -39,7 +41,6 @@ object JacksonProvider {
         jacksonObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                .registerModule(JavaTimeModule())
                 .registerModule(MirukenModule)
     }
 
@@ -76,6 +77,9 @@ object JacksonProvider {
             setMixInAnnotation(
                     NamedType::class.java,
                     NamedTypeMixin::class.java)
+
+            addSerializer(LocalDateTime::class.java, LocalDateTimeSerializer())
+            addDeserializer(LocalDateTime::class.java, LocalDateTimeDeserializer())
 
             addSerializer(Throwable::class.java, ThrowableSerializer())
             addDeserializer(Throwable::class.java, ThrowableDeserializer())
@@ -136,6 +140,33 @@ object JacksonProvider {
                         }
                     }
                 }
+            }
+        }
+
+        private val DATETIME_FORMATTER =
+                DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                        .toFormatter()
+
+        class LocalDateTimeSerializer : StdSerializer<LocalDateTime>(
+                LocalDateTime::class.java
+        ) {
+            override fun serialize(
+                    value:    LocalDateTime,
+                    gen:      JsonGenerator,
+                    provider: SerializerProvider) {
+                gen.writeString(DATETIME_FORMATTER.format(value))
+            }
+        }
+
+        class LocalDateTimeDeserializer : StdDeserializer<LocalDateTime>(
+                LocalDateTime::class.java
+        ) {
+            override fun deserialize(
+                    parser: JsonParser,
+                    ctxt:   DeserializationContext
+            ): LocalDateTime {
+               return LocalDateTime.parse(parser.text, DATETIME_FORMATTER)
             }
         }
 
