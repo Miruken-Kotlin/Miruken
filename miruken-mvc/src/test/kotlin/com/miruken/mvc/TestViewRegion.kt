@@ -7,7 +7,6 @@ import com.miruken.mvc.view.Viewing
 import com.miruken.mvc.view.ViewingLayer
 import com.miruken.mvc.view.ViewingRegion
 import com.miruken.mvc.view.ViewingStackView
-import java.time.Duration
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createInstance
@@ -38,12 +37,9 @@ class TestViewRegion : ViewingStackView {
     class Layer(val view: Viewing) : ViewingLayer {
         override val index        = 0
         override val transitioned = Event<ViewingLayer>()
-        override val closed       = Event<ViewingLayer>()
+        override val disposed     = Event<ViewingLayer>()
 
-        override fun duration(
-                duration: Duration,
-                complete: (Boolean) -> Unit
-        ) = {}
+        override fun duration(durationMillis: Int, done: (Boolean) -> Unit) = {}
 
         override fun close() {}
     }

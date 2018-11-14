@@ -50,7 +50,7 @@ inline fun <reified C: Controller> Handling.region(
             controllerContext.addHandlers(stack)
             action(this)
             layer = stack.display(ViewingRegion(this@region.pushLayer))
-            layer.closed += { controllerContext.end() }
+            layer.disposed += { controllerContext.end() }
             controllerContext.contextEnded += { layer.close() }
         }
         return layer

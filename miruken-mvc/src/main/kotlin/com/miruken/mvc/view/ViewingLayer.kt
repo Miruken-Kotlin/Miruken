@@ -1,16 +1,11 @@
 package com.miruken.mvc.view
 
 import com.miruken.event.Event
-import java.time.Duration
 
 interface ViewingLayer : AutoCloseable {
+    val index:        Int
     val transitioned: Event<ViewingLayer>
-    val closed:       Event<ViewingLayer>
+    val disposed:     Event<ViewingLayer>
 
-    val index: Int
-
-    fun duration(
-            duration: Duration,
-            complete: (Boolean) -> Unit
-    ): () -> Unit
+    fun duration(durationMillis: Int, done: (Boolean) -> Unit): () -> Unit
 }
