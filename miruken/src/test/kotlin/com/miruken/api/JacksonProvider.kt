@@ -120,7 +120,7 @@ object JacksonProvider {
 
             override fun typeFromId(
                     context: DatabindContext,
-                    id:      String?
+                    id:      String
             ) = idToTypeMapping[id]
 
             override fun getMechanism() = JsonTypeInfo.Id.NAME

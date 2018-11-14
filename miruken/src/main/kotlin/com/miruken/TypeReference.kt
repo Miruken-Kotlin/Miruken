@@ -56,7 +56,7 @@ interface TypeReference {
 }
 
 abstract class TypeReferenceImpl : TypeReference {
-    override fun toString() = "TypeReference: $type"
+    override fun toString() = type.toString()
 
     override fun equals(other: Any?) =
             (other as? TypeReference)?.type == type
