@@ -1,5 +1,6 @@
 package com.miruken.mvc
 
+import com.miruken.TypeReference
 import com.miruken.callback.FilteringCallback
 import com.miruken.callback.Handling
 import com.miruken.callback.TargetAction
@@ -12,9 +13,9 @@ enum class NavigationStyle {
 }
 
 class Navigation<C: Controller>(
-        val controllerKey: Any,
-        val action:        TargetAction<C>,
-        val style:         NavigationStyle
+        val controllerType: TypeReference,
+        val action:         TargetAction<C>,
+        val style:          NavigationStyle
 ): FilteringCallback {
     override val canFilter = false
 

@@ -1,7 +1,10 @@
 package com.miruken.mvc
 
-import com.miruken.callback.*
+import com.miruken.callback.Provides
+import com.miruken.callback.TypeHandlers
+import com.miruken.callback.getOptions
 import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.resolve
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.mvc.option.RegionOptions
@@ -35,7 +38,7 @@ class NavigatorTest {
 
     class HelloController
         @Provides @Scoped
-        constructor(): Controller() {
+        constructor(): Controller(), NavigatingAware {
 
         fun sayHello(name: String): RegionOptions? {
             println("Hello $name")
@@ -56,20 +59,28 @@ class NavigatorTest {
             assertSame(this, navigation.controller)
             assertSame(navigation, context!!.resolve()!!)
         }
+
+        override fun navigating(navigation: Navigation<*>) {
+            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerType}")
+        }
     }
 
     class GoodbyeController
         @Provides @Scoped
-        constructor() : Controller() {
+        constructor() : Controller(), NavigatingAware {
 
         fun sayGoodbye(name: String) {
             println("Goodbye $name")
+        }
+
+        override fun navigating(navigation: Navigation<*>) {
+            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerType}")
         }
     }
 
     class PartialController
     @Provides @Scoped
-    constructor() : Controller() {
+    constructor() : Controller(), NavigatingAware {
 
         fun render() {
             val navigation = io.resolve<Navigation<*>>()

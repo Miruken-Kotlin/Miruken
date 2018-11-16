@@ -40,13 +40,16 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
+        NavigatingAware(parent.xselfOrDescendant.notify)
+                .navigating(navigation)
+
         var controller: C? = null
         val child = parent.createChild()
 
         try {
             @Suppress("UNCHECKED_CAST")
             controller = ((child.xself + composer)
-                    .infer.resolve(navigation.controllerKey) {
+                    .infer.resolve(navigation.controllerType) {
                 require(Qualifier<Scoped>())
             } as? C)?.also { it.context = child } ?: return null
         } catch(e: Throwable) {
@@ -65,6 +68,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
         child.addHandlers(GenericWrapper(
                 navigation, typeOf<Navigation<*>>()))
+
         try {
             if (!navigation.invokeOn(controller)) {
                 child.end()

@@ -39,7 +39,7 @@ class TestViewRegion : ViewingStackView {
         override val transitioned = Event<ViewingLayer>()
         override val disposed     = Event<ViewingLayer>()
 
-        override fun duration(durationMillis: Int, done: (Boolean) -> Unit) = {}
+        override fun duration(durationMillis: Long, done: (Boolean) -> Unit) = {}
 
         override fun close() {}
     }

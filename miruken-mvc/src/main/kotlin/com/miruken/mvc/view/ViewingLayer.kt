@@ -7,5 +7,5 @@ interface ViewingLayer : AutoCloseable {
     val transitioned: Event<ViewingLayer>
     val disposed:     Event<ViewingLayer>
 
-    fun duration(durationMillis: Int, done: (Boolean) -> Unit): () -> Unit
+    fun duration(durationMillis: Long, done: (Boolean) -> Unit): () -> Unit
 }
