@@ -61,7 +61,7 @@ class NavigatorTest {
         }
 
         override fun navigating(navigation: Navigation<*>) {
-            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerType}")
+            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerKey}")
         }
     }
 
@@ -74,7 +74,7 @@ class NavigatorTest {
         }
 
         override fun navigating(navigation: Navigation<*>) {
-            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerType}")
+            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerKey}")
         }
     }
 

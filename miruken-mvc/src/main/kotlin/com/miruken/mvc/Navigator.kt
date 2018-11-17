@@ -49,7 +49,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         try {
             @Suppress("UNCHECKED_CAST")
             controller = ((child.xself + composer)
-                    .infer.resolve(navigation.controllerType) {
+                    .infer.resolve(navigation.controllerKey) {
                 require(Qualifier<Scoped>())
             } as? C)?.also { it.context = child } ?: return null
         } catch(e: Throwable) {
