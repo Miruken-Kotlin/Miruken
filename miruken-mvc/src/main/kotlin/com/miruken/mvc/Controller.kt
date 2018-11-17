@@ -157,13 +157,13 @@ abstract class Controller : Contextual, AutoCloseable {
     final override fun close() {
         if (_closed.compareAndSet(false, true)) {
             disposing(this)
+            disposing.clear()
+            cleanUp()
             contextChanging.clear()
             contextChanged.clear()
             context = null
             _io     = null
-            cleanUp()
             disposed(this)
-            disposing.clear()
             disposed.clear()
         }
     }

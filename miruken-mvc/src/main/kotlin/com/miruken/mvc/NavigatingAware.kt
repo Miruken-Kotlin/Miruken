@@ -9,6 +9,8 @@ import com.miruken.typeOf
 interface NavigatingAware {
     fun navigating(navigation: Navigation<*>) {}
 
+    fun navigatingOut(navigation: Navigation<*>) {}
+
     companion object {
         val PROTOCOL = typeOf<NavigatingAware>()
         operator fun invoke(adapter: ProtocolAdapter) =

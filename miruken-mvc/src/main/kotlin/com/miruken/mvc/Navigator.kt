@@ -40,8 +40,10 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
-        NavigatingAware(parent.xselfOrDescendant.notify)
-                .navigating(navigation)
+        if (style == NavigationStyle.PUSH) {
+            NavigatingAware(parent.xselfOrDescendant.notify)
+                    .navigating(navigation)
+        }
 
         var controller: C? = null
         val child = parent.createChild()
