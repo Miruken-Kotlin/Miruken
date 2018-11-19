@@ -78,9 +78,9 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected fun addRegion(
             region: ViewingRegion,
-            init:   (ViewingRegion.() -> Unit)? = null
+            init:   ((Context) -> Unit)? = null
     ) = requireContext().addRegion(region).apply {
-            init?.invoke(region(this))
+            init?.invoke(this)
         }
 
     // Navigate

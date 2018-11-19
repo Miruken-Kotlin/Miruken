@@ -56,6 +56,13 @@ class HandlerTest {
         assertEquals(1, foo.handled)
     }
 
+    @Test fun `Handles callbacks inferred greedy`() {
+        val foo     = Foo()
+        val handler = SimpleHandler()
+        assertEquals(HandleResult.HANDLED, handler.infer.handle(foo, true))
+        assertEquals(1, foo.handled)
+    }
+
     @Test fun `Handles singleton callbacks implicitly`() {
         val foo = Foo()
         assertEquals(HandleResult.HANDLED, SingletonHandler.handle(foo))

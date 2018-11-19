@@ -23,14 +23,17 @@ class Inference(
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling
-    ) = _inferred.fold(
-            super.dispatch(handler, callbackType, greedy, composer)
-    ) { result, infer ->
-        if (result.stop || (result.handled && !greedy)) {
-            return@fold result
-        } else {
-            result or infer.dispatch(
-                    handler, callbackType, greedy, composer)
+    ): HandleResult {
+        val direct = super.dispatch(
+                handler, callbackType, greedy, composer)
+        if (direct.handled) return direct
+        return _inferred.fold(direct) { result, infer ->
+            if (result.stop || (result.handled && !greedy)) {
+                return@fold result
+            } else {
+                result or infer.dispatch(
+                        handler, callbackType, greedy, composer)
+            }
         }
     }
 
