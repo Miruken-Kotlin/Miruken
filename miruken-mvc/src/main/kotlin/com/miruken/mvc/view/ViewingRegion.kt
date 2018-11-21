@@ -23,8 +23,8 @@ interface ViewingRegion {
 
     companion object {
         val PROTOCOL = typeOf<ViewingRegion>()
-        operator fun invoke(adapter: ProtocolAdapter?) =
-                adapter?.proxy(PROTOCOL) as ViewingRegion
+        operator fun invoke(adapter: ProtocolAdapter) =
+                adapter.proxy(PROTOCOL) as ViewingRegion
     }
 }
 

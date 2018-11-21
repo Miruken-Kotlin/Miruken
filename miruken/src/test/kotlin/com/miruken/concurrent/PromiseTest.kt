@@ -1,6 +1,7 @@
 package com.miruken.concurrent
 
-import com.miruken.*
+import com.miruken.map
+import com.miruken.mapLeft
 import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.rules.TestName
@@ -335,7 +336,7 @@ class PromiseTest {
 
     @Test fun `Unwraps rejected promise with projection`() {
         var called = 0
-        Promise.reject(Exception("Wrong Order")) flatMapError  {
+        Promise.reject(Exception("Wrong Order")) flatMapError {
             Promise.resolve("Soccer")
         } then {
             assertEquals("Soccer", it)

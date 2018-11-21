@@ -13,7 +13,7 @@ interface NavigatingAware {
 
     companion object {
         val PROTOCOL = typeOf<NavigatingAware>()
-        operator fun invoke(adapter: ProtocolAdapter?) =
-                adapter?.proxy(PROTOCOL) as NavigatingAware
+        operator fun invoke(adapter: ProtocolAdapter) =
+                adapter.proxy(PROTOCOL) as NavigatingAware
     }
 }

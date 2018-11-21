@@ -16,7 +16,7 @@ interface Errors {
 
     companion object {
         val PROTOCOL = typeOf<Errors>()
-        operator fun invoke(adapter: ProtocolAdapter?) =
-                adapter?.proxy(PROTOCOL) as Errors
+        operator fun invoke(adapter: ProtocolAdapter) =
+                adapter.proxy(PROTOCOL) as Errors
     }
 }

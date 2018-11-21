@@ -91,8 +91,16 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     @Handles
     @Suppress("UNUSED_PARAMETER")
     fun navigate(goBack: Navigation.GoBack, composer: Handling) =
-            composer.resolve<Navigation<*>>()?.back?.let {
-                composer.handle(it)
+            composer.resolve<Navigation<*>>()?.let {
+                when {
+                    it.back != null -> composer.handle(it)
+                    it.style == NavigationStyle.PUSH ->
+                        it.controller?.let { controller ->
+                            controller.endContext()
+                            HandleResult.HANDLED
+                        }
+                    else -> null
+                }
             }
 
     private fun bindIO(

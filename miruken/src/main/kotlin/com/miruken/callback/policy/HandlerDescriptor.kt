@@ -1,7 +1,11 @@
 package com.miruken.callback.policy
 
 import com.miruken.TypeReference
-import com.miruken.callback.*
+import com.miruken.addSorted
+import com.miruken.callback.FilteredObject
+import com.miruken.callback.HandleResult
+import com.miruken.callback.Handling
+import com.miruken.callback.getFilterProviders
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.runtime.getMetaAnnotations
@@ -192,27 +196,35 @@ class HandlerDescriptor private constructor(
                 callbackType: TypeReference? = null,
                 instances:    Boolean = false,
                 types:        Boolean = false
-        ) = DESCRIPTORS.values.mapNotNull { handler ->
-            val descriptor = handler.value
-            descriptor._instancePolicies.takeIf {
-                instances && it.isInitialized() }
-                    ?.value?.get(policy)?.let { recv ->
-                    recv.getInvariantMembers(callback, callbackType)
-                            .firstOrNull() ?:
-                    recv.getCompatibleMembers(callback, callbackType)
-                            .firstOrNull()
-                } ?:
-            descriptor._typePolicies.takeIf {
-                types && it.isInitialized() }
-                    ?.value?.get(policy)?.let { recv ->
-                    recv.getInvariantMembers(callback, callbackType)
-                            .firstOrNull() ?:
-                    recv.getCompatibleMembers(callback, callbackType)
-                            .firstOrNull()
-             }
-        }.sortedWith(policy.orderMembers)
-                .map { it.dispatcher.owningType }
-                .distinct()
+        ): List<KType> {
+            if (DESCRIPTORS.isEmpty()) return emptyList()
+            val invariants   = mutableListOf<PolicyMemberBinding>()
+            val compatible   = mutableListOf<PolicyMemberBinding>()
+            val orderMembers = policy.orderMembers
+
+            DESCRIPTORS.values.forEach { handler ->
+                val descriptor = handler.value
+                val instanceCallbacks = descriptor._instancePolicies.takeIf {
+                    instances && it.isInitialized() }?.value?.get(policy)
+                val typeCallbacks = descriptor._typePolicies.takeIf {
+                    types && it.isInitialized() }?.value?.get(policy)
+
+                (instanceCallbacks
+                        ?.getInvariantMembers(callback, callbackType)
+                        ?.firstOrNull() ?:
+                 typeCallbacks?.getInvariantMembers(callback, callbackType)
+                        ?.firstOrNull())?.also { invariants.add(it) } ?:
+                (instanceCallbacks
+                        ?.getCompatibleMembers(callback, callbackType)
+                        ?.firstOrNull() ?:
+                 typeCallbacks?.getCompatibleMembers(callback, callbackType)
+                        ?.firstOrNull())?.also { compatible.addSorted(it, orderMembers) }
+            }
+
+            return (invariants + compatible).map {
+                it.dispatcher.owningType
+            }
+        }
 
         fun getPolicyMembers(policy: CallbackPolicy, key: Any) =
                 DESCRIPTORS.values.flatMap { handler ->
