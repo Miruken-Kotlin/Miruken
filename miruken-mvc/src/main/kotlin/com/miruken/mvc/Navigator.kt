@@ -93,7 +93,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     fun navigate(goBack: Navigation.GoBack, composer: Handling) =
             composer.resolve<Navigation<*>>()?.let {
                 when {
-                    it.back != null -> composer.handle(it)
+                    it.back != null -> composer.handle(it.back!!)
                     it.style == NavigationStyle.PUSH ->
                         it.controller?.let { controller ->
                             controller.endContext()
