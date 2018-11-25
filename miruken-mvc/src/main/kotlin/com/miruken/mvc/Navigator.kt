@@ -92,10 +92,18 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     @Suppress("UNUSED_PARAMETER")
     fun navigate(goBack: Navigation.GoBack, composer: Handling) =
             composer.resolve<Navigation<*>>()?.let {
+                val nav = when {
+                    it.style == NavigationStyle.PARTIAL ->
+                        it.controller?.context?.let { ctx ->
+                            findNearest(ctx)?.second
+                        }
+                    else -> it
+                }
                 when {
-                    it.back != null -> composer.handle(it.back!!)
-                    it.style == NavigationStyle.PUSH ->
-                        it.controller?.let { controller ->
+                    nav == null -> null
+                    nav.back != null -> composer.handle(nav.back!!)
+                    nav.style == NavigationStyle.PUSH ->
+                        nav.controller?.let { controller ->
                             controller.endContext()
                             HandleResult.HANDLED
                         }

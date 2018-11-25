@@ -48,3 +48,6 @@ fun Handling.dispose(closeable: AutoCloseable): Handling {
 val Handling.publishFromRoot: Handling get() =
     resolve<Context>()?.root?.publish
             ?: error("The root context could not be found")
+
+tailrec fun Context.deepest(): Context =
+        takeUnless { it.hasChildren } ?: children.last().deepest()

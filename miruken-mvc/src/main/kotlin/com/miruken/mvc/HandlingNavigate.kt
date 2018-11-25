@@ -30,7 +30,7 @@ inline fun <reified C: Controller> Handling.navigate(
         style:  NavigationStyle
 ) = TargetActionBuilder<C> { action ->
     val navigation = Navigation(typeOf<C>(), action, style)
-    handle(navigation) otherwise  {
+    handle(navigation) failure {
         error("Navigation $style to ${C::class} not handled")
     }
 }
@@ -41,7 +41,7 @@ inline fun <reified C: Controller> Handling.navigate(
 ) = (navigate<C>(style)) { action() }
 
 fun Handling.goBack() {
-    handle(Navigation.GoBack()) otherwise {
+    handle(Navigation.GoBack()) failure {
         error("Navigation backwards not handled")
     }
 }
