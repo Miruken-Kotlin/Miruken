@@ -1,6 +1,6 @@
 package com.miruken.api.resource
 
-import java.time.LocalDateTime
+import org.threeten.bp.LocalDateTime
 
 interface Resource<TId> {
     val id:         TId?

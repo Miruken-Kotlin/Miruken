@@ -8,8 +8,8 @@ import com.miruken.callback.Handles
 import com.miruken.callback.Handling
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
-import java.time.Duration
-import java.time.Instant
+import org.threeten.bp.Duration
+import org.threeten.bp.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 class CachedHandler : Handler() {

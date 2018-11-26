@@ -2,8 +2,8 @@ package com.miruken.concurrent
 
 import com.miruken.*
 import com.miruken.event.Event
-import java.time.Duration
-import java.time.Instant
+import org.threeten.bp.Duration
+import org.threeten.bp.Instant
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean

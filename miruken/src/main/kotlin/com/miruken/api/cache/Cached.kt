@@ -4,7 +4,7 @@ import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.Request
 import com.miruken.typeOf
-import java.time.Duration
+import org.threeten.bp.Duration
 
 data class Cached<TResp: NamedType>(
         val request:     Request<TResp>,
