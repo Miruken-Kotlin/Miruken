@@ -19,10 +19,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.miruken.TypeReference
 import com.miruken.api.Try
 import com.miruken.api.schedule.ScheduleResult
-import java.lang.reflect.Type
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatterBuilder
 import org.threeten.bp.temporal.ChronoField
+import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -132,9 +132,9 @@ object JacksonProvider {
                     (responseType.classifier as? KClass<*>)?.also { nt ->
                         val companion = nt.companionObjectInstance as? NamedType
                         companion?.typeName?.takeUnless { it.isBlank() }?.also {
-                            idToTypeMapping.computeIfAbsent(it) { typeName ->
+                            idToTypeMapping.getOrPut(it) {
                                 val javaType = nt.java
-                                typeToIdMapping[nt.java] = typeName
+                                typeToIdMapping[nt.java] = it
                                 TypeFactory.defaultInstance().constructType(javaType)
                             }
                         }
@@ -210,11 +210,11 @@ object JacksonProvider {
             ): Try<*, *>? {
                 val tree    = parser.codec.readTree<JsonNode>(parser)
                 val isError = tree.get("isLeft")?.booleanValue()
-                        ?: ctxt.reportInputMismatch(this,
+                        ?: throw JsonMappingException.from(parser,
                                 "Expected field 'isLeft' was missing")
 
                 val value   = tree.get("value")
-                        ?: ctxt.reportInputMismatch(this,
+                        ?: throw JsonMappingException.from(parser,
                                 "Expected field 'value' was missing")
 
                 return when (isError) {
@@ -251,7 +251,7 @@ object JacksonProvider {
                 val tree = parser.codec.readTree<JsonNode>(parser)
                 return tree.get("message")?.textValue()?.let {
                     Exception(it)
-                } ?: ctxt.reportInputMismatch<Throwable>(this,
+                } ?: throw JsonMappingException.from(parser,
                         "Expected field 'message' was missing")
             }
         }

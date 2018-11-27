@@ -1,6 +1,6 @@
 package com.miruken.validate
 
-import java.time.LocalDate
+import org.threeten.bp.LocalDate
 import javax.validation.Valid
 import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.NotNull

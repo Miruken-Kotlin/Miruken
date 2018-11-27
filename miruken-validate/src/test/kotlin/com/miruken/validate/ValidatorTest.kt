@@ -1,16 +1,16 @@
 package com.miruken.validate
 
-import com.miruken.test.assertAsync
 import com.miruken.callback.Handler
 import com.miruken.callback.plus
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
 import com.miruken.protocol.proxy
+import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import java.time.LocalDate
-import java.time.Period
+import org.threeten.bp.LocalDate
+import org.threeten.bp.Period
 import javax.validation.groups.Default
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

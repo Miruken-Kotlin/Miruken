@@ -20,34 +20,41 @@ class CachedHandler : Handler() {
             val lastUpdate: Instant)
 
     @Handles
+    @Suppress("UNCHECKED_CAST")
     fun <TResp: NamedType> cache(
         request:  Cached<TResp>,
         composer: Handling
     ): Promise<TResp> {
-        @Suppress("UNCHECKED_CAST")
-        return _cache.compute(request.request) { key, cached ->
-            cached?.takeUnless {
-                when(it.response.state) {
-                    PromiseState.REJECTED -> true
-                    PromiseState.CANCELLED -> true
-                    else -> {
-                        val expiration = request.timeToLive ?: ONE_DAY
-                        Instant.now() > it.lastUpdate + expiration
-                    }
-                }
-            } ?: refreshResponse(key, request.requestType, composer)
-        }!!.response as Promise<TResp>
+        val key     = request.request
+        var created = false
+        var cached  = _cache.getOrPut(key) {
+            created = true
+            refreshResponse(key, request.requestType, composer)
+        }
+        if (!created && when(cached.response.state) {
+            PromiseState.REJECTED -> true
+            PromiseState.CANCELLED -> true
+            else -> {
+                val expiration = request.timeToLive ?: ONE_DAY
+                Instant.now() > cached.lastUpdate + expiration
+            }
+        }) {
+            cached = refreshResponse(key, request.requestType, composer)
+            _cache[key] = cached
+        }
+        return cached.response as Promise<TResp>
     }
 
     @Handles
+    @Suppress("UNCHECKED_CAST")
     fun <TResp: NamedType> refresh(
             request:  Refresh<TResp>,
             composer: Handling
     ): Promise<TResp> {
-        @Suppress("UNCHECKED_CAST")
-        return _cache.compute(request.request) { key, _ ->
-            refreshResponse(key, request.requestType, composer)
-        }!!.response as Promise<TResp>
+        val key = request.request
+        return refreshResponse(key, request.requestType, composer).also {
+            _cache[key] = it
+        }.response as Promise<TResp>
     }
 
     @Handles
@@ -61,10 +68,7 @@ class CachedHandler : Handler() {
             request:     NamedType,
             requestType: TypeReference,
             composer:    Handling
-    ) = CacheResponse(
-        composer.send(request, requestType),
-        Instant.now()
-    )
+    ) = CacheResponse(composer.send(request, requestType), Instant.now())
 }
 
 private val ONE_DAY = Duration.ofDays(1)
