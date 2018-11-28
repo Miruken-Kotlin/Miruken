@@ -3,6 +3,7 @@ package com.miruken.mvc
 import com.miruken.callback.Handling
 import com.miruken.context.*
 import com.miruken.event.Event
+import com.miruken.mvc.option.noBack
 import com.miruken.mvc.option.pushLayer
 import com.miruken.mvc.view.Viewing
 import com.miruken.mvc.view.ViewingRegion
@@ -146,6 +147,8 @@ abstract class Controller : Contextual, AutoCloseable {
             handler:         Handling,
             noinline action: C.() -> Unit
     ) = handler.navigate(style, action)
+
+    val noBack get() = requireContext().noBack
 
     fun goBack() = requireContext().goBack()
 

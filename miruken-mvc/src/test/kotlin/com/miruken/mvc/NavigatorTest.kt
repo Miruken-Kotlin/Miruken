@@ -7,7 +7,7 @@ import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.callback.resolve
 import com.miruken.context.Context
 import com.miruken.context.Scoped
-import com.miruken.mvc.option.RegionOptions
+import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.displayImmediate
 import com.miruken.mvc.option.unloadRegion
 import org.junit.After
@@ -40,12 +40,12 @@ class NavigatorTest {
         @Provides @Scoped
         constructor(): Controller(), NavigatingAware {
 
-        fun sayHello(name: String): RegionOptions? {
+        fun sayHello(name: String): NavigationOptions? {
             println("Hello $name")
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
             push<GoodbyeController> { sayGoodbye(name) }
-            return io.getOptions(RegionOptions())
+            return io.getOptions(NavigationOptions())
         }
 
         fun compose() {
@@ -122,9 +122,9 @@ class NavigatorTest {
         rootContext.unloadRegion
                 .next<HelloController> {
                     val options = sayHello("Lauren")
-                    assertNotNull(options?.layer)
-                    assertNull(options!!.layer!!.push)
-                    assertEquals(options.layer!!.unload, true)
+                    assertNotNull(options?.region)
+                    assertNull(options!!.region!!.push)
+                    assertEquals(options.region!!.unload, true)
                 }
     }
 
@@ -132,9 +132,9 @@ class NavigatorTest {
         rootContext.displayImmediate
                 .push<HelloController> {
                     val options = sayHello("Matthew")
-                    assertNotNull(options?.layer)
-                    assertEquals(options!!.layer!!.push, true)
-                    assertEquals(options.layer!!.immediate, true)
+                    assertNotNull(options?.region)
+                    assertEquals(options!!.region!!.push, true)
+                    assertEquals(options.region!!.immediate, true)
                 }
     }
 
