@@ -210,11 +210,11 @@ object JacksonProvider {
             ): Try<*, *>? {
                 val tree    = parser.codec.readTree<JsonNode>(parser)
                 val isError = tree.get("isLeft")?.booleanValue()
-                        ?: ctxt.reportInputMismatch(this,
+                        ?: throw JsonMappingException.from(parser,
                                 "Expected field 'isLeft' was missing")
 
                 val value   = tree.get("value")
-                        ?: ctxt.reportInputMismatch(this,
+                        ?: throw JsonMappingException.from(parser,
                                 "Expected field 'value' was missing")
 
                 return when (isError) {
@@ -251,7 +251,7 @@ object JacksonProvider {
                 val tree = parser.codec.readTree<JsonNode>(parser)
                 return tree.get("message")?.textValue()?.let {
                     Exception(it)
-                } ?: ctxt.reportInputMismatch<Throwable>(this,
+                } ?: throw JsonMappingException.from(parser,
                         "Expected field 'message' was missing")
             }
         }

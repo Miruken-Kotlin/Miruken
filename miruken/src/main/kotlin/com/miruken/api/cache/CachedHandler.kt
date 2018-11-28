@@ -16,8 +16,7 @@ class CachedHandler : Handler() {
     private val _cache = ConcurrentHashMap<NamedType, CacheResponse>()
 
     private data class CacheResponse(
-            val response:   Promise<*>,
-            val lastUpdate: Instant)
+            val response:   Promise<*>, val lastUpdate: Instant)
 
     @Handles
     fun <TResp: NamedType> cache(
@@ -30,10 +29,8 @@ class CachedHandler : Handler() {
                 when(it.response.state) {
                     PromiseState.REJECTED -> true
                     PromiseState.CANCELLED -> true
-                    else -> {
-                        val expiration = request.timeToLive ?: ONE_DAY
-                        Instant.now() > it.lastUpdate + expiration
-                    }
+                    else -> Instant.now() > it.lastUpdate +
+                            (request.timeToLive ?: ONE_DAY)
                 }
             } ?: refreshResponse(key, request.requestType, composer)
         }!!.response as Promise<TResp>
@@ -61,10 +58,7 @@ class CachedHandler : Handler() {
             request:     NamedType,
             requestType: TypeReference,
             composer:    Handling
-    ) = CacheResponse(
-        composer.send(request, requestType),
-        Instant.now()
-    )
+    ) = CacheResponse(composer.send(request, requestType), Instant.now())
 }
 
 private val ONE_DAY = Duration.ofDays(1)

@@ -5,8 +5,9 @@ import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.graph.TraversingAxis
-import com.miruken.mvc.option.LayerOptions
+import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.RegionOptions
+import com.miruken.mvc.option.noBack
 import com.miruken.mvc.option.regionOptions
 import com.miruken.mvc.view.ViewingRegion
 import com.miruken.typeOf
@@ -62,11 +63,14 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
-        if (style == NavigationStyle.NEXT) {
+        val options = composer.getOptions(NavigationOptions())
+
+        if (initiator != null && navigation.back == null &&
+                options?.noBack != true && style == NavigationStyle.NEXT) {
             navigation.back = initiator
         }
 
-        bindIO(child, controller!!, style, composer)
+        bindIO(child, controller!!, style, options, composer)
 
         child.addHandlers(GenericWrapper(
                 navigation, typeOf<Navigation<*>>()))
@@ -83,7 +87,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             child.end()
             throw e
         } finally {
-            bindIO(null, controller, style, null)
+            bindIO(null, controller, style, null, null)
         }
         return true
     }
@@ -101,7 +105,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 when {
                     nav == null -> null
-                    nav.back != null -> composer.handle(nav.back!!)
+                    nav.back != null -> composer.noBack.handle(nav.back!!)
                     nav.style == NavigationStyle.PUSH ->
                         nav.controller?.let { controller ->
                             controller.endContext()
@@ -115,6 +119,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             io:         Handling?,
             controller: Controller,
             style:      NavigationStyle,
+            options:    NavigationOptions?,
             composer:   Handling?
     ) {
         controller._io = (io ?: controller.context)?.let {
@@ -123,18 +128,18 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }?.let {
             if (composer != null) {
-                val options    = RegionOptions()
-                var hasOptions = composer.handle(options).handled
+                var navOptions = options
                 if (style == NavigationStyle.PUSH) {
-                    options.layer = (options.layer ?: LayerOptions()).apply {
-                        push = true
-                    }
-                    hasOptions = true
+                    if (navOptions == null)
+                        navOptions = NavigationOptions()
+                    navOptions.region = (navOptions.region
+                            ?: RegionOptions()).apply { push = true }
                 }
-                if (hasOptions) it.stop.regionOptions(options) else it
-            } else {
-                it
+                if (navOptions != null) {
+                    return@let it.stop.regionOptions(navOptions)
+                }
             }
+            it
         }
     }
 
