@@ -17,8 +17,7 @@ class CachedHandler
     private val _cache = ConcurrentHashMap<NamedType, CacheResponse>()
 
     private data class CacheResponse(
-            val response:   Promise<*>,
-            val lastUpdate: Instant)
+            val response: Promise<*>, val lastUpdate: Instant)
 
     @Handles
     @Suppress("UNCHECKED_CAST")
