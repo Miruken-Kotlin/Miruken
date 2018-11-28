@@ -3,16 +3,17 @@ package com.miruken.api.cache
 import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.send
-import com.miruken.callback.Handler
-import com.miruken.callback.Handles
-import com.miruken.callback.Handling
+import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
 import org.threeten.bp.Duration
 import org.threeten.bp.Instant
 import java.util.concurrent.ConcurrentHashMap
 
-class CachedHandler : Handler() {
+class CachedHandler
+    @Provides @Singleton
+    constructor(): Handler() {
+
     private val _cache = ConcurrentHashMap<NamedType, CacheResponse>()
 
     private data class CacheResponse(
@@ -34,10 +35,8 @@ class CachedHandler : Handler() {
         if (!created && when(cached.response.state) {
             PromiseState.REJECTED -> true
             PromiseState.CANCELLED -> true
-            else -> {
-                val expiration = request.timeToLive ?: ONE_DAY
-                Instant.now() > cached.lastUpdate + expiration
-            }
+            else -> Instant.now() > cached.lastUpdate +
+                    (request.timeToLive ?: ONE_DAY)
         }) {
             cached = refreshResponse(key, request.requestType, composer)
             _cache[key] = cached

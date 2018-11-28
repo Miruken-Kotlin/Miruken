@@ -1,12 +1,13 @@
 package com.miruken.api.oneway
 
 import com.miruken.api.NamedType
-import com.miruken.callback.Handler
-import com.miruken.callback.Handles
-import com.miruken.callback.Handling
 import com.miruken.api.send
+import com.miruken.callback.*
 
-class OnewayHandler : Handler() {
+class OnewayHandler
+    @Provides @Singleton
+    constructor() : Handler() {
+
     @Handles
     fun <TResp: NamedType> oneway(
             request:  Oneway<TResp>,
