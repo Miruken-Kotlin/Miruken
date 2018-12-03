@@ -1,8 +1,9 @@
 package com.miruken.map
 
-import com.miruken.test.assertAsync
 import com.miruken.callback.*
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.getDescriptor
+import com.miruken.test.assertAsync
 import com.miruken.typeOf
 import org.junit.Before
 import org.junit.Rule
@@ -122,14 +123,14 @@ class MappingTest {
     }
 
     @Test fun `Performs mapping resolving`() {
-        HandlerDescriptor.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
         val exception = IllegalArgumentException("Value is bad")
         val value     = _exception.infer.map<Any>(exception)
         assertEquals("java.lang.IllegalArgumentException: Value is bad", value)
     }
 
     @Test fun `Performs mapping on simple results`() {
-        HandlerDescriptor.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
         val exception = IllegalStateException("Close not found")
         var value     = _exception.infer.map<Any>(exception)
         assertEquals(500, value)
@@ -139,14 +140,14 @@ class MappingTest {
     }
 
     @Test fun `Maps to null if best effort`() {
-        HandlerDescriptor.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
         val value = _exception.infer.bestEffort
                 .map<Int>(InvalidClassException(""))
         assertNull(value)
     }
 
     @Test fun `Maps to null if best effort async`() {
-        HandlerDescriptor.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
         assertAsync { done ->
             _exception.infer.bestEffort
                     .mapAsync<Int>(InvalidClassException("")) then {

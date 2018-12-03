@@ -1,6 +1,8 @@
 package com.miruken.mvc
 
 import com.miruken.callback.Handling
+import com.miruken.concurrent.Promise
+import com.miruken.concurrent.delay
 import com.miruken.context.*
 import com.miruken.event.Event
 import com.miruken.mvc.option.noBack
@@ -153,6 +155,9 @@ abstract class Controller : Contextual, AutoCloseable {
     fun goBack() = requireContext().goBack()
 
     protected fun goBack(handler: Handling) = handler.goBack()
+
+    protected fun delay(delayMs: Long) =
+            Promise.delay(delayMs).also { context?.track(it) }
 
     val disposing = Event<Controller>()
     val disposed  = Event<Controller>()

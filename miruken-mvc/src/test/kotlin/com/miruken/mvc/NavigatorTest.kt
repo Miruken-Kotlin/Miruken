@@ -3,7 +3,9 @@ package com.miruken.mvc
 import com.miruken.callback.Provides
 import com.miruken.callback.TypeHandlers
 import com.miruken.callback.getOptions
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.getDescriptor
 import com.miruken.callback.resolve
 import com.miruken.context.Context
 import com.miruken.context.Scoped
@@ -18,6 +20,7 @@ import kotlin.test.*
 class NavigatorTest {
     private lateinit var rootContext: Context
     private lateinit var navigator: Navigator
+    private lateinit var factory: HandlerDescriptorFactory
 
     @Before
     fun setup() {
@@ -25,10 +28,12 @@ class NavigatorTest {
         navigator   = Navigator(TestViewRegion())
         rootContext.addHandlers(navigator, TypeHandlers)
 
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<HelloController>()
-        HandlerDescriptor.getDescriptor<GoodbyeController>()
-        HandlerDescriptor.getDescriptor<PartialController>()
+        factory = LazyHandlerDescriptorFactory().apply {
+            getDescriptor<HelloController>()
+            getDescriptor<GoodbyeController>()
+            getDescriptor<PartialController>()
+            HandlerDescriptorFactory.current = this
+        }
     }
 
     @After

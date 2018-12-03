@@ -1,30 +1,35 @@
 package com.miruken.validate
 
-import com.miruken.test.assertAsync
 import com.miruken.callback.*
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.getDescriptor
 import com.miruken.concurrent.Promise
+import com.miruken.test.assertAsync
 import com.miruken.validate.bean.BeanValidator
-import javax.validation.Valid
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
+import javax.validation.Valid
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ValidateFilterTest {
     private lateinit var _handler: Handling
+    private lateinit var factory: HandlerDescriptorFactory
 
     @Rule
     @JvmField val testName = TestName()
 
     @Before
     fun setup() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<BeanValidator>()
-        HandlerDescriptor.getDescriptor<ValidateFilter<*,*>>()
-        HandlerDescriptor.getDescriptor<TeamHandler>()
+        factory = LazyHandlerDescriptorFactory().apply {
+            getDescriptor<BeanValidator>()
+            getDescriptor<ValidateFilter<*,*>>()
+            getDescriptor<TeamHandler>()
+            HandlerDescriptorFactory.current = this
+        }
 
         _handler = TypeHandlers
     }

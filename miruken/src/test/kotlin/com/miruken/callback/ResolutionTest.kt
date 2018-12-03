@@ -1,9 +1,12 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.LazyHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.getDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
+import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -11,6 +14,14 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 
 class ResolutionTest {
+    private lateinit var factory: HandlerDescriptorFactory
+
+    @Before
+    fun setup() {
+        factory = LazyHandlerDescriptorFactory()
+        HandlerDescriptorFactory.current = factory
+    }
+
     @Test fun `Overrides providers`() {
         val demo    = DemoHandler()
         val handler = Handler()
@@ -26,7 +37,7 @@ class ResolutionTest {
     }
 
     @Test fun `Overrides providers resolving`() {
-        HandlerDescriptor.getDescriptor<DemoProvider>()
+        factory.getDescriptor<DemoProvider>()
         val demo    = DemoHandler()
         val handler = Handler()
         val resolve = handler.provide(demo).infer.resolve<DemoHandler>()
@@ -34,7 +45,7 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves handlers`() {
-        HandlerDescriptor.getDescriptor<EmailHandler>()
+        factory.getDescriptor<EmailHandler>()
         val handler = (EmailProvider()
                     + BillingImpl()
                     + RepositoryProvider()
@@ -53,8 +64,8 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves all handlers`() {
-        HandlerDescriptor.getDescriptor<EmailHandler>()
-        HandlerDescriptor.getDescriptor<OfflineHandler>()
+        factory.getDescriptor<EmailHandler>()
+        factory.getDescriptor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
         val id      = handler.inferAll.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
@@ -68,7 +79,7 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves handlers with filters`() {
-        HandlerDescriptor.getDescriptor<EmailHandler>()
+        factory.getDescriptor<EmailHandler>()
         val handler = (EmailProvider()
                     + BillingImpl()
                     + RepositoryProvider()

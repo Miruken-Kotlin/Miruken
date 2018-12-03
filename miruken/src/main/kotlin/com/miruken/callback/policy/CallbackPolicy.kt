@@ -13,9 +13,7 @@ abstract class CallbackPolicy(
         val rules:  List<MethodRule>,
         filters:    Collection<FilteringProvider>,
         val strict: Boolean = false
-) : FilteredObject(), Comparator<Any> {
-
-    init { addFilters(filters) }
+) : FilteredObject(filters), Comparator<Any> {
 
     fun match(method: CallableDispatch) =
             rules.firstOrNull { rule -> rule.matches(method) }
@@ -44,10 +42,6 @@ abstract class CallbackPolicy(
 
     open fun approve(callback: Any, binding: PolicyMemberBinding) = true
 
-    fun getMethods() = HandlerDescriptor.getPolicyMembers(this)
-
-    fun getMethods(key: Any) = HandlerDescriptor.getPolicyMembers(this, key)
-
     fun dispatch(
             handler:      Any,
             callback:     Any,
@@ -60,9 +54,10 @@ abstract class CallbackPolicy(
             return handler.dispatch(this, callback, callbackType,
                     greedy, composer, results)
         }
-        return HandlerDescriptor.getDescriptor(handler::class)
-                .dispatch(this, handler, callback, callbackType,
+        return HandlerDescriptorFactory.current.getDescriptor(handler::class)
+                ?.dispatch(this, handler, callback, callbackType,
                         greedy, composer, results)
+                ?: HandleResult.NOT_HANDLED
     }
 
     protected fun compareGenericArity(o1: Any?, o2: Any?): Int {
@@ -83,42 +78,5 @@ abstract class CallbackPolicy(
         fun getCallbackPolicy(callback: Any) =
                 (callback as? DispatchingCallback)?.policy
                         ?: HandlesPolicy
-
-        fun getInstanceHandlers(
-                callback:     Any,
-                callbackType: TypeReference? = null
-        ): List<KType> {
-            val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getInstanceHandlers(
-                    policy, callback, callbackType)
-        }
-
-        fun getTypeHandlers(
-                callback:     Any,
-                callbackType: TypeReference? = null
-        ): List<KType> {
-            val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getTypeHandlers(
-                    policy, callback, callbackType)
-        }
-
-        fun getCallbackHandlers(
-                callback:     Any,
-                callbackType: TypeReference? = null
-        ): List<KType> {
-            val policy = getCallbackPolicy(callback)
-            return HandlerDescriptor.getCallbackHandlers(
-                    policy, callback, callbackType)
-        }
-
-        fun getCallbackMethods(
-                callback:     Any,
-                callbackType: TypeReference? = null
-        ): List<PolicyMemberBinding> {
-            val policy = getCallbackPolicy(callback)
-            return policy.getKey(callback, callbackType)?.let {
-                policy.getMethods(it)
-            } ?: emptyList()
-        }
     }
 }

@@ -7,37 +7,19 @@ import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KType
 
-class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
-    private val _typed =
-            HashMap<KType, MutableList<PolicyMemberBinding>>()
+class CallbackPolicyDescriptor(
+        val policy: CallbackPolicy,
+        bindings:   Collection<PolicyMemberBinding>
+) {
+    private val _typed      = HashMap<KType, MutableList<PolicyMemberBinding>>()
+    private val _compatible = ConcurrentHashMap<Any, List<PolicyMemberBinding>>()
 
-    private val _compatible =
-            ConcurrentHashMap<Any, List<PolicyMemberBinding>>()
+    private val _indexed by lazy { HashMap<Any, MutableList<PolicyMemberBinding>>() }
+    private val _unknown by lazy { mutableListOf<PolicyMemberBinding>() }
 
-    private val _indexed by lazy {
-        HashMap<Any, MutableList<PolicyMemberBinding>>()
-    }
+    init { bindings.forEach(::addBinding) }
 
-    private val _unknown by lazy {
-        mutableListOf<PolicyMemberBinding>()
-    }
-
-    internal fun add(memberBinding: PolicyMemberBinding) {
-        val key  = memberBinding.key
-        val list = when (val type = TypeReference.getKType(key) ?: key) {
-            is KType -> if (type.classifier == Any::class) {
-                _unknown
-            } else {
-                _typed.getOrPut(type) { mutableListOf() }
-            }
-            null -> _unknown
-            else -> _indexed.getOrPut(key!!) { mutableListOf() }
-        }
-        list.addSorted(memberBinding, PolicyMemberBinding)
-    }
-
-    fun getInvariantMembers() =
-        _typed.values.flatten() + _indexed.values.flatten()
+    fun getInvariantMembers() = _typed.values.flatten() + _indexed.values.flatten()
 
     fun getInvariantMembers(
             callback:     Any,
@@ -58,14 +40,28 @@ class CallbackPolicyDescriptor(val policy: CallbackPolicy) {
         }?.filter { it.approve(callback) } ?: emptyList()
 
     private fun inferCompatibleMembers(key: Any) =
-            when (val type = TypeReference.getKType(key)) {
-                is KType ->
-                    policy.getCompatibleKeys(type, _typed.keys).flatMap {
-                        _typed[it] ?: emptyList<PolicyMemberBinding>()
-                    }
-                else ->
-                    policy.getCompatibleKeys(key, _indexed.keys).flatMap {
-                        _indexed[it] ?: emptyList<PolicyMemberBinding>()
-                    }
-            }.sortedWith(policy.orderMembers) + _unknown
+        when (val type = TypeReference.getKType(key)) {
+            is KType ->
+                policy.getCompatibleKeys(type, _typed.keys).flatMap {
+                    _typed[it] ?: emptyList<PolicyMemberBinding>()
+                }
+            else ->
+                policy.getCompatibleKeys(key, _indexed.keys).flatMap {
+                    _indexed[it] ?: emptyList<PolicyMemberBinding>()
+                }
+        }.sortedWith(policy.orderMembers) + _unknown
+
+    private fun addBinding(memberBinding: PolicyMemberBinding) {
+        val key  = memberBinding.key
+        val list = when (val type = TypeReference.getKType(key) ?: key) {
+            is KType -> if (type.classifier == Any::class) {
+                _unknown
+            } else {
+                _typed.getOrPut(type) { mutableListOf() }
+            }
+            null -> _unknown
+            else -> _indexed.getOrPut(key!!) { mutableListOf() }
+        }
+        list.addSorted(memberBinding, PolicyMemberBinding)
+    }
 }

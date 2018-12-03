@@ -1,8 +1,10 @@
 package com.miruken.callback
 
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.LazyHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.callback.policy.bindings.QualifierFactory
+import com.miruken.callback.policy.getDescriptor
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -15,10 +17,13 @@ class HandlerBindingTest {
     @Before
     fun setup() {
         _handler = TypeHandlers
-        HandlerDescriptor.getDescriptor<Client>()
-        HandlerDescriptor.getDescriptor<LocalConfiguration>()
-        HandlerDescriptor.getDescriptor<RemoteConfiguration>()
-        HandlerDescriptor.getDescriptor<Hospital>()
+        HandlerDescriptorFactory.current =
+                LazyHandlerDescriptorFactory().apply {
+            getDescriptor<Client>()
+            getDescriptor<LocalConfiguration>()
+            getDescriptor<RemoteConfiguration>()
+            getDescriptor<Hospital>()
+        }
     }
 
     @Test fun `Resolves instance without name`() {
