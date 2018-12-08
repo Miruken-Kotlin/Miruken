@@ -41,6 +41,7 @@ object JacksonProvider {
         jacksonObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .enable(SerializationFeature.WRITE_ENUMS_USING_INDEX)
                 .registerModule(MirukenModule)
     }
 

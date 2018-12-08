@@ -21,7 +21,7 @@ class HandlerDescriptor(
     fun getTypePolicyDescriptor(policy: CallbackPolicy) =
             typePolicies[policy]
 
-    internal fun dispatch(
+    fun dispatch(
             policy:       CallbackPolicy,
             receiver:     Any,
             callback:     Any,

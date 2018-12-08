@@ -79,9 +79,7 @@ class LazyHandlerDescriptorFactory(
                     ?.firstOrNull())?.also { compatible.addSorted(it, orderMembers) }
         }
 
-        return (invariants + compatible).map {
-            it.dispatcher.owningType
-        }
+        return (invariants + compatible).map { it.dispatcher.owningType }
     }
 
     override fun getPolicyMembers(policy: CallbackPolicy, key: Any) =
