@@ -26,8 +26,8 @@ class MethodRule(vararg val argumentRules: ArgumentRule) {
                     argRule.matches(arg, context) }.all { it }
     }
 
-    fun bind(policy: CallbackPolicy,
-             dispatch: CallableDispatch,
+    fun bind(policy:     CallbackPolicy,
+             dispatch:   CallableDispatch,
              annotation: Annotation): PolicyMemberBinding {
         val strict      = policy.strict || dispatch.strict
         val bindingInfo = PolicyMemberBindingInfo(

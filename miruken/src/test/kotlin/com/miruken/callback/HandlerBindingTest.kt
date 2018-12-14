@@ -17,13 +17,13 @@ class HandlerBindingTest {
     @Before
     fun setup() {
         _handler = TypeHandlers
-        HandlerDescriptorFactory.current =
+        HandlerDescriptorFactory.useFactory(
                 LazyHandlerDescriptorFactory().apply {
             getDescriptor<Client>()
             getDescriptor<LocalConfiguration>()
             getDescriptor<RemoteConfiguration>()
             getDescriptor<Hospital>()
-        }
+        })
     }
 
     @Test fun `Resolves instance without name`() {

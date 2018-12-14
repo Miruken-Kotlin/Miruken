@@ -48,6 +48,8 @@ abstract class Controller : Contextual, AutoCloseable {
 
     fun endContext() = context?.end(this)
 
+    fun unwindContext() = context?.unwind(this)
+
     val async get() = requireContext().async
 
     // Render
@@ -162,6 +164,8 @@ abstract class Controller : Contextual, AutoCloseable {
     val disposing = Event<Controller>()
     val disposed  = Event<Controller>()
 
+    protected open fun cleanUp() {}
+
     final override fun close() {
         if (_closed.compareAndSet(false, true)) {
             disposing(this)
@@ -175,6 +179,4 @@ abstract class Controller : Contextual, AutoCloseable {
             disposed.clear()
         }
     }
-
-    open fun cleanUp() {}
 }

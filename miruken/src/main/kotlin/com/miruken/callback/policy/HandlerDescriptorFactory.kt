@@ -34,11 +34,14 @@ interface HandlerDescriptorFactory {
     fun getPolicyMembers(policy: CallbackPolicy): List<PolicyMemberBinding>
 
     companion object {
-        private var currentFactory: HandlerDescriptorFactory? = null
+        private var factory: HandlerDescriptorFactory? = null
 
-        var current: HandlerDescriptorFactory
-            get() = currentFactory ?: LazyHandlerDescriptorFactory.DEFAULT
-            set(value) { currentFactory = value }
+        val current: HandlerDescriptorFactory
+            get() = factory ?: LazyHandlerDescriptorFactory.DEFAULT
+
+        fun useFactory(factory: HandlerDescriptorFactory) {
+            this.factory = factory
+        }
     }
 }
 

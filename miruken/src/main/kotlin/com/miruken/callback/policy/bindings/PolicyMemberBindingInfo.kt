@@ -4,7 +4,7 @@ import com.miruken.callback.policy.Argument
 import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.rules.MethodRule
 
-data class PolicyMemberBindingInfo(
+class PolicyMemberBindingInfo(
         val rule:       MethodRule?,
         val dispatcher: CallableDispatch,
         val annotation: Annotation,

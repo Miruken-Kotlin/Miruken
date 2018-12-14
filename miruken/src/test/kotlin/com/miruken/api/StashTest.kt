@@ -21,7 +21,7 @@ class StashTest {
 
     @Before
     fun setup() {
-       HandlerDescriptorFactory.current = LazyHandlerDescriptorFactory()
+       HandlerDescriptorFactory.useFactory(LazyHandlerDescriptorFactory())
     }
 
     @Test fun `Adds to stash`() {

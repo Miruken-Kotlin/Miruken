@@ -3,7 +3,7 @@ package com.miruken.callback
 import kotlin.reflect.KAnnotatedElement
 
 abstract class FilteredObject() : Filtered {
-    private val _filters by lazy {
+    private val _filters = lazy {
         mutableSetOf<FilteringProvider>()
     }
 
@@ -16,13 +16,31 @@ abstract class FilteredObject() : Filtered {
     }
 
     final override val filters: Collection<FilteringProvider>
-        get() = _filters
+        get() = if (_filters.isInitialized()) _filters.value else emptyList()
 
     final override fun addFilters(vararg providers: FilteringProvider) {
-        _filters.addAll(providers)
+        _filters.value.addAll(providers)
     }
 
     final override fun addFilters(providers: Collection<FilteringProvider>) {
-        _filters.addAll(providers)
+        _filters.value.addAll(providers)
+    }
+
+    final override fun removeFilters(vararg providers: FilteringProvider) {
+        if (_filters.isInitialized()) {
+            _filters.value.removeAll(providers)
+        }
+    }
+
+    final override fun removeFilters(providers: Collection<FilteringProvider>) {
+        if (_filters.isInitialized()) {
+            _filters.value.removeAll(providers)
+        }
+    }
+
+    override fun removeAllFilters() {
+        if (_filters.isInitialized()) {
+            _filters.value.clear()
+        }
     }
 }

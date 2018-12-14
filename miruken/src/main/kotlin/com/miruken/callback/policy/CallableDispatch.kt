@@ -2,15 +2,19 @@ package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
-import com.miruken.callback.*
+import com.miruken.callback.Strict
+import com.miruken.callback.getFilterProviders
 import com.miruken.concurrent.Promise
-import com.miruken.runtime.*
+import com.miruken.runtime.isNothing
+import com.miruken.runtime.isUnit
+import com.miruken.runtime.requiresReceiver
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Member
-import kotlin.reflect.*
+import kotlin.reflect.KAnnotatedElement
+import kotlin.reflect.KCallable
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
-import kotlin.reflect.jvm.*
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.jvmErasure
 
 class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val strict     = annotations.any { it is Strict }
@@ -28,12 +32,6 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
             ?: callable.returnType
 
     val filterProviders by lazy { getFilterProviders() }
-
-    val javaMember: Member get() = when (callable) {
-        is KFunction<*> -> callable.javaMethod ?: callable.javaConstructor!!
-        is KProperty<*> -> callable.javaGetter ?: callable.javaField!!
-        else -> error("Unrecognized callable $callable")
-    }
 
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing

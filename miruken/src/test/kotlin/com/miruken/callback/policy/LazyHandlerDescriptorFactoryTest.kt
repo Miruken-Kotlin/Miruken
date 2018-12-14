@@ -16,7 +16,7 @@ class LazyHandlerDescriptorFactoryTest {
     @Before
     fun setup() {
         factory = LazyHandlerDescriptorFactory()
-        HandlerDescriptorFactory.current = factory
+        HandlerDescriptorFactory.useFactory(factory)
     }
 
     @Test fun `Cannot create descriptors for interfaces`() {

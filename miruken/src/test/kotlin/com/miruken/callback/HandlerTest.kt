@@ -37,7 +37,7 @@ class HandlerTest {
     @Before
     fun setup() {
         factory = LazyHandlerDescriptorFactory()
-        HandlerDescriptorFactory.current = factory
+        HandlerDescriptorFactory.useFactory(factory)
     }
 
     @Test fun `Indicates not handled`() {
