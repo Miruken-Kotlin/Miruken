@@ -382,19 +382,19 @@ class ResolutionTest {
     }
 
     class EmailProvider : Handler() {
-        @Provides
+        @get:Provides
         val provideEmail = EmailHandler()
     }
 
-    class BillingProvider(@Provides val billing: Billing) : Handler()
+    class BillingProvider(@get:Provides val billing: Billing) : Handler()
 
     class DemoProvider : Handler() {
-        @Provides
+        @get:Provides
         val provideDemo = DemoHandler()
     }
 
     class OfflineProvider : Handler() {
-        @Provides
+        @get:Provides
         val provideOffline = OfflineHandler()
     }
 

@@ -13,7 +13,7 @@ class BatchingHandler(
 
     private val _completed = AtomicInteger(0)
 
-    @Provides
+    @get:Provides
     private var batch: Batch? = Batch(*tags)
 
     @Provides

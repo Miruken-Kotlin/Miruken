@@ -1,10 +1,10 @@
 package com.miruken.context
 
-import com.miruken.test.assertAsync
 import com.miruken.callback.Handler
 import com.miruken.callback.Key
 import com.miruken.callback.Provides
 import com.miruken.callback.Proxy
+import com.miruken.test.assertAsync
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -92,19 +92,19 @@ class PropertiesTest {
 
     @Test fun `Delegates primitive property to context`() {
         _context.addHandlers(object : Handler() {
-            @Provides
+            @get:Provides
             val primes = listOf(2,3,5,7,11)
 
-            @Provides
-            @Key("help")
+            @get:Provides
+            @get:Key("help")
             val primaryHelp = "www.help.com"
 
-            @Provides
-            @Key("help")
+            @get:Provides
+            @get:Key("help")
             val secondaryHelp = "www.help2.com"
 
-            @Provides
-            @Key("help")
+            @get:Provides
+            @get:Key("help")
             val criticalHelp = "www.help3.com"
         })
         val instance = object : ContextualHandler() {
@@ -188,7 +188,7 @@ class PropertiesTest {
             override fun buy(itemId: Long): UUID = UUID.randomUUID()
         })
         val instance = object : ContextualHandler() {
-            @Proxy val auction by get<Auction>()
+            @get:Proxy val auction by get<Auction>()
         }.apply { context = _context }
         assertNotNull(instance.auction.buy(2))
     }

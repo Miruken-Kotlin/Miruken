@@ -125,7 +125,7 @@ class LazyHandlerDescriptorFactoryTest {
         @Handles
         fun hello(foo: Foo) {}
 
-        @Provides
+        @get:Provides
         val foo = Foo()
     }
 }

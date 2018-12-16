@@ -32,7 +32,7 @@ class NavigatorTest {
             getDescriptor<HelloController>()
             getDescriptor<GoodbyeController>()
             getDescriptor<PartialController>()
-            HandlerDescriptorFactory.current = this
+            HandlerDescriptorFactory.useFactory(this)
         }
     }
 
@@ -49,7 +49,7 @@ class NavigatorTest {
             println("Hello $name")
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
-            push<GoodbyeController> { sayGoodbye(name) }
+            push<GoodbyeController> { it.sayGoodbye(name) }
             return io.getOptions(NavigationOptions())
         }
 
@@ -86,7 +86,6 @@ class NavigatorTest {
     class PartialController
     @Provides @Scoped
     constructor() : Controller(), NavigatingAware {
-
         fun render() {
             val navigation = io.resolve<Navigation<*>>()
             assertSame(this, navigation!!.controller)
@@ -98,35 +97,35 @@ class NavigatorTest {
 
     @Test fun `Fails navigation if no context`() {
         assertFailsWith(IllegalStateException::class) {
-            navigator.next<HelloController> { sayHello("hi") }
+            navigator.next<HelloController> { it.sayHello("hi") }
         }
     }
 
     @Test fun `Navigates to next controller`() {
         rootContext.next<HelloController> {
-            sayHello("Brenda")
-            assertSame(rootContext, context?.parent)
+            it.sayHello("Brenda")
+            assertSame(rootContext, it.context?.parent)
         }
     }
 
     @Test fun `Navigates to push controller`() {
         rootContext.push<HelloController> {
-            sayHello("Craig")
-            assertSame(rootContext, context?.parent)
+            it.sayHello("Craig")
+            assertSame(rootContext, it.context?.parent)
         }
     }
 
     @Test fun `Navigates to partial controller`() {
         rootContext.next<HelloController> {
-            compose()
-            assertNull(context)
+            it.compose()
+            assertNull(it.context)
         }
     }
 
     @Test fun `Propagates next options`() {
         rootContext.unloadRegion
                 .next<HelloController> {
-                    val options = sayHello("Lauren")
+                    val options = it.sayHello("Lauren")
                     assertNotNull(options?.region)
                     assertNull(options!!.region!!.push)
                     assertEquals(options.region!!.unload, true)
@@ -136,7 +135,7 @@ class NavigatorTest {
     @Test fun `Propagates push options`() {
         rootContext.displayImmediate
                 .push<HelloController> {
-                    val options = sayHello("Matthew")
+                    val options = it.sayHello("Matthew")
                     assertNotNull(options?.region)
                     assertEquals(options!!.region!!.push, true)
                     assertEquals(options.region!!.immediate, true)
@@ -144,6 +143,6 @@ class NavigatorTest {
     }
 
     @Test fun `Renders a view`() {
-        rootContext.next<HelloController> { render() }
+        rootContext.next<HelloController> { it.render() }
     }
 }

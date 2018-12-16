@@ -9,22 +9,22 @@ inline fun <reified C: Controller> Handling.next() =
         navigate<C>(NavigationStyle.NEXT)
 
 inline fun <reified C: Controller> Handling.next(
-        noinline action: C.() -> Unit
-) = (navigate<C>(NavigationStyle.NEXT)) { action() }
+        noinline action: (C) -> Unit
+) = navigate<C>(NavigationStyle.NEXT)(action)
 
 inline fun <reified C: Controller> Handling.push() =
         navigate<C>(NavigationStyle.PUSH)
 
 inline fun <reified C: Controller> Handling.push(
-        noinline action: C.() -> Unit
-) = (navigate<C>(NavigationStyle.PUSH)) { action() }
+        noinline action: (C) -> Unit
+) = navigate<C>(NavigationStyle.PUSH)(action)
 
 inline fun <reified C: Controller> Handling.partial() =
         navigate<C>(NavigationStyle.PARTIAL)
 
 inline fun <reified C: Controller> Handling.partial(
-        noinline action: C.() -> Unit
-) = (navigate<C>(NavigationStyle.PARTIAL)) { action() }
+        noinline action: (C) -> Unit
+) = navigate<C>(NavigationStyle.PARTIAL)(action)
 
 inline fun <reified C: Controller> Handling.navigate(
         style:  NavigationStyle
@@ -37,8 +37,8 @@ inline fun <reified C: Controller> Handling.navigate(
 
 inline fun <reified C: Controller> Handling.navigate(
         style:           NavigationStyle,
-        noinline action: C.() -> Unit
-) = (navigate<C>(style)) { action() }
+        noinline action: (C) -> Unit
+) = navigate<C>(style)(action)
 
 fun Handling.goBack() {
     handle(Navigation.GoBack()) otherwise {

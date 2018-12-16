@@ -1,8 +1,8 @@
 package com.miruken.callback
 
-import com.miruken.test.assertAsync
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
+import com.miruken.test.assertAsync
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -196,7 +196,7 @@ class KeyResolverTest {
     class InventoryHandler : Handler() {
         private val _orders = mutableListOf<Order>()
 
-        @Provides
+        @get:Provides
         val order get() = _orders.toList()
 
         @Handles
@@ -311,27 +311,27 @@ class KeyResolverTest {
     }
 
     class ConfigurationHandler : Handler() {
-        @Provides
+        @get:Provides
         val maxRetries: Int = 2
 
-        @Provides
-        @Key("logLevel")
+        @get:Provides
+        @get:Key("logLevel")
         val logLevelInt = LogLevel.INFO
 
-        @Provides
-        @Key("logLevelStr")
+        @get:Provides
+        @get:Key("logLevelStr")
         val logLevelStr = LogLevel.FATAL.name
 
-        @Provides
-        @Key("help")
+        @get:Provides
+        @get:Key("help")
         val primaryHelp = "www.help.com"
 
-        @Provides
-        @Key("help")
+        @get:Provides
+        @get:Key("help")
         val secondaryHelp = "www.help2.com"
 
-        @Provides
-        @Key("help")
+        @get:Provides
+        @get:Key("help")
         val criticalHelp = "www.help3.com"
     }
 

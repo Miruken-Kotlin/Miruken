@@ -96,12 +96,12 @@ abstract class Controller : Contextual, AutoCloseable {
     protected inline fun <reified C: Controller> next(handler: Handling ) =
             handler.next<C>()
 
-    protected inline fun <reified C: Controller> next(noinline action: C.() -> Unit) =
+    protected inline fun <reified C: Controller> next(noinline action: (C) -> Unit) =
             requireContext().next(action)
 
     protected inline fun <reified C: Controller> next(
             handler:         Handling,
-            noinline action: C.() -> Unit
+            noinline action: (C) -> Unit
     ) = handler.next(action)
 
     protected inline fun <reified C: Controller> push() =
@@ -110,12 +110,12 @@ abstract class Controller : Contextual, AutoCloseable {
     protected inline fun <reified C: Controller> push(handler: Handling) =
             handler.push<C>()
 
-    protected inline fun <reified C: Controller> push(noinline action: C.() -> Unit) =
+    protected inline fun <reified C: Controller> push(noinline action: (C) -> Unit) =
             requireContext().push(action)
 
     protected inline fun <reified C: Controller> push(
             handler:         Handling,
-            noinline action: C.() -> Unit
+            noinline action: (C) -> Unit
     ) = handler.push(action)
 
     protected inline fun <reified C: Controller> partial() =
@@ -124,12 +124,12 @@ abstract class Controller : Contextual, AutoCloseable {
     protected inline fun <reified C: Controller> partial(handler: Handling) =
             handler.partial<C>()
 
-    protected inline fun <reified C: Controller> partial(noinline action: C.() -> Unit) =
+    protected inline fun <reified C: Controller> partial(noinline action: (C) -> Unit) =
             requireContext().partial(action)
 
     protected inline fun <reified C: Controller> partial(
             handler:         Handling,
-            noinline action: C.() -> Unit
+            noinline action: (C) -> Unit
     ) = handler.partial(action)
 
     protected inline fun <reified C: Controller> navigate(
@@ -143,13 +143,13 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
-            noinline action: C.() -> Unit
+            noinline action: (C) -> Unit
     ) = requireContext().navigate(style, action)
 
     protected inline fun <reified C: Controller> navigate(
             style:           NavigationStyle,
             handler:         Handling,
-            noinline action: C.() -> Unit
+            noinline action: (C) -> Unit
     ) = handler.navigate(style, action)
 
     val noBack get() = requireContext().noBack

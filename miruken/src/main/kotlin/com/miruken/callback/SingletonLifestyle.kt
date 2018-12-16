@@ -31,6 +31,6 @@ object SingletonLifestyleProvider : LifestyleProvider({
 })
 
 @Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY)
+        AnnotationTarget.PROPERTY_GETTER)
 @UseFilterProvider(SingletonLifestyleProvider::class)
 annotation class Singleton

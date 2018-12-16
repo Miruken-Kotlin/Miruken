@@ -1210,7 +1210,7 @@ class HandlerTest {
                     Bar().apply { handled = 2 })
         }
 
-        @Provides
+        @get:Provides
         val providesPropertyBar : Bar
             get() = Bar().apply { handled = 3 }
 
@@ -1252,7 +1252,7 @@ class HandlerTest {
                     Bar().apply { handled = 1 },
                     Bar().apply { handled = 2 }))
 
-        @Provides
+        @get:Provides
         val providesPropertyBar: Promise<Bar>
             get() = Promise.resolve(Bar().apply { handled = 3 })
 

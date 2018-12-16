@@ -69,7 +69,7 @@ object ScopeQualifierProvider : ConstraintProvider(
 )
 
 @Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION,
-        AnnotationTarget.PROPERTY)
+        AnnotationTarget.PROPERTY_GETTER)
 @UseFilterProvider(
         ContextualLifestyleProvider::class,
         ScopeQualifierProvider::class)

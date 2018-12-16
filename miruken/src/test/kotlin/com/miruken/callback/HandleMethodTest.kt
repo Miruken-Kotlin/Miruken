@@ -13,7 +13,10 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class HandleMethodTest {
     @Test fun `Handles method calls`() {
@@ -202,7 +205,8 @@ class HandleMethodTest {
 
     @Abort
     class EmailHandler : Handler(), EmailFeature {
-        @Log
+        @get:Log
+        @set:Log
         override var count: Int = 0
             private set
 
@@ -311,7 +315,7 @@ class HandleMethodTest {
 
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
+            AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
     @UseFilter(LogFilter::class)
     annotation class Log
 
@@ -331,7 +335,7 @@ class HandleMethodTest {
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
+            AnnotationTarget.PROPERTY_GETTER)
     @UseFilter(Log2Filter::class)
     annotation class Log2
 
@@ -352,7 +356,7 @@ class HandleMethodTest {
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
+            AnnotationTarget.PROPERTY_GETTER)
     @UseFilter(AbortFilter::class)
     annotation class Abort
 }
