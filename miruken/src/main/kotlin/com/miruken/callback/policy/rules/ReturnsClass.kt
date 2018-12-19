@@ -8,10 +8,7 @@ class ReturnsClass(
         private val kclass: KClass<*>,
         private vararg val aliases: String?
 ): ReturnRuleDelegate(rule) {
-    override fun matches(
-            method: CallableDispatch,
-            context: RuleContext
-    ): Boolean {
+    override fun matches(method: CallableDispatch, context: RuleContext): Boolean {
         val returnType = method.returnType
         if (returnType.classifier != kclass) {
             return false

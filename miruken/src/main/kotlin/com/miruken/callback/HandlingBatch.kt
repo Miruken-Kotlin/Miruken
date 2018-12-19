@@ -38,15 +38,17 @@ fun Handling.getBatch(tag: Any? = null): Batch? =
             tag == null || it.shouldBatch(tag)
         }
 
-inline fun <reified B: Batching> Handling.getBatcherFor(
+inline fun <reified B: Batching> Handling.getBatcher(
         tag:     Any? = null,
         factory: () -> B
 ): B? = getBatch(tag)?.let { batch ->
-    factory().apply { batch.addHandlers(this) }
+    (batch.findHandler(typeOf<B>()) as? B) ?:
+    factory().apply { batch.addHandlers(this.toHandler()) }
 }
 
-inline fun <reified T: Any, reified B: Batching> Handling.getBatcherFor(
+inline fun <reified T: Any, reified B: Batching> Handling.getBatcher(
         factory: () -> B
 ): B? = getBatch(typeOf<T>())?.let { batch ->
-    factory().apply { batch.addHandlers(this) }
+    (batch.findHandler(typeOf<B>()) as? B) ?:
+    factory().apply { batch.addHandlers(this.toHandler()) }
 }

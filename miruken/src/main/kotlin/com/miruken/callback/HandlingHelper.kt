@@ -18,7 +18,7 @@ inline fun <reified T: Any> Handling.with(value: T) =
 
 inline fun <reified T: Any> T.toHandler(): Handling {
     return if (this::class.isGeneric)
-        GenericWrapper(this, typeOf<T>())
+        this as? GenericWrapper ?: GenericWrapper(this, typeOf<T>())
     else
         this as? Handling ?: HandlerAdapter(this)
 }

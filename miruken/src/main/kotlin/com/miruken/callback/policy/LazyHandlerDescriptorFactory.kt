@@ -8,6 +8,8 @@ import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.isInstanceCallable
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
@@ -89,10 +91,10 @@ class LazyHandlerDescriptorFactory(
                     recv.getInvariantMembers(key, null) +
                             recv.getCompatibleMembers(key, null)
                 } ?: emptyList()) +
-                        (descriptor.typePolicies[policy]?.let { recv ->
-                            recv.getInvariantMembers(key, null) +
-                                    recv.getCompatibleMembers(key, null)
-                        } ?: emptyList())
+                (descriptor.typePolicies[policy]?.let { recv ->
+                    recv.getInvariantMembers(key, null) +
+                            recv.getCompatibleMembers(key, null)
+                } ?: emptyList())
             }
 
     override fun getPolicyMembers(policy: CallbackPolicy) =
@@ -113,14 +115,19 @@ class LazyHandlerDescriptorFactory(
         var typePolicies:     MutableMap<CallbackPolicy, MutableList<PolicyMemberBinding>>? = null
         handlerClass.members.filter {
             it.isInstanceCallable }.forEach { member ->
+            val method = when (member) {
+                is KProperty<*> -> member.getter
+                is KFunction<*> -> member
+                else -> null
+            } ?: return@forEach
             val dispatch by lazy(LazyThreadSafetyMode.NONE) {
-                CallableDispatch(member)
+                CallableDispatch(method)
             }
-             for ((annotation, usePolicies) in member
+            for ((annotation, usePolicies) in method
                     .getMetaAnnotations<UsePolicy>(false)) {
                 usePolicies.single().policy?.also {
                     val rule = it.match(dispatch) ?:
-                    throw PolicyRejectedException(it, member,
+                    throw PolicyRejectedException(it, method,
                             "The policy for @${annotation.annotationClass.simpleName} rejected '$member'")
                     val binding  = rule.bind(it, dispatch, annotation)
                     val policies = when {

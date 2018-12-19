@@ -1,18 +1,34 @@
 package com.miruken.callback
 
-import com.miruken.test.assertAsync
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.protocol.proxy
+import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class BatchTest {
     @Rule
     @JvmField val testName = TestName()
+
+    @Test fun `Gets same batcher`() {
+        EmailHandler().batch { batch ->
+            val batcher = batch.getBatcher<Emailing, EmailBatch> { EmailBatch() }
+            assertNotNull(batcher)
+            assertSame(batcher, batch.getBatcher<Emailing, EmailBatch> { EmailBatch() })
+        }
+    }
+
+    @Test fun `Gets same generic batcher`() {
+        EmailHandler().batch { batch ->
+            val batcher = batch.getBatcher<Emailing, GenericEmailBatch<String>> { GenericEmailBatch() }
+            assertNotNull(batcher)
+            assertSame(batcher, batch.getBatcher<Emailing, GenericEmailBatch<String>> { GenericEmailBatch() })
+            assertTrue(batcher !== batch.getBatcher<Emailing, GenericEmailBatch<Int>> { GenericEmailBatch() })
+        }
+    }
 
     @Test fun `Batches protocols`() {
         val handler = EmailHandler()
@@ -140,12 +156,12 @@ class BatchTest {
 
     class EmailHandler : Handler(), Emailing {
         override fun send(message: Any): Any? =
-                COMPOSER!!.getBatcherFor<Emailing, EmailBatch> { EmailBatch() }
+                COMPOSER!!.getBatcher<Emailing, EmailBatch> { EmailBatch() }
                         ?.run { return send(message) }
                         ?: message
 
         override fun sendConfirm(message: Any): Promise<*> =
-                COMPOSER!!.getBatcherFor<Emailing, EmailBatch> { EmailBatch() }
+                COMPOSER!!.getBatcher<Emailing, EmailBatch> { EmailBatch() }
                         ?.run { return sendConfirm(message) }
                         ?: Promise.resolve(message)
 
@@ -155,13 +171,13 @@ class BatchTest {
                 else throw IllegalStateException("Can't send message")
 
         override fun failConfirm(message: Any): Promise<*> =
-                COMPOSER!!.getBatcherFor<Emailing, EmailBatch> { EmailBatch() }
+                COMPOSER!!.getBatcher<Emailing, EmailBatch> { EmailBatch() }
                         ?.run { return failConfirm(message) }
                         ?: Promise.reject(IllegalStateException(
                                 "Can't send message"))
     }
 
-    class EmailBatch : Emailing, Batching {
+    open class EmailBatch : Emailing, Batching {
         private val _messages = mutableListOf<Any>()
         private val _promises = mutableListOf<Promise<*>>()
         private val _resolves = mutableListOf<() -> Any?>()
@@ -202,4 +218,6 @@ class BatchTest {
                     }
         }
     }
+
+    class GenericEmailBatch<T> : EmailBatch()
 }

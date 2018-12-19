@@ -4,6 +4,7 @@ import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.unwrap
 import com.miruken.protocol.proxy
+import com.miruken.runtime.isGeneric
 import java.util.concurrent.atomic.AtomicInteger
 
 class BatchingHandler(
@@ -14,14 +15,22 @@ class BatchingHandler(
     private val _completed = AtomicInteger(0)
 
     @get:Provides
-    private var batch: Batch? = Batch(*tags)
+    var batch: Batch? = Batch(*tags)
+        private set
 
     @Provides
     @Suppress("UNCHECKED_CAST")
     fun <T: Batching> getBatch(inquiry: Inquiry): T? {
         return batch?.let {
-            inquiry.createKeyInstance() as? T
-        }?.apply { batch!!.addHandlers(this) }
+            (it.findHandler(inquiry.key) as? T) ?:
+            (inquiry.createKeyInstance() as? T)?.apply {
+                if (inquiry.key is TypeReference && this::class.isGeneric) {
+                    it.addHandlers(GenericWrapper(this, inquiry.key))
+                } else {
+                    it.addHandlers(this)
+                }
+            }
+        }
     }
 
     override fun handleCallback(

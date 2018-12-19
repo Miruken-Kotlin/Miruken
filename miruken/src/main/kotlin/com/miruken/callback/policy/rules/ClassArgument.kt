@@ -8,10 +8,7 @@ class ClassArgument(
         private val kclass:  KClass<*>,
         private vararg val aliases: String?
 ): ArgumentRuleDelegate(rule) {
-    override fun matches(
-            argument: Argument,
-            context: RuleContext
-    ):Boolean {
+    override fun matches(argument: Argument, context: RuleContext): Boolean {
         val parameterType = argument.parameterType
         if (parameterType.classifier != kclass) {
             return false
@@ -30,7 +27,5 @@ class ClassArgument(
     }
 }
 
-fun ArgumentRule.of(
-        kclass: KClass<*>,
-        vararg aliases: String?
-) = ClassArgument(this, kclass, *aliases)
+fun ArgumentRule.of(kclass: KClass<*>, vararg aliases: String?) =
+        ClassArgument(this, kclass, *aliases)
