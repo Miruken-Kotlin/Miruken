@@ -3,7 +3,7 @@ package com.miruken.validate.bean
 import com.miruken.validate.*
 import org.junit.After
 import org.junit.Test
-import org.threeten.bp.LocalDate
+import java.time.LocalDate
 import javax.validation.Validation
 import javax.validation.ValidatorFactory
 import kotlin.test.*

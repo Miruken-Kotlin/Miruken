@@ -5,8 +5,8 @@ import com.miruken.mapLeft
 import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.rules.TestName
-import org.threeten.bp.Duration
-import org.threeten.bp.Instant
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeoutException
 import kotlin.test.*

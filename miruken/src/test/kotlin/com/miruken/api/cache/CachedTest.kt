@@ -13,7 +13,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import org.threeten.bp.Duration
+import java.time.Duration
 import kotlin.test.assertEquals
 
 class CachedTest {

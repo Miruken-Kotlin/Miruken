@@ -9,8 +9,8 @@ import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import org.threeten.bp.LocalDate
-import org.threeten.bp.Period
+import java.time.LocalDate
+import java.time.Period
 import javax.validation.groups.Default
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

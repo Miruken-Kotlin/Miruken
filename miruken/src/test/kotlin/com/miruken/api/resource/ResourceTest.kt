@@ -3,8 +3,8 @@ package com.miruken.api.resource
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.miruken.api.JacksonProvider
 import org.junit.Test
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.Month
+import java.time.LocalDateTime
+import java.time.Month
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
