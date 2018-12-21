@@ -19,29 +19,33 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     @Handles
     fun <C: Controller> navigate(
             navigation: Navigation<C>,
-            context:    Context,
             composer:   Handling
     ): Any? {
+        val from = navigation.from ?: composer.resolve() ?:
+            error("Unable to determine navigation from")
+
         val style     = navigation.style
-        var initiator = context.xself.resolve<Navigation<*>>()
-        var parent    = context
+        val push      = style == NavigationStyle.PUSH ||
+                        style == NavigationStyle.FORK
+        var initiator = from.xself.resolve<Navigation<*>>()
+        var parent    = initiator?.join ?: from
 
         if (initiator != null) {
             if (initiator.style == NavigationStyle.PARTIAL &&
                     navigation.style != NavigationStyle.PARTIAL) {
-                val nearest = findNearest(context) ?:
-                        error("Navigation from a partial requires a parent")
+                val nearest = findNearest(parent) ?:
+                        error("Navigation join a partial requires a parent")
                 parent    = nearest.first
                 initiator = nearest.second
             }
 
-            if (style != NavigationStyle.PUSH) {
+            if (!push) {
                 parent = parent.parent ?: error(
                         "Navigation seems to be in a bad state")
             }
         }
 
-        if (style == NavigationStyle.PUSH) {
+        if (push) {
             NavigatingAware(parent.xselfOrDescendant.notify)
                     .navigating(navigation)
         }
@@ -69,24 +73,30 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             navigation.back = initiator
         }
 
-        bindIO(child, controller!!, style, options, composer)
+        bindIO(child, controller!!, push, options, composer)
 
-        child.addHandlers(GenericWrapper(
-                navigation, typeOf<Navigation<*>>()))
+        child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
 
         try {
             if (!navigation.invokeOn(controller)) {
                 child.end()
                 return null
             }
-            if (style != NavigationStyle.PUSH) {
-                initiator?.controller?.context?.end(initiator)
+            if (!push || initiator?.join != null) {
+                initiator?.controller?.also {
+                    it.context?.also { ctx ->
+                        val reason = initiator.takeIf {
+                            initiator.join == null
+                        } ?: it
+                        ctx.end(reason)
+                    }
+                }
             }
         } catch(e: Throwable) {
             child.end()
             throw e
         } finally {
-            bindIO(null, controller, style, null, null)
+            bindIO(null, controller, push, null, null)
         }
         return true
     }
@@ -104,8 +114,11 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 when {
                     nav == null -> null
+                    nav.back?.style == NavigationStyle.FORK ->
+                        nav.back?.from?.noBack?.handle(nav.back!!)
                     nav.back != null -> composer.noBack.handle(nav.back!!)
-                    nav.style == NavigationStyle.PUSH ->
+                    nav.style == NavigationStyle.PUSH ||
+                    nav.style == NavigationStyle.FORK ->
                         nav.controller?.let { controller ->
                             controller.endContext()
                             HandleResult.HANDLED
@@ -117,7 +130,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     private fun bindIO(
             io:         Handling?,
             controller: Controller,
-            style:      NavigationStyle,
+            pushLayer:  Boolean,
             options:    NavigationOptions?,
             composer:   Handling?
     ) {
@@ -128,7 +141,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         }?.let {
             if (composer != null) {
                 var navOptions = options
-                if (style == NavigationStyle.PUSH) {
+                if (pushLayer) {
                     if (navOptions == null)
                         navOptions = NavigationOptions()
                     navOptions.region = (navOptions.region

@@ -49,5 +49,12 @@ val Handling.publishFromRoot: Handling get() =
     resolve<Context>()?.root?.publish
             ?: error("The root context could not be found")
 
+tailrec fun Context.parent(howMany: Int): Context? =
+        when {
+            howMany == 0 -> this
+            howMany < 0 -> null
+            else -> parent?.parent(howMany - 1)
+        }
+
 tailrec fun Context.deepest(): Context =
         takeUnless { it.hasChildren } ?: children.last().deepest()

@@ -50,6 +50,10 @@ abstract class Controller : Contextual, AutoCloseable {
 
     fun unwindContext() = context?.unwind(this)
 
+    fun dispose(closeable: AutoCloseable) {
+        context?.dispose(closeable)
+    }
+
     val async get() = requireContext().async
 
     // Render
@@ -100,7 +104,7 @@ abstract class Controller : Contextual, AutoCloseable {
             requireContext().next(action)
 
     protected inline fun <reified C: Controller> next(
-            handler:         Handling,
+            handler: Handling,
             noinline action: (C) -> Unit
     ) = handler.next(action)
 
@@ -114,7 +118,7 @@ abstract class Controller : Contextual, AutoCloseable {
             requireContext().push(action)
 
     protected inline fun <reified C: Controller> push(
-            handler:         Handling,
+            handler: Handling,
             noinline action: (C) -> Unit
     ) = handler.push(action)
 
@@ -128,9 +132,15 @@ abstract class Controller : Contextual, AutoCloseable {
             requireContext().partial(action)
 
     protected inline fun <reified C: Controller> partial(
-            handler:         Handling,
+            handler: Handling,
             noinline action: (C) -> Unit
     ) = handler.partial(action)
+
+    protected inline fun <reified C: Controller> fork(from: Handling) =
+            from.fork<C>(requireContext())
+
+    protected inline fun <reified C: Controller> fork(from: Handling, noinline action: (C) -> Unit) =
+            from.fork(requireContext(), action)
 
     protected inline fun <reified C: Controller> navigate(
             style: NavigationStyle
@@ -143,14 +153,16 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
+            join:    Context? = null,
             noinline action: (C) -> Unit
-    ) = requireContext().navigate(style, action)
+    ) = requireContext().navigate(style, join, action)
 
     protected inline fun <reified C: Controller> navigate(
-            style:           NavigationStyle,
-            handler:         Handling,
+            style:   NavigationStyle,
+            handler: Handling,
+            join:    Context? = null,
             noinline action: (C) -> Unit
-    ) = handler.navigate(style, action)
+    ) = handler.navigate(style, join, action)
 
     val noBack get() = requireContext().noBack
 
