@@ -13,6 +13,11 @@ publishing {
             from components.java
             groupId    mirukenGroupId
             artifactId artifactName
+            pom.withXml {
+                def properties = asNode().appendNode('properties')
+                properties.appendNode('maven.compiler.source', '1.8')
+                properties.appendNode('maven.compiler.target', '1.8')
+            }
         }
     }
 }

@@ -10,31 +10,8 @@ repositories {
 version = packageVersion
 
 dependencies {
-    implementation     'org.jetbrains.kotlin:kotlin-stdlib-jdk7'
+    implementation     'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation     'org.jetbrains.kotlin:kotlin-reflect'
-    implementation     'org.threeten:threetenbp:1.3.8'
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
-}
-
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
-//def JDK_7 = System.getenv("JDK_7") // or some other way to get path to JDK 7 installation
-def JDK_7 = "/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home"
-
-tasks.withType(KotlinCompile) {
-    kotlinOptions {
-        jvmTarget = "1.6"
-        jdkHome = JDK_7
-    }
-}
-
-tasks.withType(JavaCompile) {
-    options.fork = true
-    options.forkOptions.javaHome = file(JDK_7)
-}
-
-test {
-    executable = "$JDK_7/bin/java"
 }

@@ -6,8 +6,8 @@ import com.miruken.api.send
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
-import org.threeten.bp.Duration
-import org.threeten.bp.Instant
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
 class CachedHandler
