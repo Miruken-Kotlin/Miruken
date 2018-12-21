@@ -28,7 +28,7 @@ class ValidateFilterTest {
             getDescriptor<BeanValidator>()
             getDescriptor<ValidateFilter<*,*>>()
             getDescriptor<TeamHandler>()
-            HandlerDescriptorFactory.current = this
+            HandlerDescriptorFactory.useFactory(this)
         }
 
         _handler = TypeHandlers
