@@ -21,8 +21,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             navigation: Navigation<C>,
             composer:   Handling
     ): Any? {
-        val from = navigation.from ?: composer.resolve() ?:
-            error("Unable to determine navigation from")
+        val from = navigation.from ?: composer.resolve()
+            ?: error("Unable to determine navigation from")
 
         val style     = navigation.style
         val push      = style == NavigationStyle.PUSH ||
