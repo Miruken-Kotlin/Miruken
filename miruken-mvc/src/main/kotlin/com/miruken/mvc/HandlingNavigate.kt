@@ -1,6 +1,9 @@
 package com.miruken.mvc
 
-import com.miruken.callback.*
+import com.miruken.callback.Handling
+import com.miruken.callback.TargetAction
+import com.miruken.callback.TargetActionBuilder
+import com.miruken.callback.handle
 import com.miruken.context.Context
 import com.miruken.typeOf
 
@@ -16,7 +19,12 @@ inline fun <reified C: Controller> Handling.push(): TargetActionBuilder<C> =
 
 inline fun <reified C: Controller> Handling.push(
         noinline action: (C) -> Unit
-): TargetAction<C> = navigate<C>(NavigationStyle.PUSH)(action)
+): TargetAction<C> = navigate(NavigationStyle.PUSH, action)
+
+inline fun <reified C: Controller> Handling.push(
+        noinline action: (C) -> Unit,
+        noinline join:   (Context) -> Unit
+): TargetAction<C> = navigate(NavigationStyle.PUSH, action, join)
 
 inline fun <reified C: Controller> Handling.partial(): TargetActionBuilder<C> =
         navigate(NavigationStyle.PARTIAL)
@@ -25,22 +33,11 @@ inline fun <reified C: Controller> Handling.partial(
         noinline action: (C) -> Unit
 ): TargetAction<C> = navigate<C>(NavigationStyle.PARTIAL)(action)
 
-inline fun <reified C: Controller> Handling.fork(join: Context): TargetActionBuilder<C> =
-        navigate(NavigationStyle.FORK, join)
-
-inline fun <reified C: Controller> Handling.fork(
-        join: Context,
-        noinline action: (C) -> Unit
-): TargetAction<C> = navigate<C>(NavigationStyle.FORK, join)(action)
-
 inline fun <reified C: Controller> Handling.navigate(
-        style: NavigationStyle,
-        join:  Context? = null
+        style: NavigationStyle
 ): TargetActionBuilder<C> {
-    val from = resolve<Context>() ?: error(
-            "Navigation $style requires a context")
     return TargetActionBuilder { action ->
-        val navigation = Navigation(typeOf<C>(), action, style, from, join)
+        val navigation = Navigation(typeOf<C>(), action, style)
         handle(navigation) otherwise {
             error("Navigation $style to ${C::class} not handled")
         }
@@ -49,9 +46,14 @@ inline fun <reified C: Controller> Handling.navigate(
 
 inline fun <reified C: Controller> Handling.navigate(
         style: NavigationStyle,
-        join:  Context? = null,
-        noinline action: (C) -> Unit
-): TargetAction<C> = navigate<C>(style, join)(action)
+        noinline action: (C) -> Unit,
+        noinline join:   ((Context) -> Unit)? = null
+): TargetAction<C> = TargetActionBuilder<C> { a ->
+        val navigation = Navigation(typeOf<C>(), a, style, join)
+        handle(navigation) otherwise {
+            error("Navigation $style to ${C::class} not handled")
+        }
+    }(action)
 
 fun Handling.goBack() {
     handle(Navigation.GoBack()) otherwise {

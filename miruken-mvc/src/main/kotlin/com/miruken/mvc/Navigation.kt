@@ -9,38 +9,26 @@ import java.lang.ref.WeakReference
 enum class NavigationStyle {
     NEXT,
     PUSH,
-    PARTIAL,
-    FORK
+    PARTIAL
 }
 
 class Navigation<C: Controller>(
         val controllerKey: Any,
         val action:        TargetAction<C>,
         val style:         NavigationStyle,
-        from:              Context,
-        join:              Context? = null
+        val join:          ((Context) -> Unit)? = null
 ): FilteringCallback {
-    override val canFilter = false
-
-    private val _from = WeakReference<Context>(from)
-    private val _join = join?.let { WeakReference(it) }
     private var _controller: WeakReference<C>? = null
+
+    val controller get() = _controller?.get()
 
     var back: Navigation<*>? = null
 
-    val from       get() = _from.get()
-    val join       get() = _join?.get()
-    val controller get() = _controller?.get()
+    override val canFilter = false
 
     init {
-        if (style == NavigationStyle.FORK) {
-            require(join != null) {
-                "Navigation $style requires a join argument"
-            }
-        } else {
-            require(join == null) {
-                "Navigation $style received a join argument"
-            }
+        require(join == null || style == NavigationStyle.PUSH) {
+            "Navigation $style received a join argument"
         }
     }
 

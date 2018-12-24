@@ -49,7 +49,7 @@ class NavigatorTest {
             println("Hello $name")
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
-            push<GoodbyeController> { it.sayGoodbye(name) }
+            push<GoodbyeController>{ it.sayGoodbye(name) }
             return io.getOptions(NavigationOptions())
         }
 
@@ -63,6 +63,10 @@ class NavigatorTest {
             assertNotNull(navigation)
             assertSame(this, navigation.controller)
             assertSame(navigation, context!!.resolve()!!)
+        }
+
+        fun nextEnd() {
+            next<GoodbyeController>{ it.endContext() }
         }
 
         override fun navigating(navigation: Navigation<*>) {
@@ -111,8 +115,30 @@ class NavigatorTest {
     @Test fun `Navigates to push controller`() {
         rootContext.push<HelloController> {
             it.sayHello("Craig")
-            assertSame(rootContext, it.context?.parent)
+            assertSame(rootContext, it.context?.parent?.parent)
         }
+    }
+
+    @Test fun `Pushes a controller and joins`() {
+        var called = false
+        rootContext.push<HelloController>({
+            it.endContext()
+            assertNull(it.context)
+        }, {
+            called = true
+        })
+        assertTrue(called)
+    }
+
+    @Test fun `Push controller, next and join`() {
+        var called = false
+        rootContext.push<HelloController>({
+            it.nextEnd()
+            assertNull(it.context)
+        }, {
+            called = true
+        })
+        assertTrue(called)
     }
 
     @Test fun `Navigates to partial controller`() {

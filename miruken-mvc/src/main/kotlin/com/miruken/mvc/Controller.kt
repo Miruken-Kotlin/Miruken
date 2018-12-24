@@ -112,6 +112,17 @@ abstract class Controller : Contextual, AutoCloseable {
             noinline action: (C) -> Unit
     ): TargetAction<C> = (handler ?: requireContext()).push(action)
 
+    protected inline fun <reified C: Controller> push(
+            noinline action: (C) -> Unit,
+            noinline join:   (Context) -> Unit
+    ): TargetAction<C> = requireContext().push(action, join)
+
+    protected inline fun <reified C: Controller> push(
+            handler: Handling,
+            noinline action: (C) -> Unit,
+            noinline join:   (Context) -> Unit
+    ): TargetAction<C> = handler.push(action, join)
+
     protected inline fun <reified C: Controller> partial(handler: Handling? = null): TargetActionBuilder<C> =
             (handler ?: requireContext()).partial()
 
@@ -119,13 +130,6 @@ abstract class Controller : Contextual, AutoCloseable {
             handler: Handling? = null,
             noinline action: (C) -> Unit
     ): TargetAction<C> = (handler ?: requireContext()).partial(action)
-
-    protected inline fun <reified C: Controller> fork(from: Handling? = null): TargetActionBuilder<C> =
-            requireContext().let { (from ?: it).fork(it) }
-
-    protected inline fun <reified C: Controller> fork(
-            from: Handling? = null, noinline action: (C) -> Unit): TargetAction<C> =
-            requireContext().let { (from ?: it).fork(it, action) }
 
     protected inline fun <reified C: Controller> navigate(
             style: NavigationStyle
@@ -138,16 +142,14 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
-            join:    Context? = null,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = requireContext().navigate(style, join, action)
+    ): TargetAction<C> = requireContext().navigate(style, action)
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
             handler: Handling,
-            join:    Context? = null,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = handler.navigate(style, join, action)
+    ): TargetAction<C> = handler.navigate(style, action)
 
     val noBack get() = requireContext().noBack
 

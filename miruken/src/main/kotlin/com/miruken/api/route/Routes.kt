@@ -21,10 +21,10 @@ class RoutesFilter<Res: Any?>(
             provider: FilteringProvider?
     ): Promise<Res> {
         if (schemes.indexOf(getScheme(callback.route)) >= 0) {
-            val batch = composer.getBatcher(null) { BatchRouter() }
-            if (batch != null) {
+            val batcher = composer.getBatcher(null) { BatchRouter() }
+            if (batcher != null) {
                 @Suppress("UNCHECKED_CAST")
-                return composer.enableFilters().send(callback) as Promise<Res>
+                return batcher.enableFilters().send(callback) as Promise<Res>
             }
             return next(composer.enableFilters())
         }

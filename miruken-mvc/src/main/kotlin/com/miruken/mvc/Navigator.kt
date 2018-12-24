@@ -19,39 +19,39 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     @Handles
     fun <C: Controller> navigate(
             navigation: Navigation<C>,
+            context:    Context,
             composer:   Handling
     ): Any? {
-        val from = navigation.from ?: composer.resolve() ?:
-            error("Unable to determine navigation from")
-
         val style     = navigation.style
-        val push      = style == NavigationStyle.PUSH ||
-                        style == NavigationStyle.FORK
-        var initiator = from.xself.resolve<Navigation<*>>()
-        var parent    = initiator?.join ?: from
+        var initiator = context.xself.resolve<Navigation<*>>()
+        var parent    = context
 
         if (initiator != null) {
             if (initiator.style == NavigationStyle.PARTIAL &&
                     navigation.style != NavigationStyle.PARTIAL) {
-                val nearest = findNearest(parent) ?:
-                        error("Navigation join a partial requires a parent")
+                val nearest = findNearest(parent) ?: error(
+                        "Navigation join a partial requires a parent")
                 parent    = nearest.first
                 initiator = nearest.second
             }
 
-            if (!push) {
+            if ((style != NavigationStyle.PUSH)) {
                 parent = parent.parent ?: error(
                         "Navigation seems to be in a bad state")
             }
         }
 
-        if (push) {
-            NavigatingAware(parent.xselfOrDescendant.notify)
-                    .navigating(navigation)
-        }
-
         var controller: C? = null
-        val child = parent.createChild()
+        var child = parent.createChild()
+
+        if (style == NavigationStyle.PUSH) {
+            child.childContextEnded += { (ctx, reason) ->
+                if (reason !is Navigation<*>) {
+                    ctx.parent?.end(reason)
+                }
+            }
+            child = child.createChild()
+        }
 
         try {
             @Suppress("UNCHECKED_CAST")
@@ -73,30 +73,31 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             navigation.back = initiator
         }
 
-        bindIO(child, controller!!, push, options, composer)
+        bindIO(child, controller!!, style, options, composer)
 
         child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
+
+        if (style == NavigationStyle.PUSH) {
+            setupJoin(child, navigation)
+            NavigatingAware(parent.xselfOrDescendant.notify)
+                    .navigating(navigation)
+        } else {
+            setupJoin(child, initiator)
+        }
 
         try {
             if (!navigation.invokeOn(controller)) {
                 child.end()
                 return null
             }
-            if (!push || initiator?.join != null) {
-                initiator?.controller?.also {
-                    it.context?.also { ctx ->
-                        val reason = initiator.takeIf {
-                            initiator.join == null
-                        } ?: it
-                        ctx.end(reason)
-                    }
-                }
+            if (style != NavigationStyle.PUSH) {
+                initiator?.controller?.context?.end(initiator)
             }
         } catch(e: Throwable) {
             child.end()
             throw e
         } finally {
-            bindIO(null, controller, push, null, null)
+            bindIO(null, controller, style, null, null)
         }
         return true
     }
@@ -114,11 +115,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 when {
                     nav == null -> null
-                    nav.back?.style == NavigationStyle.FORK ->
-                        nav.back?.from?.noBack?.handle(nav.back!!)
                     nav.back != null -> composer.noBack.handle(nav.back!!)
-                    nav.style == NavigationStyle.PUSH ||
-                    nav.style == NavigationStyle.FORK ->
+                    nav.style == NavigationStyle.PUSH ->
                         nav.controller?.let { controller ->
                             controller.endContext()
                             HandleResult.HANDLED
@@ -130,7 +128,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     private fun bindIO(
             io:         Handling?,
             controller: Controller,
-            pushLayer:  Boolean,
+            style:      NavigationStyle,
             options:    NavigationOptions?,
             composer:   Handling?
     ) {
@@ -141,7 +139,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         }?.let {
             if (composer != null) {
                 var navOptions = options
-                if (pushLayer) {
+                if (style == NavigationStyle.PUSH) {
                     if (navOptions == null)
                         navOptions = NavigationOptions()
                     navOptions.region = (navOptions.region
@@ -152,6 +150,18 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
             }
             it
+        }
+    }
+
+    private fun setupJoin(context: Context, navigation: Navigation<*>?) {
+        navigation?.join?.also {
+            context.contextEnding += { (ctx, reason) ->
+                if (reason !is Navigation<*>) {
+                    ctx.contextEnded += { (ctxx, _) ->
+                        it(ctxx)
+                    }
+                }
+            }
         }
     }
 
