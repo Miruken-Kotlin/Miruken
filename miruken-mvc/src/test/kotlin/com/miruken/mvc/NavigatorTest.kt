@@ -12,15 +12,24 @@ import com.miruken.context.Scoped
 import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.displayImmediate
 import com.miruken.mvc.option.unloadRegion
+import com.miruken.test.assertAsync
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import kotlin.test.*
+import org.junit.rules.TestName
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class NavigatorTest {
     private lateinit var rootContext: Context
     private lateinit var navigator: Navigator
     private lateinit var factory: HandlerDescriptorFactory
+
+    @Rule
+    @JvmField val testName = TestName()
 
     @Before
     fun setup() {
@@ -66,7 +75,7 @@ class NavigatorTest {
         }
 
         fun nextEnd() {
-            next<GoodbyeController>{ it.endContext() }
+            next<GoodbyeController> { it.endContext() }
         }
 
         override fun navigating(navigation: Navigation<*>) {
@@ -100,8 +109,10 @@ class NavigatorTest {
     }
 
     @Test fun `Fails navigation if no context`() {
-        assertFailsWith(IllegalStateException::class) {
-            navigator.next<HelloController> { it.sayHello("hi") }
+        assertAsync(testName) { done ->
+            navigator.next<HelloController> { it.sayHello("hi") } catch {
+                done()
+            }
         }
     }
 
@@ -120,25 +131,25 @@ class NavigatorTest {
     }
 
     @Test fun `Pushes a controller and joins`() {
-        var called = false
-        rootContext.push<HelloController>({
-            it.endContext()
-            assertNull(it.context)
-        }, {
-            called = true
-        })
-        assertTrue(called)
+        assertAsync(testName) { done ->
+            rootContext.push<HelloController> {
+                it.endContext()
+                assertNull(it.context)
+            } then {
+                done()
+            }
+        }
     }
 
     @Test fun `Push controller, next and join`() {
-        var called = false
-        rootContext.push<HelloController>({
-            it.nextEnd()
-            assertNull(it.context)
-        }, {
-            called = true
-        })
-        assertTrue(called)
+        assertAsync(testName) { done ->
+            rootContext.push<HelloController> {
+                it.nextEnd()
+                assertNull(it.context)
+            } then {
+                done()
+            }
+        }
     }
 
     @Test fun `Navigates to partial controller`() {

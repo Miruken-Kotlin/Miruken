@@ -2,6 +2,7 @@ apply from: "${rootDir}/gradle/kotlin.gradle"
 
 dependencies {
     implementation project(':miruken')
+    testImplementation project(':miruken-test')
 }
 
 def artifactName = 'miruken-mvc'

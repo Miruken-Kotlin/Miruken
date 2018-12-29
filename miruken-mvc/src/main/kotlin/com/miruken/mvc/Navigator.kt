@@ -2,6 +2,7 @@ package com.miruken.mvc
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.Qualifier
+import com.miruken.concurrent.Promise
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.graph.TraversingAxis
@@ -21,7 +22,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             navigation: Navigation<C>,
             context:    Context,
             composer:   Handling
-    ): Any? {
+    ): Promise<Context>? {
         val style     = navigation.style
         var initiator = context.xself.resolve<Navigation<*>>()
         var parent    = context
@@ -44,13 +45,25 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         var controller: C? = null
         var child = parent.createChild()
 
-        if (style == NavigationStyle.PUSH) {
-            child.childContextEnded += { (ctx, reason) ->
-                if (reason !is Navigation<*>) {
-                    ctx.parent?.end(reason)
+        val promise = if (style == NavigationStyle.PUSH) {
+            Promise { resolve, _ ->
+                child.childContextEnded += { (ctx, reason) ->
+                    if (reason !is Navigation<*>) {
+                        parent.end(reason)
+                        resolve(ctx)
+                    }
+                }
+                child = child.createChild()
+            }
+        } else {
+            Promise<Context> { resolve, _ ->
+                child.contextEnded += { (ctx, reason) ->
+                    if (reason !is Navigation<*>) {
+                        parent.end(reason)
+                        resolve(ctx)
+                    }
                 }
             }
-            child = child.createChild()
         }
 
         try {
@@ -77,14 +90,6 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
         child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
 
-        if (style == NavigationStyle.PUSH) {
-            setupJoin(child, navigation)
-            NavigatingAware(parent.xselfOrDescendant.notify)
-                    .navigating(navigation)
-        } else {
-            setupJoin(child, initiator)
-        }
-
         try {
             if (!navigation.invokeOn(controller)) {
                 child.end()
@@ -99,7 +104,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         } finally {
             bindIO(null, controller, style, null, null)
         }
-        return true
+
+        return promise
     }
 
     @Handles
@@ -150,18 +156,6 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
             }
             it
-        }
-    }
-
-    private fun setupJoin(context: Context, navigation: Navigation<*>?) {
-        navigation?.join?.also {
-            context.contextEnding += { (ctx, reason) ->
-                if (reason !is Navigation<*>) {
-                    ctx.contextEnded += { (ctxx, _) ->
-                        it(ctxx)
-                    }
-                }
-            }
         }
     }
 

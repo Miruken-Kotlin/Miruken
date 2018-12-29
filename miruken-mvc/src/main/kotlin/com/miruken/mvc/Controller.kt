@@ -1,8 +1,6 @@
 package com.miruken.mvc
 
 import com.miruken.callback.Handling
-import com.miruken.callback.TargetAction
-import com.miruken.callback.TargetActionBuilder
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
 import com.miruken.context.*
@@ -96,60 +94,49 @@ abstract class Controller : Contextual, AutoCloseable {
 
     // Navigate
 
-    protected inline fun <reified C: Controller> next(handler: Handling? = null): TargetActionBuilder<C> =
+    protected inline fun <reified C: Controller> next(handler: Handling? = null): TargetActionPromise<C> =
             (handler ?: requireContext()).next()
 
     protected inline fun <reified C: Controller> next(
             handler: Handling? = null,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = (handler ?: requireContext()).next(action)
+    ) = (handler ?: requireContext()).next(action)
 
-    protected inline fun <reified C: Controller> push(handler: Handling? = null): TargetActionBuilder<C> =
+    protected inline fun <reified C: Controller> push(handler: Handling? = null): TargetActionPromise<C> =
             (handler ?: requireContext()).push()
 
     protected inline fun <reified C: Controller> push(
             handler: Handling? = null,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = (handler ?: requireContext()).push(action)
+    ) = (handler ?: requireContext()).push(action)
 
-    protected inline fun <reified C: Controller> push(
-            noinline action: (C) -> Unit,
-            noinline join:   (Context) -> Unit
-    ): TargetAction<C> = requireContext().push(action, join)
-
-    protected inline fun <reified C: Controller> push(
-            handler: Handling,
-            noinline action: (C) -> Unit,
-            noinline join:   (Context) -> Unit
-    ): TargetAction<C> = handler.push(action, join)
-
-    protected inline fun <reified C: Controller> partial(handler: Handling? = null): TargetActionBuilder<C> =
+    protected inline fun <reified C: Controller> partial(handler: Handling? = null): TargetActionPromise<C> =
             (handler ?: requireContext()).partial()
 
     protected inline fun <reified C: Controller> partial(
             handler: Handling? = null,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = (handler ?: requireContext()).partial(action)
+    ) = (handler ?: requireContext()).partial(action)
 
     protected inline fun <reified C: Controller> navigate(
             style: NavigationStyle
-    ): TargetActionBuilder<C> = requireContext().navigate(style)
+    ): TargetActionPromise<C> = requireContext().navigate(style)
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
             handler: Handling
-    ): TargetActionBuilder<C> = handler.navigate(style)
+    ): TargetActionPromise<C> = handler.navigate(style)
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = requireContext().navigate(style, action)
+    ) = requireContext().navigate(style, action)
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
             handler: Handling,
             noinline action: (C) -> Unit
-    ): TargetAction<C> = handler.navigate(style, action)
+    ) = handler.navigate(style, action)
 
     val noBack get() = requireContext().noBack
 
