@@ -2,6 +2,7 @@ package com.miruken.mvc
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.Qualifier
+import com.miruken.concurrent.ChildCancelMode
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context
 import com.miruken.context.Scoped
@@ -45,25 +46,13 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         var controller: C? = null
         var child = parent.createChild()
 
-        val promise = if (style == NavigationStyle.PUSH) {
-            Promise { resolve, _ ->
-                child.childContextEnded += { (ctx, reason) ->
-                    if (reason !is Navigation<*>) {
-                        parent.end(reason)
-                        resolve(ctx)
-                    }
-                }
-                child = child.createChild()
-            }
-        } else {
-            Promise<Context> { resolve, _ ->
-                child.contextEnded += { (ctx, reason) ->
-                    if (reason !is Navigation<*>) {
-                        parent.end(reason)
-                        resolve(ctx)
-                    }
+        if (style == NavigationStyle.PUSH) {
+            child.childContextEnded += { (ctx, reason) ->
+                if (reason !is Navigation<*>) {
+                    ctx.parent?.end(reason)
                 }
             }
+            child = child.createChild()
         }
 
         try {
@@ -79,6 +68,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 child.end()
             }
         }
+
         val options = composer.getOptions(NavigationOptions())
 
         if (initiator != null && navigation.back == null &&
@@ -90,27 +80,37 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
         child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
 
-        try {
-            if (!navigation.invokeOn(controller)) {
-                child.end()
-                return null
-            }
-            if (style != NavigationStyle.PUSH) {
-                initiator?.controller?.context?.end(initiator)
-            }
-        } catch(e: Throwable) {
-            child.end()
-            throw e
-        } finally {
-            bindIO(null, controller, style, null, null)
-        }
+        return Promise(ChildCancelMode.ANY) { resolve, reject ->
+            try {
+                child.contextEnding += { (ctx, reason) ->
+                    if (reason !is Navigation<*>) {
+                        ctx.contextEnded += { (ctxx, _) ->
+                            resolve(ctxx)
+                        }
+                    }
+                }
+                if (!navigation.invokeOn(controller)) {
+                    reject(IllegalStateException(
+                            "Navigation $style could not be performed"
+                    ))
+                    child.end()
+                }
+                if (style != NavigationStyle.PUSH) {
+                    initiator?.controller?.context?.end(initiator)
+                }
 
-        return promise
+            } catch (t: Throwable) {
+                reject(t)
+                child.end()
+            } finally {
+                bindIO(null, controller, style, null, null)
+            }
+        }
     }
 
     @Handles
-    @Suppress("UNUSED_PARAMETER")
-    fun navigate(goBack: Navigation.GoBack, composer: Handling) =
+    @Suppress("UNUSED_PARAMETER", "UNCHECKED_CAST")
+    fun navigate(goBack: Navigation.GoBack, composer: Handling): Promise<Context>? =
             composer.resolve<Navigation<*>>()?.let {
                 val nav = when {
                     it.style == NavigationStyle.PARTIAL ->
@@ -121,14 +121,16 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 when {
                     nav == null -> null
-                    nav.back != null -> composer.noBack.handle(nav.back!!)
+                    nav.back != null -> composer.noBack.commandAsync(nav.back!!)
                     nav.style == NavigationStyle.PUSH ->
                         nav.controller?.let { controller ->
-                            controller.endContext()
-                            HandleResult.HANDLED
+                            controller.context?.let { ctx ->
+                                ctx.end()
+                                Promise.resolve(ctx)
+                            }
                         }
                     else -> null
-                }
+                } as? Promise<Context>
             }
 
     private fun bindIO(

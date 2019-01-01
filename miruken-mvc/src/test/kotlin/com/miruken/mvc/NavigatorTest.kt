@@ -1,12 +1,9 @@
 package com.miruken.mvc
 
-import com.miruken.callback.Provides
-import com.miruken.callback.TypeHandlers
-import com.miruken.callback.getOptions
+import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.LazyHandlerDescriptorFactory
 import com.miruken.callback.policy.getDescriptor
-import com.miruken.callback.resolve
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.mvc.option.NavigationOptions
@@ -18,10 +15,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertSame
+import kotlin.test.*
 
 class NavigatorTest {
     private lateinit var rootContext: Context
@@ -111,6 +105,7 @@ class NavigatorTest {
     @Test fun `Fails navigation if no context`() {
         assertAsync(testName) { done ->
             navigator.next<HelloController> { it.sayHello("hi") } catch {
+                assertTrue { it is NotHandledException }
                 done()
             }
         }
@@ -136,6 +131,7 @@ class NavigatorTest {
                 it.endContext()
                 assertNull(it.context)
             } then {
+                assertSame(rootContext, it.parent?.parent)
                 done()
             }
         }
@@ -147,6 +143,7 @@ class NavigatorTest {
                 it.nextEnd()
                 assertNull(it.context)
             } then {
+                assertSame(rootContext, it.parent?.parent)
                 done()
             }
         }

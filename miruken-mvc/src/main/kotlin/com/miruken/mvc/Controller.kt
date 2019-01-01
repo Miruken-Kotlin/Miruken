@@ -50,6 +50,10 @@ abstract class Controller : Contextual, AutoCloseable {
 
     fun unwindContext() = context?.unwind(this)
 
+    fun track(promise: Promise<*>) {
+        context?.track(promise)
+    }
+
     fun dispose(closeable: AutoCloseable) {
         context?.dispose(closeable)
     }
