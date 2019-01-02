@@ -136,7 +136,7 @@ open class Context() :
         state = ContextState.ENDING
         contextEnding { ContextEvent(this, reason) }
         try {
-            unwind(reason)
+            unwind()
         } finally {
             state = ContextState.ENDED
             contextEnded { ContextEvent(this, reason) }

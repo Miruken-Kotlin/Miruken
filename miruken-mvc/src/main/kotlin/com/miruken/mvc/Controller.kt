@@ -71,8 +71,7 @@ abstract class Controller : Contextual, AutoCloseable {
             noinline init: (V.() -> Unit)? = null
     ) = region(handler).show(init)
 
-    protected fun show(view: Viewing) =
-            view.display(region(io))
+    protected fun show(view: Viewing) = view.display(region(io))
 
     protected fun show(handler: Handling, view: Viewing) =
             view.display(region(handler))
@@ -86,8 +85,7 @@ abstract class Controller : Contextual, AutoCloseable {
             noinline init: (V.() -> Unit)? = null
     ) = region(handler.pushLayer).show(init)
 
-    protected fun region(handler: Handling) =
-            ViewingRegion(handler)
+    protected fun region(handler: Handling) = ViewingRegion(handler)
 
     protected fun addRegion(
             region: ViewingRegion,

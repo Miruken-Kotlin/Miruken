@@ -3,7 +3,8 @@ package com.miruken.mvc
 import com.miruken.callback.FilteringCallback
 import com.miruken.callback.Handling
 import com.miruken.callback.TargetAction
-import java.lang.ref.WeakReference
+import com.miruken.mvc.view.ViewingLayer
+import com.miruken.weak
 
 enum class NavigationStyle {
     NEXT,
@@ -16,16 +17,17 @@ class Navigation<C: Controller>(
         val action:        TargetAction<C>,
         val style:         NavigationStyle
 ): FilteringCallback {
-    private var _controller: WeakReference<C>? = null
+    var controller: C? by weak()
+        private set
 
-    override val canFilter = false
-
-    val controller get() = _controller?.get()
+    var viewLayer: ViewingLayer? by weak()
 
     var back: Navigation<*>? = null
 
+    override val canFilter = false
+
     fun invokeOn(controller: C): Boolean {
-        _controller = WeakReference(controller)
+        this.controller = controller
         return controller.action(controller.context!!)
     }
 

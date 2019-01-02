@@ -32,7 +32,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             if (initiator.style == NavigationStyle.PARTIAL &&
                     navigation.style != NavigationStyle.PARTIAL) {
                 val nearest = findNearest(parent) ?: error(
-                        "Navigation join a partial requires a parent")
+                        "Navigation from a partial requires a parent")
                 parent    = nearest.first
                 initiator = nearest.second
             }
@@ -40,6 +40,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             if ((style != NavigationStyle.PUSH)) {
                 parent = parent.parent ?: error(
                         "Navigation seems to be in a bad state")
+                navigation.viewLayer = initiator.viewLayer
             }
         }
 
@@ -91,8 +92,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 if (!navigation.invokeOn(controller)) {
                     reject(IllegalStateException(
-                            "Navigation $style could not be performed"
-                    ))
+                            "Navigation could not be performed.  The most likely cause is missing dependencies."))
                     child.end()
                 }
                 if (style != NavigationStyle.PUSH) {
@@ -141,9 +141,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             composer:   Handling?
     ) {
         controller._io = (io ?: controller.context)?.let {
-            GLOBAL_PREPARE.foldRight(it) {
-                filter, pipe -> filter(pipe)
-            }
+            GLOBAL_PREPARE.foldRight(it) { filter, pipe -> filter(pipe) }
         }?.let {
             if (composer != null) {
                 var navOptions = options

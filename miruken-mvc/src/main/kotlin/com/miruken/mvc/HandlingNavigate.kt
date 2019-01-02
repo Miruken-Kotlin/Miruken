@@ -13,7 +13,7 @@ inline fun <reified C: Controller> Handling.next(): TargetActionPromise<C> =
         navigate(NavigationStyle.NEXT)
 
 inline fun <reified C: Controller> Handling.next(noinline action: (C) -> Unit) =
-        navigate<C>(NavigationStyle.NEXT)(action)
+        navigate(NavigationStyle.NEXT, action)
 
 inline fun <reified C: Controller> Handling.push(): TargetActionPromise<C> =
         navigate(NavigationStyle.PUSH)
@@ -25,7 +25,7 @@ inline fun <reified C: Controller> Handling.partial(): TargetActionPromise<C> =
         navigate(NavigationStyle.PARTIAL)
 
 inline fun <reified C: Controller> Handling.partial(noinline action: (C) -> Unit) =
-        navigate<C>(NavigationStyle.PARTIAL)(action)
+        navigate(NavigationStyle.PARTIAL, action)
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified C: Controller> Handling.navigate(
@@ -43,5 +43,4 @@ inline fun <reified C: Controller> Handling.navigate(
 ): Promise<Context> = navigate<C>(style)(action)
 
 @Suppress("UNCHECKED_CAST")
-fun Handling.goBack() =
-    commandAsync(Navigation.GoBack()) as Promise<Context>
+fun Handling.goBack() = commandAsync(Navigation.GoBack()) as Promise<Context>
