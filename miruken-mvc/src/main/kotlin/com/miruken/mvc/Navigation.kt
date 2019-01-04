@@ -3,49 +3,33 @@ package com.miruken.mvc
 import com.miruken.callback.FilteringCallback
 import com.miruken.callback.Handling
 import com.miruken.callback.TargetAction
-import com.miruken.context.Context
-import java.lang.ref.WeakReference
+import com.miruken.mvc.view.ViewingLayer
+import com.miruken.weak
 
 enum class NavigationStyle {
     NEXT,
     PUSH,
-    PARTIAL,
-    FORK
+    PARTIAL
 }
 
 class Navigation<C: Controller>(
         val controllerKey: Any,
         val action:        TargetAction<C>,
-        val style:         NavigationStyle,
-        from:              Context,
-        join:              Context? = null
+        val style:         NavigationStyle
 ): FilteringCallback {
-    override val canFilter = false
+    var controller: C? by weak()
+        private set
 
-    private val _from = WeakReference<Context>(from)
-    private val _join = join?.let { WeakReference(it) }
-    private var _controller: WeakReference<C>? = null
+    var viewLayer: ViewingLayer? by weak()
+
+    var noBack = false
 
     var back: Navigation<*>? = null
 
-    val from       get() = _from.get()
-    val join       get() = _join?.get()
-    val controller get() = _controller?.get()
-
-    init {
-        if (style == NavigationStyle.FORK) {
-            require(join != null) {
-                "Navigation $style requires a join argument"
-            }
-        } else {
-            require(join == null) {
-                "Navigation $style received a join argument"
-            }
-        }
-    }
+    override val canFilter = false
 
     fun invokeOn(controller: C): Boolean {
-        _controller = WeakReference(controller)
+        this.controller = controller
         return controller.action(controller.context!!)
     }
 

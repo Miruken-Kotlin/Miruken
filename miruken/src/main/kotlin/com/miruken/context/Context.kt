@@ -92,8 +92,8 @@ open class Context() :
         return result
     }
 
-    fun store(data: Any): Context {
-        addHandlers(data)
+    inline fun <reified T: Any> store(data: T): Context {
+        addHandlers(data.toHandler())
         return this
     }
 
@@ -136,7 +136,7 @@ open class Context() :
         state = ContextState.ENDING
         contextEnding { ContextEvent(this, reason) }
         try {
-            unwind(reason)
+            unwind()
         } finally {
             state = ContextState.ENDED
             contextEnded { ContextEvent(this, reason) }

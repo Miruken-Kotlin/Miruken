@@ -1,26 +1,29 @@
 package com.miruken.mvc
 
-import com.miruken.callback.Provides
-import com.miruken.callback.TypeHandlers
-import com.miruken.callback.getOptions
+import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.LazyHandlerDescriptorFactory
 import com.miruken.callback.policy.getDescriptor
-import com.miruken.callback.resolve
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.displayImmediate
 import com.miruken.mvc.option.unloadRegion
+import com.miruken.test.assertAsync
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestName
 import kotlin.test.*
 
 class NavigatorTest {
     private lateinit var rootContext: Context
     private lateinit var navigator: Navigator
     private lateinit var factory: HandlerDescriptorFactory
+
+    @Rule
+    @JvmField val testName = TestName()
 
     @Before
     fun setup() {
@@ -49,7 +52,7 @@ class NavigatorTest {
             println("Hello $name")
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
-            push<GoodbyeController> { it.sayGoodbye(name) }
+            push<GoodbyeController>{ it.sayGoodbye(name) }
             return io.getOptions(NavigationOptions())
         }
 
@@ -63,6 +66,10 @@ class NavigatorTest {
             assertNotNull(navigation)
             assertSame(this, navigation.controller)
             assertSame(navigation, context!!.resolve()!!)
+        }
+
+        fun nextEnd() {
+            next<GoodbyeController> { it.endContext() }
         }
 
         override fun navigating(navigation: Navigation<*>) {
@@ -96,8 +103,11 @@ class NavigatorTest {
     }
 
     @Test fun `Fails navigation if no context`() {
-        assertFailsWith(IllegalStateException::class) {
-            navigator.next<HelloController> { it.sayHello("hi") }
+        assertAsync(testName) { done ->
+            navigator.next<HelloController> { it.sayHello("hi") } catch {
+                assertTrue { it is NotHandledException }
+                done()
+            }
         }
     }
 
@@ -111,7 +121,31 @@ class NavigatorTest {
     @Test fun `Navigates to push controller`() {
         rootContext.push<HelloController> {
             it.sayHello("Craig")
-            assertSame(rootContext, it.context?.parent)
+            assertSame(rootContext, it.context?.parent?.parent)
+        }
+    }
+
+    @Test fun `Pushes a controller and joins`() {
+        assertAsync(testName) { done ->
+            rootContext.push<HelloController> {
+                it.endContext()
+                assertNull(it.context)
+            } then {
+                assertSame(rootContext, it.parent?.parent)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Push controller, next and join`() {
+        assertAsync(testName) { done ->
+            rootContext.push<HelloController> {
+                it.nextEnd()
+                assertNull(it.context)
+            } then {
+                assertSame(rootContext, it.parent?.parent)
+                done()
+            }
         }
     }
 

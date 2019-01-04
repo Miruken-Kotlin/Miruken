@@ -25,12 +25,18 @@ inline fun <reified T: Any> T.toHandler(): Handling {
 
 fun Handling.resolveArgs(vararg types: TypeReference): List<Any?>? {
     return types.map { key ->
-        val type = key.kotlinType
+        val type     = key.kotlinType
         val typeInfo = TypeInfo.parse(type)
-        val inquiry = typeInfo.createInquiry(type)
+        val inquiry  = typeInfo.createInquiry(type)
         KeyResolver.resolve(inquiry, typeInfo, this)
                 ?: if (typeInfo.flags has TypeFlags.OPTIONAL)
                     null else return null
+    }
+}
+
+val Handling.execute get() = TargetActionBuilder<Handling, Unit> {
+    check(it(this)) {
+        "One more or arguments could not be resolved"
     }
 }
 

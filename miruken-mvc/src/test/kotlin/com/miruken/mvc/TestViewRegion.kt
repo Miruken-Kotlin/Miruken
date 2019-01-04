@@ -2,6 +2,7 @@ package com.miruken.mvc
 
 import com.miruken.TypeReference
 import com.miruken.callback.notHandled
+import com.miruken.concurrent.Promise
 import com.miruken.event.Event
 import com.miruken.mvc.view.Viewing
 import com.miruken.mvc.view.ViewingLayer
@@ -39,7 +40,7 @@ class TestViewRegion : ViewingStackView {
         override val transitioned = Event<ViewingLayer>()
         override val disposed     = Event<ViewingLayer>()
 
-        override fun duration(durationMillis: Long, done: (Boolean) -> Unit) = {}
+        override fun duration(durationMillis: Long) = Promise.TRUE
 
         override fun close() {}
     }

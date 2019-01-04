@@ -13,6 +13,7 @@ class BatchRouter : Handler(), Batching {
     private val _groups = mutableMapOf<String, MutableList<Pending>>()
 
     @Handles
+    @SkipFilters
     fun route(routed: Routed, command: Command): Promise<Any?> {
         val route   = routed.route
         val message = routed.message

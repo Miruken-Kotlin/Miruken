@@ -25,8 +25,8 @@ class RoutedTest {
     @Before
     fun setup() {
         handler = (StockQuoteHandler() +
-                    PassThrough() +
-                    Trash())
+                   PassThrough() +
+                   Trash())
         StockQuoteHandler.called = 0
     }
 
