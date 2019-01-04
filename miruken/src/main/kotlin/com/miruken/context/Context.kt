@@ -92,8 +92,8 @@ open class Context() :
         return result
     }
 
-    fun store(data: Any): Context {
-        addHandlers(data)
+    inline fun <reified T: Any> store(data: T): Context {
+        addHandlers(data.toHandler())
         return this
     }
 

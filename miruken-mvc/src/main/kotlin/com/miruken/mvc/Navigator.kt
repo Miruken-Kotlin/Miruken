@@ -72,9 +72,12 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
         val options = composer.getOptions(NavigationOptions())
 
-        if (initiator != null && navigation.back == null &&
-                options?.noBack != true && style == NavigationStyle.NEXT) {
-            navigation.back = initiator
+        with(navigation) {
+            noBack = options?.noBack == true
+            if (!noBack && back == null && initiator != null &&
+                    style == NavigationStyle.NEXT) {
+                back = initiator
+            }
         }
 
         bindIO(child, controller!!, style, options, composer)
@@ -113,6 +116,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     fun navigate(goBack: Navigation.GoBack, composer: Handling): Promise<Context>? =
             composer.resolve<Navigation<*>>()?.let {
                 val nav = when {
+                    it.noBack -> return@let null
                     it.style == NavigationStyle.PARTIAL ->
                         it.controller?.context?.let { ctx ->
                             findNearest(ctx)?.second

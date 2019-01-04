@@ -22,6 +22,8 @@ class Navigation<C: Controller>(
 
     var viewLayer: ViewingLayer? by weak()
 
+    var noBack = false
+
     var back: Navigation<*>? = null
 
     override val canFilter = false

@@ -3,6 +3,7 @@ package com.miruken.callback
 import com.miruken.callback.policy.Bar
 import com.miruken.callback.policy.Foo
 import org.junit.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -43,6 +44,20 @@ class TargetActionBuilderTest {
         }
         target { a: Foo -> }
         assertTrue(called)
+    }
+
+    @Test fun `Calls two argument action`() {
+        val foo    = Foo()
+        val bar    = Bar<String>()
+        Handler().with(foo).with(bar).execute { a: Foo, b: Bar<String> ->
+            matches(a to foo, b to bar)
+        }
+    }
+
+    @Test fun `Rejects missing argument action`() {
+        assertFailsWith(IllegalStateException::class) {
+            Handler().execute { a: Foo, b: Bar<String> -> }
+        }
     }
 
     private fun matches(vararg args: Pair<Any?, Any?>) =
