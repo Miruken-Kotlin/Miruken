@@ -3,6 +3,7 @@ package com.miruken.callback
 import com.miruken.callback.policy.Bar
 import com.miruken.callback.policy.Foo
 import org.junit.Test
+import java.util.*
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -36,6 +37,29 @@ class TargetActionBuilderTest {
         assertTrue(called)
     }
 
+    @Test fun `Creates optional argument action`() {
+        val foo    = Foo()
+        var called = false
+        val target = targetAction<TargetActionBuilderTest, Unit> {
+            assertTrue(it(Handler().with(foo)))
+            called = true
+        }
+        target { a: Optional<Foo> ->
+            assertTrue { matches(a.get() to foo) }
+        }
+        assertTrue(called)
+    }
+
+    @Test fun `Creates empty optional argument action`() {
+        var called = false
+        val target = targetAction<TargetActionBuilderTest, Unit> {
+            assertTrue(it(Handler()))
+            called = true
+        }
+        target { a: Optional<Foo> -> assertFalse(a.isPresent) }
+        assertTrue(called)
+    }
+
     @Test fun `Rejects target-action if args not resolved`() {
         var called = false
         val target = targetAction<TargetActionBuilderTest, Unit> {
@@ -52,6 +76,17 @@ class TargetActionBuilderTest {
         Handler().with(foo).with(bar).execute { a: Foo, b: Bar<String> ->
             matches(a to foo, b to bar)
         }
+    }
+
+    @Test fun `Calls optional argument action`() {
+        var called = false
+        val bar    = Bar<String>()
+        Handler().with(bar).execute { a: Optional<Foo>, b: Optional<Bar<String>> ->
+            assertFalse(a.isPresent)
+            assertTrue { matches(b.get() to bar) }
+            called = true
+        }
+        assertTrue(called)
     }
 
     @Test fun `Rejects missing argument action`() {
