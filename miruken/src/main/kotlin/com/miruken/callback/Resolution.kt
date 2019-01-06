@@ -8,13 +8,10 @@ open class Resolution(
         val callback:     Any,
         val callbackType: TypeReference?
 ) : Inquiry(key, true, callback as? Inquiry),
-        InferringCallback, FilteringCallback,
-        DispatchingCallbackGuard {
+        InferringCallback, DispatchingCallbackGuard {
     private var _handled = false
 
     final override fun inferCallback() = this
-
-    final override val canFilter = false
 
     override fun canDispatch(
             target:     Any,

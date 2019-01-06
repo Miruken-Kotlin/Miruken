@@ -5,6 +5,7 @@ import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.bindings.BindingMetadata
 import com.miruken.callback.policy.bindings.BindingScope
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
 import com.miruken.concurrent.all
 import com.miruken.runtime.isCompatibleWith
 import java.lang.reflect.Modifier
@@ -151,9 +152,13 @@ open class Inquiry(
             greedy:     Boolean,
             composer:   Handling
     ): Boolean {
-        if (resolution is Promise<*>) {
+        val res = (resolution as? Promise<*>)
+                ?.takeIf { it.state == PromiseState.FULFILLED }
+                ?.let { it.get() } ?: resolution
+
+        if (res is Promise<*>) {
             isAsync = true
-            _promises.add(resolution.then { r ->
+            _promises.add(res.then { r ->
                 when {
                     !strict && r is Collection<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
@@ -161,14 +166,13 @@ open class Inquiry(
                     !strict && r is Array<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
                     }
-                    else ->
-                        r?.takeIf { isSatisfied(it, greedy, composer) }
+                    else -> r?.takeIf { isSatisfied(it, greedy, composer) }
                 }
             })
-        } else if (!isSatisfied(resolution, greedy, composer)) {
+        } else if (!isSatisfied(res, greedy, composer)) {
             return false
         } else {
-            _resolutions.add(resolution)
+            _resolutions.add(res)
         }
         return true
     }
@@ -238,8 +242,7 @@ open class Inquiry(
 
     private fun flatten(vararg lists: List<*>): List<Any> {
         val flat = mutableSetOf<Any>()
-        lists.flatMap { it }
-             .forEach { when (it) {
+        lists.flatMap { it }.forEach { when (it) {
                  null -> return@forEach
                  is Iterable<*> -> flat.addAll(it.filterNotNull())
                  is Array<*> -> flat.addAll(it.filterNotNull())
