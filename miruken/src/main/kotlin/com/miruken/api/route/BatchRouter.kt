@@ -14,11 +14,11 @@ class BatchRouter : Handler(), Batching {
 
     @Handles
     @SkipFilters
-    fun route(routed: Routed, command: Command): Promise<Any?> {
+    fun route(batch: RoutedBatch, command: Command): Promise<Any?> {
+        val routed  = batch.routed
         val route   = routed.route
-        val message = routed.message
-                .takeUnless { command.many } ?:
-            Publish(routed.message)
+        val message = routed.message.takeUnless { command.many }
+                ?: Publish(routed.message)
         val request = Pending(message)
         if (_groups[route]?.add(request) == null) {
             _groups[route] = mutableListOf(request)
@@ -65,6 +65,7 @@ class BatchRouter : Handler(), Batching {
     private class Pending(val message: NamedType) {
         lateinit var resolve: (Any?) -> Unit
             private set
+
         lateinit var reject:  (Throwable) -> Unit
             private set
 
