@@ -21,7 +21,7 @@ class RoutesFilter<Res: Any?>(vararg val schemes: String) : Filtering<Routed, Re
             if (batcher != null) {
                 @Suppress("UNCHECKED_CAST")
                 return composer.enableFilters().commandAsync(
-                        RoutedBatch(callback)) as Promise<Res>
+                        BatchRouted(callback)) as Promise<Res>
             }
             return next(composer.enableFilters())
         }

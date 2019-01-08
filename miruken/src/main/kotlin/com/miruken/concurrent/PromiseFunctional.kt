@@ -42,16 +42,21 @@ infix fun <T, S> Promise<T>
 
 fun <T, S, U> Promise<T>
         .flatMap(f: (T) -> Promise<S>,
-                 t: (Throwable) -> U): Promise<Either<U, S>> =
+                 t: (Throwable) -> Promise<U>): Promise<Either<U, S>> =
         then(f, t).then { r ->
             r.fold(
-                    { Promise.resolve(Either.Left(it)) },
+                    { it.then { r -> Either.Left(r) } },
                     { it.then { r -> Either.Right(r) } })
         }.unwrap()
 
-infix fun <T: Any> Promise<T>
+infix fun <T> Promise<T>
         .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =
         catch(f).then { it: Either<Promise<T>, T> ->
             it.fold({ it },
                     { r: T -> Promise { suc, _ -> suc(r) }})
         }.unwrap()
+
+fun <T, S> Promise<T>
+        .fold(f: (T) -> Promise<S>,
+              t: (Throwable) -> Promise<S>): Promise<S> =
+        flatMap(f, t) then { r -> r.fold({ it }, { it }) }

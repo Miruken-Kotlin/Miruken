@@ -14,7 +14,7 @@ class BatchRouter : Handler(), Batching {
 
     @Handles
     @SkipFilters
-    fun route(batch: RoutedBatch, command: Command): Promise<Any?> {
+    fun route(batch: BatchRouted, command: Command): Promise<Any?> {
         val routed  = batch.routed
         val route   = routed.route
         val message = routed.message.takeUnless { command.many }
