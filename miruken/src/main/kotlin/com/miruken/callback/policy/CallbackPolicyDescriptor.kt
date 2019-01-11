@@ -19,7 +19,9 @@ class CallbackPolicyDescriptor(
 
     init { bindings.forEach(::addBinding) }
 
-    fun getInvariantMembers() = _typed.values.flatten() + _indexed.values.flatten()
+    val invariantMembers by lazy {
+        _typed.values.flatten() + _indexed.values.flatten()
+    }
 
     fun getInvariantMembers(
             callback:     Any,

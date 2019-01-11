@@ -100,9 +100,9 @@ class LazyHandlerDescriptorFactory(
     override fun getPolicyMembers(policy: CallbackPolicy) =
             _descriptors.values.flatMap { handler ->
                 val descriptor = handler.value
-                (descriptor.instancePolicies[policy]?.getInvariantMembers()
+                (descriptor.instancePolicies[policy]?.invariantMembers
                         ?: emptyList()) +
-                (descriptor.typePolicies[policy]?.getInvariantMembers()
+                (descriptor.typePolicies[policy]?.invariantMembers
                         ?: emptyList())
             }
 
