@@ -20,8 +20,7 @@ class RoutesFilter<Res: Any?>(vararg val schemes: String) : Filtering<Routed, Re
             val batcher = composer.getBatcher(null) { BatchRouter() }
             if (batcher != null) {
                 @Suppress("UNCHECKED_CAST")
-                return composer.enableFilters().commandAsync(
-                        BatchRouted(callback)) as Promise<Res>
+                return composer.enableFilters().commandAsync(Batched(callback)) as Promise<Res>
             }
             return next(composer.enableFilters())
         }
