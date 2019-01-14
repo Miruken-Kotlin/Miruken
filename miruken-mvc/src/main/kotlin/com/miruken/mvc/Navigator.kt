@@ -48,6 +48,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         var child = parent.createChild()
 
         if (style == NavigationStyle.PUSH) {
+            NavigatingAware(parent.xselfOrDescendant.notify)
+                    .navigating(navigation)
             child.childContextEnded += { (ctx, reason) ->
                 if (reason !is Navigation<*>) {
                     ctx.parent?.end(reason)

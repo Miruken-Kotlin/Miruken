@@ -35,37 +35,25 @@ class BatchRouter : Handler(), Batching {
         Promise.all(_groups.map { group ->
             val uri      = group.key
             val requests = group.value
-            if (requests.size == 1) {
-                requests[0].let { request ->
-                    composer.send(request.message.routeTo(uri)) then {
-                        request.resolve(it)
-                        uri to listOf(it)
-                    } catch { error ->
-                        request.reject(error)
-                        uri to listOf(error)
-                    }
+            val messages = requests.map { it.message }
+            composer.send(Concurrent(messages).routeTo(uri)).map({
+                val responses = it.responses
+                for (i in responses.size until requests.size) {
+                    requests[i].promise.cancel()
                 }
-            } else {
-                val messages = requests.map { it.message }
-                composer.send(Concurrent(messages).routeTo(uri)).map({
-                    val responses = it.responses
-                    for (i in responses.size until requests.size) {
-                        requests[i].promise.cancel()
-                    }
-                    uri to responses.mapIndexed { index, response ->
-                        response.fold({ ex ->
-                            requests[index].reject(ex)
-                            ex
-                        }, { result ->
-                            requests[index].resolve(result)
-                            result
-                        })
-                    }
-                }, {
-                    requests.forEach { r -> r.promise.cancel() }
-                    throw it
-                })
-            }
+                uri to responses.mapIndexed { index, response ->
+                    response.fold({ ex ->
+                        requests[index].reject(ex)
+                        ex
+                    }, { result ->
+                        requests[index].resolve(result)
+                        result
+                    })
+                }
+            }, {
+                requests.forEach { r -> r.promise.cancel() }
+                throw it
+            })
         }).also {
             _groups.clear()
         }
