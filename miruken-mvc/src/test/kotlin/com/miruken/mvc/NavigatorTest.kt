@@ -46,7 +46,7 @@ class NavigatorTest {
 
     class HelloController
         @Provides @Scoped
-        constructor(): Controller(), NavigatingAware {
+        constructor(): Controller() {
 
         fun sayHello(name: String): NavigationOptions? {
             println("Hello $name")
@@ -71,28 +71,20 @@ class NavigatorTest {
         fun nextEnd() {
             next<GoodbyeController> { it.endContext() }
         }
-
-        override fun navigating(navigation: Navigation<*>) {
-            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerKey}")
-        }
     }
 
     class GoodbyeController
         @Provides @Scoped
-        constructor() : Controller(), NavigatingAware {
+        constructor() : Controller() {
 
         fun sayGoodbye(name: String) {
             println("Goodbye $name")
-        }
-
-        override fun navigating(navigation: Navigation<*>) {
-            println("${this::class.qualifiedName} Navigating ${navigation.style} to ${navigation.controllerKey}")
         }
     }
 
     class PartialController
     @Provides @Scoped
-    constructor() : Controller(), NavigatingAware {
+    constructor() : Controller() {
         fun render() {
             val navigation = io.resolve<Navigation<*>>()
             assertSame(this, navigation!!.controller)

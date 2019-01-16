@@ -12,6 +12,8 @@ enum class NavigationStyle {
     PARTIAL
 }
 
+typealias NavigationFilter = (Navigation<*>) -> Boolean
+
 class Navigation<C: Controller>(
         val controllerKey: Any,
         val action:        TargetAction<C>,
@@ -30,10 +32,15 @@ class Navigation<C: Controller>(
 
     fun invokeOn(controller: C): Boolean {
         this.controller = controller
-        return controller.action(controller.context!!)
+        return GLOBAL_EXECUTE.all { it(this) } &&
+                controller.action(controller.context!!)
     }
 
     class GoBack
+
+    companion object {
+        val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
+        val GLOBAL_EXECUTE = mutableListOf<NavigationFilter>()
+    }
 }
 
-val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
