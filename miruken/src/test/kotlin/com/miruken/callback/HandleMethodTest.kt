@@ -300,11 +300,12 @@ class HandleMethodTest {
         override var order: Int? = 1
 
         override fun next(
-                callback: HandleMethod,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    HandleMethod,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             print("Handle method '${callback.method.name}' with result ")
             val result = next()
@@ -323,11 +324,12 @@ class HandleMethodTest {
         override var order: Int? = 2
 
         override fun next(
-                callback: HandleMethod,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    HandleMethod,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             println("Log2 method '${callback.method.name}'")
             return next()
@@ -343,11 +345,12 @@ class HandleMethodTest {
         override var order: Int? = 0
 
         override fun next(
-                callback: HandleMethod,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    HandleMethod,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = when {
             callback.method.name == "email" &&
                     callback.arguments[0] == "Abort" -> next.abort()

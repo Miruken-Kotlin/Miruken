@@ -34,7 +34,7 @@ interface TypeReference {
         }
 
         val ANY_STAR by lazy(LazyThreadSafetyMode.NONE) {
-            Any::class.starProjectedType
+            Any::class.createType()
         }
 
         val ANY_TYPE by lazy(LazyThreadSafetyMode.NONE) {

@@ -109,11 +109,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: SpecialFoo,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Int>,
-                provider: FilteringProvider?
+                callback:    SpecialFoo,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Int>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -123,11 +124,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -135,11 +137,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -149,11 +152,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -161,11 +165,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<String>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<String>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -173,11 +178,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Number>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Number>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -185,11 +191,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Foo,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<T>,
-                provider: FilteringProvider?
+                callback:    Foo,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<T>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -197,11 +204,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Foo,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<T>,
-                provider: FilteringProvider?
+                callback:    Foo,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<T>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -209,11 +217,12 @@ class UseFiltersFilterProviderTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Any,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Any>,
-                provider: FilteringProvider?
+                callback:    Any,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Any>,
+                provider:    FilteringProvider?
         ) = next()
     }
 }

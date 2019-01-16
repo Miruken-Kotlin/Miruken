@@ -102,11 +102,12 @@ class StashTest {
         override var order: Int? = null
 
         override fun next(
-                callback: CancelOrder,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Order>,
-                provider: FilteringProvider?
+                callback:    CancelOrder,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Order>,
+                provider:    FilteringProvider?
         ): Promise<Order> {
             composer.proxy<Stash>().put(Order().apply {
                 id = callback.orderId

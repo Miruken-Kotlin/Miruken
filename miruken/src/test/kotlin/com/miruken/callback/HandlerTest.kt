@@ -1471,11 +1471,12 @@ class HandlerTest {
         ): AbortingFilter<R> = AbortingFilter()
 
         override fun next(
-                callback: Bar,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Unit>,
-                provider: FilteringProvider?
+                callback:    Bar,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Unit>,
+                provider:    FilteringProvider?
         ): Promise<Unit> {
             callback.filters.add(this)
             callback.handled++
@@ -1508,16 +1509,16 @@ class HandlerTest {
         }
     }
 
-
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -1529,11 +1530,12 @@ class HandlerTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Any?>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Any?>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -1545,11 +1547,12 @@ class HandlerTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Any,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<T>,
-                provider: FilteringProvider?
+                callback:    Any,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<T>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -1561,11 +1564,12 @@ class HandlerTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Any,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Unit>,
-                provider: FilteringProvider?
+                callback:    Any,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Unit>,
+                provider:    FilteringProvider?
         ): Promise<Unit> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
@@ -1581,11 +1585,12 @@ class HandlerTest {
         override var order: Int? = 1
 
         override fun next(
-                callback: Cb,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    Cb,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
@@ -1602,11 +1607,12 @@ class HandlerTest {
         override var order: Int? = 0
 
         override fun next(
-                callback: Bar,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    Bar,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = when {
                 callback.handled > 99 -> next.abort()
                 else -> next()
@@ -1621,11 +1627,12 @@ class HandlerTest {
         override var order: Int? = 2
 
         override fun next(
-                callback: Req,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    Req,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)

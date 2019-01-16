@@ -6,21 +6,25 @@ import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import java.net.URI
 
-class RoutesFilter<Res: Any?>(vararg val schemes: String) : Filtering<Routed, Res> {
+class RoutesFilter<Res: Any?>(
+        private vararg val schemes: String
+) : Filtering<Routed, Res> {
     override var order: Int? = Stage.LOGGING - 1
 
     override fun next(
-            callback: Routed,
-            binding:  MemberBinding,
-            composer: Handling,
-            next:     Next<Res>,
-            provider: FilteringProvider?
+            callback:    Routed,
+            rawCallback: Any,
+            binding:     MemberBinding,
+            composer:    Handling,
+            next:        Next<Res>,
+            provider:    FilteringProvider?
     ): Promise<Res> {
         if (schemes.indexOf(getScheme(callback.route)) >= 0) {
             val batcher = composer.getBatcher(null) { BatchRouter() }
             if (batcher != null) {
                 @Suppress("UNCHECKED_CAST")
-                return composer.enableFilters().commandAsync(Batched(callback)) as Promise<Res>
+                return composer.enableFilters().commandAsync(
+                        Batched(callback, rawCallback)) as Promise<Res>
             }
             return next(composer.enableFilters())
         }

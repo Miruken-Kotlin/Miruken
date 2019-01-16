@@ -15,9 +15,8 @@ class BatchRouter : Handler(), Batching {
     private val _groups = mutableMapOf<String, MutableList<Pending>>()
 
     @Handles
-    @SkipFilters
     fun route(batched: Batched<Routed>, command: Command) =
-            route(batched.callback, command)
+            route(batched.callback, batched.rawCallback as? Command ?: command)
 
     @Handles
     fun route(routed: Routed, command: Command): Promise<Any?> {

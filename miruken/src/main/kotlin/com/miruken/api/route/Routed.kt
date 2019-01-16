@@ -5,7 +5,7 @@ import com.miruken.api.NamedType
 import com.miruken.api.Request
 import com.miruken.typeOf
 
-interface Routed : NamedType{
+interface Routed : NamedType {
     val message:     NamedType
     val messageType: TypeReference?
     val route:       String
@@ -17,12 +17,12 @@ data class RoutedMessage(
         override val messageType: TypeReference?,
         override val route:       String,
         override val tag:         String? = null,
-        override val typeName:    String =
+        override val typeName:    String  =
                 RoutedMessage.typeName.format(message.typeName)
 ) : Routed {
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Route.RoutedMessage`1[[%s]],Miruken.Mediate"
+                "Miruken.Mediate.Route.Routed,Miruken.Mediate"
     }
 }
 
@@ -31,7 +31,7 @@ data class RoutedRequest<TResp: NamedType>(
         override val messageType: TypeReference?,
         override val route:       String,
         override val tag:         String? = null,
-        override val typeName:    String =
+        override val typeName:    String  =
                 RoutedRequest.typeName.format(message.typeName)
 ) : Request<TResp>, Routed {
     companion object : NamedType {

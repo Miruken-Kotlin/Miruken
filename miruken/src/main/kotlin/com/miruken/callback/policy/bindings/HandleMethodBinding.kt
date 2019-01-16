@@ -48,7 +48,7 @@ class HandleMethodBinding(
                 }
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.first.next(handleMethod, this, comp,
+                    pipeline.first.next(handleMethod, handleMethod, this, comp,
                             { c,p -> next((c ?: comp), p ?: true)
                     }, pipeline.second)
                 }

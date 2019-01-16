@@ -48,7 +48,7 @@ class PolicyMemberBinding(
                 return HandleResult.NOT_HANDLED
         }
 
-        val ruleArgs  = rule?.resolveArguments(callback) ?: emptyArray()
+        val ruleArgs = rule?.resolveArguments(callback) ?: emptyArray()
         val filterCallback = callbackArg?.let {
             ruleArgs[it.parameter.index - 1].takeIf { // skip receiver
                 arg -> it.parameterType.jvmErasure.isInstance(arg)
@@ -107,7 +107,7 @@ class PolicyMemberBinding(
                 Promise.resolve(baseResult)
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.first.next(filterCallback, this, comp,
+                    pipeline.first.next(filterCallback, callback, this, comp,
                             { c, p -> next((c ?: comp), p ?: true)
                     }, pipeline.second)
                 }

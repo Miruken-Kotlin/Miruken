@@ -12,11 +12,12 @@ class ValidateFilter<in Cb: Any, Res: Any?>
     override var order: Int? = Stage.VALIDATION
 
     override fun next(
-            callback: Cb,
-            binding:  MemberBinding,
-            composer: Handling,
-            next:     Next<Res>,
-            provider: FilteringProvider?
+            callback:    Cb,
+            rawCallback: Any,
+            binding:     MemberBinding,
+            composer:    Handling,
+            next:        Next<Res>,
+            provider:    FilteringProvider?
     ) = validate(callback, composer) flatMap {
         next()
     } flatMap {

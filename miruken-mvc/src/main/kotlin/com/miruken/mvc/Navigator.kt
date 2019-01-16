@@ -103,7 +103,6 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 if (style != NavigationStyle.PUSH) {
                     initiator?.controller?.context?.end(initiator)
                 }
-
             } catch (t: Throwable) {
                 reject(t)
                 child.end()

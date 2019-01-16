@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.miruken.TypeReference
-import com.miruken.api.schedule.ScheduleResult
+import com.miruken.api.schedule.ScheduledResult
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
@@ -33,7 +33,7 @@ object JacksonProvider {
     private val typeToIdMapping = ConcurrentHashMap<Type, String>()
 
     init {
-        register(ScheduleResult)
+        register(ScheduledResult)
     }
 
     val mapper: ObjectMapper by lazy {
