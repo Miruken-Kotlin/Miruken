@@ -55,7 +55,7 @@ fun Handling.getOrderedFilters(
             }
             this.skipFilters()
         }
-        else -> this
+        false -> this.skipFilters()
     }
 
     return providers.toList().flatMap { provider ->

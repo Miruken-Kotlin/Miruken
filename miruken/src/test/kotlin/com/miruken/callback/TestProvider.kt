@@ -65,19 +65,19 @@ sealed class TestProvider {
     }
 
     class Properties : TestProvider() {
-        @Provides
+        @get:Provides
         val provide = Foo()
 
-        @Provides
+        @get:Provides
         val provideGetter: Foo
             get() = Foo()
     }
 
     class GenericProperties<T: Foo> : TestProvider() {
-        @Provides
+        @get:Provides
         val provide = Foo()
 
-        @Provides
+        @get:Provides
         val provideGetter: Foo
             get() = Foo()
     }

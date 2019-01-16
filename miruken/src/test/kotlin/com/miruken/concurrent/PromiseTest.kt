@@ -325,7 +325,7 @@ class PromiseTest {
 
     @Test fun `Unwraps fulfilled promise with rejection`() {
         var called = 0
-        Promise.resolve(22) flatMap  {
+        Promise.resolve(22) flatMap {
             Promise.reject(Exception("Crash and burn"))
         } catch {
             assertEquals("Crash and burn", it.message)
@@ -345,16 +345,102 @@ class PromiseTest {
         assertEquals(1, called)
     }
 
-    @Test fun `Unwraps fulfilled promise with success or fail`() {
+    @Test fun `Unwraps fulfilled promise with success`() {
         var called = 0
         Promise.resolve(22).flatMap(
                 { Promise.resolve(it.toString()) },
-                { fail("Should skip") }
-        ).then {
+                { Promise.reject(Exception("Should skip")) }
+        ) then {
             it.map { result ->
                 assertEquals("22", result)
                 ++called
             }
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Unwraps fulfilled promise with fail`() {
+        var called = 0
+        Promise.resolve(22).flatMap(
+                { Promise.reject(Exception("Broken")) },
+                { Promise.resolve(it.toString())  }
+        ) catch {
+            assertEquals("Broken", it.message)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Folds fulfilled promise with success`() {
+        var called = 0
+        Promise.resolve(22).fold(
+                { Promise.resolve(it.toString()) },
+                { Promise.resolve("19") }
+        ) then {
+            assertEquals("22", it)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Folds rejected promise with success`() {
+        var called = 0
+        Promise.reject(Exception("Bad parity")).fold(
+                { Promise.resolve(7) },
+                { Promise.resolve(24) }
+        ) then {
+            assertEquals(24, it)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Folds fulfilled promise with failure`() {
+        var called = 0
+        Promise.resolve(22).fold(
+                { Promise.reject(Exception("Timeout")) },
+                { Promise.resolve("19") }
+        ) catch {
+            assertEquals("Timeout", it.message)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Folds rejected promise with failure`() {
+        var called = 0
+        Promise.reject(Exception("Bad parity")).fold(
+                { Promise.resolve(11) },
+                { Promise.reject(Exception("Unknown Server")) }
+        ) catch {
+            assertEquals("Unknown Server", it.message)
+            ++called
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Unwraps rejected promise with success`() {
+        var called = 0
+        Promise.reject(Exception("Bad timing")).flatMap(
+                { Promise.resolve(3) },
+                { Promise.resolve("Hello") }
+        ) then {
+            it.mapLeft { result ->
+                assertEquals("Hello", result)
+                ++called
+            }
+        }
+        assertEquals(1, called)
+    }
+
+    @Test fun `Unwraps rejected promise with fail`() {
+        var called = 0
+        Promise.reject(Exception("Bad timing")).flatMap(
+                { Promise.resolve(3) },
+                { Promise.reject(Exception("Broken")) }
+        ) catch {
+            assertEquals("Broken", it.message)
+            ++called
         }
         assertEquals(1, called)
     }

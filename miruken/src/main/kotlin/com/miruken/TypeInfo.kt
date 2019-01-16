@@ -6,6 +6,7 @@ import com.miruken.runtime.checkOpenConformance
 import com.miruken.runtime.componentType
 import com.miruken.runtime.isGeneric
 import com.miruken.runtime.isOpenGeneric
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
@@ -53,20 +54,25 @@ data class TypeInfo(
                     flags += TypeFlags.INTERFACE
             }
 
-            // TODO:  Check for @Strict when KType is KAnnotatedElement
+            // TODO: Check for @Strict when KType is KAnnotatedElement
 
             logicalType = logicalType.takeIf { it.isMarkedNullable }?.let {
                 flags += TypeFlags.OPTIONAL
                 type.withNullability(false)
             } ?: logicalType
 
+            logicalType = unwrapType(logicalType, Optional::class)
+                    ?.let { flags += TypeFlags.OPTIONAL_EXPLICIT; it }
+                    ?: logicalType
+
             logicalType = unwrapType(type, Lazy::class)?.let {
                 flags += TypeFlags.LAZY; it }
                     ?: unwrapType(type, Function0::class)?.let {
                 flags += TypeFlags.FUNC; it } ?: logicalType
 
-            logicalType = unwrapType(logicalType, Promise::class)?.let {
-                flags += TypeFlags.PROMISE; it } ?: logicalType
+            logicalType = unwrapType(logicalType, Promise::class)
+                    ?.let { flags += TypeFlags.PROMISE; it }
+                    ?: logicalType
 
             var componentType = unwrapType(logicalType, Collection::class)
                     ?.let { flags += TypeFlags.COLLECTION; it }

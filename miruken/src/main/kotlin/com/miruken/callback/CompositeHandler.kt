@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.TypeReference
+import com.miruken.runtime.isCompatibleWith
 
 open class CompositeHandler(vararg handlers: Any)
     : Handler(), CompositeHandling {
@@ -48,6 +49,26 @@ open class CompositeHandler(vararg handlers: Any)
             vararg handlers: Any): CompositeHandler {
         _handlers.removeAll(handlers.mapNotNull(::find))
         return this
+    }
+
+    final override fun findHandler(key: Any): Any? {
+        for (handler in handlers) {
+            when (handler) {
+                is GenericWrapper ->
+                    if (isCompatibleWith(key, handler.type)) {
+                        return handler.value
+                    }
+                is HandlerAdapter ->
+                    if (isCompatibleWith(key, handler.handler)) {
+                        return handler.handler
+                    }
+                else ->
+                    if (isCompatibleWith(key, handler)) {
+                        return handler
+                    }
+            }
+        }
+        return null
     }
 
     private fun find(target: Any): Handling? {

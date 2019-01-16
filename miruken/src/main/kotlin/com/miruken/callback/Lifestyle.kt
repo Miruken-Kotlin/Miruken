@@ -9,11 +9,12 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
     override var order: Int? = null
 
     override fun next(
-            callback: Inquiry,
-            binding:  MemberBinding,
-            composer: Handling,
-            next:     Next<Res>,
-            provider: FilteringProvider?
+            callback:    Inquiry,
+            rawCallback: Any,
+            binding:     MemberBinding,
+            composer:    Handling,
+            next:        Next<Res>,
+            provider:    FilteringProvider?
     ) = getInstance(callback, binding, next, composer)?.let {
         @Suppress("UNCHECKED_CAST")
         Promise.resolve(it as Any) as Promise<Res>

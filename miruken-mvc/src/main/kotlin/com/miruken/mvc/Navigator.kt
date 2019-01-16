@@ -2,6 +2,8 @@ package com.miruken.mvc
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.Qualifier
+import com.miruken.concurrent.ChildCancelMode
+import com.miruken.concurrent.Promise
 import com.miruken.context.Context
 import com.miruken.context.Scoped
 import com.miruken.graph.TraversingAxis
@@ -21,7 +23,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             navigation: Navigation<C>,
             context:    Context,
             composer:   Handling
-    ): Any? {
+    ): Promise<Context>? {
         val style     = navigation.style
         var initiator = context.xself.resolve<Navigation<*>>()
         var parent    = context
@@ -29,25 +31,32 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         if (initiator != null) {
             if (initiator.style == NavigationStyle.PARTIAL &&
                     navigation.style != NavigationStyle.PARTIAL) {
-                val nearest = findNearest(context) ?:
-                        error("Navigation from a partial requires a parent")
+                val nearest = findNearest(parent) ?: error(
+                        "Navigation from a partial requires a parent")
                 parent    = nearest.first
                 initiator = nearest.second
             }
 
-            if (style != NavigationStyle.PUSH) {
+            if ((style != NavigationStyle.PUSH)) {
                 parent = parent.parent ?: error(
                         "Navigation seems to be in a bad state")
+                navigation.viewLayer = initiator.viewLayer
             }
         }
+
+        var controller: C? = null
+        var child = parent.createChild()
 
         if (style == NavigationStyle.PUSH) {
             NavigatingAware(parent.xselfOrDescendant.notify)
                     .navigating(navigation)
+            child.childContextEnded += { (ctx, reason) ->
+                if (reason !is Navigation<*>) {
+                    ctx.parent?.end(reason)
+                }
+            }
+            child = child.createChild()
         }
-
-        var controller: C? = null
-        val child = parent.createChild()
 
         try {
             @Suppress("UNCHECKED_CAST")
@@ -65,38 +74,50 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
 
         val options = composer.getOptions(NavigationOptions())
 
-        if (initiator != null && navigation.back == null &&
-                options?.noBack != true && style == NavigationStyle.NEXT) {
-            navigation.back = initiator
+        with(navigation) {
+            noBack = options?.noBack == true
+            if (!noBack && back == null && initiator != null &&
+                    style == NavigationStyle.NEXT) {
+                back = initiator
+            }
         }
 
         bindIO(child, controller!!, style, options, composer)
 
-        child.addHandlers(GenericWrapper(
-                navigation, typeOf<Navigation<*>>()))
+        child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
 
-        try {
-            if (!navigation.invokeOn(controller)) {
+        return Promise(ChildCancelMode.ANY) { resolve, reject ->
+            try {
+                child.contextEnding += { (ctx, reason) ->
+                    if (reason !is Navigation<*>) {
+                        ctx.contextEnded += { (ctxx, _) ->
+                            resolve(ctxx)
+                        }
+                    }
+                }
+                if (!navigation.invokeOn(controller)) {
+                    reject(IllegalStateException(
+                            "Navigation could not be performed.  The most likely cause is missing dependencies."))
+                    child.end()
+                }
+                if (style != NavigationStyle.PUSH) {
+                    initiator?.controller?.context?.end(initiator)
+                }
+            } catch (t: Throwable) {
+                reject(t)
                 child.end()
-                return null
+            } finally {
+                bindIO(null, controller, style, null, null)
             }
-            if (style != NavigationStyle.PUSH) {
-                initiator?.controller?.context?.end(initiator)
-            }
-        } catch(e: Throwable) {
-            child.end()
-            throw e
-        } finally {
-            bindIO(null, controller, style, null, null)
         }
-        return true
     }
 
     @Handles
-    @Suppress("UNUSED_PARAMETER")
-    fun navigate(goBack: Navigation.GoBack, composer: Handling) =
+    @Suppress("UNUSED_PARAMETER", "UNCHECKED_CAST")
+    fun navigate(goBack: Navigation.GoBack, composer: Handling): Promise<Context>? =
             composer.resolve<Navigation<*>>()?.let {
                 val nav = when {
+                    it.noBack -> return@let null
                     it.style == NavigationStyle.PARTIAL ->
                         it.controller?.context?.let { ctx ->
                             findNearest(ctx)?.second
@@ -105,14 +126,16 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 when {
                     nav == null -> null
-                    nav.back != null -> composer.noBack.handle(nav.back!!)
+                    nav.back != null -> composer.noBack.commandAsync(nav.back!!)
                     nav.style == NavigationStyle.PUSH ->
                         nav.controller?.let { controller ->
-                            controller.endContext()
-                            HandleResult.HANDLED
+                            controller.context?.let { ctx ->
+                                ctx.end()
+                                Promise.resolve(ctx)
+                            }
                         }
                     else -> null
-                }
+                } as? Promise<Context>
             }
 
     private fun bindIO(
@@ -123,9 +146,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             composer:   Handling?
     ) {
         controller._io = (io ?: controller.context)?.let {
-            GLOBAL_PREPARE.foldRight(it) {
-                filter, pipe -> filter(pipe)
-            }
+            GLOBAL_PREPARE.foldRight(it) { filter, pipe -> filter(pipe) }
         }?.let {
             if (composer != null) {
                 var navOptions = options

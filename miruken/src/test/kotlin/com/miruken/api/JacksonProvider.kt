@@ -17,12 +17,11 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.miruken.TypeReference
-import com.miruken.api.Try
-import com.miruken.api.schedule.ScheduleResult
-import java.lang.reflect.Type
+import com.miruken.api.schedule.ScheduledResult
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
+import java.lang.reflect.Type
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -34,13 +33,14 @@ object JacksonProvider {
     private val typeToIdMapping = ConcurrentHashMap<Type, String>()
 
     init {
-        register(ScheduleResult)
+        register(ScheduledResult)
     }
 
     val mapper: ObjectMapper by lazy {
         jacksonObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .enable(SerializationFeature.WRITE_ENUMS_USING_INDEX)
                 .registerModule(MirukenModule)
     }
 
@@ -132,9 +132,9 @@ object JacksonProvider {
                     (responseType.classifier as? KClass<*>)?.also { nt ->
                         val companion = nt.companionObjectInstance as? NamedType
                         companion?.typeName?.takeUnless { it.isBlank() }?.also {
-                            idToTypeMapping.computeIfAbsent(it) { typeName ->
+                            idToTypeMapping.getOrPut(it) {
                                 val javaType = nt.java
-                                typeToIdMapping[nt.java] = typeName
+                                typeToIdMapping[nt.java] = it
                                 TypeFactory.defaultInstance().constructType(javaType)
                             }
                         }
@@ -200,7 +200,7 @@ object JacksonProvider {
                     property: BeanProperty?
             ): JsonDeserializer<*> {
                 val tryType = ctxt.contextualType ?: property?.type
-                ?: error("Unable to determine Try parameters")
+                    ?: error("Unable to determine Try parameters")
                 return TryDeserializer().apply { _tryType = tryType }
             }
 

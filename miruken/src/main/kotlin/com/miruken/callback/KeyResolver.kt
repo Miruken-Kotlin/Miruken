@@ -5,6 +5,7 @@ import com.miruken.TypeInfo
 import com.miruken.runtime.closeType
 import com.miruken.runtime.getFirstMetaAnnotation
 import com.miruken.runtime.toTypedArray
+import java.util.*
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -113,7 +114,13 @@ open class KeyResolver : KeyResolving {
             inquiry.wantsAsync -> resolveKeyAsync(
                     inquiry, typeInfo, handler)
             else -> resolveKey(inquiry, typeInfo, handler)
-        }
+        }?.let {
+            if (typeInfo.flags has TypeFlags.OPTIONAL_EXPLICIT) {
+                Optional.of(it)
+            } else it
+        } ?: if (typeInfo.flags has TypeFlags.OPTIONAL_EXPLICIT) {
+            Optional.empty<Any>()
+        } else null
     }
 
     companion object : KeyResolver() {

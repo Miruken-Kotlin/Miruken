@@ -4,7 +4,7 @@ import com.miruken.TypeReference
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.CallbackPolicyDispatching
 import com.miruken.callback.policy.CollectResultsBlock
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
 import kotlin.reflect.jvm.jvmErasure
 
 object TypeHandlers : Handler(), CallbackPolicyDispatching {
@@ -15,15 +15,16 @@ object TypeHandlers : Handler(), CallbackPolicyDispatching {
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock?
-    ) = HandlerDescriptor.getTypeHandlers(
-            policy, callback, callbackType)
-            .fold(HandleResult.NOT_HANDLED) { result, type ->
-                if ((result.handled && !greedy) || result.stop) {
-                    return result
-                }
-                val descriptor = HandlerDescriptor
-                        .getDescriptor(type.jvmErasure)
-                result or descriptor.dispatch(policy, type, callback,
-                        callbackType, greedy, composer, results)
+    ): HandleResult {
+        val factory = HandlerDescriptorFactory.current
+        return factory.getTypeHandlers(policy, callback, callbackType)
+                .fold(HandleResult.NOT_HANDLED) { result, type ->
+            if ((result.handled && !greedy) || result.stop) {
+                return result
+            }
+            result or (factory.getDescriptor(type.jvmErasure)?.dispatch(
+                    policy, type, callback, callbackType, greedy, composer, results)
+                    ?: HandleResult.NOT_HANDLED)
         }
+    }
 }

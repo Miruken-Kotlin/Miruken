@@ -11,8 +11,8 @@ import kotlin.reflect.full.createType
 
 class HandleMethodBinding(
         val protocolMethod: Method,
-        method: Method
-): MemberBinding(method) {
+        val method:         Method
+): MemberBinding() {
     init { method.isAccessible = true }
 
     override val returnType = method.genericReturnType.toKType()
@@ -22,7 +22,7 @@ class HandleMethodBinding(
                 method.declaringClass.getAnnotation(it) != null
     }
 
-    val filterProviders by lazy {
+    private val filterProviders by lazy {
         method.getFilterProviders() +
         method.declaringClass.getFilterProviders() +
         protocolMethod.getFilterProviders() +
@@ -40,9 +40,7 @@ class HandleMethodBinding(
             val filters = resolveFilters(target, handleMethod, composer)
                     ?: return HandleResult.NOT_HANDLED
             if (filters.isEmpty()) {
-                withComposer(composer) {
-                    invoke(handleMethod, target)
-                }
+                withComposer(composer) { invoke(handleMethod, target) }
             } else filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
                 withComposer(comp) {
@@ -50,7 +48,7 @@ class HandleMethodBinding(
                 }
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.first.next(handleMethod, this, comp,
+                    pipeline.first.next(handleMethod, handleMethod, this, comp,
                             { c,p -> next((c ?: comp), p ?: true)
                     }, pipeline.second)
                 }
@@ -83,8 +81,7 @@ class HandleMethodBinding(
     private fun invoke(
             handleMethod: HandleMethod,
             target:       Any
-    ) = (member as Method)
-            .invoke(target, *handleMethod.arguments)
+    ) = method.invoke(target, *handleMethod.arguments)
 
     @Suppress("UNCHECKED_CAST")
     private fun resolveFilters(

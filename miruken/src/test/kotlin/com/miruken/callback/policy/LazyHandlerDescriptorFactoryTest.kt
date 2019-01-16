@@ -3,99 +3,104 @@ package com.miruken.callback.policy
 import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.MemberBinding
 import io.github.classgraph.ClassGraph
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 
-class HandlerDescriptorTest {
-    @Test fun `Cannot create descriptors for interfaces`() {
-        assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<Handling>()
-        }
+class LazyHandlerDescriptorFactoryTest {
+    private lateinit var factory: HandlerDescriptorFactory
+
+    @Before
+    fun setup() {
+        factory = LazyHandlerDescriptorFactory()
+        HandlerDescriptorFactory.useFactory(factory)
     }
 
-    @Test fun `Cannot create descriptors for abstract classes`() {
+    @Test fun `Cannot create descriptors for interfaces`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<CallbackPolicy>()
+            factory.getDescriptor<Handling>()
         }
     }
 
     @Test fun `Cannot create descriptors for primitive types`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<Int>()
+            factory.getDescriptor<Int>()
         }
     }
 
     @Test fun `Cannot create descriptors for collection classes`() {
         assertFailsWith(IllegalStateException::class) {
-            HandlerDescriptor.getDescriptor<List<Foo>>()
+            factory.getDescriptor<List<Foo>>()
         }
     }
 
     @Test fun `Obtains same descriptor per Handler class`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestHandler.Good>()
+        val descriptor = factory.getDescriptor<TestHandler.Good>()
+        assertNotNull(descriptor)
         assertEquals(TestHandler.Good::class, descriptor.handlerClass)
-        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestHandler.Good>())
+        assertSame(descriptor, factory.getDescriptor<TestHandler.Good>())
     }
 
     @Test fun `Obtains descriptor with Handles method using open generics`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestHandler.OpenGenerics>()
+        val descriptor = factory.getDescriptor<TestHandler.OpenGenerics>()
         assertNotNull(descriptor)
     }
 
     @Test fun `Rejects descriptor with Handles method with no parameters`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestHandler.NoParameters>()
+            factory.getDescriptor<TestHandler.NoParameters>()
         }
     }
 
     @Test fun `Rejects descriptor with Handles method with Nothing parameter`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestHandler.NothingParameter>()
+            factory.getDescriptor<TestHandler.NothingParameter>()
         }
     }
 
     @Test fun `Obtains same descriptor per Provider class`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.Good>()
-        assertSame(descriptor, HandlerDescriptor.getDescriptor<TestProvider.Good>())
+        val descriptor = factory.getDescriptor<TestProvider.Good>()
+        assertSame(descriptor, factory.getDescriptor<TestProvider.Good>())
     }
 
     @Test fun `Obtains descriptor for Provider with properties`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.Properties>()
+        val descriptor = factory.getDescriptor<TestProvider.Properties>()
         assertNotNull(descriptor)
     }
 
     @Test fun `Obtains descriptor for Provider with generic properties`() {
-        val descriptor = HandlerDescriptor.getDescriptor<TestProvider.GenericProperties<TestProvider.Foo>>()
+        val descriptor = factory.getDescriptor<TestProvider.GenericProperties<TestProvider.Foo>>()
         assertNotNull(descriptor)
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothing>()
+            factory.getDescriptor<TestProvider.ReturnsNothing>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing taking callback`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestProvider.ReturnsNothingWithCallback>()
+            factory.getDescriptor<TestProvider.ReturnsNothingWithCallback>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Unit`() {
         assertFailsWith(PolicyRejectedException::class) {
-            HandlerDescriptor.getDescriptor<TestProvider.ReturnsUnit>()
+            factory.getDescriptor<TestProvider.ReturnsUnit>()
         }
     }
 
     @Test fun `Visits all descriptor member bindings`() {
         val bindings = mutableListOf<MemberBinding>()
-        HandlerDescriptor.getDescriptor<ExampleHandler> { descriptor, binding ->
+        val factory  = LazyHandlerDescriptorFactory { descriptor, binding ->
             assertSame(ExampleHandler::class, descriptor.handlerClass)
             bindings.add(binding)
         }
+        factory.getDescriptor<ExampleHandler>()
         assertEquals(3, bindings.size)
     }
 
@@ -120,7 +125,7 @@ class HandlerDescriptorTest {
         @Handles
         fun hello(foo: Foo) {}
 
-        @Provides
+        @get:Provides
         val foo = Foo()
     }
 }

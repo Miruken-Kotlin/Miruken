@@ -3,48 +3,56 @@ package com.miruken.api.cache
 import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.send
-import com.miruken.callback.Handler
-import com.miruken.callback.Handles
-import com.miruken.callback.Handling
+import com.miruken.callback.*
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
-class CachedHandler : Handler() {
+class CachedHandler
+    @Provides @Singleton
+    constructor(): Handler() {
+
     private val _cache = ConcurrentHashMap<NamedType, CacheResponse>()
 
     private data class CacheResponse(
-            val response:   Promise<*>, val lastUpdate: Instant)
+            val response: Promise<*>, val lastUpdate: Instant)
 
     @Handles
+    @Suppress("UNCHECKED_CAST")
     fun <TResp: NamedType> cache(
         request:  Cached<TResp>,
         composer: Handling
     ): Promise<TResp> {
-        @Suppress("UNCHECKED_CAST")
-        return _cache.compute(request.request) { key, cached ->
-            cached?.takeUnless {
-                when(it.response.state) {
-                    PromiseState.REJECTED -> true
-                    PromiseState.CANCELLED -> true
-                    else -> Instant.now() > it.lastUpdate +
-                            (request.timeToLive ?: ONE_DAY)
-                }
-            } ?: refreshResponse(key, request.requestType, composer)
-        }!!.response as Promise<TResp>
+        val key     = request.request
+        var created = false
+        var cached  = _cache.getOrPut(key) {
+            created = true
+            refreshResponse(key, request.requestType, composer)
+        }
+        if (!created && when(cached.response.state) {
+            PromiseState.REJECTED -> true
+            PromiseState.CANCELLED -> true
+            else -> Instant.now() > cached.lastUpdate +
+                    (request.timeToLive ?: ONE_DAY)
+        }) {
+            cached = refreshResponse(key, request.requestType, composer)
+            _cache[key] = cached
+        }
+        return cached.response as Promise<TResp>
     }
 
     @Handles
+    @Suppress("UNCHECKED_CAST")
     fun <TResp: NamedType> refresh(
             request:  Refresh<TResp>,
             composer: Handling
     ): Promise<TResp> {
-        @Suppress("UNCHECKED_CAST")
-        return _cache.compute(request.request) { key, _ ->
-            refreshResponse(key, request.requestType, composer)
-        }!!.response as Promise<TResp>
+        val key = request.request
+        return refreshResponse(key, request.requestType, composer).also {
+            _cache[key] = it
+        }.response as Promise<TResp>
     }
 
     @Handles

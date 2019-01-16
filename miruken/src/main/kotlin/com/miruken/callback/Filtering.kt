@@ -11,11 +11,12 @@ typealias Next<Res> = (Handling?, Boolean?) -> Promise<Res>
 
 interface Filtering<in Cb: Any, Res: Any?> : Ordered {
     fun next(
-            callback: Cb,
-            binding:  MemberBinding,
-            composer: Handling,
-            next:     Next<Res>,
-            provider: FilteringProvider? = null
+            callback:    Cb,
+            rawCallback: Any,
+            binding:     MemberBinding,
+            composer:    Handling,
+            next:        Next<Res>,
+            provider:    FilteringProvider? = null
     ): Promise<Res>
 }
 

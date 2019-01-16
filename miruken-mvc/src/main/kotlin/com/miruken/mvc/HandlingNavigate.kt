@@ -2,46 +2,45 @@ package com.miruken.mvc
 
 import com.miruken.callback.Handling
 import com.miruken.callback.TargetActionBuilder
-import com.miruken.callback.handle
+import com.miruken.callback.commandAsync
+import com.miruken.concurrent.Promise
+import com.miruken.context.Context
 import com.miruken.typeOf
 
-inline fun <reified C: Controller> Handling.next() =
-        navigate<C>(NavigationStyle.NEXT)
+typealias TargetActionPromise<C> = TargetActionBuilder<C, Promise<Context>>
 
-inline fun <reified C: Controller> Handling.next(
-        noinline action: C.() -> Unit
-) = (navigate<C>(NavigationStyle.NEXT)) { action() }
+inline fun <reified C: Controller> Handling.next(): TargetActionPromise<C> =
+        navigate(NavigationStyle.NEXT)
 
-inline fun <reified C: Controller> Handling.push() =
-        navigate<C>(NavigationStyle.PUSH)
+inline fun <reified C: Controller> Handling.next(noinline action: (C) -> Unit) =
+        navigate(NavigationStyle.NEXT, action)
 
-inline fun <reified C: Controller> Handling.push(
-        noinline action: C.() -> Unit
-) = (navigate<C>(NavigationStyle.PUSH)) { action() }
+inline fun <reified C: Controller> Handling.push(): TargetActionPromise<C> =
+        navigate(NavigationStyle.PUSH)
 
-inline fun <reified C: Controller> Handling.partial() =
-        navigate<C>(NavigationStyle.PARTIAL)
+inline fun <reified C: Controller> Handling.push(noinline action: (C) -> Unit) =
+        navigate(NavigationStyle.PUSH, action)
 
-inline fun <reified C: Controller> Handling.partial(
-        noinline action: C.() -> Unit
-) = (navigate<C>(NavigationStyle.PARTIAL)) { action() }
+inline fun <reified C: Controller> Handling.partial(): TargetActionPromise<C> =
+        navigate(NavigationStyle.PARTIAL)
 
+inline fun <reified C: Controller> Handling.partial(noinline action: (C) -> Unit) =
+        navigate(NavigationStyle.PARTIAL, action)
+
+@Suppress("UNCHECKED_CAST")
 inline fun <reified C: Controller> Handling.navigate(
-        style:  NavigationStyle
-) = TargetActionBuilder<C> { action ->
-    val navigation = Navigation(typeOf<C>(), action, style)
-    handle(navigation) otherwise {
-        error("Navigation $style to ${C::class} not handled")
+        style: NavigationStyle
+): TargetActionPromise<C> {
+    return TargetActionBuilder { action ->
+        val navigation = Navigation(typeOf<C>(), action, style)
+        commandAsync(navigation) as Promise<Context>
     }
 }
 
 inline fun <reified C: Controller> Handling.navigate(
-        style:           NavigationStyle,
-        noinline action: C.() -> Unit
-) = (navigate<C>(style)) { action() }
+        style: NavigationStyle,
+        noinline action: (C) -> Unit
+): Promise<Context> = navigate<C>(style)(action)
 
-fun Handling.goBack() {
-    handle(Navigation.GoBack()) otherwise {
-        error("Navigation backwards not handled")
-    }
-}
+@Suppress("UNCHECKED_CAST")
+fun Handling.goBack() = commandAsync(Navigation.GoBack()) as Promise<Context>

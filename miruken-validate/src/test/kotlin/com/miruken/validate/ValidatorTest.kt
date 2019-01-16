@@ -1,11 +1,11 @@
 package com.miruken.validate
 
-import com.miruken.test.assertAsync
 import com.miruken.callback.Handler
 import com.miruken.callback.plus
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
 import com.miruken.protocol.proxy
+import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName

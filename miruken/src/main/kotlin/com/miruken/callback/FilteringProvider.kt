@@ -18,4 +18,7 @@ interface Filtered {
 
     fun addFilters(vararg providers: FilteringProvider)
     fun addFilters(providers: Collection<FilteringProvider>)
+    fun removeFilters(vararg providers: FilteringProvider)
+    fun removeFilters(providers: Collection<FilteringProvider>)
+    fun removeAllFilters()
 }

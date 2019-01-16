@@ -14,9 +14,8 @@ class NavigationOptions : Options<NavigationOptions>() {
         region?.run {
             val l = other.region ?: RegionOptions()
             mergeInto(l)
-            if (other.region == null) {
+            if (other.region == null)
                 other.region = l
-            }
         }
     }
 }

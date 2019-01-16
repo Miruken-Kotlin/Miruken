@@ -1,13 +1,13 @@
 package com.miruken.api
 
-import com.miruken.test.assertAsync
 import com.miruken.callback.*
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.LazyHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
+import com.miruken.test.assertAsync
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -21,7 +21,7 @@ class StashTest {
 
     @Before
     fun setup() {
-       HandlerDescriptor.resetDescriptors()
+       HandlerDescriptorFactory.useFactory(LazyHandlerDescriptorFactory())
     }
 
     @Test fun `Adds to stash`() {
@@ -102,11 +102,12 @@ class StashTest {
         override var order: Int? = null
 
         override fun next(
-                callback: CancelOrder,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Order>,
-                provider: FilteringProvider?
+                callback:    CancelOrder,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Order>,
+                provider:    FilteringProvider?
         ): Promise<Order> {
             composer.proxy<Stash>().put(Order().apply {
                 id = callback.orderId

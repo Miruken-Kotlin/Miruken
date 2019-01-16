@@ -1,7 +1,7 @@
 package com.miruken.callback
 
-import com.miruken.test.assertAsync
 import com.miruken.concurrent.Promise
+import com.miruken.test.assertAsync
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -67,19 +67,19 @@ class PropertiesTest {
 
     @Test fun `Delegates primitive property to handler`() {
         val handler = object : Handler() {
-            @Provides
+            @get:Provides
             val primes = listOf(2,3,5,7,11)
 
-            @Provides
-            @Key("help")
+            @get:Provides
+            @get:Key("help")
             val primaryHelp = "www.help.com"
 
-            @Provides
-            @Key("help")
+            @get:Provides
+            @get:Key("help")
             val secondaryHelp = "www.help2.com"
 
-            @Provides
-            @Key("help")
+            @get:Provides
+            @get:Key("help")
             val criticalHelp = "www.help3.com"
         }
         val instance = object {
@@ -164,7 +164,7 @@ class PropertiesTest {
             override fun buy(itemId: Long): UUID = UUID.randomUUID()
         }
         val instance = object {
-            @Proxy val auction by handler.get<Auction>()
+            @get:Proxy val auction by handler.get<Auction>()
         }
         assertNotNull(instance.auction.buy(2))
     }

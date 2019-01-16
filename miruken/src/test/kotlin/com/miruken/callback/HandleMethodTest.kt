@@ -13,7 +13,10 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class HandleMethodTest {
     @Test fun `Handles method calls`() {
@@ -202,7 +205,8 @@ class HandleMethodTest {
 
     @Abort
     class EmailHandler : Handler(), EmailFeature {
-        @Log
+        @get:Log
+        @set:Log
         override var count: Int = 0
             private set
 
@@ -296,11 +300,12 @@ class HandleMethodTest {
         override var order: Int? = 1
 
         override fun next(
-                callback: HandleMethod,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    HandleMethod,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             print("Handle method '${callback.method.name}' with result ")
             val result = next()
@@ -311,7 +316,7 @@ class HandleMethodTest {
 
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
+            AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
     @UseFilter(LogFilter::class)
     annotation class Log
 
@@ -319,11 +324,12 @@ class HandleMethodTest {
         override var order: Int? = 2
 
         override fun next(
-                callback: HandleMethod,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    HandleMethod,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             println("Log2 method '${callback.method.name}'")
             return next()
@@ -331,7 +337,7 @@ class HandleMethodTest {
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
+            AnnotationTarget.PROPERTY_GETTER)
     @UseFilter(Log2Filter::class)
     annotation class Log2
 
@@ -339,11 +345,12 @@ class HandleMethodTest {
         override var order: Int? = 0
 
         override fun next(
-                callback: HandleMethod,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    HandleMethod,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = when {
             callback.method.name == "email" &&
                     callback.arguments[0] == "Abort" -> next.abort()
@@ -352,7 +359,7 @@ class HandleMethodTest {
     }
 
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION,
-            AnnotationTarget.PROPERTY)
+            AnnotationTarget.PROPERTY_GETTER)
     @UseFilter(AbortFilter::class)
     annotation class Abort
 }

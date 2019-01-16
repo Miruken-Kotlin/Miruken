@@ -18,19 +18,25 @@ inline fun <reified T: Any> Handling.with(value: T) =
 
 inline fun <reified T: Any> T.toHandler(): Handling {
     return if (this::class.isGeneric)
-        GenericWrapper(this, typeOf<T>())
+        this as? GenericWrapper ?: GenericWrapper(this, typeOf<T>())
     else
         this as? Handling ?: HandlerAdapter(this)
 }
 
 fun Handling.resolveArgs(vararg types: TypeReference): List<Any?>? {
     return types.map { key ->
-        val type = key.kotlinType
-        val typeInfo = TypeInfo.parse(type)
-        val inquiry = typeInfo.createInquiry(type)
-        KeyResolver.resolve(inquiry, typeInfo, this)
-                ?: if (typeInfo.flags has TypeFlags.OPTIONAL)
-                    null else return null
+        val typeInfo = TypeInfo.parse(key.kotlinType)
+        val inquiry  = typeInfo.createInquiry(typeInfo.componentType)
+        KeyResolver.resolve(inquiry, typeInfo, this) ?: when {
+            typeInfo.flags has TypeFlags.OPTIONAL -> null
+            else -> return null
+        }
+    }
+}
+
+val Handling.execute get() = TargetActionBuilder<Handling, Unit> {
+    check(it(this)) {
+        "One more or arguments could not be resolved"
     }
 }
 

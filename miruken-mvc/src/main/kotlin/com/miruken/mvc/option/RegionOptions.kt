@@ -32,11 +32,6 @@ class RegionOptions : Options<RegionOptions>() {
     }
 }
 
-fun Handling.region(tag: String) =
-        withOptions(NavigationOptions().apply {
-            region = RegionOptions().apply { this.tag = tag }
-        })
-
 val Handling.pushLayer get() =
     withOptions(NavigationOptions().apply {
         region = RegionOptions().apply { push = true }

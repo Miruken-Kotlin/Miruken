@@ -3,11 +3,13 @@
 package com.miruken.callback
 
 import com.miruken.TypeReference
-import com.miruken.callback.policy.HandlerDescriptor
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.LazyHandlerDescriptorFactory
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.Qualifier
+import com.miruken.callback.policy.getDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context
 import com.miruken.context.ContextualImpl
@@ -16,6 +18,7 @@ import com.miruken.kTypeOf
 import com.miruken.runtime.checkOpenConformance
 import com.miruken.test.assertAsync
 import com.miruken.typeOf
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -26,8 +29,16 @@ import kotlin.reflect.full.createType
 import kotlin.test.*
 
 class HandlerTest {
+    private lateinit var factory: HandlerDescriptorFactory
+
     @Rule
     @JvmField val testName = TestName()
+
+    @Before
+    fun setup() {
+        factory = LazyHandlerDescriptorFactory()
+        HandlerDescriptorFactory.useFactory(factory)
+    }
 
     @Test fun `Indicates not handled`() {
         val handler = SimpleHandler()
@@ -648,7 +659,7 @@ class HandlerTest {
     }
 
     @Test fun `Creates instance implicitly`() {
-        HandlerDescriptor.getDescriptor<ControllerBase>()
+        factory.getDescriptor<ControllerBase>()
         val instance = TypeHandlers.resolve<ControllerBase>()
         assertNotNull(instance)
         assertNotSame(instance, TypeHandlers.resolve()!!)
@@ -657,7 +668,7 @@ class HandlerTest {
     @Test fun `Creates generic instance implicitly`() {
         val view = Screen()
         val bar  = SpecialBar()
-        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        factory.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers
                 .with(view).with(bar)
                 .resolve<Controller<Screen, Bar>>()
@@ -668,7 +679,7 @@ class HandlerTest {
 
     @Test fun `Infers instance implicitly`() {
         val foo = Foo()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
+        factory.getDescriptor<ControllerBase>()
         assertEquals(HandleResult.HANDLED,
                 TypeHandlers.infer.handle(foo))
         assertEquals(1, foo.handled)
@@ -676,7 +687,7 @@ class HandlerTest {
 
     @Test fun `Infers singleton callbacks implicitly`() {
         val foo = Foo()
-        HandlerDescriptor.getDescriptor<SingletonHandler>()
+        factory.getDescriptor<SingletonHandler>()
         assertEquals(HandleResult.HANDLED,
                 TypeHandlers.infer.handle(foo))
         assertEquals(1, foo.handled)
@@ -684,14 +695,14 @@ class HandlerTest {
 
     @Test fun `Infers explicit companion callbacks implicitly`() {
         val foo = Foo()
-        HandlerDescriptor.getDescriptor<ExplicitCompanionHandler>()
+        factory.getDescriptor<ExplicitCompanionHandler>()
         assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
         assertEquals(1, foo.handled)
     }
 
     @Test fun `Infers implicit companion callbacks implicitly`() {
         val foo = Foo()
-        HandlerDescriptor.getDescriptor<ImplicitCompanionHandler>()
+        factory.getDescriptor<ImplicitCompanionHandler>()
         assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
         assertEquals(1, foo.handled)
     }
@@ -699,8 +710,8 @@ class HandlerTest {
     @Test fun `Infers generic instance implicitly`() {
         val boo = Boo()
         val baz = SpecialBaz()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
-        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        factory.getDescriptor<ControllerBase>()
+        factory.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers.infer
                 .with(boo).with(baz)
                 .resolve<Controller<Boo, Baz>>()
@@ -710,17 +721,15 @@ class HandlerTest {
     }
 
     @Test fun `Provides instance implicitly`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
+        factory.getDescriptor<ControllerBase>()
         val bar = TypeHandlers.infer.resolve<Bar>()
         assertNotNull(bar)
     }
 
     @Test fun `Provides dependencies implicitly`() {
         val view = Screen()
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
-        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        factory.getDescriptor<ControllerBase>()
+        factory.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers.infer
                 .with(view).resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
@@ -729,16 +738,14 @@ class HandlerTest {
 
     @Test fun `Detects circular dependencies`() {
         val view = Screen()
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Controller<*,*>>()
+        factory.getDescriptor<Controller<*,*>>()
         val instance = TypeHandlers.infer
                 .with(view).resolve<Controller<Screen, Bar>>()
         assertNull(instance)
     }
 
     @Test fun `Creates singleton instance implicitly`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ApplicationBase>()
+        factory.getDescriptor<ApplicationBase>()
         val app = TypeHandlers.resolve<ApplicationBase>()
         assertNotNull(app)
         assertSame(app, TypeHandlers.resolve()!!)
@@ -747,10 +754,9 @@ class HandlerTest {
     @Test fun `Creates generic singleton instance implicitly`() {
         val view    = Screen()
         val handler = TypeHandlers.infer
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
-        HandlerDescriptor.getDescriptor<Controller<*,*>>()
-        HandlerDescriptor.getDescriptor<Application<*>>()
+        factory.getDescriptor<ControllerBase>()
+        factory.getDescriptor<Controller<*,*>>()
+        factory.getDescriptor<Application<*>>()
         val app1 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
@@ -766,8 +772,7 @@ class HandlerTest {
 
     @Test fun `Returns same scoped instance without qualifier`() {
         var screen: Screen? = null
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Screen>()
+        factory.getDescriptor<Screen>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             screen = context.resolve()
@@ -787,8 +792,7 @@ class HandlerTest {
 
     @Test fun `Creates scoped instance implicitly`() {
         var screen: Screen? = null
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Screen>()
+        factory.getDescriptor<Screen>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             screen = context.resolve()
@@ -809,8 +813,7 @@ class HandlerTest {
     }
 
     @Test fun `Creates scpoed instance covariantly`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        factory.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             val view = context.with(Bar()).resolve<View<Bar>>()
@@ -820,9 +823,8 @@ class HandlerTest {
     }
 
     @Test fun `Creates scoped instance covariantly inferred`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
-        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        factory.getDescriptor<ControllerBase>()
+        factory.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             val view = context.infer.resolve<View<Bar>>()
@@ -832,9 +834,8 @@ class HandlerTest {
     }
 
     @Test fun `Creates generic scoped instance implicitly`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
-        HandlerDescriptor.getDescriptor<ScreenModel<*>>()
+        factory.getDescriptor<ControllerBase>()
+        factory.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             val screen1 = context.with(Foo()).resolve<ScreenModel<Foo>>()
@@ -846,9 +847,8 @@ class HandlerTest {
     }
 
     @Test fun `Provides generic scoped instance implicitly`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<ControllerBase>()
-        HandlerDescriptor.getDescriptor<ScreenModelProvider>()
+        factory.getDescriptor<ControllerBase>()
+        factory.getDescriptor<ScreenModelProvider>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             val screen1 = context.with(Foo())
@@ -863,15 +863,13 @@ class HandlerTest {
     }
 
     @Test fun `Rejects scoped creation if no context`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Screen>()
+        factory.getDescriptor<Screen>()
         val screen = TypeHandlers.resolve<Screen>()
         assertNull(screen)
     }
 
     @Test fun `Rejects changing managed context`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Screen>()
+        factory.getDescriptor<Screen>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             val screen = context.resolve<Screen>()
@@ -884,8 +882,7 @@ class HandlerTest {
     }
 
     @Test fun `Detaches context when assigned null`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Screen>()
+        factory.getDescriptor<Screen>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             val screen = context.resolve<Screen>()
@@ -897,9 +894,8 @@ class HandlerTest {
     }
 
     @Test fun `Rejects scoped dependency in singleton`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<Screen>()
-        HandlerDescriptor.getDescriptor<LifestyleMismatch>()
+        factory.getDescriptor<Screen>()
+        factory.getDescriptor<LifestyleMismatch>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
             assertNull(context.resolve<LifestyleMismatch>())
@@ -907,8 +903,7 @@ class HandlerTest {
     }
 
     @Test fun `Selects greediest consructor`() {
-        HandlerDescriptor.resetDescriptors()
-        HandlerDescriptor.getDescriptor<OverloadedConstructors>()
+        factory.getDescriptor<OverloadedConstructors>()
         val ctor    = TypeHandlers.resolve<OverloadedConstructors>()
         assertNotNull(ctor)
         assertNull(ctor.foo)
@@ -1215,7 +1210,7 @@ class HandlerTest {
                     Bar().apply { handled = 2 })
         }
 
-        @Provides
+        @get:Provides
         val providesPropertyBar : Bar
             get() = Bar().apply { handled = 3 }
 
@@ -1257,7 +1252,7 @@ class HandlerTest {
                     Bar().apply { handled = 1 },
                     Bar().apply { handled = 2 }))
 
-        @Provides
+        @get:Provides
         val providesPropertyBar: Promise<Bar>
             get() = Promise.resolve(Bar().apply { handled = 3 })
 
@@ -1476,11 +1471,12 @@ class HandlerTest {
         ): AbortingFilter<R> = AbortingFilter()
 
         override fun next(
-                callback: Bar,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Unit>,
-                provider: FilteringProvider?
+                callback:    Bar,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Unit>,
+                provider:    FilteringProvider?
         ): Promise<Unit> {
             callback.filters.add(this)
             callback.handled++
@@ -1513,16 +1509,16 @@ class HandlerTest {
         }
     }
 
-
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -1534,11 +1530,12 @@ class HandlerTest {
         override var order: Int? = null
 
         override fun next(
-                callback: T,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Any?>,
-                provider: FilteringProvider?
+                callback:    T,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Any?>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -1550,11 +1547,12 @@ class HandlerTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Any,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<T>,
-                provider: FilteringProvider?
+                callback:    Any,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<T>,
+                provider:    FilteringProvider?
         ) = next()
     }
 
@@ -1566,11 +1564,12 @@ class HandlerTest {
         override var order: Int? = null
 
         override fun next(
-                callback: Any,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Unit>,
-                provider: FilteringProvider?
+                callback:    Any,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Unit>,
+                provider:    FilteringProvider?
         ): Promise<Unit> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
@@ -1586,11 +1585,12 @@ class HandlerTest {
         override var order: Int? = 1
 
         override fun next(
-                callback: Cb,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    Cb,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)
@@ -1607,11 +1607,12 @@ class HandlerTest {
         override var order: Int? = 0
 
         override fun next(
-                callback: Bar,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<R>,
-                provider: FilteringProvider?
+                callback:    Bar,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<R>,
+                provider:    FilteringProvider?
         ) = when {
                 callback.handled > 99 -> next.abort()
                 else -> next()
@@ -1626,11 +1627,12 @@ class HandlerTest {
         override var order: Int? = 2
 
         override fun next(
-                callback: Req,
-                binding:  MemberBinding,
-                composer: Handling,
-                next:     Next<Res>,
-                provider: FilteringProvider?
+                callback:    Req,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
         ): Promise<Res> {
             val cb = extractTesting(callback)
             cb?.filters?.add(this)

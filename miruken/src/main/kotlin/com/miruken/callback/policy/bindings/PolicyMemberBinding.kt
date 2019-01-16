@@ -17,10 +17,9 @@ import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmErasure
 
 class PolicyMemberBinding(
-        val policy: CallbackPolicy,
+        val policy:  CallbackPolicy,
         bindingInfo: PolicyMemberBindingInfo
-) : MemberBinding(bindingInfo.dispatcher.javaMember) {
-
+) : MemberBinding() {
     val rule        = bindingInfo.rule
     val annotation  = bindingInfo.annotation
     val dispatcher  = bindingInfo.dispatcher
@@ -49,7 +48,7 @@ class PolicyMemberBinding(
                 return HandleResult.NOT_HANDLED
         }
 
-        val ruleArgs  = rule?.resolveArguments(callback) ?: emptyArray()
+        val ruleArgs = rule?.resolveArguments(callback) ?: emptyArray()
         val filterCallback = callbackArg?.let {
             ruleArgs[it.parameter.index - 1].takeIf { // skip receiver
                 arg -> it.parameterType.jvmErasure.isInstance(arg)
@@ -94,9 +93,9 @@ class PolicyMemberBinding(
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
-                val args = resolveArguments(callback,
-                        ruleArgs, callbackType, comp,
-                        typeBindings) ?: notHandled()
+                val args = resolveArguments(
+                        callback, ruleArgs, callbackType, comp, typeBindings)
+                        ?: notHandled()
                 val baseResult   = dispatcher.invoke(handler, args)
                 val handleResult = when (baseResult) {
                     is HandleResult -> baseResult
@@ -108,7 +107,7 @@ class PolicyMemberBinding(
                 Promise.resolve(baseResult)
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
-                    pipeline.first.next(filterCallback, this, comp,
+                    pipeline.first.next(filterCallback, callback, this, comp,
                             { c, p -> next((c ?: comp), p ?: true)
                     }, pipeline.second)
                 }
@@ -144,18 +143,16 @@ class PolicyMemberBinding(
         val cbType = callbackType?.kotlinType
                 ?: callbackArg?.parameterType
                 ?: callback::class.starProjectedType
-
         val filterType = Filtering::class.createType(listOf(
                 KTypeProjection.invariant(cbType),
                 KTypeProjection.invariant(resultType)))
         return composer.getOrderedFilters(
                 filterType, this, sequenceOf(
-                        dispatcher.filterProviders,
-                        descriptor.filters,
-                        policy.filters,
-                        ((handler as? Filtering<*,*>)?.let {
-                            listOf(FilterInstanceProvider(true, it))
-                        } ?: emptyList()))
+                filters, dispatcher.filterProviders,
+                descriptor.filters, policy.filters,
+                ((handler as? Filtering<*,*>)?.let {
+                    listOf(FilterInstanceProvider(true, it))
+                } ?: emptyList()))
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>
     }
 
@@ -181,8 +178,7 @@ class PolicyMemberBinding(
             when (logicalType.classifier) {
                 Handling::class -> resolved[i] = composer
                 MemberBinding::class,
-                PolicyMemberBinding::class ->
-                    resolved[i] = this
+                PolicyMemberBinding::class -> resolved[i] = this
                 KType::class -> {
                     if (callbackType == null) {
                         if (!optional) return null
@@ -201,14 +197,10 @@ class PolicyMemberBinding(
                     if (argument.isOpen && typeBindings.value.isEmpty()) {
                         return null
                     }
-                    val inquiry = argument.createInquiry(
-                            parent, typeBindings.value)
-                        ?: return null
-                    val resolver = KeyResolver.getResolver(
-                            argument.useResolver, composer) ?: return null
+                    val inquiry  = argument.createInquiry(parent, typeBindings.value) ?: return null
+                    val resolver = KeyResolver.getResolver(argument.useResolver, composer) ?: return null
                     resolver.validate(inquiry.key, typeInfo)
-                    resolved[i] = resolver.resolve(
-                            inquiry, typeInfo, composer) ?:
+                    resolved[i] = resolver.resolve(inquiry, typeInfo, composer) ?:
                             if (optional) null else return null
                 }
             }
@@ -218,9 +210,7 @@ class PolicyMemberBinding(
     }
 
     companion object OrderByArity : Comparator<PolicyMemberBinding> {
-        override fun compare(
-                o1: PolicyMemberBinding,
-                o2: PolicyMemberBinding
-        ) =  o2.dispatcher.arity - o1.dispatcher.arity
+        override fun compare(o1: PolicyMemberBinding, o2: PolicyMemberBinding) =
+                o2.dispatcher.arity - o1.dispatcher.arity
     }
 }

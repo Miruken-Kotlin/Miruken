@@ -2,6 +2,7 @@ package com.miruken.callback
 
 import com.miruken.TypeReference
 import com.miruken.callback.policy.CallbackPolicy
+import com.miruken.callback.policy.HandlerDescriptorFactory
 
 class Inference(
         callback:     Any,
@@ -10,7 +11,8 @@ class Inference(
         InferringCallback {
 
     private val _inferred by lazy(LazyThreadSafetyMode.NONE) {
-        CallbackPolicy.getCallbackHandlers(
+        HandlerDescriptorFactory.current.getCallbackHandlers(
+               CallbackPolicy.getCallbackPolicy(callback),
                 callback, callbackType).map {
             Resolution(it, callback, callbackType)
         }

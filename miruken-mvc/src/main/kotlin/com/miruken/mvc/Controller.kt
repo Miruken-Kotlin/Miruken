@@ -1,6 +1,8 @@
 package com.miruken.mvc
 
 import com.miruken.callback.Handling
+import com.miruken.concurrent.Promise
+import com.miruken.concurrent.delay
 import com.miruken.context.*
 import com.miruken.event.Event
 import com.miruken.mvc.option.noBack
@@ -46,6 +48,16 @@ abstract class Controller : Contextual, AutoCloseable {
 
     fun endContext() = context?.end(this)
 
+    fun unwindContext() = context?.unwind(this)
+
+    fun track(promise: Promise<*>) {
+        context?.track(promise)
+    }
+
+    fun dispose(closeable: AutoCloseable) {
+        context?.dispose(closeable)
+    }
+
     val async get() = requireContext().async
 
     // Render
@@ -59,8 +71,7 @@ abstract class Controller : Contextual, AutoCloseable {
             noinline init: (V.() -> Unit)? = null
     ) = region(handler).show(init)
 
-    protected fun show(view: Viewing) =
-            view.display(region(io))
+    protected fun show(view: Viewing) = view.display(region(io))
 
     protected fun show(handler: Handling, view: Viewing) =
             view.display(region(handler))
@@ -74,8 +85,7 @@ abstract class Controller : Contextual, AutoCloseable {
             noinline init: (V.() -> Unit)? = null
     ) = region(handler.pushLayer).show(init)
 
-    protected fun region(handler: Handling) =
-            ViewingRegion(handler)
+    protected fun region(handler: Handling) = ViewingRegion(handler)
 
     protected fun addRegion(
             region: ViewingRegion,
@@ -86,66 +96,48 @@ abstract class Controller : Contextual, AutoCloseable {
 
     // Navigate
 
-    protected inline fun <reified C: Controller> next() =
-            requireContext().next<C>()
-
-    protected inline fun <reified C: Controller> next(handler: Handling ) =
-            handler.next<C>()
-
-    protected inline fun <reified C: Controller> next(noinline action: C.() -> Unit) =
-            requireContext().next(action)
+    protected inline fun <reified C: Controller> next(handler: Handling? = null): TargetActionPromise<C> =
+            (handler ?: requireContext()).next()
 
     protected inline fun <reified C: Controller> next(
-            handler:         Handling,
-            noinline action: C.() -> Unit
-    ) = handler.next(action)
+            handler: Handling? = null,
+            noinline action: (C) -> Unit
+    ) = (handler ?: requireContext()).next(action)
 
-    protected inline fun <reified C: Controller> push() =
-            requireContext().push<C>()
-
-    protected inline fun <reified C: Controller> push(handler: Handling) =
-            handler.push<C>()
-
-    protected inline fun <reified C: Controller> push(noinline action: C.() -> Unit) =
-            requireContext().push(action)
+    protected inline fun <reified C: Controller> push(handler: Handling? = null): TargetActionPromise<C> =
+            (handler ?: requireContext()).push()
 
     protected inline fun <reified C: Controller> push(
-            handler:         Handling,
-            noinline action: C.() -> Unit
-    ) = handler.push(action)
+            handler: Handling? = null,
+            noinline action: (C) -> Unit
+    ) = (handler ?: requireContext()).push(action)
 
-    protected inline fun <reified C: Controller> partial() =
-            requireContext().partial<C>()
-
-    protected inline fun <reified C: Controller> partial(handler: Handling) =
-            handler.partial<C>()
-
-    protected inline fun <reified C: Controller> partial(noinline action: C.() -> Unit) =
-            requireContext().partial(action)
+    protected inline fun <reified C: Controller> partial(handler: Handling? = null): TargetActionPromise<C> =
+            (handler ?: requireContext()).partial()
 
     protected inline fun <reified C: Controller> partial(
-            handler:         Handling,
-            noinline action: C.() -> Unit
-    ) = handler.partial(action)
+            handler: Handling? = null,
+            noinline action: (C) -> Unit
+    ) = (handler ?: requireContext()).partial(action)
 
     protected inline fun <reified C: Controller> navigate(
             style: NavigationStyle
-    ) = requireContext().navigate<C>(style)
+    ): TargetActionPromise<C> = requireContext().navigate(style)
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
             handler: Handling
-    ) = handler.navigate<C>(style)
+    ): TargetActionPromise<C> = handler.navigate(style)
 
     protected inline fun <reified C: Controller> navigate(
             style:   NavigationStyle,
-            noinline action: C.() -> Unit
+            noinline action: (C) -> Unit
     ) = requireContext().navigate(style, action)
 
     protected inline fun <reified C: Controller> navigate(
-            style:           NavigationStyle,
-            handler:         Handling,
-            noinline action: C.() -> Unit
+            style:   NavigationStyle,
+            handler: Handling,
+            noinline action: (C) -> Unit
     ) = handler.navigate(style, action)
 
     val noBack get() = requireContext().noBack
@@ -154,8 +146,49 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected fun goBack(handler: Handling) = handler.goBack()
 
+    // Workflow
+
+    fun finish() {
+        endContext()
+    }
+
+    inline fun <reified A: Any> finish(a: A) {
+        context?.also {
+            it.store(a).end()
+        }
+    }
+
+    inline fun <reified A1: Any, reified A2: Any> finish(a1: A1, a2: A2) {
+        context?.also {
+            it.store(a1).store(a2).end()
+        }
+    }
+
+    inline fun <reified A1: Any, reified A2: Any, reified A3: Any> finish(a1: A1, a2: A2, a3: A3) {
+        context?.also {
+            it.store(a1).store(a2).store(a3).end()
+        }
+    }
+
+    inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any> finish(a1: A1, a2: A2, a3: A3, a4: A4) {
+        context?.also {
+            it.store(a1).store(a2).store(a3).store(a4).end()
+        }
+    }
+
+    inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any, reified A5: Any> finish(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5) {
+        context?.also {
+            it.store(a1).store(a2).store(a3).store(a4).store(a5).end()
+        }
+    }
+
+    protected fun delay(delayMs: Long) =
+            Promise.delay(delayMs).also { context?.track(it) }
+
     val disposing = Event<Controller>()
     val disposed  = Event<Controller>()
+
+    protected open fun cleanUp() {}
 
     final override fun close() {
         if (_closed.compareAndSet(false, true)) {
@@ -170,6 +203,4 @@ abstract class Controller : Contextual, AutoCloseable {
             disposed.clear()
         }
     }
-
-    open fun cleanUp() {}
 }

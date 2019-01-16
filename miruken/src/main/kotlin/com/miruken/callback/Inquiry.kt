@@ -5,6 +5,7 @@ import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.bindings.BindingMetadata
 import com.miruken.callback.policy.bindings.BindingScope
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
 import com.miruken.concurrent.all
 import com.miruken.runtime.isCompatibleWith
 import java.lang.reflect.Modifier
@@ -98,12 +99,10 @@ open class Inquiry(
             if (_result == null) {
                 _result = if (isAsync) {
                     Promise.all(_promises) then {
-                        val flat = flatten(_resolutions, it)
-                        if (many) flat else flat.firstOrNull()
+                        if (many) _resolutions else _resolutions.firstOrNull()
                     }
                 } else {
-                    val flat = flatten(_resolutions)
-                    if (many) flat else flat.firstOrNull()
+                    if (many) _resolutions else _resolutions.firstOrNull()
                 }
             }
             if (isAsync) {
@@ -151,24 +150,37 @@ open class Inquiry(
             greedy:     Boolean,
             composer:   Handling
     ): Boolean {
-        if (resolution is Promise<*>) {
+        val res = (resolution as? Promise<*>)
+                ?.takeIf { it.state == PromiseState.FULFILLED }
+                ?.let { it.get() } ?: resolution
+
+        if (res is Promise<*>) {
             isAsync = true
-            _promises.add(resolution.then { r ->
+            _promises.add(res.then { r ->
                 when {
-                    !strict && r is Collection<*> -> r.filter {
+                    strict -> r?.takeIf { isSatisfied(it, greedy, composer) }
+                    r is Iterable<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
                     }
-                    !strict && r is Array<*> -> r.filter {
+                    r is Array<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
                     }
-                    else ->
-                        r?.takeIf { isSatisfied(it, greedy, composer) }
+                    else -> r?.takeIf { isSatisfied(it, greedy, composer) }
                 }
             })
-        } else if (!isSatisfied(resolution, greedy, composer)) {
+        } else if (!isSatisfied(res, greedy, composer)) {
             return false
         } else {
-            _resolutions.add(resolution)
+            @Suppress("UNCHECKED_CAST") when {
+                strict -> _resolutions.add(res)
+                res is Iterable<*> -> res.filter {
+                    it != null && isSatisfied(it, greedy, composer)
+                }.also { _resolutions.addAll(it as Collection<Any>) }
+                res is Array<*> -> res.filter {
+                    it != null && isSatisfied(it, greedy, composer)
+                }.also { _resolutions.addAll(it as Collection<Any>) }
+                else -> _resolutions.add(res)
+            }
         }
         return true
     }
@@ -234,18 +246,6 @@ open class Inquiry(
         return (target === this.target &&
                 dispatcher === this.dispatcher) ||
                 parent?.inProgress(target, dispatcher) == true
-    }
-
-    private fun flatten(vararg lists: List<*>): List<Any> {
-        val flat = mutableSetOf<Any>()
-        lists.flatMap { it }
-             .forEach { when (it) {
-                 null -> return@forEach
-                 is Iterable<*> -> flat.addAll(it.filterNotNull())
-                 is Array<*> -> flat.addAll(it.filterNotNull())
-                 else -> flat.add(it)
-             } }
-        return flat.toList()
     }
 }
 

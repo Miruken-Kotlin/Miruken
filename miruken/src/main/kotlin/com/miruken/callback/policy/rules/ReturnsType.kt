@@ -9,10 +9,8 @@ class ReturnsType(
         rule: ReturnRule,
         private val type: TypeReference
 ): ReturnRuleDelegate(rule) {
-    override fun matches(
-            method: CallableDispatch,
-            context: RuleContext
-    ) = type.kotlinType.isSupertypeOf(method.returnType) &&
+    override fun matches(method: CallableDispatch, context: RuleContext) =
+            type.kotlinType.isSupertypeOf(method.returnType) &&
             super.matches(method, context)
 }
 

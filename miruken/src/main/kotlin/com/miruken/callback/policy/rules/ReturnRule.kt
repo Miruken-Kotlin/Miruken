@@ -4,10 +4,7 @@ import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 
 interface ReturnRule {
-    fun matches(
-            method: CallableDispatch,
-            context: RuleContext
-    ): Boolean
+    fun matches(method:  CallableDispatch, context: RuleContext): Boolean
 
     fun configure(bindingInfo: PolicyMemberBindingInfo) {
     }
@@ -19,10 +16,7 @@ interface ReturnRule {
             ReturnRuleDisjunction(this, otherRule)
 
     object Anything : ReturnRule {
-        override fun matches(
-                method: CallableDispatch,
-                context: RuleContext
-        ) = true
+        override fun matches(method: CallableDispatch, context: RuleContext) = true
     }
 }
 

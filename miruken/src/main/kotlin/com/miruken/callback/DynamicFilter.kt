@@ -17,15 +17,16 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
     override var order: Int? = null
 
     final override fun next(
-            callback: Cb,
-            binding:  MemberBinding,
-            composer: Handling,
-            next:     Next<Res>,
-            provider: FilteringProvider?
+            callback:    Cb,
+            rawCallback: Any,
+            binding:     MemberBinding,
+            composer:    Handling,
+            next:        Next<Res>,
+            provider:    FilteringProvider?
     ) = NEXT.getOrPut(this::class) { lazyOf(getDynamicNext(binding)) }
             .value?.let { dispatcher ->
                 @Suppress("UNCHECKED_CAST")
-                resolveArguments(dispatcher, callback,
+                resolveArguments(dispatcher, callback, rawCallback,
                     binding, composer, next, provider)
                     ?.let { args ->
                         dispatcher.invoke(this, args) as Promise<Res>
@@ -33,12 +34,13 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
             } ?: next.abort()
 
     private fun resolveArguments(
-            dispatcher: CallableDispatch,
-            callback:   Cb,
-            binding:    MemberBinding,
-            composer:   Handling,
-            next:       Next<Res>,
-            provider:   FilteringProvider?
+            dispatcher:  CallableDispatch,
+            callback:    Cb,
+            rawCallback: Any,
+            binding:     MemberBinding,
+            composer:    Handling,
+            next:        Next<Res>,
+            provider:    FilteringProvider?
     ): Array<Any?>? {
         val arguments = dispatcher.arguments
         if (arguments.size == 2) {
@@ -46,9 +48,21 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
         }
         val parent   = callback as? Inquiry
         val resolved = arrayOfNulls<Any?>(arguments.size)
+        resolved[0] = callback
 
-        for (i in 2 until resolved.size) {
-            val argument      = arguments[i]
+        for (i in 1 until resolved.size) {
+            val argument = arguments[i]
+            if (i == 1) {
+                if (argument.parameterType.classifier == Any::class) {
+                    resolved[1] = rawCallback
+                } else {
+                    resolved[1] = next
+                }
+                continue
+            } else if (i == 2 && resolved[1] === rawCallback) {
+                resolved[2] = next
+                continue
+            }
             val argumentClass = argument.typeInfo.logicalType.jvmErasure
             when {
                 argumentClass == Handling::class ->
@@ -72,8 +86,6 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
             }
         }
 
-        resolved[0] = callback
-        resolved[1] = next
         return resolved
     }
 

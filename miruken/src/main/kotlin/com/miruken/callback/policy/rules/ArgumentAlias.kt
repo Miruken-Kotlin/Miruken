@@ -6,10 +6,8 @@ class ArgumentAlias(
         rule: ArgumentRule,
         private val alias: String
 ) : ArgumentRuleDelegate(rule) {
-    override fun matches(
-            argument: Argument,
-            context: RuleContext
-    ) = super.matches(argument, context) &&
+    override fun matches(argument: Argument, context: RuleContext) =
+            super.matches(argument, context) &&
             context.addAlias(alias, argument.parameterType)
 }
 
