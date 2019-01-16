@@ -9,7 +9,7 @@ interface Scheduled : Request<ScheduledResult> {
 }
 
 data class ScheduledResult(
-        val responses: List<Try<Throwable, NamedType>>,
+        val responses: List<Try<Throwable, NamedType?>>,
         override val typeName: String = ScheduledResult.typeName
 ) : NamedType {
     companion object : NamedType {

@@ -12,8 +12,6 @@ enum class NavigationStyle {
     PARTIAL
 }
 
-typealias NavigationFilter = (Navigation<*>) -> Boolean
-
 class Navigation<C: Controller>(
         val controllerKey: Any,
         val action:        TargetAction<C>,
@@ -40,7 +38,7 @@ class Navigation<C: Controller>(
 
     companion object {
         val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()
-        val GLOBAL_EXECUTE = mutableListOf<NavigationFilter>()
+        val GLOBAL_EXECUTE = mutableListOf<(Navigation<*>) -> Boolean>()
     }
 }
 
