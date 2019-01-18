@@ -1,7 +1,6 @@
 package com.miruken.concurrent
 
-import java.util.Timer
-import java.util.TimerTask
+import java.util.*
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.schedule
@@ -36,11 +35,11 @@ fun Promise.Companion.all(input: Collection<Any?>) : Promise<List<Any?>> {
  * Never returns if no promises are supplied.
  * Use [Promise].any instead
  */
-fun Promise.Companion.race(vararg promises: Promise<Any>) : Promise<Any> =
+fun Promise.Companion.race(vararg promises: Promise<*>) : Promise<*> =
         race(promises.toList())
 
-fun Promise.Companion.race(promises: Collection<Promise<Any>>) : Promise<Any> {
-    return Promise { resolve, reject ->
+fun Promise.Companion.race(promises: Collection<Promise<*>>) : Promise<*> {
+    return Promise<Any?> { resolve, reject ->
         for (promise in promises) {
             promise.then(resolve, reject)
         }
@@ -59,13 +58,13 @@ fun Promise.Companion.delay(delayMs: Long) : Promise<Unit> {
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T: Any> Promise<T>.timeout(timeoutMs: Long) : Promise<T> {
+fun <T> Promise<T>.timeout(timeoutMs: Long) : Promise<T> {
     return Promise.race(this, Promise.delay(timeoutMs).then {
         throw TimeoutException()
     }).then { it as T }
 }
 
-inline fun <reified T: Any> Promise.Companion.`try`(
+inline fun <reified T> Promise.Companion.`try`(
         block: () -> T) : Promise<T> {
     return try {
         Promise.resolve(block())
