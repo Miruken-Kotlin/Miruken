@@ -152,31 +152,31 @@ abstract class Controller : Contextual, AutoCloseable {
         endContext()
     }
 
-    inline fun <reified A: Any> finish(a: A) {
+    inline fun <reified A: Any> finish(a: A?) {
         context?.also {
             it.store(a).end()
         }
     }
 
-    inline fun <reified A1: Any, reified A2: Any> finish(a1: A1, a2: A2) {
+    inline fun <reified A1: Any, reified A2: Any> finish(a1: A1?, a2: A2?) {
         context?.also {
             it.store(a1).store(a2).end()
         }
     }
 
-    inline fun <reified A1: Any, reified A2: Any, reified A3: Any> finish(a1: A1, a2: A2, a3: A3) {
+    inline fun <reified A1: Any, reified A2: Any, reified A3: Any> finish(a1: A1?, a2: A2?, a3: A3?) {
         context?.also {
             it.store(a1).store(a2).store(a3).end()
         }
     }
 
-    inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any> finish(a1: A1, a2: A2, a3: A3, a4: A4) {
+    inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any> finish(a1: A1?, a2: A2?, a3: A3?, a4: A4?) {
         context?.also {
             it.store(a1).store(a2).store(a3).store(a4).end()
         }
     }
 
-    inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any, reified A5: Any> finish(a1: A1, a2: A2, a3: A3, a4: A4, a5: A5) {
+    inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any, reified A5: Any> finish(a1: A1?, a2: A2?, a3: A3?, a4: A4?, a5: A5?) {
         context?.also {
             it.store(a1).store(a2).store(a3).store(a4).store(a5).end()
         }

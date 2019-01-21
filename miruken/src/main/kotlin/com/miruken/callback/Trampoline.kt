@@ -2,7 +2,6 @@ package com.miruken.callback
 
 import com.miruken.TypeReference
 import com.miruken.callback.policy.CallableDispatch
-import kotlin.reflect.KType
 
 open class Trampoline(
         val callback:     Any?,
@@ -24,5 +23,6 @@ open class Trampoline(
             composer:     Handling
     ) = callback?.let {
         Handler.dispatch(handler, it, this.callbackType, greedy, composer)
-    } ?: HandleResult.NOT_HANDLED
+    } ?: Command(this, callbackType)
+            .dispatch(handler, callbackType, greedy, composer)
 }
