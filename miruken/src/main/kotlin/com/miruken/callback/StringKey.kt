@@ -1,6 +1,9 @@
 package com.miruken.callback
 
-class StringKey(val key: String, val caseSensitive: Boolean = false) {
+class StringKey(
+        private val key:           String,
+        private val caseSensitive: Boolean = false
+) {
     override fun equals(other: Any?): Boolean {
         return (other === this) || ((other as? StringKey)?.key)
                 ?.let { it == key || (!caseSensitive &&

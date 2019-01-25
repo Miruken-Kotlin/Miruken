@@ -88,9 +88,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             try {
                 child.contextEnding += { (ctx, reason) ->
                     if (reason !is Navigation<*>) {
-                        ctx.contextEnded += { (ctxx, _) ->
-                            resolve(ctxx)
-                        }
+                        resolve(ctx)
                     }
                 }
                 if (!navigation.invokeOn(controller)) {
