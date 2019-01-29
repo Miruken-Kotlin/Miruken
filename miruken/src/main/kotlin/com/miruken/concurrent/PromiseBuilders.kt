@@ -46,11 +46,11 @@ fun Promise.Companion.race(promises: Collection<Promise<*>>) : Promise<*> {
     }
 }
 
-fun Promise.Companion.delay(delayMs: Long) : Promise<Unit> {
+fun Promise.Companion.delay(delayMs: Long) : Promise<*> {
     var timer: TimerTask? = null
-    return Promise<Unit> { resolve, _ ->
+    return Promise<Any?> { resolve, _ ->
         timer = Timer().schedule(delayMs) {
-            resolve(Unit)
+            resolve(null)
         }
     } finally {
         timer?.cancel()

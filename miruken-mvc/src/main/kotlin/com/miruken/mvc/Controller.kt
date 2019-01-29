@@ -182,7 +182,7 @@ abstract class Controller : Contextual, AutoCloseable {
         }
     }
 
-    protected fun delay(delayMs: Long) =
+    protected fun delayFor(delayMs: Long) =
             Promise.delay(delayMs).also { context?.track(it) }
 
     val disposing = Event<Controller>()
