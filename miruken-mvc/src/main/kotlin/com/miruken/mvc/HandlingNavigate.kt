@@ -40,7 +40,7 @@ inline fun <reified C: Controller> Handling.navigate(
 inline fun <reified C: Controller> Handling.navigate(
         style: NavigationStyle,
         noinline action: (C) -> Unit
-): Promise<Context> = navigate<C>(style)(action)
+): Promise<Context> = navigate<C>(style)(action).first
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.goBack() = commandAsync(Navigation.GoBack()) as Promise<Context>

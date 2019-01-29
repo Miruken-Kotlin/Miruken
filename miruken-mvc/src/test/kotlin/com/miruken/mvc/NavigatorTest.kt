@@ -9,6 +9,7 @@ import com.miruken.context.Scoped
 import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.displayImmediate
 import com.miruken.mvc.option.unloadRegion
+import com.miruken.mvc.view.region
 import com.miruken.test.assertAsync
 import org.junit.After
 import org.junit.Before
@@ -53,6 +54,12 @@ class NavigatorTest {
             val navigation = io.resolve<Navigation<*>>()
             assertNotNull(navigation)
             push<GoodbyeController>{ it.sayGoodbye(name) }
+            return io.getOptions(NavigationOptions())
+        }
+
+        fun sayHelloRegion(name: String): NavigationOptions? {
+            println("Hello region $name")
+            show(context!!.region<GoodbyeController> { it.sayGoodbye("region $name") })
             return io.getOptions(NavigationOptions())
         }
 
@@ -114,6 +121,13 @@ class NavigatorTest {
         rootContext.push<HelloController> {
             it.sayHello("Craig")
             assertSame(rootContext, it.context?.parent?.parent)
+        }
+    }
+
+    @Test fun `Navigates to next controller and pushes region`() {
+        rootContext.next<HelloController> {
+            it.sayHelloRegion("Brenda")
+            assertSame(rootContext, it.context?.parent)
         }
     }
 

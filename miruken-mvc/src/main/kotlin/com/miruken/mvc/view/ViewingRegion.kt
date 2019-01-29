@@ -39,21 +39,20 @@ inline fun <reified V: Viewing> ViewingRegion.show(
 ) = show(view(typeOf<V>(), init as (Viewing.() -> Unit)?))
 
 inline fun <reified C: Controller> Handling.region(
-        crossinline action: (C: Controller) -> Unit
+        crossinline action: (C) -> Unit
 ): Viewing = object : ViewAdapter() {
     override fun display(region: ViewingRegion): ViewingLayer {
-        lateinit var layer: ViewingLayer
         val stack = region.createViewStack()
-        (push<C>()) {
+        return push<C>().invoke { ->
             val controllerContext = context ?:
                     error("Region navigation seemed to have failed")
             controllerContext.addHandlers(stack)
             action(this)
-            layer = stack.display(ViewingRegion(this@region.pushLayer))
-            layer.disposed += { controllerContext.end() }
-            controllerContext.contextEnded += { layer.close() }
-        }
-        return layer
+            stack.display(ViewingRegion(this@region.pushLayer)).apply {
+                disposed += { controllerContext.end() }
+                controllerContext.contextEnded += { close() }
+            }
+        }.second ?: error("Unable to render the region")
     }
 }
 

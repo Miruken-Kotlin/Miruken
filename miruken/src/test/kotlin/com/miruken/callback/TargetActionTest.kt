@@ -73,20 +73,21 @@ class TargetActionBuilderTest {
     @Test fun `Calls two argument action`() {
         val foo    = Foo()
         val bar    = Bar<String>()
-        Handler().with(foo).with(bar).execute { a: Foo, b: Bar<String> ->
-            matches(a to foo, b to bar)
+        val called = Handler().with(foo).with(bar).execute { a: Foo, b: Bar<String> ->
+            assertTrue { matches(a to foo, b to bar) }
+            true
         }
+        assertTrue(called.second!!)
     }
 
     @Test fun `Calls optional argument action`() {
-        var called = false
         val bar    = Bar<String>()
-        Handler().with(bar).execute { a: Optional<Foo>, b: Optional<Bar<String>> ->
+        val called = Handler().with(bar).execute { a: Optional<Foo>, b: Optional<Bar<String>> ->
             assertFalse(a.isPresent)
             assertTrue { matches(b.get() to bar) }
-            called = true
+            true
         }
-        assertTrue(called)
+        assertTrue(called.second!!)
     }
 
     @Test fun `Rejects missing argument action`() {
