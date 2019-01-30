@@ -21,9 +21,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A>())?.let {
-                s =block(it[0] as A); true
-            } ?: false
+            handler.resolveArgs(typeOf<A>())?.also {
+                s = block(it[0] as A)
+            } != null
         } to s
     }
 
@@ -32,9 +32,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A1>(), typeOf<A2>())?.let {
-                s = block(it[0] as A1, it[1] as A2); true
-            } ?: false
+            handler.resolveArgs(typeOf<A1>(), typeOf<A2>())?.also {
+                s = block(it[0] as A1, it[1] as A2)
+            } != null
         } to s
     }
 
@@ -43,9 +43,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>())?.let {
-                s = block(it[0] as A1, it[1] as A2, it[2] as A3); true
-            } ?: false
+            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>())?.also {
+                s = block(it[0] as A1, it[1] as A2, it[2] as A3)
+            } != null
         } to s
     }
 
@@ -54,9 +54,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>())?.let {
-                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4); true
-            } ?: false
+            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>())?.also {
+                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4)
+            } != null
         } to s
     }
 
@@ -65,9 +65,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>())?.let {
-                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5); true
-            } ?: false
+            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>())?.also {
+                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5)
+            } != null
         } to s
     }
 
@@ -76,9 +76,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>(), typeOf<A6>())?.let {
-                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6); true
-            } ?: false
+            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>(), typeOf<A6>())?.also {
+                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6)
+            } != null
         } to s
     }
 
@@ -87,9 +87,9 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
     ): Pair<R, S?> {
         var s: S? = null
         return notify { handler ->
-            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>(), typeOf<A6>(), typeOf<A7>())?.let {
-                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6, it[6] as A7); true
-            } ?: false
+            handler.resolveArgs(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>(), typeOf<A6>(), typeOf<A7>())?.also {
+                s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6, it[6] as A7)
+            } != null
         } to s
     }
 }

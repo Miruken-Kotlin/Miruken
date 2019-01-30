@@ -22,6 +22,7 @@ interface ViewingRegion {
     fun show(view: Viewing): ViewingLayer
 
     companion object {
+        @Suppress("MemberVisibilityCanBePrivate")
         val PROTOCOL = typeOf<ViewingRegion>()
         operator fun invoke(adapter: ProtocolAdapter) =
                 adapter.proxy(PROTOCOL) as ViewingRegion
@@ -43,7 +44,7 @@ inline fun <reified C: Controller> Handling.region(
 ): Viewing = object : ViewAdapter() {
     override fun display(region: ViewingRegion): ViewingLayer {
         val stack = region.createViewStack()
-        return push<C>().invoke { ->
+        return push<C>()<ViewingLayer> {
             val controllerContext = context ?:
                     error("Region navigation seemed to have failed")
             controllerContext.addHandlers(stack)

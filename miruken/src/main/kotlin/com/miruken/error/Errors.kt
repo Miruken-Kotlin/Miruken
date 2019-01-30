@@ -15,6 +15,7 @@ interface Errors {
     ): Promise<*>
 
     companion object {
+        @Suppress("MemberVisibilityCanBePrivate")
         val PROTOCOL = typeOf<Errors>()
         operator fun invoke(adapter: ProtocolAdapter) =
                 adapter.proxy(PROTOCOL) as Errors
