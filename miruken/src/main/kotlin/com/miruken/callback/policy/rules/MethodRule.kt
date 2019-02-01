@@ -5,8 +5,8 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 
+@Suppress("MemberVisibilityCanBePrivate")
 class MethodRule(vararg val argumentRules: ArgumentRule) {
-
     var returnRule: ReturnRule? = null
         private set
 

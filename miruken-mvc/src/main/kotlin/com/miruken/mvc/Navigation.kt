@@ -17,6 +17,8 @@ class Navigation<C: Controller>(
         val action:        TargetAction<C>,
         val style:         NavigationStyle
 ): FilteringCallback {
+    class GoBack
+
     var controller: C? by weak()
         private set
 
@@ -28,13 +30,16 @@ class Navigation<C: Controller>(
 
     override val canFilter = false
 
-    fun invokeOn(controller: C): Boolean {
-        this.controller = controller
-        return GLOBAL_EXECUTE.all { it(this) } &&
-                controller.action(controller.context!!)
-    }
+    val context get() = controller?.context
 
-    class GoBack
+    fun invokeOn(controller: C): Boolean {
+        val context = controller.context
+        checkNotNull(context) {
+            "Controller invocation requires a context"
+        }
+        this.controller = controller
+        return GLOBAL_EXECUTE.all { it(this) } && controller.action(context)
+    }
 
     companion object {
         val GLOBAL_PREPARE = mutableListOf<(Handling) -> Handling>()

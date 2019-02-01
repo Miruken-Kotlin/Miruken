@@ -3,24 +3,21 @@ package com.miruken.context
 import com.miruken.event.Event
 
 open class ContextualImpl : Contextual {
-    private var _context: Context? = null
-
     override val contextChanging = Event<ContextChangingEvent>()
     override val contextChanged  = Event<ContextChangedEvent>()
 
-    override var context: Context?
-        get() = _context
+    override var context: Context? = null
         set(value) {
-            if (_context == value) return
+            if (field == value) return
             contextChanging {
-                ContextChangingEvent(this, _context, value)
+                ContextChangingEvent(this, field, value)
             }
-            _context?.removeHandlers(this)
-            val oldContext = _context
-            _context = value
-            _context?.insertHandlers(0, this)
+            field?.removeHandlers(this)
+            val oldContext = field
+            field = value
+            field?.insertHandlers(0, this)
             contextChanged {
-                ContextChangedEvent(this, oldContext, _context)
+                ContextChangedEvent(this, oldContext, field)
             }
         }
 }

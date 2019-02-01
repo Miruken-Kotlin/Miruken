@@ -18,7 +18,6 @@ open class Command(
 
     private var _result: Any? = null
     private val _results = mutableListOf<Any>()
-    private var _policy: CallbackPolicy? = null
 
     override var wantsAsync: Boolean = false
 
@@ -33,9 +32,7 @@ open class Command(
 
     override fun getCallbackKey() = callbackType
 
-    override var policy: CallbackPolicy
-        get() = _policy ?: HandlesPolicy
-        set(value) { _policy = value }
+    override var policy: CallbackPolicy = HandlesPolicy
 
     val results: List<Any> get() = _results
 
