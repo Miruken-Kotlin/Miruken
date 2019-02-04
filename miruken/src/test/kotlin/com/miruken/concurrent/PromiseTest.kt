@@ -636,7 +636,7 @@ class PromiseTest {
         var called = false
         Promise.`try` {
             Promise.resolve("Hello")
-        }.unwrap() then {
+        }.flatten() then {
             assertEquals("Hello", it)
             called = true
         }

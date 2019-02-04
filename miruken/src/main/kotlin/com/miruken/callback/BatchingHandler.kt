@@ -2,7 +2,7 @@ package com.miruken.callback
 
 import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
-import com.miruken.concurrent.unwrap
+import com.miruken.concurrent.flatten
 import com.miruken.protocol.proxy
 import com.miruken.runtime.isGeneric
 import java.util.concurrent.atomic.AtomicInteger
@@ -57,6 +57,6 @@ class BatchingHandler(
         val results = proxy<BatchingComplete>().completeBatch(this)
         return promise?.let { follow ->
             results then { rs -> follow.then { rs } }
-        }?.unwrap() ?: results
+        }?.flatten() ?: results
     }
 }

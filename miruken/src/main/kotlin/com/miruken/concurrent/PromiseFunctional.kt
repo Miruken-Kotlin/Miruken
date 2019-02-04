@@ -31,14 +31,14 @@ infix fun <T> Promise<T>
  */
 infix fun <T, S> Promise<(T) -> S>
         .apply(f: Promise<T>): Promise<S> =
-        then { f.then(it) }.unwrap()
+        then { f.then(it) }.flatten()
 
 /**
  * flatMap/bind/chain/liftM
  */
 infix fun <T, S> Promise<T>
         .flatMap(f: (T) -> Promise<S>): Promise<S> =
-        then(f).unwrap()
+        then(f).flatten()
 
 fun <T, S, U> Promise<T>
         .flatMap(f: (T) -> Promise<S>,
@@ -47,13 +47,13 @@ fun <T, S, U> Promise<T>
             r.fold(
                     { it.then { r -> Either.Left(r) } },
                     { it.then { r -> Either.Right(r) } })
-        }.unwrap()
+        }.flatten()
 
 infix fun <T> Promise<T>
         .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =
         catch(f).then { res ->
             res.fold({ it }, { Promise { suc, _ -> suc(it) }})
-        }.unwrap()
+        }.flatten()
 
 fun <T, S> Promise<T>
         .fold(f: (T) -> Promise<S>,

@@ -2,7 +2,7 @@ package com.miruken.error
 
 import com.miruken.callback.*
 import com.miruken.concurrent.Promise
-import com.miruken.concurrent.unwrap
+import com.miruken.concurrent.flatten
 import com.miruken.fold
 import java.util.concurrent.CancellationException
 
@@ -27,7 +27,7 @@ fun Handling.recover(context: Any? = null): Handling {
                     (cb?.result as? Promise<*>)?.also { p ->
                         cb.result = (p.catch(::promisify) then { r ->
                             r.fold({ it }, { Promise.resolve(it) })
-                        }).unwrap()
+                        }).flatten()
                     }
                 }
                 result

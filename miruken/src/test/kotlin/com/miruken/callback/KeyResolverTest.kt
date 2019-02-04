@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
-import com.miruken.concurrent.unwrap
+import com.miruken.concurrent.flatten
 import com.miruken.test.assertAsync
 import org.junit.Before
 import org.junit.Rule
@@ -227,7 +227,7 @@ class KeyResolverTest {
                     assertEquals(0, orders.size)
                     UUID.randomUUID()
                 }
-            }.unwrap()
+            }.flatten()
         }
 
         @Handles
@@ -242,7 +242,7 @@ class KeyResolverTest {
                 repository then { repo ->
                     repo.save(cancel.order)
                 }
-            }.unwrap()
+            }.flatten()
         }
     }
 
@@ -355,7 +355,7 @@ class KeyResolverTest {
             return (logLevel then {
                 assertEquals(LogLevel.INFO, it)
                 maxRetries
-            }).unwrap()
+            }).flatten()
         }
 
         @Handles
@@ -367,7 +367,7 @@ class KeyResolverTest {
             return (logLevel then {
                 assertEquals(LogLevel.FATAL, it)
                 maxRetries
-            }).unwrap()
+            }).flatten()
         }
 
         @Handles

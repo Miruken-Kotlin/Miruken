@@ -1,6 +1,6 @@
 package com.miruken.concurrent
 
-import com.miruken.*
+import com.miruken.Either
 import com.miruken.event.Event
 import java.time.Duration
 import java.time.Instant
@@ -336,7 +336,7 @@ open class Promise<out T>
     }
 }
 
-fun <T> Promise<Promise<T>>.unwrap(): Promise<T> {
+fun <T> Promise<Promise<T>>.flatten(): Promise<T> {
     return Promise(this.cancelMode) { resolve, reject, onCancel ->
         onCancel { this.cancel() }
         then({ inner -> inner.then(resolve, reject)
