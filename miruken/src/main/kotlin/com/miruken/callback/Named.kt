@@ -15,9 +15,7 @@ class NamedConstraint(val name: String) : BindingConstraint {
 }
 
 object NamedFactory : FilteringProviderFactory {
-    override fun createProvider(
-            annotation: Annotation
-    ): FilteringProvider {
+    override fun createProvider(annotation: Annotation): FilteringProvider {
         val named = annotation as Named
         return ConstraintProvider(NamedConstraint(named.name))
     }

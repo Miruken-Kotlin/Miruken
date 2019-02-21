@@ -7,13 +7,15 @@ import kotlin.reflect.KType
 open class ConstraintProvider(
         val constraint: BindingConstraint
 ): FilteringProvider {
-    private val _constraint = listOf(ConstraintFilter<Any>())
-
     override val required = true
 
     override fun getFilters(
             binding:    MemberBinding,
             filterType: KType,
             composer:   Handling
-    ) = _constraint
+    ) = filters
+
+    companion object {
+        private val filters = listOf(ConstraintFilter<Any>())
+    }
 }

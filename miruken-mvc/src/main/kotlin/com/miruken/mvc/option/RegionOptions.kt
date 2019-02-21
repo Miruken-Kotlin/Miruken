@@ -5,7 +5,7 @@ import com.miruken.callback.Options
 import com.miruken.callback.withOptions
 import com.miruken.mvc.view.ViewingLayer
 
-class RegionOptions : Options<RegionOptions>() {
+class  RegionOptions : Options<RegionOptions>() {
     var tag:       Any?     = null
     var push:      Boolean? = null
     var overlay:   Boolean? = null

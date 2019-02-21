@@ -9,8 +9,8 @@ import com.miruken.context.Scoped
 import com.miruken.graph.TraversingAxis
 import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.RegionOptions
+import com.miruken.mvc.option.navigationOptions
 import com.miruken.mvc.option.noBack
-import com.miruken.mvc.option.regionOptions
 import com.miruken.mvc.view.ViewingRegion
 import com.miruken.typeOf
 
@@ -97,13 +97,13 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                     child.end()
                 }
                 if (style != NavigationStyle.PUSH) {
-                    initiator?.controller?.context?.end(initiator)
+                    initiator?.context?.end(initiator)
                 }
             } catch (t: Throwable) {
                 reject(t)
                 child.end()
             } finally {
-                bindIO(null, controller, style, null, null)
+                bindIO(null, controller, style)
             }
         }
     }
@@ -115,7 +115,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 val nav = when {
                     it.noBack -> return@let null
                     it.style == NavigationStyle.PARTIAL ->
-                        it.controller?.context?.let { ctx ->
+                        it.context?.let { ctx ->
                             findNearest(ctx)?.second
                         }
                     else -> it
@@ -124,11 +124,9 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                     nav == null -> null
                     nav.back != null -> composer.noBack.commandAsync(nav.back!!)
                     nav.style == NavigationStyle.PUSH ->
-                        nav.controller?.let { controller ->
-                            controller.context?.let { ctx ->
-                                ctx.end()
-                                Promise.resolve(ctx)
-                            }
+                        nav.context?.let { ctx ->
+                            ctx.end()
+                            Promise.resolve(ctx)
                         }
                     else -> null
                 } as? Promise<Context>
@@ -138,8 +136,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             io:         Handling?,
             controller: Controller,
             style:      NavigationStyle,
-            options:    NavigationOptions?,
-            composer:   Handling?
+            options:    NavigationOptions? = null,
+            composer:   Handling? = null
     ) {
         controller._io = (io ?: controller.context)?.let {
             Navigation.GLOBAL_PREPARE.foldRight(it) { filter, pipe -> filter(pipe) }
@@ -153,7 +151,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                             ?: RegionOptions()).apply { push = true }
                 }
                 if (navOptions != null) {
-                    return@let it.stop.regionOptions(navOptions)
+                    return@let it.stop.navigationOptions(navOptions)
                 }
             }
             it

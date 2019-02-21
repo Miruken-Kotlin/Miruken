@@ -23,5 +23,5 @@ class NavigationOptions : Options<NavigationOptions>() {
 val Handling.noBack get() =
     withOptions(NavigationOptions().apply { noBack = true })
 
-fun Handling.regionOptions(options: NavigationOptions) =
+fun Handling.navigationOptions(options: NavigationOptions) =
         withOptions(options)

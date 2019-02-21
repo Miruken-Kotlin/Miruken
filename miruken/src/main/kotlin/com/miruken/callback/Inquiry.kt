@@ -157,16 +157,20 @@ open class Inquiry(
         if (res is Promise<*>) {
             isAsync = true
             _promises.add(res.then { r ->
-                when {
+                @Suppress("UNCHECKED_CAST") when {
                     strict -> r?.takeIf { isSatisfied(it, greedy, composer) }
+                            ?.also { _resolutions.add(it) }
                     r is Iterable<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
-                    }
+                    }.also { _resolutions.addAll(it as Iterable<Any>) }
                     r is Array<*> -> r.filter {
                         it != null && isSatisfied(it, greedy, composer)
-                    }
+                    }.also { _resolutions.addAll(it as Collection<Any>) }
                     else -> r?.takeIf { isSatisfied(it, greedy, composer) }
+                            ?.also { _resolutions.add(it) }
                 }
+            } catch {
+                // ignore failures
             })
         } else if (!isSatisfied(res, greedy, composer)) {
             return false
@@ -175,7 +179,7 @@ open class Inquiry(
                 strict -> _resolutions.add(res)
                 res is Iterable<*> -> res.filter {
                     it != null && isSatisfied(it, greedy, composer)
-                }.also { _resolutions.addAll(it as Collection<Any>) }
+                }.also { _resolutions.addAll(it as Iterable<Any>) }
                 res is Array<*> -> res.filter {
                     it != null && isSatisfied(it, greedy, composer)
                 }.also { _resolutions.addAll(it as Collection<Any>) }
@@ -248,4 +252,3 @@ open class Inquiry(
                 parent?.inProgress(target, dispatcher) == true
     }
 }
-

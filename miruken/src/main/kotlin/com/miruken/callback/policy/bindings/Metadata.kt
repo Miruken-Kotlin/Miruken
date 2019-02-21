@@ -1,6 +1,5 @@
 package com.miruken.callback.policy.bindings
 
-import com.miruken.callback.FilteringProvider
 import com.miruken.callback.FilteringProviderFactory
 import com.miruken.callback.UseFilterProviderFactory
 
@@ -53,12 +52,9 @@ annotation class MetadataFloat(val key: String, val value: Float)
 @UseFilterProviderFactory(MetadataConstraintFactory::class)
 annotation class MetadataDouble(val key: String, val value: Double)
 
-object MetadataConstraintFactory : FilteringProviderFactory
-{
-    override fun createProvider(
-            annotation: Annotation
-    ): FilteringProvider {
-        val constraint = when (annotation) {
+object MetadataConstraintFactory : FilteringProviderFactory {
+    override fun createProvider(annotation: Annotation) =
+        ConstraintProvider(when (annotation) {
             is Metadata ->
                 MetadataKeyConstraint(annotation.key, null)
             is MetadataBool ->
@@ -70,7 +66,5 @@ object MetadataConstraintFactory : FilteringProviderFactory
             is MetadataDouble ->
                 MetadataKeyConstraint(annotation.key, annotation.value)
             else -> error("Unrecognized metadata '$annotation'")
-        }
-        return ConstraintProvider(constraint)
-    }
+        })
 }
