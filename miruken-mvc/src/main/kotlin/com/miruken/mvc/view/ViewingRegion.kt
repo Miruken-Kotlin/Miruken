@@ -31,12 +31,12 @@ interface ViewingRegion {
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified V: Viewing> ViewingRegion.view(
-        noinline init: (V.() -> Unit)? = null
+        noinline init: ((V) -> Unit)? = null
 ) = view(typeOf<V>(), init as (Viewing.() -> Unit)?) as V
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified V: Viewing> ViewingRegion.show(
-        noinline init: (V.() -> Unit)? = null
+        noinline init: ((V) -> Unit)? = null
 ) = show(view(typeOf<V>(), init as (Viewing.() -> Unit)?))
 
 inline fun <reified C: Controller> Handling.region(

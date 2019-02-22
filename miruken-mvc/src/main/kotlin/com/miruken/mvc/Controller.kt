@@ -63,12 +63,12 @@ abstract class Controller : Contextual, AutoCloseable {
     // Render
 
     protected inline fun <reified V: Viewing> show(
-            noinline init: (V.() -> Unit)? = null
+            noinline init: ((V) -> Unit)? = null
     ) = region(io).show(init)
 
     protected inline fun <reified V: Viewing> show(
             handler:       Handling,
-            noinline init: (V.() -> Unit)? = null
+            noinline init: ((V) -> Unit)? = null
     ) = region(handler).show(init)
 
     protected fun show(view: Viewing) = view.display(region(io))
@@ -77,12 +77,12 @@ abstract class Controller : Contextual, AutoCloseable {
             view.display(region(handler))
 
     protected inline fun <reified V: Viewing> overlay(
-            noinline init: (V.() -> Unit)? = null
+            noinline init: ((V) -> Unit)? = null
     ) = region(io.pushLayer).show(init)
 
     protected inline fun <reified V: Viewing> overlay(
             handler: Handling,
-            noinline init: (V.() -> Unit)? = null
+            noinline init: ((V) -> Unit)? = null
     ) = region(handler.pushLayer).show(init)
 
     protected fun region(handler: Handling) = ViewingRegion(handler)
@@ -149,36 +149,36 @@ abstract class Controller : Contextual, AutoCloseable {
     // Workflow
 
     fun finish() {
-        endContext()
+        context?.end(this)
     }
 
     inline fun <reified A: Any> finish(a: A?) {
         context?.also {
-            it.store(a).end()
+            it.store(a).end(this)
         }
     }
 
     inline fun <reified A1: Any, reified A2: Any> finish(a1: A1?, a2: A2?) {
         context?.also {
-            it.store(a1).store(a2).end()
+            it.store(a1).store(a2).end(this)
         }
     }
 
     inline fun <reified A1: Any, reified A2: Any, reified A3: Any> finish(a1: A1?, a2: A2?, a3: A3?) {
         context?.also {
-            it.store(a1).store(a2).store(a3).end()
+            it.store(a1).store(a2).store(a3).end(this)
         }
     }
 
     inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any> finish(a1: A1?, a2: A2?, a3: A3?, a4: A4?) {
         context?.also {
-            it.store(a1).store(a2).store(a3).store(a4).end()
+            it.store(a1).store(a2).store(a3).store(a4).end(this)
         }
     }
 
     inline fun <reified A1: Any, reified A2: Any, reified A3: Any, reified A4: Any, reified A5: Any> finish(a1: A1?, a2: A2?, a3: A3?, a4: A4?, a5: A5?) {
         context?.also {
-            it.store(a1).store(a2).store(a3).store(a4).store(a5).end()
+            it.store(a1).store(a2).store(a3).store(a4).store(a5).end(this)
         }
     }
 
