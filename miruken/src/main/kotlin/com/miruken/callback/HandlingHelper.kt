@@ -21,7 +21,7 @@ inline fun <reified T: Any> T.toHandler(): Handling {
 }
 
 fun Handling.resolveArgs(vararg types: TypeReference): List<Any?>? {
-    return types.map { key ->
+    return if (types.isEmpty()) emptyList() else types.map { key ->
         val typeInfo = TypeInfo.parse(key.kotlinType)
         val inquiry  = typeInfo.createInquiry(typeInfo.componentType)
         KeyResolver.resolve(inquiry, typeInfo, this) ?: when {

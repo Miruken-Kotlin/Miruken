@@ -12,7 +12,11 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
             crossinline block: T.() -> S
     ): Pair<R, S?> {
         var s: S? = null
-        return notify { s = block(); true } to s
+        return notify { args ->
+            args(emptyArray())
+                ?.takeIf { it.isEmpty() }
+                ?.also { s = block() } != null
+        } to s
     }
 
     inline operator fun <reified A, S> invoke(
@@ -21,8 +25,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A>()))
-                    ?.takeIf { it.size == 1 }
-                    ?.also { s = block(it[0] as A) } != null
+                ?.takeIf { it.size == 1 }
+                ?.also { s = block(it[0] as A) } != null
         } to s
     }
 
@@ -32,8 +36,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A1>(), typeOf<A2>()))
-                    ?.takeIf { it.size == 2 }
-                    ?.also { s = block(it[0] as A1, it[1] as A2) } != null
+                ?.takeIf { it.size == 2 }
+                ?.also { s = block(it[0] as A1, it[1] as A2) } != null
         } to s
     }
 
@@ -43,8 +47,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A1>(), typeOf<A2>(), typeOf<A3>()))
-                    ?.takeIf { it.size == 3 }
-                    ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3) } != null
+                ?.takeIf { it.size == 3 }
+                ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3) } != null
         } to s
     }
 
@@ -54,8 +58,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>()))
-                    ?.takeIf { it.size == 4 }
-                    ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4) } != null
+                ?.takeIf { it.size == 4 }
+                ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4) } != null
         } to s
     }
 
@@ -65,8 +69,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>()))
-                    ?.takeIf { it.size == 5 }
-                    ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5) } != null
+                ?.takeIf { it.size == 5 }
+                ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5) } != null
         } to s
     }
 
@@ -76,8 +80,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>(), typeOf<A6>()))
-                    ?.takeIf { it.size == 6 }
-                    ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6) } != null
+                ?.takeIf { it.size == 6 }
+                ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6) } != null
         } to s
     }
 
@@ -87,10 +91,8 @@ class TargetActionBuilder<T, R>(val notify: (TargetAction<T>) -> R) {
         var s: S? = null
         return notify { args ->
             args(arrayOf(typeOf<A1>(), typeOf<A2>(), typeOf<A3>(), typeOf<A4>(), typeOf<A5>(), typeOf<A6>(), typeOf<A7>()))
-                    ?.takeIf { it.size == 7 }
-                    ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6, it[6] as A7) } != null
+                ?.takeIf { it.size == 7 }
+                ?.also { s = block(it[0] as A1, it[1] as A2, it[2] as A3, it[3] as A4, it[4] as A5, it[5] as A6, it[6] as A7) } != null
         } to s
     }
 }
-
-
