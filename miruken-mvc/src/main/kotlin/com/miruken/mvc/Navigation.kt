@@ -1,8 +1,9 @@
 package com.miruken.mvc
 
+import com.miruken.ResolveArgs
+import com.miruken.TargetAction
 import com.miruken.callback.FilteringCallback
 import com.miruken.callback.Handling
-import com.miruken.callback.TargetAction
 import com.miruken.mvc.view.ViewingLayer
 import com.miruken.weak
 
@@ -14,7 +15,7 @@ enum class NavigationStyle {
 
 class Navigation<C: Controller>(
         val controllerKey: Any,
-        val action:        TargetAction<C>,
+        val action: TargetAction<C>,
         val style:         NavigationStyle
 ): FilteringCallback {
     class GoBack
@@ -32,13 +33,12 @@ class Navigation<C: Controller>(
 
     val context get() = controller?.context
 
-    fun invokeOn(controller: C): Boolean {
-        val context = controller.context
-        checkNotNull(context) {
+    fun invokeOn(controller: C, args: ResolveArgs): Boolean {
+        checkNotNull(controller.context) {
             "Controller invocation requires a context"
         }
         this.controller = controller
-        return GLOBAL_EXECUTE.all { it(this) } && controller.action(context)
+        return GLOBAL_EXECUTE.all { it(this) } && controller.action(args)
     }
 
     companion object {

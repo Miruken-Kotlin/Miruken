@@ -91,13 +91,15 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                         resolve(ctx)
                     }
                 }
-                if (!navigation.invokeOn(controller)) {
+                if (!navigation.invokeOn(controller) { args ->
+                        child.resolveArgs(*args)?.also {
+                            if (style != NavigationStyle.PUSH) {
+                                initiator?.context?.end(initiator)
+                            }
+                        }}) {
                     reject(IllegalStateException(
                             "Navigation could not be performed.  The most likely cause is missing dependencies."))
                     child.end()
-                }
-                if (style != NavigationStyle.PUSH) {
-                    initiator?.context?.end(initiator)
                 }
             } catch (t: Throwable) {
                 reject(t)

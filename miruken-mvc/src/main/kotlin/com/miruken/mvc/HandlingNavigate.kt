@@ -1,7 +1,7 @@
 package com.miruken.mvc
 
 import com.miruken.callback.Handling
-import com.miruken.callback.TargetActionBuilder
+import com.miruken.TargetActionBuilder
 import com.miruken.callback.commandAsync
 import com.miruken.concurrent.Promise
 import com.miruken.context.Context

@@ -1,10 +1,7 @@
 package com.miruken.callback
 
-import com.miruken.TypeFlags
-import com.miruken.TypeInfo
-import com.miruken.TypeReference
+import com.miruken.*
 import com.miruken.runtime.isGeneric
-import com.miruken.typeOf
 
 inline operator fun <reified T: Handling,
         reified S: Any> T.plus(other: S): Handling =
@@ -35,7 +32,7 @@ fun Handling.resolveArgs(vararg types: TypeReference): List<Any?>? {
 }
 
 val Handling.execute get() = TargetActionBuilder<Handling, Unit> {
-    check(it(this)) {
+    check(it { args -> resolveArgs(*args) }) {
         "One more or arguments could not be resolved"
     }
 }
