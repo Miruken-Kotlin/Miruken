@@ -45,15 +45,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         }
 
         var controller: C? = null
-        var child = parent.createChild()
-
-        if (style == NavigationStyle.PUSH) {
-            child.childContextEnded += { (ctx, reason) ->
-                if (reason !is Navigation<*>) {
-                    ctx.parent?.end(reason)
-                }
-            }
-            child = child.createChild()
+        val child = parent.createChild().let {
+            if (style == NavigationStyle.PUSH) it.createChild() else it
         }
 
         try {
@@ -89,6 +82,14 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 child.contextEnding += { (ctx, reason) ->
                     if (reason !is Navigation<*>) {
                         resolve(ctx)
+                    }
+                }
+                if (style == NavigationStyle.PUSH) {
+                    child.parent!!.childContextEnded += { (ctx, reason) ->
+                        if (reason !is Navigation<*>) {
+                            ctx.parent?.end(reason)
+                            resolve(ctx)
+                        }
                     }
                 }
                 if (!navigation.invokeOn(controller) { args ->
