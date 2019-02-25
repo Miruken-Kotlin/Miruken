@@ -24,9 +24,13 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             context:    Context,
             composer:   Handling
     ): Promise<Context>? {
-        val style     = navigation.style
-        var initiator = context.xself.resolve<Navigation<*>>()
         var parent    = context
+        var initiator = context.xself.resolve<Navigation<*>>()
+        val style     = if (initiator?.back != null) {
+            NavigationStyle.NEXT
+        } else {
+            navigation.style
+        }
 
         if (initiator != null) {
             if (initiator.style == NavigationStyle.PARTIAL &&
@@ -80,13 +84,18 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         return Promise(ChildCancelMode.ANY) { resolve, reject ->
             try {
                 child.contextEnding += { (ctx, reason) ->
-                    if (reason !is Navigation<*>) {
+                    if (reason is NavigationException) {
+                        reject(reason)
+                    } else if (reason !is Navigation<*>) {
                         resolve(ctx)
                     }
                 }
                 if (style == NavigationStyle.PUSH) {
                     child.parent!!.childContextEnded += { (ctx, reason) ->
-                        if (reason !is Navigation<*>) {
+                        if (reason is NavigationException) {
+                            ctx.parent?.end(reason)
+                            reject(reason)
+                        } else if (reason !is Navigation<*>) {
                             ctx.parent?.end(reason)
                             resolve(ctx)
                         }
@@ -98,13 +107,18 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                                 initiator?.context?.end(initiator)
                             }
                         }}) {
-                    reject(IllegalStateException(
-                            "Navigation could not be performed.  The most likely cause is missing dependencies."))
-                    child.end()
+                    NavigationException(context,
+                            "Navigation could not be performed.  The most likely cause is missing dependencies.")
+                            .also {
+                                reject(it)
+                                child.end(it)
+                            }
                 }
             } catch (t: Throwable) {
-                reject(t)
-                child.end()
+                NavigationException(context, t).also {
+                    reject(it)
+                    child.end(it)
+                }
             } finally {
                 bindIO(null, controller, style)
             }

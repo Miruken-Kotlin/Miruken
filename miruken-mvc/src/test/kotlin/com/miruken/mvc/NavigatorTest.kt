@@ -78,6 +78,16 @@ class NavigatorTest {
         fun nextEnd() {
             next<GoodbyeController> { it.endContext() }
         }
+
+        fun exception() {
+            throw IllegalStateException("Crashed")
+        }
+
+        fun nextException() {
+            next<GoodbyeController> {
+                throw IllegalStateException("No manners")
+            }
+        }
     }
 
     class GoodbyeController
@@ -104,7 +114,7 @@ class NavigatorTest {
     @Test fun `Fails navigation if no context`() {
         assertAsync(testName) { done ->
             navigator.next<HelloController> { it.sayHello("hi") } catch {
-                assertTrue { it is NotHandledException }
+                assertTrue(it is NotHandledException)
                 done()
             }
         }
@@ -159,6 +169,38 @@ class NavigatorTest {
         rootContext.next<HelloController> {
             it.compose()
             assertNull(it.context)
+        }
+    }
+
+    @Test fun `Fails navigation if action throws exception`() {
+        assertAsync(testName) { done ->
+            rootContext.next<HelloController> { it.exception() } catch {
+                assertTrue(it is NavigationException)
+                assertEquals("Crashed", it.cause?.message)
+                assertSame(rootContext, it.context)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Fails navigation if next action throws exception`() {
+        assertAsync(testName) { done ->
+            rootContext.push<HelloController> { it.nextException() } catch {
+                assertTrue(it is NavigationException)
+                assertEquals("No manners", it.cause?.message)
+                assertSame(rootContext, it.context.parent?.parent)
+                done()
+            }
+        }
+    }
+
+    @Test fun `Navigates next after failed navigation`() {
+        assertAsync(testName) { done ->
+            rootContext.push<HelloController> { it.nextException() } catch {
+                assertTrue(it is NavigationException)
+                it.context.parent?.parent?.next<GoodbyeController> { it.sayGoodbye("Joe")}
+                done()
+            }
         }
     }
 
