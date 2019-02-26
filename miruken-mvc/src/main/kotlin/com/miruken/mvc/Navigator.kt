@@ -9,8 +9,8 @@ import com.miruken.context.Scoped
 import com.miruken.graph.TraversingAxis
 import com.miruken.mvc.option.NavigationOptions
 import com.miruken.mvc.option.RegionOptions
+import com.miruken.mvc.option.goBack
 import com.miruken.mvc.option.navigationOptions
-import com.miruken.mvc.option.noBack
 import com.miruken.mvc.view.ViewingRegion
 import com.miruken.typeOf
 
@@ -26,11 +26,13 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
     ): Promise<Context>? {
         var parent    = context
         var initiator = context.xself.resolve<Navigation<*>>()
-        val style     = if (initiator?.back != null) {
+        val options   = composer.getOptions(NavigationOptions())
+        val style     = if (options?.goBack == true) {
             NavigationStyle.NEXT
         } else {
             navigation.style
         }
+
 
         if (initiator != null) {
             if (initiator.style == NavigationStyle.PARTIAL &&
@@ -67,10 +69,8 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
-        val options = composer.getOptions(NavigationOptions())
-
         with(navigation) {
-            noBack = options?.noBack == true
+            noBack = options?.noBack == true || options?.goBack == true
             if (!noBack && back == null && initiator != null &&
                     style == NavigationStyle.NEXT) {
                 back = initiator
@@ -139,7 +139,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 }
                 when {
                     nav == null -> null
-                    nav.back != null -> composer.noBack.commandAsync(nav.back!!)
+                    nav.back != null -> composer.goBack.commandAsync(nav.back!!)
                     nav.style == NavigationStyle.PUSH ->
                         nav.context?.let { ctx ->
                             ctx.end()
