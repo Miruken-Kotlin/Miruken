@@ -4,7 +4,6 @@ import com.miruken.callback.Handler
 import com.miruken.callback.execute
 import com.miruken.callback.policy.Bar
 import com.miruken.callback.policy.Foo
-import com.miruken.callback.resolveArgs
 import com.miruken.callback.with
 import org.junit.Test
 import java.util.*
@@ -18,7 +17,7 @@ class TargetActionBuilderTest {
         val foo    = Foo()
         var called = false
         val target = targetAction<TargetActionBuilderTest, Unit> {
-            assertTrue(it { args -> Handler().with(foo).resolveArgs(*args) })
+            assertTrue(it(Handler().with(foo)))
             called = true
         }
         target { a: Foo ->
@@ -32,7 +31,7 @@ class TargetActionBuilderTest {
         val bar    = Bar<String>()
         var called = false
         val target = targetAction<TargetActionBuilderTest, Unit> {
-            assertTrue(it { args -> Handler().with(foo).with(bar).resolveArgs(*args) })
+            assertTrue(it(Handler().with(foo).with(bar)))
             called = true
         }
         target { a: Foo, b: Bar<String> ->
@@ -45,7 +44,7 @@ class TargetActionBuilderTest {
         val foo    = Foo()
         var called = false
         val target = targetAction<TargetActionBuilderTest, Unit> {
-            assertTrue(it { args -> Handler().with(foo).resolveArgs(*args) })
+            assertTrue(it(Handler().with(foo)))
             called = true
         }
         target { a: Optional<Foo> ->
@@ -57,7 +56,7 @@ class TargetActionBuilderTest {
     @Test fun `Creates empty optional argument action`() {
         var called = false
         val target = targetAction<TargetActionBuilderTest, Unit> {
-            assertTrue(it { args -> Handler().resolveArgs(*args) })
+            assertTrue(it(Handler()))
             called = true
         }
         target { a: Optional<Foo> -> assertFalse(a.isPresent) }

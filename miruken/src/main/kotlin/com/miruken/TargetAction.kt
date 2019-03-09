@@ -1,6 +1,6 @@
 package com.miruken
 
-typealias ResolveArgs = (Array<TypeReference>) -> List<Any?>?
+typealias ResolveArgs = (Array<out TypeReference>) -> List<Any?>?
 typealias TargetAction<T> = T.(resolveArgs: ResolveArgs) -> Boolean
 
 inline fun <reified T, R> targetAction(

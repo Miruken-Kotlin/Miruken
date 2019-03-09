@@ -15,7 +15,7 @@ enum class NavigationStyle {
 
 class Navigation<C: Controller>(
         val controllerKey: Any,
-        val action: TargetAction<C>,
+        val action:        TargetAction<C>,
         val style:         NavigationStyle
 ): FilteringCallback {
     class GoBack

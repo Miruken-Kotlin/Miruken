@@ -1,7 +1,8 @@
 package com.miruken.callback
 
-import com.miruken.*
+import com.miruken.TargetActionBuilder
 import com.miruken.runtime.isGeneric
+import com.miruken.typeOf
 
 inline operator fun <reified T: Handling,
         reified S: Any> T.plus(other: S): Handling =
@@ -20,19 +21,8 @@ inline fun <reified T: Any> T.toHandler(): Handling {
         this as? Handling ?: HandlerAdapter(this)
 }
 
-fun Handling.resolveArgs(vararg types: TypeReference): List<Any?>? {
-    return if (types.isEmpty()) emptyList() else types.map { key ->
-        val typeInfo = TypeInfo.parse(key.kotlinType)
-        val inquiry  = typeInfo.createInquiry(typeInfo.componentType)
-        KeyResolver.resolve(inquiry, typeInfo, this) ?: when {
-            typeInfo.flags has TypeFlags.OPTIONAL -> null
-            else -> return null
-        }
-    }
-}
-
 val Handling.execute get() = TargetActionBuilder<Handling, Unit> {
-    check(it { args -> resolveArgs(*args) }) {
+    check(it(this)) {
         "One more or arguments could not be resolved"
     }
 }

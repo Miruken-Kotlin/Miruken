@@ -1,11 +1,10 @@
 package com.miruken.callback
 
-import com.miruken.TypeReference
+import com.miruken.*
 import com.miruken.protocol.ProtocolAdapter
-import com.miruken.typeOf
 import java.lang.reflect.Method
 
-interface Handling : ProtocolAdapter {
+interface Handling : ProtocolAdapter, ResolveArgs {
     fun handle(
             callback:     Any,
             callbackType: TypeReference?,
@@ -53,6 +52,17 @@ interface Handling : ProtocolAdapter {
             throw NotHandledException(handleMethod,
                     "Method $method'not handled")
         } ?: handleMethod.result
+    }
+
+    override fun invoke(types: Array<out TypeReference>): List<Any?>? {
+        return if (types.isEmpty()) emptyList() else types.map { key ->
+            val typeInfo = TypeInfo.parse(key.kotlinType)
+            val inquiry  = typeInfo.createInquiry(typeInfo.componentType)
+            KeyResolver.resolve(inquiry, typeInfo, this) ?: when {
+                typeInfo.flags has TypeFlags.OPTIONAL -> null
+                else -> return null
+            }
+        }
     }
 }
 

@@ -33,7 +33,6 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             navigation.style
         }
 
-
         if (initiator != null) {
             if (initiator.style == NavigationStyle.PARTIAL &&
                     navigation.style != NavigationStyle.PARTIAL) {
@@ -102,7 +101,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                     }
                 }
                 if (!navigation.invokeOn(controller) { args ->
-                        child.resolveArgs(*args)?.also {
+                        child(args)?.also {
                             if (style != NavigationStyle.PUSH) {
                                 initiator?.context?.end(initiator)
                             }
