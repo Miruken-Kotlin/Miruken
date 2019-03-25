@@ -1,7 +1,9 @@
 package com.miruken.callback.policy
 
+import com.miruken.Initializing
 import com.miruken.TypeReference
 import com.miruken.addSorted
+import com.miruken.callback.InitializeProvider
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.runtime.getMetaAnnotations
@@ -78,7 +80,9 @@ class LazyHandlerDescriptorFactory(
                     ?.getCompatibleMembers(callback, callbackType)
                     ?.firstOrNull() ?:
             typeCallbacks?.getCompatibleMembers(callback, callbackType)
-                    ?.firstOrNull())?.also { compatible.addSorted(it, orderMembers) }
+                    ?.firstOrNull())?.also {
+                compatible.addSorted(it, orderMembers)
+            }
         }
 
         return (invariants + compatible).map { it.dispatcher.owningType }
@@ -161,6 +165,9 @@ class LazyHandlerDescriptorFactory(
                         outKey = constructor.returnType
                     }
                     val binding = it.bindMethod(bindingInfo)
+                    if (handlerClass.isSubclassOf(Initializing::class)) {
+                        binding.addFilters(InitializeProvider)
+                    }
                     if (typePolicies == null) {
                         typePolicies = mutableMapOf()
                     }

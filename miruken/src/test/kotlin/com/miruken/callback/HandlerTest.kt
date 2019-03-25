@@ -2,6 +2,7 @@
 
 package com.miruken.callback
 
+import com.miruken.Initializing
 import com.miruken.TypeReference
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.LazyHandlerDescriptorFactory
@@ -760,11 +761,13 @@ class HandlerTest {
         val app1 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
+        assertEquals(1, app1.initialized)
         assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
         val app2 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
+        assertEquals(1, app2?.initialized)
         val app3 = handler.with(view)
                 .resolve<App<Controller<Screen, Bar>>>()
         assertSame(app1, app3)
@@ -1400,7 +1403,16 @@ class HandlerTest {
         @Provides @Singleton constructor(
                 override val rootController: C,
                 override val mainScreen:     Screen
-        ): ApplicationBase(), App<C>
+        ): ApplicationBase(), App<C>, Initializing {
+        var initialized = 0
+           private set
+
+        override fun initialize(): Promise<*>? {
+            return Promise.TRUE then {
+                ++initialized
+            }
+        }
+    }
 
     class LifestyleMismatch
         @Provides @Singleton constructor(
