@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KType
 
 abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
-    override var order: Int? = Int.MAX_VALUE - 1000
+    override var order: Int? = Int.MAX_VALUE - 100
 
     override fun next(
             callback:    Inquiry,

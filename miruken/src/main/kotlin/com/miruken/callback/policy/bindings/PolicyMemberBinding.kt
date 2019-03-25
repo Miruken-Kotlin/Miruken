@@ -85,7 +85,7 @@ class PolicyMemberBinding(
             emptyList()
         }
 
-        val result  = if (filters.isEmpty()) {
+        val result = if (filters.isEmpty()) {
             val args = resolveArguments(callback, ruleArgs,
                     callbackType, composer, typeBindings)
                     ?: return HandleResult.NOT_HANDLED

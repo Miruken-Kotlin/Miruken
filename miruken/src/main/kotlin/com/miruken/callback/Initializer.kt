@@ -4,10 +4,11 @@ import com.miruken.Initializing
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.flatMap
+import com.miruken.concurrent.fold
 import kotlin.reflect.KType
 
 class Initializer<Res> : Filtering<Inquiry, Res> {
-    override var order: Int? = Int.MAX_VALUE - 100
+    override var order: Int? = Int.MAX_VALUE - 1000
 
     override fun next(
             callback:    Inquiry,
@@ -19,7 +20,24 @@ class Initializer<Res> : Filtering<Inquiry, Res> {
     ) = next() flatMap { result ->
         @Suppress("UNCHECKED_CAST")
         (result as? Initializing)?.let {
-            it.initialize()?.then { result }
+            if (result.initialized) {
+                Promise.resolve(result) as Promise<Res>
+            } else {
+                try {
+                    it.initialize()?.fold({
+                        result.initialized = true
+                        Promise.resolve(result) as Promise<Res>
+                    }, { t ->
+                        result.initialized = false
+                        result.failedInitialize(t)
+                        Promise.reject(t)
+                    })
+                } catch (t: Throwable) {
+                    result.initialized = false
+                    result.failedInitialize(t)
+                    Promise.reject(t)
+                }
+            }
         } ?: Promise.resolve(result as Any) as Promise<Res>
     }
 }

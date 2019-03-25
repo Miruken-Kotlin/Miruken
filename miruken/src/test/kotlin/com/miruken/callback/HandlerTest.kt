@@ -23,6 +23,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
+import sun.plugin.dom.exception.InvalidStateException
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
@@ -761,13 +762,13 @@ class HandlerTest {
         val app1 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
-        assertEquals(1, app1.initialized)
+        assertEquals(1, app1.initializeCount)
         assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
         val app2 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
-        assertEquals(1, app2?.initialized)
+        assertEquals(1, app2?.initializeCount)
         val app3 = handler.with(view)
                 .resolve<App<Controller<Screen, Bar>>>()
         assertSame(app1, app3)
@@ -893,6 +894,15 @@ class HandlerTest {
             screen.context = null
             assertNotSame(screen, context.resolve()!!)
             assertTrue(screen.closed)
+        }
+    }
+
+    @Test fun `Rejects constructor if initializer fails`() {
+        factory.getDescriptor<FailedInitialization>()
+        assertAsync(testName) { done ->
+            TypeHandlers.infer.resolveAsync<FailedInitialization>() then {
+                done()
+            }
         }
     }
 
@@ -1404,13 +1414,24 @@ class HandlerTest {
                 override val rootController: C,
                 override val mainScreen:     Screen
         ): ApplicationBase(), App<C>, Initializing {
-        var initialized = 0
-           private set
+        override var initialized = false
+        var initializeCount = 0
+            private set
 
         override fun initialize(): Promise<*>? {
             return Promise.TRUE then {
-                ++initialized
+                ++initializeCount
             }
+        }
+    }
+
+    class FailedInitialization : Initializing {
+        override var initialized = false
+        @Provides @Singleton constructor()
+        override fun initialize(): Promise<*>? {
+            return Promise.reject(InvalidStateException(
+                    "Initializion failed"
+            ))
         }
     }
 
