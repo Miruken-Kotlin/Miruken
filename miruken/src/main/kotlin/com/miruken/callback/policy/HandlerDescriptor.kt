@@ -28,7 +28,7 @@ class HandlerDescriptor(
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
-            results:      CollectResultsBlock? = null
+            results:      CollectResultsBlock
     ): HandleResult {
         var target = receiver
         return when (receiver) {
@@ -65,7 +65,7 @@ class HandlerDescriptor(
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
-            results:      CollectResultsBlock?
+            results:      CollectResultsBlock
     ) = members.fold(HandleResult.NOT_HANDLED) { result, method ->
         if ((result.handled && !greedy) || result.stop) {
             return result

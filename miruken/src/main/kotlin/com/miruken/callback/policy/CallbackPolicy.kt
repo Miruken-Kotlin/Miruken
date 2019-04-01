@@ -48,7 +48,7 @@ abstract class CallbackPolicy(
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
-            results:      CollectResultsBlock? = null
+            results:      CollectResultsBlock
     ): HandleResult {
         if (handler is CallbackPolicyDispatching) {
             return handler.dispatch(this, callback, callbackType,

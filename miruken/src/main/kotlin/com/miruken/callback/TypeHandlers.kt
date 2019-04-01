@@ -14,7 +14,7 @@ object TypeHandlers : Handler(), CallbackPolicyDispatching {
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
-            results:      CollectResultsBlock?
+            results:      CollectResultsBlock
     ): HandleResult {
         val factory = HandlerDescriptorFactory.current
         return factory.getTypeHandlers(policy, callback, callbackType)

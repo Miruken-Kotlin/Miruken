@@ -11,6 +11,6 @@ interface CallbackPolicyDispatching {
             callbackType: TypeReference?,
             greedy:       Boolean,
             composer:     Handling,
-            results:      CollectResultsBlock? = null
+            results:      CollectResultsBlock
     ): HandleResult
 }

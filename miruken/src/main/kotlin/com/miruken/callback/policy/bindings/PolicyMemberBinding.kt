@@ -41,7 +41,7 @@ class PolicyMemberBinding(
             callbackType: TypeReference?,
             composer:     Handling,
             descriptor:   HandlerDescriptor,
-            results:      CollectResultsBlock?
+            results:      CollectResultsBlock
     ): HandleResult {
         (callback as? DispatchingCallbackGuard)?.let {
             if (!it.canDispatch(handler, dispatcher))
@@ -122,7 +122,7 @@ class PolicyMemberBinding(
         val accepted = policy.acceptResult(result, this)
         if (accepted.handled && result != null &&
                 result !is HandleResult) {
-            if (results?.invoke(result, strict) == false) {
+            if (!results(result, strict)) {
                 return if (accepted.stop)
                     HandleResult.NOT_HANDLED_AND_STOP
                 else HandleResult.NOT_HANDLED
