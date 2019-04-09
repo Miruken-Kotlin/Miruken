@@ -3,6 +3,7 @@ package com.miruken.callback
 import com.miruken.GivenTypeReference
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
+import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import kotlin.reflect.KType
 
@@ -22,10 +23,19 @@ object ProxyKeyResolver : KeyResolver() {
             inquiry:  Inquiry,
             typeInfo: TypeInfo,
             handler:  Handling
-    ): Any {
-        val typeReference = (inquiry.key as? KType)?.let {
-            GivenTypeReference(it)
-        } ?: error("Expected inquiry.key to be a KType")
-        return handler.proxy(typeReference)
-    }
+    ) = getTypeReference(inquiry)?.let(handler::proxy)
+            ?: error("Expected inquiry.key to be a KType")
+
+
+    override fun resolveKeyAsync(
+            inquiry:  Inquiry,
+            typeInfo: TypeInfo,
+            handler:  Handling
+    ) = getTypeReference(inquiry)?.let {
+        Promise.resolve(handler.proxy(it))
+    } ?: Promise.reject(IllegalStateException(
+            "Expected inquiry.key to be a KType"))
+
+    private fun getTypeReference(inquiry:  Inquiry) =
+            (inquiry.key as? KType)?.let(::GivenTypeReference)
 }

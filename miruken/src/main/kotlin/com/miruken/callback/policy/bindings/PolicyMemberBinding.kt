@@ -1,5 +1,6 @@
 package com.miruken.callback.policy.bindings
 
+import com.miruken.Either
 import com.miruken.TypeFlags
 import com.miruken.TypeReference
 import com.miruken.callback.*
@@ -7,6 +8,9 @@ import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.callback.policy.CollectResultsBlock
 import com.miruken.callback.policy.HandlerDescriptor
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
+import com.miruken.concurrent.all
+import com.miruken.fold
 import com.miruken.runtime.closeType
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
@@ -89,22 +93,18 @@ class PolicyMemberBinding(
             val args = resolveArguments(callback, ruleArgs,
                     callbackType, composer, typeBindings)
                     ?: return HandleResult.NOT_HANDLED
-            dispatcher.invoke(handler, args)
+            args.fold({ dispatcher.invoke(handler, it) }, { p ->
+                p then { dispatcher.invoke(handler, it) }
+            })
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
-                val args = resolveArguments(
-                        callback, ruleArgs, callbackType, comp, typeBindings)
-                        ?: notHandled()
-                val baseResult   = dispatcher.invoke(handler, args)
-                val handleResult = when (baseResult) {
-                    is HandleResult -> baseResult
-                    else -> policy.acceptResult(baseResult, this)
-                }
-                if (!handleResult.handled) {
-                    throw NotHandledException(handleResult)
-                }
-                Promise.resolve(baseResult)
+                (resolveArguments(callback, ruleArgs, callbackType, comp, typeBindings)
+                        ?: notHandled()).fold({
+                    Promise.resolve(invoke(handler, it))
+                }, { promise ->
+                    promise then { invoke(handler, it)}
+                })
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
                     pipeline.first.next(filterCallback, callback, this, comp,
@@ -120,8 +120,7 @@ class PolicyMemberBinding(
         }
 
         val accepted = policy.acceptResult(result, this)
-        if (accepted.handled && result != null &&
-                result !is HandleResult) {
+        if (accepted.handled  && result != null && result !is HandleResult) {
             if (!results(result, strict)) {
                 return if (accepted.stop)
                     HandleResult.NOT_HANDLED_AND_STOP
@@ -129,6 +128,18 @@ class PolicyMemberBinding(
             }
         }
         return accepted
+    }
+
+    private fun invoke(handler: Any, args: Array<Any?>): Any? {
+        val baseResult   = dispatcher.invoke(handler, args)
+        val handleResult = when (baseResult) {
+            is HandleResult -> baseResult
+            else -> policy.acceptResult(baseResult, this)
+        }
+        if (!handleResult.handled) {
+            throw NotHandledException(handleResult)
+        }
+        return baseResult
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -162,13 +173,14 @@ class PolicyMemberBinding(
             callbackType:  TypeReference?,
             composer:      Handling,
             typeBindings:  Lazy<MutableMap<KTypeParameter, KType>>
-    ): Array<Any?>? {
+    ): Either<Array<Any?>, Promise<Array<Any?>>>? {
         val arguments = dispatcher.arguments
         if (arguments.size == ruleArguments.size)
-            return ruleArguments
+            return Either.Left(ruleArguments)
 
         val parent   = callback as? Inquiry
         val resolved = ruleArguments.copyOf(arguments.size)
+        val promises = mutableListOf<Promise<*>>()
 
         for (i in ruleArguments.size until arguments.size) {
             val argument    = arguments[i]
@@ -197,16 +209,41 @@ class PolicyMemberBinding(
                     if (argument.isOpen && typeBindings.value.isEmpty()) {
                         return null
                     }
-                    val inquiry  = argument.createInquiry(parent, typeBindings.value) ?: return null
-                    val resolver = KeyResolver.getResolver(argument.useResolver, composer) ?: return null
+                    val inquiry = argument.createInquiry(parent, typeBindings.value)?.apply {
+                        if (!(typeInfo.flags has TypeFlags.LAZY || typeInfo.flags has TypeFlags.FUNC)) {
+                            wantsAsync = true
+                        }
+                    } ?: return null
+                    val resolver = KeyResolver.getResolver(argument.useResolver, composer)
+                            ?: return null
                     resolver.validate(inquiry.key, typeInfo)
-                    resolved[i] = resolver.resolve(inquiry, typeInfo, composer) ?:
-                            if (optional) null else return null
+                    when (val arg = resolver.resolve(inquiry, typeInfo, composer)) {
+                        is Promise<*> ->
+                            if (typeInfo.flags has TypeFlags.PROMISE) {
+                                resolved[i] = arg
+                            } else {
+                                when (arg.state) {
+                                    PromiseState.FULFILLED -> resolved[i] = arg.get()
+                                            ?: if (optional) null else return null
+                                    PromiseState.PENDING -> promises.add(arg then {
+                                        resolved[i] = it
+                                    })
+                                    else -> return null
+                                }
+                            }
+                        else -> resolved[i] = arg
+                    }
                 }
             }
         }
 
-        return resolved
+        return when {
+            promises.size == 1 ->
+                Either.Right(promises[0] then { resolved })
+            promises.size > 1 ->
+                Either.Right(Promise.all(promises) then { resolved })
+            else -> Either.Left(resolved)
+        }
     }
 
     companion object OrderByArity : Comparator<PolicyMemberBinding> {

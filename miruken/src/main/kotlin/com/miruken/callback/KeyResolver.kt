@@ -36,11 +36,18 @@ open class KeyResolver : KeyResolving {
             typeInfo: TypeInfo,
             handler:  Handling
     ) = handler.resolveAsync(inquiry) then {
-        check (it != null ||
-                typeInfo.componentType.isMarkedNullable) {
-            "Unable to resolve key '${inquiry.key}'"
+        when {
+            it == null -> when {
+                typeInfo.componentType.isMarkedNullable ||
+                typeInfo.flags has TypeFlags.OPTIONAL-> null
+                typeInfo.flags has TypeFlags.OPTIONAL_EXPLICIT ->
+                    Optional.empty<Any>()
+                else -> error("Unable to resolve key '${inquiry.key}'")
+            }
+            typeInfo.flags has TypeFlags.OPTIONAL_EXPLICIT ->
+                Optional.of(it)
+            else -> it
         }
-        it
     }
 
     open fun resolveKeyAll(

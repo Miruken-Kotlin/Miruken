@@ -76,6 +76,18 @@ open class Promise<out T>
         }
     }
 
+    constructor(resolved: T) : this(ChildCancelMode.ALL) {
+        _result = resolved
+        state   = PromiseState.FULFILLED
+        _completed.set(true)
+    }
+
+    constructor(rejected: Throwable) : this(ChildCancelMode.ALL) {
+        _throwable = rejected
+        state      = PromiseState.REJECTED
+        _completed.set(true)
+    }
+
     infix fun <R> then(success: PromiseSuccessBlock<T, R>): Promise<R> {
         return createChild { resolveChild, rejectChild ->
             val res: ((T) -> Unit) = {
@@ -238,18 +250,19 @@ open class Promise<out T>
     }
 
     fun get(timeoutMs: Long? = null): T {
-        val deadline = timeoutMs?.let {
-            Instant.now().plusMillis(timeoutMs) }
-        synchronized (_guard) {
-            while (!isCompleted &&
-                    deadline?.let { Instant.now() < deadline } != false) {
-                if (deadline == null)
-                    _guard.wait()
-                else
-                    _guard.wait(Duration.between(Instant.now(),
-                            deadline).toMillis())
-                if (!isCompleted)
-                    throw TimeoutException()
+        if (!isCompleted) {
+            val deadline = timeoutMs?.let {
+                Instant.now().plusMillis(timeoutMs)
+            }
+            synchronized(_guard) {
+                while (!isCompleted && deadline?.let { Instant.now() < deadline } != false) {
+                    if (deadline == null) {
+                        _guard.wait()
+                    } else {
+                        _guard.wait(Duration.between(Instant.now(), deadline).toMillis())
+                    }
+                    if (!isCompleted) throw TimeoutException()
+                }
             }
         }
         if (_throwable != null) throw _throwable!!
@@ -315,21 +328,20 @@ open class Promise<out T>
     }
 
     companion object {
-        val TRUE       = resolve(true)
-        val FALSE      = resolve(false)
-        val EMPTY      = resolve(null as Any?)
-        val EMPTY_LIST = resolve(emptyList<Any>())
+        val TRUE       = Promise(true)
+        val FALSE      = Promise(false)
+        val EMPTY      = Promise(null as Any?)
+        val EMPTY_LIST = Promise(emptyList<Any>())
 
-        fun reject(e: Throwable): Promise<Nothing> =
-                Promise { _, reject -> reject(e) }
+        fun reject(error: Throwable): Promise<Nothing> = Promise(error)
 
         @Suppress("UNCHECKED_CAST")
         inline fun <reified S: Any?> resolve(result: S): Promise<S> =
                 if (S::class === Any::class && result is Promise<*>) {
                     Promise<Any?> { suc, fail ->
-                        result.then({ suc(it)}, fail) } as Promise<S>
+                        result.then(suc, fail) } as Promise<S>
                 } else {
-                    Promise { success, _ -> success(result) }
+                    Promise(result)
                 }
 
         fun <S> resolve(promise: Promise<S>): Promise<S> = promise

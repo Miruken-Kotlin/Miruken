@@ -1,10 +1,14 @@
 package com.miruken.callback
 
+import com.miruken.Either
 import com.miruken.TypeFlags
 import com.miruken.callback.policy.CallableDispatch
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
+import com.miruken.concurrent.all
+import com.miruken.fold
 import com.miruken.runtime.isCompatibleWith
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -26,11 +30,11 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
     ) = NEXT.getOrPut(this::class) { lazyOf(getDynamicNext(binding)) }
             .value?.let { dispatcher ->
                 @Suppress("UNCHECKED_CAST")
-                resolveArguments(dispatcher, callback, rawCallback,
-                    binding, composer, next, provider)
-                    ?.let { args ->
-                        dispatcher.invoke(this, args) as Promise<Res>
-                    }
+                resolveArguments(dispatcher, callback,
+                    rawCallback, binding, composer, next, provider)
+                    ?.fold({ dispatcher.invoke(this, it) }, { p ->
+                        p then { dispatcher.invoke(this, it) }
+                    }) as? Promise<Res>
             } ?: next.abort()
 
     private fun resolveArguments(
@@ -41,13 +45,14 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
             composer:    Handling,
             next:        Next<Res>,
             provider:    FilteringProvider?
-    ): Array<Any?>? {
+    ): Either<Array<Any?>, Promise<Array<Any?>>>?{
         val arguments = dispatcher.arguments
         if (arguments.size == 2) {
-            return arrayOf(callback, next)
+            return Either.Left(arrayOf<Any?>(callback, next))
         }
         val parent   = callback as? Inquiry
         val resolved = arrayOfNulls<Any?>(arguments.size)
+        val promises = mutableListOf<Promise<*>>()
         resolved[0] = callback
 
         for (i in 1 until resolved.size) {
@@ -63,7 +68,8 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                 resolved[2] = next
                 continue
             }
-            val argumentClass = argument.typeInfo.logicalType.jvmErasure
+            val typeInfo      = argument.typeInfo
+            val argumentClass = typeInfo.logicalType.jvmErasure
             when {
                 argumentClass == Handling::class ->
                     resolved[i] = composer
@@ -72,21 +78,42 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                 argumentClass.isSubclassOf(FilteringProvider::class)->
                     resolved[i] = provider
                 else -> {
-                    val inquiry = argument.createInquiry(parent)
+                    val inquiry = argument.createInquiry(parent)?.apply {
+                        if (!(typeInfo.flags has TypeFlags.LAZY || typeInfo.flags has TypeFlags.FUNC)) {
+                            wantsAsync = true
+                        }
+                    } ?: return null
+                    val resolver = KeyResolver.getResolver(argument.useResolver, composer)
                             ?: return null
-                    val typeInfo = argument.typeInfo
-                    val resolver = KeyResolver.getResolver(
-                            argument.useResolver, composer) ?: return null
                     resolver.validate(inquiry, typeInfo)
-                    resolved[i] = resolver.resolve(
-                            inquiry, typeInfo, composer) ?:
-                            if (typeInfo.flags has TypeFlags.OPTIONAL)
-                                null else return null
+                    when (val arg = resolver.resolve(inquiry, typeInfo, composer)) {
+                        is Promise<*> ->
+                            if (typeInfo.flags has TypeFlags.PROMISE) {
+                                resolved[i] = arg
+                            } else {
+                                val optional = typeInfo.flags has TypeFlags.OPTIONAL
+                                when (arg.state) {
+                                    PromiseState.FULFILLED -> resolved[i] = arg.get()
+                                            ?: if (optional) null else return null
+                                    PromiseState.PENDING -> promises.add(arg then {
+                                        resolved[i] = it
+                                    })
+                                    else -> return null
+                                }
+                            }
+                        else -> resolved[i] = arg
+                    }
                 }
             }
         }
 
-        return resolved
+        return when {
+            promises.size == 1 ->
+                Either.Right(promises[0] then { resolved })
+            promises.size > 1 ->
+                Either.Right(Promise.all(promises) then { resolved })
+            else -> Either.Left(resolved)
+        }
     }
 
     private fun getDynamicNext(binding: MemberBinding): CallableDispatch? {
@@ -100,7 +127,7 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                     it.returnType.classifier == Promise::class &&
                     isCompatibleWith(it.parameters[1].type, callbackType) &&
                     isCompatibleReturn(binding.returnType, it.returnType)
-                }?.let { CallableDispatch(it) }
+                }?.let(::CallableDispatch)
     }
 
     private fun isCompatibleReturn(

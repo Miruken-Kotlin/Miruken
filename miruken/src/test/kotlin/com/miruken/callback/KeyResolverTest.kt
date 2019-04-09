@@ -291,7 +291,7 @@ class KeyResolverTest {
 
         @Handles
         fun validateOrder(
-                place: NewOrder,
+                place:      NewOrder,
                 repository: Repository<Order>?
         ): Boolean {
             assertNotNull(place)

@@ -18,4 +18,4 @@ data class Oneway<TResp: NamedType>(
 }
 
 inline val <TResp: NamedType, reified T: Request<TResp>>
-        T.oneway: Oneway<TResp> get ()= Oneway(this, typeOf<T>())
+        T.oneway: Oneway<TResp> get () = Oneway(this, typeOf<T>())

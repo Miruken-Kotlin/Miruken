@@ -12,6 +12,7 @@ import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.callback.policy.getDescriptor
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.delay
 import com.miruken.context.Context
 import com.miruken.context.ContextualImpl
 import com.miruken.context.Scoped
@@ -759,12 +760,14 @@ class HandlerTest {
         factory.getDescriptor<ControllerBase>()
         factory.getDescriptor<Controller<*,*>>()
         factory.getDescriptor<Application<*>>()
+        factory.getDescriptor<InitializingComponent>()
         val app1 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
-        assertEquals(1, app1.initializeCount)
         assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
+        assertEquals(1, app1.initializeCount)
+        assertTrue(app1.component.initialized)
         val app2 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
@@ -901,6 +904,7 @@ class HandlerTest {
         factory.getDescriptor<FailedInitialization>()
         assertAsync(testName) { done ->
             TypeHandlers.infer.resolveAsync<FailedInitialization>() then {
+                assertNull(it)
                 done()
             }
         }
@@ -1412,7 +1416,8 @@ class HandlerTest {
     class Application<C: ControllerBase>
         @Provides @Singleton constructor(
                 override val rootController: C,
-                override val mainScreen:     Screen
+                override val mainScreen:     Screen,
+                val component: InitializingComponent
         ): ApplicationBase(), App<C>, Initializing {
         override var initialized = false
         var initializeCount = 0
@@ -1420,9 +1425,21 @@ class HandlerTest {
 
         override fun initialize(): Promise<*>? {
             return Promise.TRUE then {
+                initialized = true
                 ++initializeCount
             }
         }
+    }
+
+    class InitializingComponent
+        @Provides @Singleton
+        constructor() : Initializing {
+            override var initialized = false
+            override fun initialize(): Promise<*>? {
+                return Promise.delay(100) then {
+                    initialized = true
+                }
+            }
     }
 
     class FailedInitialization : Initializing {
