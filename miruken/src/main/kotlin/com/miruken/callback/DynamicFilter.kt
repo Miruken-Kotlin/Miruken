@@ -30,11 +30,11 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
     ) = NEXT.getOrPut(this::class) { lazyOf(getDynamicNext(binding)) }
             .value?.let { dispatcher ->
                 @Suppress("UNCHECKED_CAST")
-                resolveArguments(dispatcher, callback,
-                    rawCallback, binding, composer, next, provider)
-                    ?.fold({ dispatcher.invoke(this, it) }, { p ->
-                        p then { dispatcher.invoke(this, it) }
-                    }) as? Promise<Res>
+                resolveArguments(dispatcher, callback, rawCallback,
+                        binding, composer, next, provider)
+                    ?.fold({ dispatcher.invoke(this, it) },
+                           { p -> p then { dispatcher.invoke(this, it) } }
+                    ) as? Promise<Res>
             } ?: next.abort()
 
     private fun resolveArguments(

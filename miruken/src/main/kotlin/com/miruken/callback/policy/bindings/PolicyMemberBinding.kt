@@ -93,22 +93,20 @@ class PolicyMemberBinding(
             val args = resolveArguments(callback, ruleArgs,
                     callbackType, composer, typeBindings)
                     ?: return HandleResult.NOT_HANDLED
-            args.fold({ dispatcher.invoke(handler, it) }, { p ->
-                p then { dispatcher.invoke(handler, it) }
+            args.fold({ dispatcher.invoke(handler, it) },
+                      { p -> p then { dispatcher.invoke(handler, it) }
             })
         } else try {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (!proceed) notHandled()
                 (resolveArguments(callback, ruleArgs, callbackType, comp, typeBindings)
-                        ?: notHandled()).fold({
-                    Promise.resolve(invoke(handler, it))
-                }, { promise ->
-                    promise then { invoke(handler, it)}
-                })
+                        ?: notHandled()).fold(
+                        { Promise.resolve(invoke(handler, it)) },
+                        { p -> p then { invoke(handler, it)} })
             }, { pipeline, next -> { comp, proceed ->
                     if (!proceed) notHandled()
                     pipeline.first.next(filterCallback, callback, this, comp,
-                            { c, p -> next((c ?: comp), p ?: true)
+                        { c, p -> next((c ?: comp), p ?: true)
                     }, pipeline.second)
                 }
             })(composer, true)

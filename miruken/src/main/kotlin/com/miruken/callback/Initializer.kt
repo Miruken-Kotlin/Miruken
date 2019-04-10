@@ -21,12 +21,12 @@ class Initializer<Res> : Filtering<Inquiry, Res> {
         @Suppress("UNCHECKED_CAST")
         (result as? Initializing)?.let {
             if (result.initialized) {
-                Promise.resolve(result) as Promise<Res>
+                Promise.resolve(result)
             } else {
                 try {
                     it.initialize()?.fold({
                         result.initialized = true
-                        Promise.resolve(result) as Promise<Res>
+                        Promise.resolve(result)
                     }, { t ->
                         result.initialized = false
                         result.failedInitialize(t)
@@ -37,8 +37,8 @@ class Initializer<Res> : Filtering<Inquiry, Res> {
                     result.failedInitialize(t)
                     Promise.reject(t)
                 }
-            }
-        } ?: Promise.resolve(result as Any) as Promise<Res>
+            } as? Promise<Res>
+        } ?: Promise.resolve(result as Any?) as Promise<Res>
     }
 }
 
