@@ -760,14 +760,16 @@ class HandlerTest {
         factory.getDescriptor<ControllerBase>()
         factory.getDescriptor<Controller<*,*>>()
         factory.getDescriptor<Application<*>>()
-        factory.getDescriptor<InitializingComponent>()
+        factory.getDescriptor<InitializingComponent1>()
+        factory.getDescriptor<InitializingComponent2>()
         val app1 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertNotNull(app1)
         assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
         assertEquals(1, app1.initializeCount)
-        assertTrue(app1.component.initialized)
+        assertTrue(app1.component1.initialized)
+        assertTrue(app1.component2.initialized)
         val app2 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
@@ -1417,7 +1419,8 @@ class HandlerTest {
         @Provides @Singleton constructor(
                 override val rootController: C,
                 override val mainScreen:     Screen,
-                val component: InitializingComponent
+                val component1: InitializingComponent1,
+                val component2: InitializingComponent2
         ): ApplicationBase(), App<C>, Initializing {
         override var initialized = false
         var initializeCount = 0
@@ -1429,17 +1432,37 @@ class HandlerTest {
                 ++initializeCount
             }
         }
+
+        override fun failedInitialize(t: Throwable?) {
+        }
     }
 
-    class InitializingComponent
+    class InitializingComponent1
         @Provides @Singleton
         constructor() : Initializing {
-            override var initialized = false
-            override fun initialize(): Promise<*>? {
-                return Promise.delay(100) then {
-                    initialized = true
-                }
+
+        override var initialized = false
+        override fun initialize(): Promise<*>? {
+            return Promise.delay(100) then {
+                initialized = true
             }
+        }
+
+        override fun failedInitialize(t: Throwable?) {
+        }
+    }
+
+    class InitializingComponent2
+    @Provides @Singleton
+    constructor() : Initializing {
+        override var initialized = false
+        override fun initialize(): Promise<*>? {
+            return Promise.delay(200) then {
+                initialized = true
+            }
+        }
+        override fun failedInitialize(t: Throwable?) {
+        }
     }
 
     class FailedInitialization : Initializing {
@@ -1449,6 +1472,9 @@ class HandlerTest {
             return Promise.reject(InvalidStateException(
                     "Initializion failed"
             ))
+        }
+
+        override fun failedInitialize(t: Throwable?) {
         }
     }
 

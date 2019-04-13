@@ -49,77 +49,82 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
             }
         }
 
-        var controller: C? = null
         val child = parent.createChild().let {
             if (style == NavigationStyle.PUSH) it.createChild() else it
         }
 
-        try {
-            @Suppress("UNCHECKED_CAST")
-            controller = ((child.xself + composer)
-                    .infer.resolve(navigation.controllerKey) {
-                require(Qualifier<Scoped>())
-            } as? C)?.also { it.context = child } ?: return null
-        } catch(e: Throwable) {
-            return null
-        } finally {
-            if (controller == null) {
-                child.end()
-            }
-        }
-
-        with(navigation) {
-            noBack = options?.noBack == true || options?.goBack == true
-            if (!noBack && back == null && initiator != null &&
-                    style == NavigationStyle.NEXT) {
-                back = initiator
-            }
-        }
-
-        bindIO(child, controller!!, style, options, composer)
-
-        child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
-
+        @Suppress("UNCHECKED_CAST")
         return Promise(ChildCancelMode.ANY) { resolve, reject ->
-            try {
-                child.contextEnding += { (ctx, reason) ->
-                    if (reason is NavigationException) {
-                        reject(reason)
-                    } else if (reason !is Navigation<*>) {
-                        resolve(ctx)
+            (child.xself + composer)
+                    .infer.resolveAsync(navigation.controllerKey) {
+                require(Qualifier<Scoped>())
+            } then {
+                if (it == null) {
+                    error("Unable to resolve controller ${navigation.controllerKey}")
+                }
+
+                val controller = it as C
+                controller.context = child
+
+                with(navigation) {
+                    noBack = options?.noBack == true || options?.goBack == true
+                    if (!noBack && back == null && initiator != null &&
+                            style == NavigationStyle.NEXT) {
+                        back = initiator
                     }
                 }
-                if (style == NavigationStyle.PUSH) {
-                    child.parent!!.childContextEnded += { (ctx, reason) ->
+
+                bindIO(child, controller, style, options, composer)
+
+                child.addHandlers(GenericWrapper(navigation, typeOf<Navigation<*>>()))
+
+                try {
+                    child.contextEnding += { (ctx, reason) ->
                         if (reason is NavigationException) {
-                            ctx.parent?.end(reason)
                             reject(reason)
                         } else if (reason !is Navigation<*>) {
-                            ctx.parent?.end(reason)
                             resolve(ctx)
                         }
                     }
-                }
-                if (!navigation.invokeOn(controller) { args ->
-                        child(args)?.also {
-                            if (style != NavigationStyle.PUSH) {
-                                initiator?.context?.end(initiator)
+
+                    if (style == NavigationStyle.PUSH) {
+                        child.parent!!.childContextEnded += { (ctx, reason) ->
+                            if (reason is NavigationException) {
+                                ctx.parent?.end(reason)
+                                reject(reason)
+                            } else if (reason !is Navigation<*>) {
+                                ctx.parent?.end(reason)
+                                resolve(ctx)
                             }
-                        }}) {
-                    NavigationException(context,
-                            "Navigation could not be performed.  The most likely cause is missing dependencies.")
-                            .also {
-                                reject(it)
-                                child.end(it)
-                            }
+                        }
+                    }
+
+                    if (!navigation.invokeOn(controller) { args ->
+                            child(args)?.also {
+                                if (style != NavigationStyle.PUSH) {
+                                    initiator?.context?.end(initiator)
+                                }
+                            }}) {
+                        NavigationException(context,
+                                "Navigation could not be performed.  The most likely cause is missing dependencies.")
+                                .also { ex ->
+                                    reject(ex)
+                                    child.end(ex)
+                                }
+                    }
+
+                    child
+                } catch (t: Throwable) {
+                    NavigationException(context, t).also { ex ->
+                        reject(ex)
+                        child.end(ex)
+                    }
+                } finally {
+                    bindIO(null, controller, style)
                 }
-            } catch (t: Throwable) {
-                NavigationException(context, t).also {
-                    reject(it)
-                    child.end(it)
-                }
-            } finally {
-                bindIO(null, controller, style)
+            } catch {
+                reject(it)
+                child.end(it)
             }
         }
     }

@@ -38,5 +38,7 @@ open class ContextualHandler :
         }
     }
 
+    open fun failedInitialize(t: Throwable?) = close()
+
     open fun cleanUp() {}
 }

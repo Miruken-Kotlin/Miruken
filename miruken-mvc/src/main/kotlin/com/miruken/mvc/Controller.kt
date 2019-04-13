@@ -1,5 +1,6 @@
 package com.miruken.mvc
 
+import com.miruken.Initializing
 import com.miruken.callback.Handling
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
@@ -19,6 +20,9 @@ abstract class Controller : Contextual, AutoCloseable {
 
     @Suppress("PropertyName")
     internal var _io: Handling? = null
+
+    @Suppress("LeakingThis")
+    var initialized: Boolean = this !is Initializing
 
     // Context
 
@@ -190,6 +194,8 @@ abstract class Controller : Contextual, AutoCloseable {
 
     protected open fun cleanUp() {}
 
+    open fun failedInitialize(t: Throwable?) = close()
+
     final override fun close() {
         if (_closed.compareAndSet(false, true)) {
             disposing(this)
@@ -203,4 +209,5 @@ abstract class Controller : Contextual, AutoCloseable {
             disposed.clear()
         }
     }
+
 }

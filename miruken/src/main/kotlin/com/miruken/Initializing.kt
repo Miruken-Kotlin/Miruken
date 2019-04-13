@@ -7,5 +7,5 @@ interface Initializing {
 
     fun initialize(): Promise<*>? = null
 
-    fun failedInitialize(t: Throwable? = null) {}
+    fun failedInitialize(t: Throwable? = null)
 }
