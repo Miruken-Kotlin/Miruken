@@ -84,7 +84,10 @@ open class Promise<out T>
 
     constructor(rejected: Throwable) : this(ChildCancelMode.ALL) {
         _throwable = rejected
-        state      = PromiseState.REJECTED
+        state      = when (rejected){
+            is CancellationException -> PromiseState.CANCELLED
+            else -> PromiseState.REJECTED
+        }
         _completed.set(true)
     }
 
