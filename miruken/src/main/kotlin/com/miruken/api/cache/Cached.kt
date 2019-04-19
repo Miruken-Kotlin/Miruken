@@ -3,16 +3,18 @@ package com.miruken.api.cache
 import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.Request
+import com.miruken.api.responseTypeName
 import com.miruken.typeOf
 import java.time.Duration
 
 data class Cached<TResp: NamedType>(
         val request:     Request<TResp>,
         val requestType: TypeReference,
-        val timeToLive:  Duration? = null,
-        override val typeName: String =
-                Cached.typeName.format(request.typeName)
+        val timeToLive:  Duration? = null
 ) : Request<TResp> {
+    override val typeName: String =
+            Cached.typeName.format(request.responseTypeName)
+
     companion object : NamedType {
         override val typeName =
                 "Miruken.Mediate.Cache.Cached`1[[%s]],Miruken.Mediate"
@@ -22,10 +24,11 @@ data class Cached<TResp: NamedType>(
 data class Refresh<TResp: NamedType>(
         val request:     Request<TResp>,
         val requestType: TypeReference,
-        val timeToLive:  Duration? = null,
-        override val typeName: String =
-                Refresh.typeName.format(request.typeName)
+        val timeToLive:  Duration? = null
 ) : Request<TResp> {
+    override val typeName: String =
+            Refresh.typeName.format(request.responseTypeName)
+
     companion object : NamedType {
         override val typeName =
                 "Miruken.Mediate.Cache.Refresh`1[[%s]],Miruken.Mediate"
@@ -34,10 +37,11 @@ data class Refresh<TResp: NamedType>(
 
 data class Invalidate<TResp: NamedType>(
         val request:     Request<TResp>,
-        val requestType: TypeReference,
-        override val typeName: String =
-                Invalidate.typeName.format(request.typeName)
+        val requestType: TypeReference
 ) : Request<TResp?> {
+    override val typeName: String =
+            Invalidate.typeName.format(request.responseTypeName)
+
     companion object : NamedType {
         override val typeName =
                 "Miruken.Mediate.Cache.Invalidate`1[[%s]],Miruken.Mediate"
