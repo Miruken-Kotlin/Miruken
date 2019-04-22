@@ -10,7 +10,7 @@ fun Promise.Companion.all(vararg input:Any) : Promise<List<Any?>> =
 
 fun Promise.Companion.all(input: Collection<Any?>) : Promise<List<Any?>> {
     if (input.isEmpty())
-        return Promise.resolve(emptyList())
+        return resolve(emptyList())
 
     val pending   = AtomicInteger(0)
     val promises  = input.map(::resolve)
@@ -47,28 +47,29 @@ fun Promise.Companion.race(promises: Collection<Promise<*>>) : Promise<*> {
 }
 
 fun Promise.Companion.delay(delayMs: Long) : Promise<*> {
-    var timer: TimerTask? = null
-    return Promise<Any?> { resolve, _ ->
-        timer = Timer().schedule(delayMs) {
+    return Promise<Any?> { resolve, _, onCancel ->
+        val timer = Timer().schedule(delayMs) {
             resolve(null)
         }
-    } finally {
-        timer?.cancel()
+        onCancel { timer.cancel() }
     }
 }
 
 @Suppress("UNCHECKED_CAST")
 fun <T> Promise<T>.timeout(timeoutMs: Long) : Promise<T> {
-    return Promise.race(this, Promise.delay(timeoutMs).then {
+    val delay = Promise.delay(timeoutMs)
+    return Promise.race(this.apply { finally {
+        delay.cancel()
+    }}, delay then {
         throw TimeoutException()
-    }).then { it as T }
+    }) as Promise<T>
 }
 
 inline fun <reified T> Promise.Companion.`try`(
         block: () -> T) : Promise<T> {
     return try {
-        Promise.resolve(block())
+        resolve(block())
     } catch (e: Throwable) {
-        Promise.reject(e)
+        reject(e)
     }
 }

@@ -5,7 +5,7 @@ import com.miruken.concurrent.Promise
 interface Initializing {
     var initialized: Boolean
 
-    fun initialize(): Promise<*>? = null
+    fun initialize(): Promise<*>?
 
     fun failedInitialize(t: Throwable? = null)
 }

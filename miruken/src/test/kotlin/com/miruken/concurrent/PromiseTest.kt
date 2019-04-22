@@ -664,7 +664,9 @@ class PromiseTest {
 
     @Test fun `Resolves promise if before timeout`() {
         assertAsync(testName) { done ->
-            Promise.delay(50).timeout(100) then {
+            (Promise.delay(50) then { 22 })
+                    .timeout(100) then {
+                assertEquals(22, it)
                 done()
             }
         }
@@ -672,7 +674,8 @@ class PromiseTest {
 
     @Test fun `Rejects promise if after timeout`() {
         assertAsync(testName) { done ->
-            Promise.delay(100).timeout(50) catch {
+            (Promise.delay(100) then { "Hello "})
+                    .timeout(50) catch {
                 assertTrue(it is TimeoutException)
                 done()
             }

@@ -1,16 +1,15 @@
 package com.miruken.api.route
 
 import com.miruken.TypeReference
+import com.miruken.api.MessageWrapper
 import com.miruken.api.NamedType
 import com.miruken.api.Request
 import com.miruken.api.responseTypeName
 import com.miruken.typeOf
 
-interface Routed : NamedType {
-    val message:     NamedType
-    val messageType: TypeReference?
-    val route:       String
-    val tag:         String?
+interface Routed : MessageWrapper {
+    val route: String
+    val tag:   String?
 }
 
 data class RoutedMessage(
@@ -33,7 +32,7 @@ data class RoutedRequest<TResp: NamedType>(
         override val route:       String,
         override val tag:         String? = null
 ) : Request<TResp>, Routed {
-    override val typeName:    String  =
+    override val typeName: String  =
             RoutedRequest.typeName.format(message.responseTypeName)
 
     companion object : NamedType {

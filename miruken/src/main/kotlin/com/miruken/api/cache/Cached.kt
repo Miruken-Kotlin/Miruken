@@ -3,15 +3,16 @@ package com.miruken.api.cache
 import com.miruken.TypeReference
 import com.miruken.api.NamedType
 import com.miruken.api.Request
+import com.miruken.api.RequestWrapper
 import com.miruken.api.responseTypeName
 import com.miruken.typeOf
 import java.time.Duration
 
 data class Cached<TResp: NamedType>(
-        val request:     Request<TResp>,
-        val requestType: TypeReference,
-        val timeToLive:  Duration? = null
-) : Request<TResp> {
+        override val request:     Request<TResp>,
+        override val requestType: TypeReference,
+        val timeToLive: Duration? = null
+) : RequestWrapper<TResp> {
     override val typeName: String =
             Cached.typeName.format(request.responseTypeName)
 
@@ -22,10 +23,10 @@ data class Cached<TResp: NamedType>(
 }
 
 data class Refresh<TResp: NamedType>(
-        val request:     Request<TResp>,
-        val requestType: TypeReference,
+        override val request:     Request<TResp>,
+        override val requestType: TypeReference,
         val timeToLive:  Duration? = null
-) : Request<TResp> {
+) : RequestWrapper<TResp> {
     override val typeName: String =
             Refresh.typeName.format(request.responseTypeName)
 
@@ -36,9 +37,9 @@ data class Refresh<TResp: NamedType>(
 }
 
 data class Invalidate<TResp: NamedType>(
-        val request:     Request<TResp>,
-        val requestType: TypeReference
-) : Request<TResp?> {
+        override val request:     Request<TResp>,
+        override val requestType: TypeReference
+) : RequestWrapper<TResp?> {
     override val typeName: String =
             Invalidate.typeName.format(request.responseTypeName)
 
