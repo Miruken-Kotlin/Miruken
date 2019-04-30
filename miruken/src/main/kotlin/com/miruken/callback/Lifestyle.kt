@@ -15,10 +15,19 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
             composer:    Handling,
             next:        Next<Res>,
             provider:    FilteringProvider?
-    ) = getInstance(callback, binding, next, composer)?.let {
-        @Suppress("UNCHECKED_CAST")
-        Promise.resolve(it as Any) as Promise<Res>
-    } ?: next.abort()
+    ): Promise<Res> {
+        val parent = callback.parent
+        if (parent == null || isCompatibleWithParent(parent)) {
+            val instance = getInstance(callback, binding, next, composer)
+            if (instance != null) {
+                @Suppress("UNCHECKED_CAST")
+                return Promise.resolve(instance as Any) as Promise<Res>
+            }
+        }
+        return next.abort()
+    }
+
+    abstract fun isCompatibleWithParent(parent: Inquiry): Boolean
 
     abstract fun getInstance(
             inquiry:  Inquiry,

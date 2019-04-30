@@ -6,6 +6,8 @@ class SingletonLifestyle<Res> : Lifestyle<Res>() {
     @Volatile
     private var _instance: Res? = null
 
+    override fun isCompatibleWithParent(parent: Inquiry) = true
+
     override fun getInstance(
             inquiry:  Inquiry,
             binding:  MemberBinding,
