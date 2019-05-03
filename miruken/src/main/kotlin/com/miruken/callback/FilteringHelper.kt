@@ -77,19 +77,28 @@ object FilterComparator :
 
 fun KAnnotatedElement.getFilterProviders() =
         (getMetaAnnotations<UseFilterProvider>()
-                .flatMap    { it.second }
-                .flatMap    { it.provideBy.asList() }
-                .mapNotNull { it.objectInstance } +
+                .flatMap {
+                    it.second.flatMap { p -> p.provideBy.toList() }
+                             .mapNotNull { p -> p.objectInstance?.apply {
+                                configure(it.first) }
+                             }
+                } +
          getMetaAnnotations<UseFilterProviderFactory>()
                 .flatMap { it.second
                     it.second.mapNotNull { f ->
                         f.createBy.objectInstance
-                                ?.createProvider(it.first) }
+                                ?.createProvider(it.first)?.apply {
+                                    configure(it.first)
+                                }
+                    }
                 } +
         (getMetaAnnotations<UseFilter>()
-                .flatMap { it.second }
-                .map {
-                    FilterSpecProvider(createSpec(it))
+                .flatMap {
+                    it.second.map { f ->
+                        FilterSpecProvider(createSpec(f)).apply {
+                            configure(it.first)
+                        }
+                    }
                 })
         ).toList()
          .normalize()
@@ -97,19 +106,28 @@ fun KAnnotatedElement.getFilterProviders() =
 
 fun AnnotatedElement.getFilterProviders() =
         (getMetaAnnotations<UseFilterProvider>()
-                .flatMap    { it.second }
-                .flatMap    { it.provideBy.asList() }
-                .mapNotNull { it.objectInstance } +
+                .flatMap {
+                    it.second.flatMap { p -> p.provideBy.toList() }
+                             .mapNotNull { p -> p.objectInstance?.apply {
+                                configure(it.first) }
+                             }
+                } +
          getMetaAnnotations<UseFilterProviderFactory>()
                 .flatMap {
                     it.second.mapNotNull { f ->
                         f.createBy.objectInstance
-                                ?.createProvider(it.first) }
+                                ?.createProvider(it.first)?.apply {
+                                    configure(it.first)
+                                }
+                    }
                 } +
         (getMetaAnnotations<UseFilter>()
-                .flatMap { it.second }
-                .map {
-                    FilterSpecProvider(createSpec(it))
+                .flatMap {
+                    it.second.map { f ->
+                        FilterSpecProvider(createSpec(f)).apply {
+                            configure(it.first)
+                        }
+                    }
                 })
         ).toList()
          .normalize()

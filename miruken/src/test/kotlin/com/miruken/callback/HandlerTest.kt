@@ -821,6 +821,24 @@ class HandlerTest {
         assertTrue(screen!!.closed)
     }
 
+    @Test fun `Creates rooted scoped instance implicitly`() {
+        factory.getDescriptor<RootedComponent>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val rooted = context.resolve<RootedComponent>()
+            assertNotNull(rooted)
+            assertSame(context, rooted.context)
+            context.createChild().use { child ->
+                val rooted2 = child.resolve<RootedComponent> {
+                    require(Qualifier<Scoped>())
+                }
+                assertNotNull(rooted2)
+                assertSame(rooted, rooted2)
+                assertSame(context, rooted2.context)
+            }
+        }
+    }
+
     @Test fun `Creates scpoed instance covariantly`() {
         factory.getDescriptor<ScreenModel<*>>()
         Context().use { context ->
@@ -1434,6 +1452,17 @@ class HandlerTest {
         }
 
         override fun failedInitialize(t: Throwable?) {
+        }
+    }
+
+    open class RootedComponent @Provides @Scoped(rooted = true)
+    constructor() : ContextualImpl(), AutoCloseable {
+
+        var closed: Boolean = false
+            private set
+
+        override fun close() {
+            closed = true
         }
     }
 

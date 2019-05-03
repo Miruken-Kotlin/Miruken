@@ -11,6 +11,8 @@ interface FilteringProvider {
             filterType: KType,
             composer:   Handling
     ): List<Filtering<*,*>>?
+
+    fun configure(owner: Any) {}
 }
 
 interface Filtered {

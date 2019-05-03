@@ -28,9 +28,9 @@ class SingletonLifestyle<Res> : Lifestyle<Res>() {
     }
 }
 
-object SingletonLifestyleProvider : LifestyleProvider({
-    SingletonLifestyle<Any>()
-})
+object SingletonLifestyleProvider : LifestyleProvider() {
+    override fun createLifestyle() = SingletonLifestyle<Any>()
+}
 
 @Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.FUNCTION,
         AnnotationTarget.PROPERTY_GETTER)

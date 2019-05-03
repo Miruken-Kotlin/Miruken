@@ -37,9 +37,7 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
     ): Res?
 }
 
-open class LifestyleProvider(
-        private val initializer: () -> Lifestyle<*>
-): FilteringProvider {
+abstract class LifestyleProvider : FilteringProvider {
     final override val required = true
 
     override fun getFilters(
@@ -49,8 +47,10 @@ open class LifestyleProvider(
     ): List<Lifestyle<*>> {
         val resultType = filterType.arguments[1].type!!
         return listOf(LIFESTYLES.getOrPut(
-                binding to resultType, initializer))
+                binding to resultType, ::createLifestyle))
     }
+
+    abstract fun createLifestyle(): Lifestyle<*>
 
     override fun equals(other: Any?) =
             this === other || other?.let {

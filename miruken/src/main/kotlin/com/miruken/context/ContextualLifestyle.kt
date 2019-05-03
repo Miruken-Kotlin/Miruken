@@ -6,12 +6,15 @@ import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.Qualifier
 import java.util.concurrent.ConcurrentHashMap
 
-class ContextualLifestyle<Res> : Lifestyle<Res>() {
+class ContextualLifestyle<Res>(val rooted: Boolean) : Lifestyle<Res>() {
     override fun isCompatibleWithParent(parent: Inquiry) =
             parent.dispatcher?.let { dispatcher ->
                 dispatcher.filterProviders
                         .filterIsInstance<LifestyleProvider>()
-                        .all { it is ContextualLifestyleProvider }
+                        .all {
+                            it is ContextualLifestyleProvider &&
+                                    (rooted || !it.rooted)
+                        }
             } ?: true
 
     override fun getInstance(
@@ -20,7 +23,9 @@ class ContextualLifestyle<Res> : Lifestyle<Res>() {
             next:     Next<Res>,
             composer: Handling
     ): Res? {
-        val context = composer.resolve<Context>() ?: return null
+        val context = composer.resolve<Context>()?.let {
+            if (rooted) it.root else it
+        } ?: return null
         return _cache.getOrPut(context) {
             val instance = next().get()
             if (instance is Contextual) {
@@ -58,9 +63,18 @@ class ContextualLifestyle<Res> : Lifestyle<Res>() {
     private val _cache = ConcurrentHashMap<Context, Res>()
 }
 
-object ContextualLifestyleProvider : LifestyleProvider({
-    ContextualLifestyle<Any>()
-})
+object ContextualLifestyleProvider : LifestyleProvider() {
+    var rooted = false
+        private set
+
+    override fun configure(owner: Any) {
+        if (owner is Scoped) {
+            rooted = owner.rooted
+        }
+    }
+
+    override fun createLifestyle() = ContextualLifestyle<Any>(rooted)
+}
 
 object ScopeQualifierProvider : ConstraintProvider(
         Qualifier(Scoped::class)
@@ -71,4 +85,4 @@ object ScopeQualifierProvider : ConstraintProvider(
 @UseFilterProvider(
         ContextualLifestyleProvider::class,
         ScopeQualifierProvider::class)
-annotation class Scoped
+annotation class Scoped(val rooted: Boolean = false)

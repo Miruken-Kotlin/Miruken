@@ -10,6 +10,8 @@ import kotlin.reflect.full.createType
 open class FilterSpecProvider(
         private val filterSpec: FilterSpec
 ): FilteringProvider {
+    private var _owner: Any? = null
+
     init {
         check (filterSpec.filterby != Filtering::class) {
             "Unspecified filter by is not allowed"
@@ -17,6 +19,10 @@ open class FilterSpecProvider(
     }
 
     override val required = filterSpec.required
+
+    override fun configure(owner: Any) {
+        _owner = owner
+    }
 
     override fun getFilters(
             binding:    MemberBinding,
