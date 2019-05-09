@@ -28,7 +28,7 @@ class Validation(
 
     override val policy get() = ValidatesPolicy
 
-    override fun getCallbackKey() = targetType
+    override fun getCallbackKey() = targetType?.kotlinType
 
     override val resultType: KType?
         get() = if (wantsAsync || isAsync) {

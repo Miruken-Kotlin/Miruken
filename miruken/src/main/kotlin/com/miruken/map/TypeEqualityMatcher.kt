@@ -1,8 +1,8 @@
 package com.miruken.map
 
-object EqualityMatcher : FormatMatching {
+object TypeEqualityMatcher : FormatMatching {
     override fun matches(
             annotation: Annotation,
             format:     Any
-    ) = (annotation as? Format)?.format?.equals(format) == true
+    ) = (annotation as? FormatType)?.format?.equals(format) == true
 }

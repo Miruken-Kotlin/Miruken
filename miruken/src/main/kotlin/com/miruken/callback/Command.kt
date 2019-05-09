@@ -30,7 +30,7 @@ open class Command(
     override val canBatch: Boolean
         get() = (callback as? BatchingCallback)?.canBatch != false
 
-    override fun getCallbackKey() = callbackType
+    override fun getCallbackKey() = callbackType?.kotlinType
 
     override var policy: CallbackPolicy = HandlesPolicy
 

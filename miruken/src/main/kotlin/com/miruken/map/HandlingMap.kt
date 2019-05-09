@@ -11,8 +11,8 @@ fun Handling.mapAsync(
         source:     Any,
         targetType: TypeReference,
         sourceType: TypeReference? = null,
-        target:     Any?              = null,
-        format:     Any?              = null
+        target:     Any?           = null,
+        format:     Any?           = null
 ): Promise<Any?> {
     val mapping = Mapping(source, targetType,
             sourceType, target, format).apply {
@@ -26,21 +26,21 @@ fun Handling.mapAsync(
 
 inline fun <reified T> Handling.map(
         source:     Any,
-        format:     Any?              = null,
+        format:     Any?           = null,
         sourceType: TypeReference? = null
 ) = map(source, typeOf<T>(), sourceType, null, format) as? T
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.mapAsync(
         source:     Any,
-        format:     Any?              = null,
+        format:     Any?           = null,
         sourceType: TypeReference? = null
 ) = mapAsync(source, typeOf<T>(), sourceType, null, format) as Promise<T?>
 
 inline fun <reified T: Any> Handling.mapInto(
         source:     Any,
         target:     T,
-        format:     Any?              = null,
+        format:     Any?           = null,
         sourceType: TypeReference? = null
 ) = map(source, typeOf<T>(), sourceType, target, format) as? T
 
@@ -48,6 +48,6 @@ inline fun <reified T: Any> Handling.mapInto(
 inline fun <reified T: Any> Handling.mapIntoAsync(
         source:     Any,
         target:     T,
-        format:     Any?              = null,
+        format:     Any?           = null,
         sourceType: TypeReference? = null
 ) = mapAsync(source, typeOf<T>(), sourceType, target, format) as Promise<T?>

@@ -11,8 +11,8 @@ class Mapping(
         val source:     Any,
         val targetType: TypeReference,
         val sourceType: TypeReference? = null,
-        val target:     Any?              = null,
-        val format:     Any?              = null
+        val target:     Any?           = null,
+        val format:     Any?           = null
 ) : Callback, AsyncCallback, DispatchingCallback {
 
     private var _result: Any? = null
@@ -24,8 +24,8 @@ class Mapping(
 
     override val policy get() = MapsPolicy
 
-    override fun getCallbackKey() =
-            sourceType?.let { targetType to it }
+    override fun getCallbackKey() = sourceType?.let {
+        targetType.kotlinType to it.kotlinType }
 
     override val resultType: KType? = targetType.kotlinType
             .takeIf { !wantsAsync && !isAsync }
