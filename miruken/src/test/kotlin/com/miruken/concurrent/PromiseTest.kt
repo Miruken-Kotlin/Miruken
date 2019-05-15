@@ -610,6 +610,20 @@ class PromiseTest {
         assertTrue(called)
     }
 
+    @Test fun `Cancels promise if any promise cancelled`() {
+        var called   = false
+        val promises = (1..5).mapIndexed { index, result ->
+            if (index == 3)
+                Promise<Boolean> { _, _ -> }.apply { cancel() }
+            else
+                Promise.resolve(result)
+        }
+        Promise.all(promises) cancelled {
+            called = true
+        }
+        assertTrue(called)
+    }
+
     @Test fun `Converts return into a promise`() {
         var called = false
         Promise.`try` {

@@ -27,14 +27,14 @@ inline fun <reified T: Any> Handling.commandAsync(callback: T) =
 fun Handling.commandAsync(
         callback:     Any,
         callbackType: TypeReference
-): Promise<Any> {
+): Promise<Any?> {
     val command = Command(callback, callbackType).apply {
         wantsAsync = true
     }
     return try {
         handle(command) failure {
             Promise.reject(NotHandledException(callback))
-        } ?: command.result as Promise<Any>
+        } ?: command.result as Promise<Any?>
     } catch (e: Throwable) {
         Promise.reject(e)
     }

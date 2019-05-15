@@ -34,12 +34,12 @@ open class Promise<out T>
 
     private var _fulfilled  = Event<T>()
     private var _rejected   = Event<Throwable>()
-    private var _onCancel   : (() -> Unit) = {}
+    private var _onCancel   = Event<Unit>()
     private var _result     : Any? = null
     private var _throwable  : Throwable? = null
     private val _completed  : AtomicBoolean = AtomicBoolean()
     private val _childCount : AtomicInteger = AtomicInteger()
-    private val _guard      = java.lang.Object()
+    private val _guard      = Object()
 
     @Volatile var state : PromiseState = PromiseState.PENDING
         protected set
@@ -70,19 +70,21 @@ open class Promise<out T>
             executor: PromiseExecutorCancelBlock<T>
     ) : this(mode) {
         try {
-            executor(::resolve, ::reject) { _onCancel = it }
+            executor(::resolve, ::reject) { onCancel ->
+                _onCancel += { onCancel() }
+            }
         } catch (e: Throwable) {
             reject(e)
         }
     }
 
-    constructor(resolved: T) : this(ChildCancelMode.ALL) {
+    constructor(resolved: T) : this(ChildCancelMode.ANY) {
         _result = resolved
         state   = PromiseState.FULFILLED
         _completed.set(true)
     }
 
-    constructor(rejected: Throwable) : this(ChildCancelMode.ALL) {
+    constructor(rejected: Throwable) : this(ChildCancelMode.ANY) {
         _throwable = rejected
         state      = when (rejected){
             is CancellationException -> PromiseState.CANCELLED
@@ -300,6 +302,7 @@ open class Promise<out T>
             synchronized (_guard) {
                 state = PromiseState.FULFILLED
                 _rejected.clear()
+                _onCancel.clear()
                 _guard.notifyAll()
                 _fulfilled(result)
                 _fulfilled.clear()
@@ -313,7 +316,7 @@ open class Promise<out T>
             val isCancellation = e is CancellationException
             if (isCancellation) {
                 try {
-                    _onCancel()
+                    _onCancel(Unit)
                 }
                 catch (t: Throwable) {
                     e.addSuppressed(t)
@@ -323,6 +326,7 @@ open class Promise<out T>
                 state = if (isCancellation) PromiseState.CANCELLED
                         else PromiseState.REJECTED
                 _fulfilled.clear()
+                _onCancel.clear()
                 _guard.notifyAll()
                 _rejected(e)
                 _rejected.clear()
@@ -341,8 +345,10 @@ open class Promise<out T>
         @Suppress("UNCHECKED_CAST")
         inline fun <reified S: Any?> resolve(result: S): Promise<S> =
                 if (S::class === Any::class && result is Promise<*>) {
-                    Promise<Any?> { suc, fail ->
-                        result.then(suc, fail) } as Promise<S>
+                    Promise<Any?>(result.cancelMode) { suc, fail, onCancel ->
+                        onCancel(result::cancel)
+                        result.then(suc, fail).cancelled(fail)
+                    } as Promise<S>
                 } else {
                     Promise(result)
                 }

@@ -52,6 +52,6 @@ class ValidationMapping : Handler() {
         ValidationErrors(culprit,
                 messages.takeUnless { it.isEmpty() }?.toTypedArray(),
                 children.takeUnless { it.isEmpty() }?.toTypedArray()
-                )
+        )
     }.toTypedArray()
 }

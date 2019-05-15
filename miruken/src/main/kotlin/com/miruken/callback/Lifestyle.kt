@@ -19,10 +19,7 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
         val parent = callback.parent
         if (parent == null || isCompatibleWithParent(parent)) {
             val instance = getInstance(callback, binding, next, composer)
-            if (instance != null) {
-                @Suppress("UNCHECKED_CAST")
-                return Promise.resolve(instance as Any) as Promise<Res>
-            }
+            if (instance != null)  return instance
         }
         return next.abort()
     }
@@ -34,7 +31,7 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
             binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling
-    ): Res?
+    ): Promise<Res>?
 }
 
 abstract class LifestyleProvider : FilteringProvider {

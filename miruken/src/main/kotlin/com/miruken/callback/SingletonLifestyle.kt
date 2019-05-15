@@ -1,10 +1,11 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.concurrent.Promise
 
 class SingletonLifestyle<Res> : Lifestyle<Res>() {
     @Volatile
-    private var _instance: Res? = null
+    private var _instance: Promise<Res>? = null
 
     override fun isCompatibleWithParent(parent: Inquiry) = true
 
@@ -13,14 +14,14 @@ class SingletonLifestyle<Res> : Lifestyle<Res>() {
             binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling
-    ): Res? {
+    ): Promise<Res>? {
         val val1 = _instance
         if (val1 != null) return val1
         return synchronized(this) {
             val val2 = _instance
             if (val2 != null) val2
             else {
-                val instance = next().get()
+                val instance = next()
                 _instance = instance
                 instance
             }

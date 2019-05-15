@@ -96,29 +96,44 @@ class PolicyMemberBinding(
             args.fold({ dispatcher.invoke(handler, it) },
                       { p -> p then { dispatcher.invoke(handler, it) }
             })
-        } else try {
+        } else {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
-                if (!proceed) notHandled()
-                (resolveArguments(callback, ruleArgs, callbackType, comp, typeBindings)
-                        ?: notHandled()).fold(
-                        { Promise.resolve(invoke(handler, it)) },
-                        { p -> p then { invoke(handler, it)} })
+                if (proceed) {
+                    resolveArguments(callback, ruleArgs, callbackType, comp, typeBindings)
+                            ?.fold( { Promise.resolve(invoke(handler, it)) },
+                                    { p -> p then { invoke(handler, it) } })
+                            ?: Promise.reject(NotHandledException(callback,
+                                    "${dispatcher.callable} is missing one or more dependencies"))
+                } else {
+                    Promise.reject(NotHandledException(callback,
+                            "${dispatcher.callable} was aborted"))
+                }
             }, { pipeline, next -> { comp, proceed ->
-                    if (!proceed) notHandled()
-                    pipeline.first.next(filterCallback, callback, this, comp,
-                        { c, p -> next((c ?: comp), p ?: true)
-                    }, pipeline.second)
+                    if (proceed) {
+                        pipeline.first.next(filterCallback, callback, this, comp,
+                                { c, p -> next((c ?: comp), p ?: true)
+                        }, pipeline.second)
+                    } else {
+                        Promise.reject(NotHandledException(
+                                "${dispatcher.callable} was aborted"))
+                    }
                 }
             })(composer, true)
-        } catch (e: Throwable) {
-            when (e) {
-                is HandleResultException -> return e.result
-                else -> throw e
+        }
+
+        if (result is Promise<*> && result.state == PromiseState.REJECTED) {
+            try {
+                result.get()
+            } catch (t: Throwable) {
+                if (t is NotHandledException) {
+                    results(result, strict)
+                    return HandleResult.NOT_HANDLED
+                }
             }
         }
 
         val accepted = policy.acceptResult(result, this)
-        if (accepted.handled  && result != null && result !is HandleResult) {
+        if (accepted.handled && result != null && result !is HandleResult) {
             if (!results(result, strict)) {
                 return if (accepted.stop)
                     HandleResult.NOT_HANDLED_AND_STOP

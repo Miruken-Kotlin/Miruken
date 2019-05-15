@@ -33,10 +33,10 @@ class ValidationMappingTest {
                                 errors = arrayOf("club not specified"))))
                 )
 
-        val exception = _mapping.map<ValidationException>(
-                errors,
+        val exception = _mapping.map<Exception>(errors,
                 sourceType = typeOf<Array<ValidationErrors>>(),
-                format     = Exception::class)
+                format     = Exception::class
+        ) as? ValidationException
 
         assertNotNull(exception)
 

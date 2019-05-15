@@ -34,7 +34,7 @@ fun Handling.resolveAsync(
     } ?: Inquiry(key, false).apply { wantsAsync = true }
     constraints?.invoke(ConstraintBuilder(inquiry))
     return handle(inquiry) success {
-        inquiry.result as? Promise<Any>
+        inquiry.result as? Promise<Any?>
     } ?: Promise.EMPTY
 }
 

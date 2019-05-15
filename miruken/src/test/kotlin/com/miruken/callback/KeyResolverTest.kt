@@ -235,13 +235,13 @@ class KeyResolverTest {
                 cancel:     CancelOrder,
                 repository: Promise<Repository<Order>>,
                 getOrders:  Lazy<Promise<List<Order>>>
-        ): Promise<Any> {
+        ): Promise<Any?> {
             cancel.order.status = OrderStatus.CANCELLED
             return getOrders.value.then {
                 assertEquals(0, it.size)
-                repository then { repo ->
+                (repository then { repo ->
                     repo.save(cancel.order)
-                }
+                }).flatten()
             }.flatten()
         }
     }

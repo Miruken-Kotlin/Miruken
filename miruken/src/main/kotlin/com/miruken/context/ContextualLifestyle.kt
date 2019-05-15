@@ -4,6 +4,7 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.bindings.ConstraintProvider
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.Qualifier
+import com.miruken.concurrent.Promise
 import java.util.concurrent.ConcurrentHashMap
 
 class ContextualLifestyle<Res>(val rooted: Boolean) : Lifestyle<Res>() {
@@ -22,28 +23,29 @@ class ContextualLifestyle<Res>(val rooted: Boolean) : Lifestyle<Res>() {
             binding:  MemberBinding,
             next:     Next<Res>,
             composer: Handling
-    ): Res? {
+    ): Promise<Res>? {
         val context = composer.resolve<Context>()?.let {
             if (rooted) it.root else it
         } ?: return null
         return _cache.getOrPut(context) {
-            val instance = next().get()
-            if (instance is Contextual) {
-                instance.context = context
-                val undo = instance.contextChanging.register(::changeContext)
-                context.contextEnded += { event ->
-                    _cache.remove(event.context)
-                    undo()
-                    (instance as? AutoCloseable)?.close()
-                    instance.context = null
+            next() then { instance ->
+                if (instance is Contextual) {
+                    instance.context = context
+                    val undo = instance.contextChanging.register(::changeContext)
+                    context.contextEnded += { event ->
+                        _cache.remove(event.context)
+                        undo()
+                        (instance as? AutoCloseable)?.close()
+                        instance.context = null
+                    }
+                } else {
+                    context.contextEnded += { event ->
+                        _cache.remove(event.context)
+                        (instance as? AutoCloseable)?.close()
+                    }
                 }
-            } else {
-                context.contextEnded += { event ->
-                    _cache.remove(event.context)
-                    (instance as? AutoCloseable)?.close()
-                }
+                instance
             }
-            instance
         }
     }
 
@@ -54,13 +56,14 @@ class ContextualLifestyle<Res>(val rooted: Boolean) : Lifestyle<Res>() {
         check(newContext == null) {
             "Managed instances cannot change context"
         }
-        _cache[oldContext]?.takeIf { it === event.contextual }?.also {
-            _cache.remove(oldContext)
-            (it as? AutoCloseable)?.close()
-        }
+        _cache[oldContext]?.get()
+                ?.takeIf { it === event.contextual }?.also {
+                    _cache.remove(oldContext)
+                    (it as? AutoCloseable)?.close()
+                }
     }
 
-    private val _cache = ConcurrentHashMap<Context, Res>()
+    private val _cache = ConcurrentHashMap<Context, Promise<Res>>()
 }
 
 object ContextualLifestyleProvider : LifestyleProvider() {

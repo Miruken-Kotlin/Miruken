@@ -52,7 +52,7 @@ fun <T, S, U> Promise<T>
 infix fun <T> Promise<T>
         .flatMapError(f: (Throwable) -> Promise<T>): Promise<T> =
         catch(f).then { res ->
-            res.fold({ it }, { Promise { suc, _ -> suc(it) }})
+            res.fold({ it }, { Promise(cancelMode) { suc, _ -> suc(it) }})
         }.flatten()
 
 fun <T, S> Promise<T>

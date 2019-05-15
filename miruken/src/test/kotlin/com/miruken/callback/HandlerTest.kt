@@ -197,6 +197,12 @@ class HandlerTest {
         assertTrue { foo.hasComposer }
     }
 
+    @Test fun `Replaces composer in filter`() {
+        val handler = FilterHandlerTests()
+        val bar = handler.command(Foo()) as? Bar
+        assertNotNull(bar)
+    }
+
     @Test fun `Rejects bounded callbacks generically`() {
         val handler = BoundedGenericHandler()
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(Bar()))
@@ -767,13 +773,15 @@ class HandlerTest {
         assertNotNull(app1)
         assertSame(view, app1.rootController.view)
         assertSame(view, app1.mainScreen)
+        assertTrue(app1.initialized)
         assertEquals(1, app1.initializeCount)
         assertTrue(app1.component1.initialized)
         assertTrue(app1.component2.initialized)
         val app2 = handler.with(view)
                 .resolve<Application<Controller<Screen, Bar>>>()
         assertSame(app1, app2)
-        assertEquals(1, app2?.initializeCount)
+        assertTrue(app2!!.initialized)
+        assertEquals(1, app2.initializeCount)
         val app3 = handler.with(view)
                 .resolve<App<Controller<Screen, Bar>>>()
         assertSame(app1, app3)
@@ -973,7 +981,7 @@ class HandlerTest {
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = kTypeOf<HandlerTest.ExceptionBehavior<Boo,String>>()
+        val otherType = kTypeOf<ExceptionBehavior<Boo,String>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
         assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(2, bindings.size)
@@ -987,7 +995,7 @@ class HandlerTest {
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = kTypeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        val otherType = kTypeOf<ExceptionBehavior<Boo,Unit>>()
         val bindings  = mutableMapOf<KTypeParameter, KType>()
         assertNotNull(openType.checkOpenConformance(otherType, bindings))
         assertEquals(1, bindings.size)
@@ -1000,7 +1008,7 @@ class HandlerTest {
                 KTypeProjection.invariant(
                         Filtering::class.typeParameters[1].createType()))
         )
-        val otherType = kTypeOf<HandlerTest.ExceptionBehavior<Boo,Unit>>()
+        val otherType = kTypeOf<ExceptionBehavior<Boo,Unit>>()
         assertFalse(openType.checkOpenConformance(otherType))
     }
 
@@ -1471,6 +1479,7 @@ class HandlerTest {
         constructor() : Initializing {
 
         override var initialized = false
+
         override fun initialize(): Promise<*>? {
             return Promise.delay(100) then {
                 initialized = true
@@ -1482,9 +1491,11 @@ class HandlerTest {
     }
 
     class InitializingComponent2
-    @Provides @Singleton
-    constructor() : Initializing {
+        @Provides @Singleton
+        constructor() : Initializing {
+
         override var initialized = false
+
         override fun initialize(): Promise<*>? {
             return Promise.delay(200) then {
                 initialized = true
@@ -1494,9 +1505,12 @@ class HandlerTest {
         }
     }
 
-    class FailedInitialization : Initializing {
+    class FailedInitialization
+        @Provides @Singleton
+        constructor(): Initializing {
+
         override var initialized = false
-        @Provides @Singleton constructor()
+
         override fun initialize(): Promise<*>? {
             return Promise.reject(InvalidStateException(
                     "Initializion failed"
@@ -1504,6 +1518,7 @@ class HandlerTest {
         }
 
         override fun failedInitialize(t: Throwable?) {
+            assertEquals("Initializion failed", t?.message)
         }
     }
 
@@ -1542,8 +1557,7 @@ class HandlerTest {
 
         @Handles
         fun handleStuff(command: Command): Promise<Any?>? {
-            val callback = command.callback
-            when (callback) {
+            when (val callback = command.callback) {
                 is Bar -> callback.handled = -99
                 else -> return null
             }
@@ -1612,6 +1626,17 @@ class HandlerTest {
         @Exceptions
         fun remove(boo: Boo) {
         }
+    }
+
+    class FilterHandlerTests : Handler() {
+        @Handles
+        @ReplaceComposer
+        fun handleFoo(foo: Foo, bar: Bar): Bar = bar
+
+        @Provides
+        fun <T: Any, R: Any?> createFilter(
+                inquiry: Inquiry
+        ): ReplaceComposerFilter<T,R> = ReplaceComposerFilter()
     }
 
     class RequestFilter<in T: Any, R: Any?> : Filtering<T, R> {
@@ -1707,6 +1732,23 @@ class HandlerTest {
     @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
     @UseFilter(LogFilter::class)
     annotation class Log
+
+    class ReplaceComposerFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
+        override var order: Int? = 1
+
+        override fun next(
+                callback:    Cb,
+                rawCallback: Any,
+                binding:     MemberBinding,
+                composer:    Handling,
+                next:        Next<Res>,
+                provider:    FilteringProvider?
+        ) = next(composer = composer.provide(Bar()))
+    }
+
+    @Target(AnnotationTarget.CLASS,AnnotationTarget.FUNCTION)
+    @UseFilter(ReplaceComposerFilter::class)
+    annotation class ReplaceComposer
 
     class AbortingFilter<R: Any?> : Filtering<Bar, R> {
         override var order: Int? = 0

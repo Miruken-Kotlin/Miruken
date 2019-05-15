@@ -3,6 +3,7 @@ package com.miruken.callback
 import com.miruken.TypeReference
 import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
 import com.miruken.concurrent.all
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
@@ -17,7 +18,8 @@ open class Command(
         DispatchingCallback {
 
     private var _result: Any? = null
-    private val _results = mutableListOf<Any>()
+    private val _promises     = mutableListOf<Promise<*>>()
+    private val _results      = mutableListOf<Any>()
 
     override var wantsAsync: Boolean = false
 
@@ -53,15 +55,12 @@ open class Command(
     override var result: Any?
         get() {
             if (_result == null) {
-                if (!many) {
-                    if (_results.isNotEmpty()) {
-                        _result = _results.first()
+                _result = if (isAsync) {
+                    Promise.all(_promises) then {
+                        if (many) _results else _results.firstOrNull()
                     }
-                } else if (isAsync) {
-                    _result = Promise.all(_results
-                            .map { Promise.resolve(it) })
                 } else {
-                    _result = _results
+                    if (many) _result else _results.firstOrNull()
                 }
             }
             if (isAsync) {
@@ -81,10 +80,24 @@ open class Command(
 
     @Suppress("UNUSED_PARAMETER")
     fun respond(response: Any, strict: Boolean) : Boolean {
-        if ((!many && _results.isNotEmpty())) return false
-        if (response is Promise<*>) isAsync = true
-        _results.add(response)
-        _result = null
+        val accepted = include(response)
+        if (accepted) _result = null
+        return accepted
+    }
+
+    private fun include(resolution: Any): Boolean {
+        val res = (resolution as? Promise<*>)
+                ?.takeIf { it.state == PromiseState.FULFILLED }
+                ?.let { it.get() } ?: resolution
+
+        if (res is Promise<*>) {
+            isAsync = true
+            _promises.add(res.then {
+                if (it != null) _results.add(it)
+            })
+        } else {
+            _results.add(res)
+        }
         return true
     }
 

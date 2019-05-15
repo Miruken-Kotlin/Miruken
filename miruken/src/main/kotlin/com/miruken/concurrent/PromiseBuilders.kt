@@ -1,6 +1,7 @@
 package com.miruken.concurrent
 
 import java.util.*
+import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.schedule
@@ -12,19 +13,24 @@ fun Promise.Companion.all(input: Collection<Any?>) : Promise<List<Any?>> {
     if (input.isEmpty())
         return resolve(emptyList())
 
-    val pending   = AtomicInteger(0)
-    val promises  = input.map(::resolve)
+    val pending  = AtomicInteger(0)
+    val promises = input.map {
+        if (it is Promise<*>) it else resolve(it)
+    }
     val fulfilled = arrayOfNulls<Any>(promises.size)
 
-    return Promise { resolveChild, rejectChild ->
+    return Promise(ChildCancelMode.ANY) { resolve, reject, onCancel ->
+        onCancel {
+            promises.forEach { it.cancel() }
+        }
         promises.forEachIndexed { index, promise ->
-            promise.then {
+            promise.then({
                 fulfilled[index] = it
                 @Suppress("UNCHECKED_CAST")
                 if (pending.incrementAndGet() == promises.size)
-                    resolveChild(fulfilled.toList())
-            }.catch {
-                rejectChild(it)
+                    resolve(fulfilled.toList())
+            }, reject).cancelled {
+                reject(CancellationException())
             }
         }
     }
