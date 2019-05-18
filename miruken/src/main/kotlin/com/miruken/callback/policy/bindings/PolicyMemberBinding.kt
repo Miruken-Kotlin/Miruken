@@ -89,22 +89,31 @@ class PolicyMemberBinding(
             emptyList()
         }
 
+        var completed = true
+
         val result = if (filters.isEmpty()) {
-            val args = resolveArguments(callback, ruleArgs,
-                    callbackType, composer, typeBindings)
-                    ?: return HandleResult.NOT_HANDLED
-            args.fold({ dispatcher.invoke(handler, it) },
-                      { p -> p then { dispatcher.invoke(handler, it) }
-            })
+            val args = resolveArguments(callback, ruleArgs, callbackType, composer, typeBindings)
+            if (args == null) {
+                completed = false
+            } else {
+                args.fold({ dispatcher.invoke(handler, it) },
+                          { p -> p then { dispatcher.invoke(handler, it) }
+                })
+            }
         } else {
             filters.foldRight({ comp: Handling, proceed: Boolean ->
                 if (proceed) {
-                    resolveArguments(callback, ruleArgs, callbackType, comp, typeBindings)
-                            ?.fold( { Promise.resolve(invoke(handler, it)) },
-                                    { p -> p then { invoke(handler, it) } })
-                            ?: Promise.reject(NotHandledException(callback,
-                                    "${dispatcher.callable} is missing one or more dependencies"))
+                    val args = resolveArguments(callback, ruleArgs, callbackType, comp, typeBindings)
+                    if (args == null) {
+                        completed = false
+                        Promise.reject(NotHandledException(callback,
+                                "${dispatcher.callable} is missing one or more dependencies"))
+                    } else {
+                        args.fold({ Promise.resolve(invoke(handler, it)) },
+                                  { p -> p then { invoke(handler, it) } })
+                    }
                 } else {
+                    completed = false
                     Promise.reject(NotHandledException(callback,
                             "${dispatcher.callable} was aborted"))
                 }
@@ -114,6 +123,7 @@ class PolicyMemberBinding(
                                 { c, p -> next((c ?: comp), p ?: true)
                         }, pipeline.second)
                     } else {
+                        completed = false
                         Promise.reject(NotHandledException(
                                 "${dispatcher.callable} was aborted"))
                     }
@@ -121,15 +131,8 @@ class PolicyMemberBinding(
             })(composer, true)
         }
 
-        if (result is Promise<*> && result.state == PromiseState.REJECTED) {
-            try {
-                result.get()
-            } catch (t: Throwable) {
-                if (t is NotHandledException) {
-                    results(result, strict)
-                    return HandleResult.NOT_HANDLED
-                }
-            }
+        if (!completed) {
+            return HandleResult.NOT_HANDLED
         }
 
         val accepted = policy.acceptResult(result, this)

@@ -70,4 +70,8 @@ inline fun <reified T: Any> Handling.handle(
         callback: T,
         greedy:   Boolean   = false,
         composer: Handling? = null
-) = handle(callback, typeOf<T>(), greedy, composer)
+): HandleResult {
+    val type = typeOf<T>().getMostSpecificType(callback)
+            ?: error("This should never happen")
+    return handle(callback, type, greedy, composer)
+}

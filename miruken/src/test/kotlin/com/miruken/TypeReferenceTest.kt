@@ -3,100 +3,117 @@ package com.miruken
 import com.miruken.runtime.isCompatibleWith
 import org.junit.Test
 import kotlin.reflect.full.isSubtypeOf
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class TypeReferenceTest {
-    class Foo
-    class Bar<T>
+    open class Foo
+    class SpecialFoo : Foo()
+    open class Bar<T>
+    class SpecialBar<T> : Bar<T>()
 
     @Test fun `Can obtain KType of T`() {
-        kotlin.test.assertEquals(typeOf<Set<String>>(), typeOf<Set<String>>())
-        kotlin.test.assertNotEquals(typeOf<Set<String>>().type, typeOf<Set<Int>>().type)
-        kotlin.test.assertEquals(typeOf<List<*>>().type, typeOf<List<Any>>().type)
+        assertEquals(typeOf<Set<String>>(), typeOf<Set<String>>())
+        assertNotEquals(typeOf<Set<String>>().type, typeOf<Set<Int>>().type)
+        assertEquals(typeOf<List<*>>().type, typeOf<List<Any>>().type)
     }
 
     @Test fun `Can obtain component KType of Unit`() {
         val unitType = typeOf<Unit>()
-        kotlin.test.assertTrue(unitType.kotlinType.isSubtypeOf(TypeReference.UNIT_TYPE))
+        assertTrue(unitType.kotlinType.isSubtypeOf(TypeReference.UNIT_TYPE))
     }
 
     @Test fun `Can obtain component KType of Any`() {
         val anyType = typeOf<Any>()
-        kotlin.test.assertTrue(anyType.kotlinType.isSubtypeOf(TypeReference.ANY_TYPE))
+        assertTrue(anyType.kotlinType.isSubtypeOf(TypeReference.ANY_TYPE))
     }
 
     @Test fun `Can obtain component KType of List`() {
         val listType = typeOf<List<String>>()
-        kotlin.test.assertTrue(listType.kotlinType
+        assertTrue(listType.kotlinType
                 .isSubtypeOf(typeOf<List<*>>().kotlinType))
         val componentType = listType.kotlinType.arguments.single().type
-        kotlin.test.assertEquals(kTypeOf<String>(), componentType)
+        assertEquals(kTypeOf<String>(), componentType)
     }
 
     @Test fun `Can obtain KType of Function`() {
         val listType = kTypeOf<(String) -> Int>()
-        kotlin.test.assertEquals(Function1::class, listType.classifier)
-        kotlin.test.assertEquals(kTypeOf<String>(), listType.arguments[0].type)
-        kotlin.test.assertEquals(kTypeOf<Int>(), listType.arguments[1].type)
+        assertEquals(Function1::class, listType.classifier)
+        assertEquals(kTypeOf<String>(), listType.arguments[0].type)
+        assertEquals(kTypeOf<Int>(), listType.arguments[1].type)
     }
 
     @Test fun `Can check KType assignability`() {
-        kotlin.test.assertTrue(isCompatibleWith(
+        assertTrue(isCompatibleWith(
                 kTypeOf<List<*>>(), kTypeOf<List<String>>()))
-        kotlin.test.assertFalse(isCompatibleWith(
+        assertFalse(isCompatibleWith(
                 kTypeOf<List<Foo>>(), kTypeOf<List<*>>()))
-        kotlin.test.assertFalse(isCompatibleWith(
+        assertFalse(isCompatibleWith(
                 kTypeOf<List<Int>>(), kTypeOf<List<String>>()))
     }
 
     @Test fun `Can check KClass assignability`() {
-        kotlin.test.assertTrue(isCompatibleWith(Foo::class, Foo()))
-        kotlin.test.assertTrue(isCompatibleWith(Foo::class, Foo()::class))
-        kotlin.test.assertTrue(isCompatibleWith(Foo::class, Foo().javaClass))
-        kotlin.test.assertFalse(isCompatibleWith(Foo(), Foo::class))
-        kotlin.test.assertFalse(isCompatibleWith(String::class, Foo()::class))
-        kotlin.test.assertTrue(isCompatibleWith(Bar::class, Bar<Int>()::class))
+        assertTrue(isCompatibleWith(Foo::class, Foo()))
+        assertTrue(isCompatibleWith(Foo::class, Foo()::class))
+        assertTrue(isCompatibleWith(Foo::class, Foo().javaClass))
+        assertFalse(isCompatibleWith(Foo(), Foo::class))
+        assertFalse(isCompatibleWith(String::class, Foo()::class))
+        assertTrue(isCompatibleWith(Bar::class, Bar<Int>()::class))
     }
 
     @Test fun `Can check mixed assignability`() {
-        kotlin.test.assertTrue(isCompatibleWith(kTypeOf<Foo>(), Foo()))
-        kotlin.test.assertTrue(isCompatibleWith(Foo::class, kTypeOf<Foo>()))
-        kotlin.test.assertTrue(isCompatibleWith(kTypeOf<Foo>(), Foo::class))
-        kotlin.test.assertFalse(isCompatibleWith(Foo(), kTypeOf<Foo>()))
-        kotlin.test.assertFalse(isCompatibleWith(kTypeOf<Bar<String>>(), Bar<String>()))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), Foo()))
+        assertTrue(isCompatibleWith(Foo::class, kTypeOf<Foo>()))
+        assertTrue(isCompatibleWith(kTypeOf<Foo>(), Foo::class))
+        assertFalse(isCompatibleWith(Foo(), kTypeOf<Foo>()))
+        assertFalse(isCompatibleWith(kTypeOf<Bar<String>>(), Bar<String>()))
     }
 
     @Test fun `Can check primitive assignability`() {
-        kotlin.test.assertTrue(isCompatibleWith(kTypeOf<Int>(), 2))
-        kotlin.test.assertTrue(isCompatibleWith(kTypeOf<Int>(), Int::class))
-        kotlin.test.assertTrue(isCompatibleWith(Int::class, 2))
-        kotlin.test.assertTrue(isCompatibleWith(kTypeOf<Int>(), 2::class.java))
+        assertTrue(isCompatibleWith(kTypeOf<Int>(), 2))
+        assertTrue(isCompatibleWith(kTypeOf<Int>(), Int::class))
+        assertTrue(isCompatibleWith(Int::class, 2))
+        assertTrue(isCompatibleWith(kTypeOf<Int>(), 2::class.java))
     }
 
     @Test fun `Can determine KType covariance`() {
-        kotlin.test.assertTrue(typeOf<MutableList<Int>>()
+        assertTrue(typeOf<MutableList<Int>>()
                 .kotlinType.isSubtypeOf(kTypeOf<MutableList<Any>>()))
-        kotlin.test.assertFalse(typeOf<MutableList<Any>>()
+        assertFalse(typeOf<MutableList<Any>>()
                 .kotlinType.isSubtypeOf(kTypeOf<MutableList<Int>>()))
     }
 
     @Test fun `Can determine KType wildcard covariance`() {
-        kotlin.test.assertTrue(typeOf<MutableList<Int>>()
+        assertTrue(typeOf<MutableList<Int>>()
                 .kotlinType.isSubtypeOf(kTypeOf<MutableList<*>>()))
-        kotlin.test.assertFalse(typeOf<MutableList<*>>()
+        assertFalse(typeOf<MutableList<*>>()
                 .kotlinType.isSubtypeOf(kTypeOf<MutableList<Int>>()))
     }
 
     @Test fun `Can determine KType contravariance`() {
-        kotlin.test.assertTrue(kTypeOf<Comparable<Any>>()
+        assertTrue(kTypeOf<Comparable<Any>>()
                 .isSubtypeOf(kTypeOf<Comparable<String>>()))
-        kotlin.test.assertFalse(kTypeOf<Comparable<String>>()
+        assertFalse(kTypeOf<Comparable<String>>()
                 .isSubtypeOf(kTypeOf<Comparable<Any>>()))
     }
 
     @Test fun `Can determine KType wildcard contravariance`() {
-        kotlin.test.assertFalse(kTypeOf<Comparable<*>>()
+        assertFalse(kTypeOf<Comparable<*>>()
                 .isSubtypeOf(kTypeOf<Comparable<String>>()))
-        kotlin.test.assertTrue(kTypeOf<Comparable<String>>()
+        assertTrue(kTypeOf<Comparable<String>>()
                 .isSubtypeOf(kTypeOf<Comparable<*>>()))
+    }
+
+    @Test fun `Can obtain specific type of instance`() {
+        val type = typeOf<Foo>().getMostSpecificType(SpecialFoo())
+        assertEquals(typeOf<SpecialFoo>().kotlinType, type?.kotlinType)
+        assertEquals(SpecialFoo::class.java, type?.type)
+    }
+
+    @Test fun `Cannot obtain specific type of generic instance`() {
+        val type = typeOf<Bar<String>>().getMostSpecificType(SpecialBar<String>())
+        assertEquals(typeOf<Bar<String>>().kotlinType, type?.kotlinType)
     }
 }

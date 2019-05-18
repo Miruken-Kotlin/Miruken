@@ -107,7 +107,7 @@ class HandlerTest {
         val bar     = Bar()
         val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(bar))
-        assertTrue { bar.hasComposer }
+        assertTrue(bar.hasComposer)
         assertEquals(1, bar.handled)
         assertEquals(HandleResult.NOT_HANDLED, handler.handle(bar))
         assertEquals(2, bar.handled)
@@ -118,7 +118,7 @@ class HandlerTest {
         val handler = InterfaceHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(1, foo.handled)
-        assertTrue { foo.hasComposer }
+        assertTrue(foo.hasComposer)
     }
 
     @Test fun `Handles callbacks covariantly`() {
@@ -126,7 +126,15 @@ class HandlerTest {
         val handler = SimpleHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(2, foo.handled)
-        assertTrue { foo.hasComposer }
+        assertTrue(foo.hasComposer)
+    }
+
+    @Test fun `Handles callbacks using runtime type`() {
+        val foo: Foo = SpecialFoo()
+        val handler  = SimpleHandler()
+        assertEquals(HandleResult.HANDLED, handler.handle(foo))
+        assertEquals(2, foo.handled)
+        assertTrue(foo.hasComposer)
     }
 
     @Test fun `Handles composed callbacks`() {
@@ -194,7 +202,7 @@ class HandlerTest {
         val handler = BoundedGenericHandler()
         assertEquals(HandleResult.HANDLED, handler.handle(foo))
         assertEquals(1, foo.handled)
-        assertTrue { foo.hasComposer }
+        assertTrue(foo.hasComposer)
     }
 
     @Test fun `Replaces composer in filter`() {

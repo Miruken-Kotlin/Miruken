@@ -8,6 +8,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.full.withNullability
 import kotlin.reflect.jvm.javaType
@@ -15,6 +16,26 @@ import kotlin.reflect.jvm.javaType
 interface TypeReference {
     val type:       Type
     val kotlinType: KType
+
+    fun getMostSpecificType(instance: Any) =
+            (kotlinType.classifier as? KClass<*>)?.let {
+            val instanceClass = instance::class
+            when {
+                instanceClass == it -> this
+                instanceClass.isSubclassOf(it) -> {
+                    if (instanceClass.typeParameters.isEmpty()) {
+                        val javaClass = instanceClass.java
+                        GivenTypeReference(
+                                TypeToKTypeMapping.getOrPut(javaClass) {
+                                    instanceClass.createType()
+                                }, javaClass)
+                    } else {
+                        this
+                    }
+                }
+                else -> null
+            }
+        }
 
     companion object {
         fun getType(key: Any?): Type? = when(key) {
@@ -79,16 +100,19 @@ abstract class SuperTypeReference<T>
 }
 
 class GivenTypeReference(
-        override val kotlinType: KType
+        override val kotlinType: KType,
+        override val type:       Type
 ) : TypeReferenceImpl() {
-    override val type: Type
+
+    constructor(kotlinType: KType) : this(kotlinType,
+            when (val javaType = kotlinType.javaType) {
+                is Class<*> -> javaType
+                is ParameterizedType -> javaType.rawType
+                else -> error("Unable to determine java type from kotlin type '$kotlinType'")
+            }
+    )
 
     init {
-        type = when (val javaType = kotlinType.javaType) {
-            is Class<*> -> javaType
-            is ParameterizedType -> javaType.rawType
-            else -> error("Unable to determine java type from kotlin type '$kotlinType'")
-        }
         TypeToKTypeMapping.putIfAbsent(type, kotlinType)
     }
 }
