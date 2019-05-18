@@ -69,8 +69,8 @@ fun Handling.map(
         source:     Any,
         targetType: TypeReference,
         sourceType: TypeReference? = null,
-        target:     Any?              = null,
-        format:     Any?              = null
+        target:     Any?           = null,
+        format:     Any?           = null
 ): Any? {
     val mapping = Mapping(source, targetType,
             sourceType, target, format)

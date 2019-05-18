@@ -2,7 +2,6 @@ package com.miruken.validate
 
 import com.miruken.callback.Handling
 import com.miruken.map.map
-import com.miruken.typeOf
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -24,18 +23,17 @@ class ValidationMappingTest {
 
     @Test
     fun `Maps validation errors to a ValidationException`() {
-        val errors = arrayOf(
+        val mapping = arrayOf(
                 ValidationErrors("name",
                         errors = arrayOf("name cannot be empty")),
                 ValidationErrors("certification",
                         errors = arrayOf("certification expired"),
                         nested = arrayOf(ValidationErrors("club",
                                 errors = arrayOf("club not specified"))))
-                )
+                ).let(::ValidationErrorMapping)
 
-        val exception = _mapping.map<Exception>(errors,
-                sourceType = typeOf<Array<ValidationErrors>>(),
-                format     = Exception::class
+        val exception = _mapping.map<Throwable>(
+                mapping, format = Throwable::class
         ) as? ValidationException
 
         assertNotNull(exception)

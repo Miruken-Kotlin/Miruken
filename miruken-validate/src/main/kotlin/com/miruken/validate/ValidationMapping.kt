@@ -1,5 +1,6 @@
 package com.miruken.validate
 
+import com.miruken.api.NamedType
 import com.miruken.callback.Handler
 import com.miruken.map.FormatType
 import com.miruken.map.Maps
@@ -11,16 +12,28 @@ data class ValidationErrors(
     val nested:       Array<ValidationErrors>? = null
 )
 
+@Suppress("ArrayInDataClass")
+data class ValidationErrorMapping(
+        val errors: Array<ValidationErrors>
+) : NamedType {
+    override val typeName: String = ValidationErrorMapping.typeName
+
+    companion object : NamedType {
+        override val typeName =
+                "Miruken.Validate.ValidationErrors[], Miruken.Validate"
+    }
+}
+
 class ValidationMapping : Handler() {
     @Maps
-    @FormatType(Exception::class)
+    @FormatType(Throwable::class)
     fun map(exception: ValidationException) =
-            createErrors(exception.outcome)
+            ValidationErrorMapping(createErrors(exception.outcome))
 
     @Maps
-    @FormatType(Exception::class)
-    fun map(errors: Array<ValidationErrors>) =
-            ValidationException(createOutcome(errors))
+    @FormatType(Throwable::class)
+    fun map(mapping: ValidationErrorMapping) =
+            ValidationException(createOutcome(mapping.errors))
 
     private fun createOutcome(
             errors: Array<ValidationErrors>
