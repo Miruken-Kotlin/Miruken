@@ -16,7 +16,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
 
-class LazyHandlerDescriptorFactory(
+class MutableHandlerDescriptorFactory(
         private val visitor: HandlerDescriptorVisitor? = null
 ) : HandlerDescriptorFactory {
 
@@ -213,6 +213,6 @@ class LazyHandlerDescriptorFactory(
     }
 
     companion object {
-        val DEFAULT = LazyHandlerDescriptorFactory()
+        val DEFAULT = MutableHandlerDescriptorFactory()
     }
 }

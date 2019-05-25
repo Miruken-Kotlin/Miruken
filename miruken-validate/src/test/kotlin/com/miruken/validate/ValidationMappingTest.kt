@@ -1,6 +1,11 @@
 package com.miruken.validate
 
 import com.miruken.callback.Handling
+import com.miruken.callback.TypeHandlers
+import com.miruken.callback.infer
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.getDescriptor
 import com.miruken.map.map
 import org.junit.Before
 import org.junit.Rule
@@ -16,13 +21,19 @@ class ValidationMappingTest {
 
     private lateinit var _mapping: Handling
 
+    private lateinit var _factory: HandlerDescriptorFactory
+
     @Before
     fun setup() {
         _mapping = ValidationMapping()
+        _factory = MutableHandlerDescriptorFactory()
+        HandlerDescriptorFactory.useFactory(_factory)
     }
 
     @Test
     fun `Maps validation errors to a ValidationException`() {
+        _factory.getDescriptor<ValidationMapping>()
+
         val mapping = arrayOf(
                 ValidationErrors("name",
                         errors = arrayOf("name cannot be empty")),
@@ -32,7 +43,7 @@ class ValidationMappingTest {
                                 errors = arrayOf("club not specified"))))
                 ).let(::ValidationErrorMapping)
 
-        val exception = _mapping.map<Throwable>(
+        val exception = TypeHandlers.infer.map<Throwable>(
                 mapping, format = Throwable::class
         ) as? ValidationException
 

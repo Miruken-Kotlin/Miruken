@@ -15,7 +15,7 @@ class LazyHandlerDescriptorFactoryTest {
 
     @Before
     fun setup() {
-        factory = LazyHandlerDescriptorFactory()
+        factory = MutableHandlerDescriptorFactory()
         HandlerDescriptorFactory.useFactory(factory)
     }
 
@@ -96,7 +96,7 @@ class LazyHandlerDescriptorFactoryTest {
 
     @Test fun `Visits all descriptor member bindings`() {
         val bindings = mutableListOf<MemberBinding>()
-        val factory  = LazyHandlerDescriptorFactory { descriptor, binding ->
+        val factory  = MutableHandlerDescriptorFactory { descriptor, binding ->
             assertSame(ExampleHandler::class, descriptor.handlerClass)
             bindings.add(binding)
         }

@@ -1,7 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.callback.policy.bindings.QualifierFactory
 import com.miruken.callback.policy.getDescriptor
@@ -18,7 +18,7 @@ class HandlerBindingTest {
     fun setup() {
         _handler = TypeHandlers
         HandlerDescriptorFactory.useFactory(
-                LazyHandlerDescriptorFactory().apply {
+                MutableHandlerDescriptorFactory().apply {
             getDescriptor<Client>()
             getDescriptor<LocalConfiguration>()
             getDescriptor<RemoteConfiguration>()

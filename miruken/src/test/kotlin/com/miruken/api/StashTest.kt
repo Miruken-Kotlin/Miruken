@@ -2,7 +2,7 @@ package com.miruken.api
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
@@ -21,7 +21,7 @@ class StashTest {
 
     @Before
     fun setup() {
-       HandlerDescriptorFactory.useFactory(LazyHandlerDescriptorFactory())
+       HandlerDescriptorFactory.useFactory(MutableHandlerDescriptorFactory())
     }
 
     @Test fun `Adds to stash`() {

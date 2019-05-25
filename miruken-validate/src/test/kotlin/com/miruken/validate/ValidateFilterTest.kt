@@ -2,7 +2,7 @@ package com.miruken.validate
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.getDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.test.assertAsync
@@ -24,7 +24,7 @@ class ValidateFilterTest {
 
     @Before
     fun setup() {
-        factory = LazyHandlerDescriptorFactory().apply {
+        factory = MutableHandlerDescriptorFactory().apply {
             getDescriptor<BeanValidator>()
             getDescriptor<ValidateFilter<*,*>>()
             getDescriptor<TeamHandler>()

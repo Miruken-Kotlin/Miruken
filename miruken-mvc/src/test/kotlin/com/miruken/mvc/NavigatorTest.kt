@@ -2,7 +2,7 @@ package com.miruken.mvc
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.getDescriptor
 import com.miruken.context.Context
 import com.miruken.context.Scoped
@@ -32,7 +32,7 @@ class NavigatorTest {
         navigator   = Navigator(TestViewRegion())
         rootContext.addHandlers(navigator, TypeHandlers)
 
-        factory = LazyHandlerDescriptorFactory().apply {
+        factory = MutableHandlerDescriptorFactory().apply {
             getDescriptor<HelloController>()
             getDescriptor<GoodbyeController>()
             getDescriptor<PartialController>()

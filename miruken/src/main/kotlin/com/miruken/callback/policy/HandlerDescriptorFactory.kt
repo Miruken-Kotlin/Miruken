@@ -37,7 +37,7 @@ interface HandlerDescriptorFactory {
         private var factory: HandlerDescriptorFactory? = null
 
         val current: HandlerDescriptorFactory
-            get() = factory ?: LazyHandlerDescriptorFactory.DEFAULT
+            get() = factory ?: MutableHandlerDescriptorFactory.DEFAULT
 
         fun useFactory(factory: HandlerDescriptorFactory) {
             this.factory = factory

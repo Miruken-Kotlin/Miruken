@@ -5,7 +5,7 @@ package com.miruken.callback
 import com.miruken.Initializing
 import com.miruken.TypeReference
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.LazyHandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.PolicyRejectedException
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
@@ -39,7 +39,7 @@ class HandlerTest {
 
     @Before
     fun setup() {
-        factory = LazyHandlerDescriptorFactory()
+        factory = MutableHandlerDescriptorFactory()
         HandlerDescriptorFactory.useFactory(factory)
     }
 

@@ -2,6 +2,8 @@ package com.miruken.validate
 
 import com.miruken.api.NamedType
 import com.miruken.callback.Handler
+import com.miruken.callback.Provides
+import com.miruken.callback.Singleton
 import com.miruken.map.FormatType
 import com.miruken.map.Maps
 
@@ -24,7 +26,10 @@ data class ValidationErrorMapping(
     }
 }
 
-class ValidationMapping : Handler() {
+class ValidationMapping
+    @Provides @Singleton
+    constructor() : Handler() {
+
     @Maps
     @FormatType(Throwable::class)
     fun map(exception: ValidationException) =
