@@ -1,10 +1,11 @@
 package com.miruken
 
 import com.miruken.callback.Handler
+import com.miruken.callback.Provider
 import com.miruken.callback.execute
-import com.miruken.callback.policy.Bar
-import com.miruken.callback.policy.Foo
+import com.miruken.callback.policy.*
 import com.miruken.callback.with
+import org.junit.Before
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertFailsWith
@@ -13,6 +14,12 @@ import kotlin.test.assertTrue
 
 @Suppress("UNUSED_ANONYMOUS_PARAMETER")
 class TargetActionBuilderTest {
+    @Before
+    fun setup() {
+        val factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<Provider>()
+        HandlerDescriptorFactory.useFactory(factory)
+    }
     @Test fun `Creates single argument action`() {
         val foo    = Foo()
         var called = false

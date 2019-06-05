@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
-import kotlin.reflect.KType
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
 
@@ -23,11 +22,19 @@ class MutableHandlerDescriptorFactory(
     private val _descriptors =
             ConcurrentHashMap<KClass<*>, Lazy<HandlerDescriptor>>()
 
-    override fun getDescriptor(handlerClass: KClass<*>): HandlerDescriptor? = try {
+    override fun getDescriptor(handlerClass: KClass<*>) =
+        _descriptors[handlerClass]?.value
+
+    override fun registerDescriptor(
+            handlerClass:  KClass<*>,
+            customVisitor: HandlerDescriptorVisitor?
+    ): HandlerDescriptor = try {
         _descriptors.getOrPut(handlerClass) {
-            lazy { createDescriptor(handlerClass, visitor) }
+            lazy { createDescriptor(handlerClass, customVisitor) }
         }.value.also {
-            handlerClass.companionObject?.run(::getDescriptor)
+            handlerClass.companionObject?.run {
+                registerDescriptor(this, customVisitor)
+            }
         }
     } catch (e: Throwable) {
         _descriptors.remove(handlerClass)
@@ -38,27 +45,27 @@ class MutableHandlerDescriptorFactory(
             policy:       CallbackPolicy,
             callback:     Any,
             callbackType: TypeReference?
-    ) = getHandlerTypes(policy, callback, callbackType, true, false)
+    ) = getDescriptors(policy, callback, callbackType, instances = true, types = false)
 
     override fun getTypeHandlers(
             policy:       CallbackPolicy,
             callback:     Any,
             callbackType: TypeReference?
-    ) = getHandlerTypes(policy, callback, callbackType, false, true)
+    ) = getDescriptors(policy, callback, callbackType, instances = false, types = true)
 
     override fun getCallbackHandlers(
             policy:       CallbackPolicy,
             callback:     Any,
             callbackType: TypeReference?
-    ) = getHandlerTypes(policy, callback, callbackType, true, true)
+    ) = getDescriptors(policy, callback, callbackType, instances = true, types = true)
 
-    private fun getHandlerTypes(
+    private fun getDescriptors(
             policy:       CallbackPolicy,
             callback:     Any,
             callbackType: TypeReference? = null,
             instances:    Boolean = false,
             types:        Boolean = false
-    ): List<KType> {
+    ): List<HandlerDescriptor> {
         if (_descriptors.isEmpty()) return emptyList()
         val invariants   = mutableListOf<PolicyMemberBinding>()
         val compatible   = mutableListOf<PolicyMemberBinding>()
@@ -85,7 +92,9 @@ class MutableHandlerDescriptorFactory(
             }
         }
 
-        return (invariants + compatible).map { it.dispatcher.owningType }
+        return (invariants + compatible).mapNotNull {
+            getDescriptor(it.dispatcher.owningClass)
+        }
     }
 
     override fun getPolicyMembers(policy: CallbackPolicy, key: Any) =
@@ -111,8 +120,8 @@ class MutableHandlerDescriptorFactory(
             }
 
     private fun createDescriptor(
-            handlerClass: KClass<*>,
-            visitor:      HandlerDescriptorVisitor? = null
+            handlerClass:  KClass<*>,
+            customVisitor: HandlerDescriptorVisitor?
     ): HandlerDescriptor {
         validate(handlerClass)
         var instancePolicies: MutableMap<CallbackPolicy, MutableList<PolicyMemberBinding>>? = null
@@ -186,12 +195,14 @@ class MutableHandlerDescriptorFactory(
                 } ?: emptyMap()
         )
 
-        if (visitor != null) {
+        if (visitor != null || customVisitor != null) {
             instancePolicies?.values?.flatten()?.forEach {
-                visitor(descriptor, it)
+                visitor?.invoke(descriptor, it)
+                customVisitor?.invoke(descriptor, it)
             }
             typePolicies?.values?.flatten()?.forEach {
-                visitor(descriptor, it)
+                visitor?.invoke(descriptor, it)
+                customVisitor?.invoke(descriptor, it)
             }
         }
 
@@ -210,9 +221,5 @@ class MutableHandlerDescriptorFactory(
               !handlerClass.isSubclassOf(Collection::class)) {
             "Handlers cannot be collections or arrays: ${handlerClass.qualifiedName}"
         }
-    }
-
-    companion object {
-        val DEFAULT = MutableHandlerDescriptorFactory()
     }
 }

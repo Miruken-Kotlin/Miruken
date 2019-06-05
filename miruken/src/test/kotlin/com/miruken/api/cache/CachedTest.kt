@@ -6,6 +6,9 @@ import com.miruken.api.StockQuoteHandler
 import com.miruken.api.send
 import com.miruken.callback.Handling
 import com.miruken.callback.plus
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
 import com.miruken.test.assertAsync
@@ -24,6 +27,10 @@ class CachedTest {
 
     @Before
     fun setup() {
+        val factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<StockQuoteHandler>()
+        factory.registerDescriptor<CachedHandler>()
+        HandlerDescriptorFactory.useFactory(factory)
         handler = StockQuoteHandler() + CachedHandler()
         StockQuoteHandler.called = 0
     }

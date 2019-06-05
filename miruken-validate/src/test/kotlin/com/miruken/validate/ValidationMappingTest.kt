@@ -5,7 +5,7 @@ import com.miruken.callback.TypeHandlers
 import com.miruken.callback.infer
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
-import com.miruken.callback.policy.getDescriptor
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.map.map
 import org.junit.Before
 import org.junit.Rule
@@ -32,7 +32,7 @@ class ValidationMappingTest {
 
     @Test
     fun `Maps validation errors to a ValidationException`() {
-        _factory.getDescriptor<ValidationMapping>()
+        _factory.registerDescriptor<ValidationMapping>()
 
         val mapping = arrayOf(
                 ValidationErrors("name",

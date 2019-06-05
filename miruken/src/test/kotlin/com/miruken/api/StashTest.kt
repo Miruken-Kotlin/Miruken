@@ -4,8 +4,8 @@ import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
-import com.miruken.protocol.proxy
 import com.miruken.test.assertAsync
 import org.junit.Before
 import org.junit.Rule
@@ -21,41 +21,41 @@ class StashTest {
 
     @Before
     fun setup() {
-       HandlerDescriptorFactory.useFactory(MutableHandlerDescriptorFactory())
+        val factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<OrderHandler>()
+        factory.registerDescriptor<StashImpl>()
+        HandlerDescriptorFactory.useFactory(factory)
     }
 
     @Test fun `Adds to stash`() {
         val order   = Order()
         val handler = StashImpl()
-        val stash   = handler.proxy<Stash>()
-        stash.put(order)
-        assertSame(order, stash.get()!!)
+        handler.stashPut(order)
+        assertSame(order, handler.stashGet()!!)
     }
 
     @Test fun `Get or adds to stash`() {
         val order   = Order()
         val handler = StashImpl()
-        val stash   = handler.proxy<Stash>()
-        val result  = stash.getOrPut(order)
+        val result  = handler.stashGetOrPut(order)
         assertSame(order, result)
-        assertSame(order, stash.get()!!)
+        assertSame(order, handler.stashGet()!!)
     }
 
     @Test fun `Drops from stash`() {
         val order   = Order()
         val handler = StashImpl() + StashImpl(true)
-        val stash   = handler.proxy<Stash>()
-        stash.put(order)
-        stash.drop<Order>()
-        assertNull(stash.get<Order>())
+        handler.stashPut(order)
+        handler.stashDrop<Order>()
+        assertNull(handler.stashGet<Order>())
     }
 
     @Test fun `Cascades stash`() {
         val order    = Order()
         val handler  = StashImpl()
         val handler2 = StashImpl() + handler
-        handler.proxy<Stash>().put(order)
-        assertSame(order, handler2.proxy<Stash>().get()!!)
+        handler.stashPut(order)
+        assertSame(order, handler2.stashGet()!!)
     }
 
     @Test fun `Accesses stash`() {
@@ -109,7 +109,7 @@ class StashTest {
                 next:        Next<Order>,
                 provider:    FilteringProvider?
         ): Promise<Order> {
-            composer.proxy<Stash>().put(Order().apply {
+            composer.stashPut(Order().apply {
                 id = callback.orderId
             })
             return next()

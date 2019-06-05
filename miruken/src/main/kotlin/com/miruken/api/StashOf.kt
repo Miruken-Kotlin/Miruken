@@ -1,35 +1,31 @@
 package com.miruken.api
 
 import com.miruken.callback.Handling
+import com.miruken.callback.handle
 import com.miruken.concurrent.Promise
-import com.miruken.protocol.proxy
 import kotlin.reflect.KType
 
 @Suppress("UNCHECKED_CAST")
-class StashOf<T: Any>(
-        val key: KType,
-        handler: Handling) {
-    val stash = handler.proxy<Stash>()
-
+class StashOf<T: Any>(val key: KType, val handler: Handling) {
     var value: T?
-        get() = try {
-            stash.get(key) as? T
-        } catch (e: Throwable) {
-            null
+        get() {
+            val get = StashAction.Get(key)
+            return handler.handle(get) success { get.value as? T }
         }
         set(value) {
-            value?.also { stash.put(key, it) }
+            val put = StashAction.Put(key, value)
+            handler.handle(put)
         }
 }
 
 inline fun <reified T: Any> StashOf<T>.getOrPut(data: T) =
-        stash.getOrPut(data)
+        handler.stashGetOrPut(data)
 
 inline fun <reified T: Any> StashOf<T>.getOrPut(data: () -> T) =
-        stash.getOrPut(data)
+        handler.stashGetOrPut(data)
 
 inline fun <reified T: Any> StashOf<T>.getOrPutAsync(
         data: () -> Promise<T>
-) = stash.getOrPutAsync(data)
+) = handler.stashGetOrPutAsync(data)
 
-inline fun <reified T: Any> StashOf<T>.drop() = stash.drop<T>()
+inline fun <reified T: Any> StashOf<T>.drop() = handler.stashDrop<T>()

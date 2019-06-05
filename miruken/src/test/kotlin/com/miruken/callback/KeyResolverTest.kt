@@ -1,5 +1,8 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.flatten
 import com.miruken.test.assertAsync
@@ -17,13 +20,23 @@ class KeyResolverTest {
 
     @Before
     fun setup() {
-       RepositoryImpl.nextId = 0
+        HandlerDescriptorFactory.useFactory(
+                MutableHandlerDescriptorFactory().apply {
+                    registerDescriptor<InventoryHandler>()
+                    registerDescriptor<RepositoryImpl<*>>()
+                    registerDescriptor<CustomerSupport>()
+                    registerDescriptor<ConfigurationHandler>()
+                    registerDescriptor<SimpleDependencyHandler>()
+                    registerDescriptor<GenericWrapper>()
+                }
+        )
+        RepositoryImpl.nextId = 0
     }
 
     @Test fun `Resolves single dependency`() {
         val handler = (InventoryHandler()
-                    + RepositoryImpl<Order>())
-        val order   = Order().apply {
+                    +  RepositoryImpl<Order>())
+        val order   =  Order().apply {
             lineItems = listOf(LineItem("1234", 1))
         }
         val confirmation = handler.command(NewOrder(order)) as? UUID
@@ -40,8 +53,8 @@ class KeyResolverTest {
 
     @Test fun `Resolves promise dependency`() {
         val handler = (InventoryHandler()
-                    + RepositoryImpl<Order>())
-        val order   = Order().apply { id = 1 }
+                    +  RepositoryImpl<Order>())
+        val order   =  Order().apply { id = 1 }
         assertAsync(testName) { done ->
             handler.commandAsync(CancelOrder(order)) then {
                 done()
@@ -58,8 +71,8 @@ class KeyResolverTest {
 
     @Test fun `Resolves list dependency`() {
         val handler = (InventoryHandler()
-                    + CustomerSupport()
-                    + RepositoryImpl<Order>())
+                    +  CustomerSupport()
+                    +  RepositoryImpl<Order>())
         handler.command(NewOrder(Order()))
         handler.command(NewOrder(Order()))
         handler.command(NewOrder(Order()))
@@ -75,8 +88,8 @@ class KeyResolverTest {
 
     @Test fun `Rejects command if result is null`() {
         val handler = (InventoryHandler()
-                    + CustomerSupport()
-                    + RepositoryImpl<Order>())
+                    +  CustomerSupport()
+                    +  RepositoryImpl<Order>())
         handler.command(NewOrder(Order()))
         handler.command(NewOrder(Order()))
         handler.command(NewOrder(Order()))
@@ -90,8 +103,8 @@ class KeyResolverTest {
 
     @Test fun `Resolves promise list dependency`() {
         val handler = (InventoryHandler()
-                    + CustomerSupport()
-                    + RepositoryImpl<Order>())
+                    +  CustomerSupport()
+                    +  RepositoryImpl<Order>())
         handler.command(NewOrder(Order()))
         handler.command(NewOrder(Order()))
         assertAsync(testName) { done ->
@@ -107,21 +120,21 @@ class KeyResolverTest {
 
     @Test fun `Resolves simple dependency`() {
         val handler    = (SimpleDependencyHandler()
-                       + ConfigurationHandler())
+                       +  ConfigurationHandler())
         val maxRetries = handler.command(NewOrder(Order())) as Int
         assertEquals(2, maxRetries)
     }
 
     @Test fun `Resolves promise simple dependency`() {
         val handler    = (SimpleDependencyHandler()
-                       + ConfigurationHandler())
+                       +  ConfigurationHandler())
         val maxRetries = handler.command(ChangeOrder(Order())) as Int
         assertEquals(2, maxRetries)
     }
 
     @Test fun `Resolves simple array dependency`() {
         val handler = (SimpleDependencyHandler()
-                    + ConfigurationHandler())
+                    +  ConfigurationHandler())
         @Suppress("UNCHECKED_CAST")
         val help    = handler.command(RefundOrder(1)) as List<String>
         assertTrue(help.containsAll(listOf(

@@ -2,11 +2,16 @@
 
 package com.miruken.callback
 
+import com.miruken.api.StashImpl
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.MemberBinding
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.kTypeOf
 import com.miruken.protocol.proxy
 import com.miruken.runtime.checkOpenConformance
+import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
 import kotlin.reflect.KType
@@ -19,6 +24,18 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class HandleMethodTest {
+    @Before
+    fun setup() {
+        HandlerDescriptorFactory.useFactory(
+            MutableHandlerDescriptorFactory().apply {
+                registerDescriptor<EmailHandler>()
+                registerDescriptor<OfflineHandler>()
+                registerDescriptor<DemoHandler>()
+                registerDescriptor<BillingImpl>()
+                registerDescriptor<StashImpl>()
+            })
+    }
+
     @Test fun `Handles method calls`() {
         val handler = EmailHandler()
         var id      = handler.proxy<EmailFeature>().email("Hello")

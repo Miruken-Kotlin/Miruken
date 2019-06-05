@@ -5,7 +5,11 @@ import com.miruken.api.JacksonProvider
 import com.miruken.api.StockQuoteHandler
 import com.miruken.api.send
 import com.miruken.callback.plus
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.test.assertAsync
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -14,6 +18,14 @@ import kotlin.test.assertEquals
 class OnewayTest {
     @Rule
     @JvmField val testName = TestName()
+
+    @Before
+    fun setup() {
+        val factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<StockQuoteHandler>()
+        factory.registerDescriptor<OnewayHandler>()
+        HandlerDescriptorFactory.useFactory(factory)
+    }
 
     @Test
     fun `Ignores response`() {

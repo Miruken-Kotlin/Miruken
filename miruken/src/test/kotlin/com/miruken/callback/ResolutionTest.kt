@@ -3,7 +3,7 @@ package com.miruken.callback
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.MemberBinding
-import com.miruken.callback.policy.getDescriptor
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.protocol.proxy
 import org.junit.Before
@@ -19,6 +19,19 @@ class ResolutionTest {
     @Before
     fun setup() {
         factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<EmailHandler>()
+        factory.registerDescriptor<EmailProvider>()
+        factory.registerDescriptor<OfflineHandler>()
+        factory.registerDescriptor<DemoHandler>()
+        factory.registerDescriptor<BillingProvider>()
+        factory.registerDescriptor<OfflineProvider>()
+        factory.registerDescriptor<DemoProvider>()
+        factory.registerDescriptor<ManyProvider>()
+        factory.registerDescriptor<FilterProvider>()
+        factory.registerDescriptor<Repository<*>>()
+        factory.registerDescriptor<RepositoryProvider>()
+        factory.registerDescriptor<Accountant>()
+        factory.registerDescriptor<Provider>()
         HandlerDescriptorFactory.useFactory(factory)
     }
 
@@ -37,7 +50,7 @@ class ResolutionTest {
     }
 
     @Test fun `Overrides providers resolving`() {
-        factory.getDescriptor<DemoProvider>()
+        factory.registerDescriptor<DemoProvider>()
         val demo    = DemoHandler()
         val handler = Handler()
         val resolve = handler.provide(demo).infer.resolve<DemoHandler>()
@@ -45,7 +58,7 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves handlers`() {
-        factory.getDescriptor<EmailHandler>()
+        factory.registerDescriptor<EmailHandler>()
         val handler = (EmailProvider()
                     + BillingImpl()
                     + RepositoryProvider()
@@ -64,8 +77,8 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves all handlers`() {
-        factory.getDescriptor<EmailHandler>()
-        factory.getDescriptor<OfflineHandler>()
+        factory.registerDescriptor<EmailHandler>()
+        factory.registerDescriptor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
         val id      = handler.inferAll.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
@@ -79,7 +92,7 @@ class ResolutionTest {
     }
 
     @Test fun `Resolves handlers with filters`() {
-        factory.getDescriptor<EmailHandler>()
+        factory.registerDescriptor<EmailHandler>()
         val handler = (EmailProvider()
                     + BillingImpl()
                     + RepositoryProvider()

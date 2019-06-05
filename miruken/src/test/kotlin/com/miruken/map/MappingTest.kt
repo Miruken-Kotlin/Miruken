@@ -2,7 +2,8 @@ package com.miruken.map
 
 import com.miruken.callback.*
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.getDescriptor
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.test.assertAsync
 import com.miruken.typeOf
 import org.junit.Before
@@ -23,6 +24,14 @@ class MappingTest {
 
     @Before
     fun setup() {
+        HandlerDescriptorFactory.useFactory(
+            MutableHandlerDescriptorFactory().apply {
+                registerDescriptor<EntityMapping>()
+                registerDescriptor<ExplicitMapping>()
+                registerDescriptor<OpenMapping>()
+                registerDescriptor<ExceptionMapping>()
+            })
+
         _entity    = EntityMapping()
         _explicit  = ExplicitMapping()
         _exception = ExceptionMapping()
@@ -123,14 +132,14 @@ class MappingTest {
     }
 
     @Test fun `Performs mapping resolving`() {
-        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         val exception = IllegalArgumentException("Value is bad")
         val value     = _exception.infer.map<Any>(exception)
         assertEquals("java.lang.IllegalArgumentException: Value is bad", value)
     }
 
     @Test fun `Performs mapping on simple results`() {
-        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         val exception = IllegalStateException("Close not found")
         var value     = _exception.infer.map<Any>(exception)
         assertEquals(500, value)
@@ -140,14 +149,14 @@ class MappingTest {
     }
 
     @Test fun `Maps to null if best effort`() {
-        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         val value = _exception.infer.bestEffort
                 .map<Int>(InvalidClassException(""))
         assertNull(value)
     }
 
     @Test fun `Maps to null if best effort async`() {
-        HandlerDescriptorFactory.current.getDescriptor<ExplicitMapping>()
+        HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         assertAsync { done ->
             _exception.infer.bestEffort
                     .mapAsync<Int>(InvalidClassException("")) then {

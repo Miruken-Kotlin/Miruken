@@ -6,6 +6,9 @@ import com.miruken.api.StockQuoteHandler
 import com.miruken.api.oneway.oneway
 import com.miruken.api.send
 import com.miruken.callback.*
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.test.assertAsync
 import org.junit.Before
@@ -24,6 +27,12 @@ class RoutedTest {
 
     @Before
     fun setup() {
+        val factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<StockQuoteHandler>()
+        factory.registerDescriptor<PassThrough>()
+        factory.registerDescriptor<Trash>()
+        HandlerDescriptorFactory.useFactory(factory)
+
         handler = (StockQuoteHandler() +
                    PassThrough() +
                    Trash())

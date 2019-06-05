@@ -4,6 +4,7 @@ import com.miruken.callback.Handler
 import com.miruken.callback.Key
 import com.miruken.callback.Provides
 import com.miruken.callback.Proxy
+import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.test.assertAsync
 import org.junit.After
 import org.junit.Before
@@ -69,10 +70,12 @@ class PropertiesTest {
     }
     
     @Test fun `Delegates list property to context`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foos by getAll<Foo>()
         }.apply { context = _context }
@@ -80,10 +83,12 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates array property to context`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
-        })
+        }
+        _context.addHandlers(handler)
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object : ContextualHandler() {
             val foos by getArray<Foo>()
         }.apply { context = _context }
@@ -91,7 +96,7 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates primitive property to context`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @get:Provides
             val primes = listOf(2,3,5,7,11)
 
@@ -106,7 +111,9 @@ class PropertiesTest {
             @get:Provides
             @get:Key("help")
             val criticalHelp = "www.help3.com"
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val primes by get<IntArray>()
             val help by getArray<String>()
@@ -152,10 +159,12 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates promise list property to context`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo())
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foo by getAllAsync<Foo>()
         }.apply { context = _context }
@@ -168,10 +177,12 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates promise array property to context`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo())
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foo by getArrayAsync<Foo>()
         }.apply { context = _context }
@@ -194,10 +205,12 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates property to context once`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoo() = Foo()
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
@@ -205,10 +218,12 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates property to context always`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoo() = Foo()
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foo by link<Foo>()
         }.apply { context = _context }
@@ -216,30 +231,36 @@ class PropertiesTest {
     }
 
     @Test fun `Delegates property to context if changes`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoo() = Foo()
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
         val foo = instance.foo
         assertSame(foo, instance.foo)
 
+        val handler2 = object : Handler() {
+            @Provides
+            fun provideFoo() = Foo()
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler2::class)
         instance.context = Context().apply {
-            addHandlers(object : Handler() {
-                @Provides
-                fun provideFoo() = Foo()
-            })
+            addHandlers(handler2)
         }
         assertNotSame(foo, instance.foo)
     }
 
     @Test fun `Delegates property to context after ending`() {
-        _context.addHandlers(object : Handler() {
+        val handler = object : Handler() {
             @Provides
             fun provideFoo() = Foo()
-        })
+        }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
+        _context.addHandlers(handler)
         val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }

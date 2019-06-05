@@ -1,15 +1,26 @@
 package com.miruken.context
 
 import com.miruken.callback.*
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.ChildCancelMode
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
 import com.miruken.protocol.proxy
+import org.junit.Before
 import org.junit.Test
 import kotlin.test.*
 
 @Suppress("RemoveExplicitTypeArguments", "UNUSED_VARIABLE")
 class ContextTest {
+    @Before
+    fun setup() {
+        val factory = MutableHandlerDescriptorFactory()
+        factory.registerDescriptor<Gateway>()
+        factory.registerDescriptor<Observer>()
+        HandlerDescriptorFactory.useFactory(factory)
+    }
     @Test fun `Starts in the active state`() {
         val context = Context()
         assertEquals(ContextState.ACTIVE, context.state)

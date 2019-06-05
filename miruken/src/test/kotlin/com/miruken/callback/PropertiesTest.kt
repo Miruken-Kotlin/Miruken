@@ -1,7 +1,11 @@
 package com.miruken.callback
 
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.test.assertAsync
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -15,6 +19,14 @@ class PropertiesTest {
     class Foo
     interface Auction {
         fun buy(itemId: Long): UUID
+    }
+
+    @Before
+    fun setup() {
+        HandlerDescriptorFactory.useFactory(
+                MutableHandlerDescriptorFactory().apply {
+                    registerDescriptor<Provider>()
+                })
     }
 
     @Test fun `Delegates property to handler`() {
@@ -48,6 +60,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val foos by handler.getAll<Foo>()
         }
@@ -59,6 +72,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = listOf(Foo(), Foo(), Foo())
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val foos by handler.getArray<Foo>()
         }
@@ -82,6 +96,7 @@ class PropertiesTest {
             @get:Key("help")
             val criticalHelp = "www.help3.com"
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val primes by handler.get<IntArray>()
             val help by handler.getArray<String>()
@@ -132,6 +147,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = Promise.resolve(listOf(Foo(), Foo()))
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val foo by handler.getAllAsync<Foo>()
         }
@@ -148,6 +164,7 @@ class PropertiesTest {
             @Provides
             fun provideFoos() = Promise.resolve(listOf(Foo(), Foo()))
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val foo by handler.getArrayAsync<Foo>()
         }
@@ -174,6 +191,7 @@ class PropertiesTest {
             @Provides
             fun provideFoo() = Foo()
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val foo by handler.get<Foo>()
         }
@@ -185,6 +203,7 @@ class PropertiesTest {
             @Provides
             fun provideFoo() = Foo()
         }
+        HandlerDescriptorFactory.current.registerDescriptor(handler::class)
         val instance = object {
             val foo by handler.link<Foo>()
         }

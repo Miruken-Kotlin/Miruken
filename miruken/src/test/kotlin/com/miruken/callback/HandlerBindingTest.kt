@@ -4,7 +4,7 @@ import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.bindings.Qualifier
 import com.miruken.callback.policy.bindings.QualifierFactory
-import com.miruken.callback.policy.getDescriptor
+import com.miruken.callback.policy.registerDescriptor
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -19,10 +19,11 @@ class HandlerBindingTest {
         _handler = TypeHandlers
         HandlerDescriptorFactory.useFactory(
                 MutableHandlerDescriptorFactory().apply {
-            getDescriptor<Client>()
-            getDescriptor<LocalConfiguration>()
-            getDescriptor<RemoteConfiguration>()
-            getDescriptor<Hospital>()
+            registerDescriptor<PersonProvider>()
+            registerDescriptor<LocalConfiguration>()
+            registerDescriptor<RemoteConfiguration>()
+            registerDescriptor<Hospital>()
+            registerDescriptor<Client>()
         })
     }
 

@@ -7,14 +7,13 @@ import com.miruken.callback.policy.HandlerDescriptorFactory
 class Inference(
         callback:     Any,
         callbackType: TypeReference?
-) : Trampoline(callback, callbackType),
-        InferringCallback {
+) : Trampoline(callback, callbackType), InferringCallback {
 
     private val _inferred by lazy(LazyThreadSafetyMode.NONE) {
         HandlerDescriptorFactory.current.getCallbackHandlers(
-               CallbackPolicy.getCallbackPolicy(callback),
+                CallbackPolicy.getCallbackPolicy(callback),
                 callback, callbackType).map {
-            Resolution(it, callback, callbackType)
+            Resolution(it.handlerClass, callback, callbackType)
         }
     }
 
