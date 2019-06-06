@@ -1,8 +1,8 @@
 package com.miruken.api.schedule
 
 import com.miruken.api.NamedType
-import com.miruken.callback.Handling
 import com.miruken.api.send
+import com.miruken.callback.Handling
 
 data class Concurrent(
         override val requests: List<NamedType>,
@@ -10,7 +10,7 @@ data class Concurrent(
 ) : Scheduled {
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Schedule.Concurrent,Miruken.Mediate"
+                "Miruken.Api.Schedule.Concurrent,Miruken"
     }
 }
 

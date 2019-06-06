@@ -18,7 +18,7 @@ data class Cached<TResp: NamedType>(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Cache.Cached`1[[%s]],Miruken.Mediate"
+                "Miruken.Api.Cache.Cached`1[[%s]],Miruken"
     }
 }
 
@@ -32,7 +32,7 @@ data class Refresh<TResp: NamedType>(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Cache.Refresh`1[[%s]],Miruken.Mediate"
+                "Miruken.Api.Cache.Refresh`1[[%s]],Miruken"
     }
 }
 
@@ -45,7 +45,7 @@ data class Invalidate<TResp: NamedType>(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Cache.Invalidate`1[[%s]],Miruken.Mediate"
+                "Miruken.Api.Cache.Invalidate`1[[%s]],Miruken"
     }
 }
 

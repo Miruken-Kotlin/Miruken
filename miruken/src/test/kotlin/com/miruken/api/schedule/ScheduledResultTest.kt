@@ -15,14 +15,14 @@ class ScheduledResultTest {
         val result = ScheduledResult(listOf(
                 Try.Success(StockQuote("AAPL", 207.48))))
         val json   = JacksonProvider.mapper.writeValueAsString(result)
-        assertEquals("{\"\$type\":\"Miruken.Mediate.Schedule.ScheduledResult,Miruken.Mediate\",\"responses\":[{\"isLeft\":false,\"value\":{\"\$type\":\"StockQuote\",\"symbol\":\"AAPL\",\"value\":207.48}}]}", json)
+        assertEquals("{\"\$type\":\"Miruken.Api.Schedule.ScheduledResult,Miruken\",\"responses\":[{\"isLeft\":false,\"value\":{\"\$type\":\"StockQuote\",\"symbol\":\"AAPL\",\"value\":207.48}}]}", json)
     }
 
     @Test fun `Serializes scheduled error into json`() {
         val error = ScheduledResult(listOf(
                 Try.error(Exception("Validation failed"))))
         val json  = JacksonProvider.mapper.writeValueAsString(error)
-        assertEquals("{\"\$type\":\"Miruken.Mediate.Schedule.ScheduledResult,Miruken.Mediate\",\"responses\":[{\"isLeft\":true,\"value\":{\"message\":\"Validation failed\"}}]}", json)
+        assertEquals("{\"\$type\":\"Miruken.Api.Schedule.ScheduledResult,Miruken\",\"responses\":[{\"isLeft\":true,\"value\":{\"message\":\"Validation failed\"}}]}", json)
     }
 
     @Test fun `Deserializes scheduled result from json`() {

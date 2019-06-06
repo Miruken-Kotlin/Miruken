@@ -22,7 +22,7 @@ data class RoutedMessage(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Route.Routed,Miruken.Mediate"
+                "Miruken.Api.Route.Routed,Miruken"
     }
 }
 
@@ -37,7 +37,7 @@ data class RoutedRequest<TResp: NamedType>(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Route.RoutedRequest`1[[%s]],Miruken.Mediate"
+                "Miruken.Api.Route.RoutedRequest`1[[%s]],Miruken"
     }
 }
 

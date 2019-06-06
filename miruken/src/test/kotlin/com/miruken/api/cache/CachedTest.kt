@@ -141,6 +141,6 @@ class CachedTest {
     @Test fun `Serializes cached request into json`() {
         val request  = GetStockQuote("AAPL").cache()
         val json     = JacksonProvider.mapper.writeValueAsString(request)
-        assertEquals("{\"\$type\":\"Miruken.Mediate.Cache.Cached`1[[StockQuote]],Miruken.Mediate\",\"request\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"}}", json)
+        assertEquals("{\"\$type\":\"Miruken.Api.Cache.Cached`1[[StockQuote]],Miruken\",\"request\":{\"\$type\":\"GetStockQuote\",\"symbol\":\"AAPL\"}}", json)
     }
 }

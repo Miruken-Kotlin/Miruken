@@ -11,7 +11,7 @@ class Parallel(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Schedule.Parallel,Miruken.Mediate"
+                "Miruken.Api.Schedule.Parallel,Miruken"
     }
 }
 

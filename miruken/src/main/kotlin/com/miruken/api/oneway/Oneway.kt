@@ -15,7 +15,7 @@ data class Oneway<TResp: NamedType>(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Oneway.Oneway`1[[%s]],Miruken.Mediate"
+                "Miruken.Api.Oneway.Oneway`1[[%s]],Miruken"
     }
 }
 

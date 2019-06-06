@@ -15,6 +15,6 @@ data class ScheduledResult(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Schedule.ScheduledResult,Miruken.Mediate"
+                "Miruken.Api.Schedule.ScheduledResult,Miruken"
     }
 }

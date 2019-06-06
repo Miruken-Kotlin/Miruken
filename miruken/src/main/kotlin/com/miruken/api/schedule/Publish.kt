@@ -9,6 +9,6 @@ data class Publish(
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Schedule.Publish,Miruken.Mediate"
+                "Miruken.Api.Schedule.Publish,Miruken"
     }
 }

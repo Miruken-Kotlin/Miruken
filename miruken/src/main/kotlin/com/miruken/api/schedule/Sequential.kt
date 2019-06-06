@@ -11,7 +11,7 @@ class Sequential (
 
     companion object : NamedType {
         override val typeName =
-                "Miruken.Mediate.Schedule.Sequential,Miruken.Mediate"
+                "Miruken.Api.Schedule.Sequential,Miruken"
     }
 }
 
