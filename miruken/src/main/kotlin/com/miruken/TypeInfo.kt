@@ -1,12 +1,14 @@
 package com.miruken
 
 import com.miruken.callback.Inquiry
+import com.miruken.callback.Strict
 import com.miruken.concurrent.Promise
 import com.miruken.runtime.checkOpenConformance
 import com.miruken.runtime.componentType
 import com.miruken.runtime.isGeneric
 import com.miruken.runtime.isOpenGeneric
 import java.util.*
+import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
@@ -40,7 +42,10 @@ data class TypeInfo(
     }
 
     companion object {
-        fun parse(type: KType): TypeInfo {
+        fun parse(
+                type:      KType,
+                annotated: KAnnotatedElement? = null
+        ): TypeInfo {
             var logicalType = type
 
             var flags = when {
@@ -54,7 +59,10 @@ data class TypeInfo(
                     flags += TypeFlags.INTERFACE
             }
 
-            // TODO: Check for @Strict when KType is KAnnotatedElement
+            if (type.annotations.filterIsInstance<Strict>().any() ||
+                annotated?.annotations?.filterIsInstance<Strict>()?.any() == true) {
+                flags += TypeFlags.STRICT
+            }
 
             logicalType = logicalType.takeIf { it.isMarkedNullable }?.let {
                 flags += TypeFlags.OPTIONAL
@@ -74,14 +82,15 @@ data class TypeInfo(
                     ?.let { flags += TypeFlags.PROMISE; it }
                     ?: logicalType
 
-            var componentType = unwrapType(logicalType, Collection::class)
-                    ?.let { flags += TypeFlags.COLLECTION; it }
-                    ?: logicalType
-
-            if (!(flags has TypeFlags.COLLECTION)) {
-                componentType = logicalType.componentType.takeIf {
-                    it != logicalType
-                }?.also { flags += TypeFlags.ARRAY } ?: logicalType
+            val componentType = if (flags has TypeFlags.STRICT) {
+                logicalType
+            } else {
+                unwrapType(logicalType, Collection::class)
+                        ?.let { flags += TypeFlags.COLLECTION; it }
+                        ?: logicalType.componentType.takeIf {
+                            it != logicalType
+                        }?.also { flags += TypeFlags.ARRAY }
+                        ?: logicalType
             }
 
             (componentType.classifier as? KClass<*>)?.also {

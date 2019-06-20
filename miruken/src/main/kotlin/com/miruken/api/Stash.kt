@@ -1,9 +1,6 @@
 package com.miruken.api
 
-import com.miruken.callback.Handler
-import com.miruken.callback.Handles
-import com.miruken.callback.Inquiry
-import com.miruken.callback.Provides
+import com.miruken.callback.*
 import kotlin.collections.set
 
 sealed class StashAction {
@@ -17,7 +14,7 @@ class StashImpl(
 ) : Handler() {
     private val _data = mutableMapOf<Any, Any?>()
 
-    @Provides
+    @Provides @Strict
     fun provide(inquiry: Inquiry) = _data[inquiry.key]
 
     @Handles

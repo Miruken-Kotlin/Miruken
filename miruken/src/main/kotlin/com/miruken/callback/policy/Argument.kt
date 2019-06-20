@@ -14,7 +14,7 @@ import kotlin.reflect.full.withNullability
 import kotlin.reflect.jvm.jvmErasure
 
 class Argument(val parameter: KParameter) : KAnnotatedElement {
-    val typeInfo    = TypeInfo.parse(parameter.type)
+    val typeInfo    = TypeInfo.parse(parameter.type, parameter)
     val useResolver = KeyResolver.getResolverClass(parameter)
                    ?: impliedProtocolResolver()
 

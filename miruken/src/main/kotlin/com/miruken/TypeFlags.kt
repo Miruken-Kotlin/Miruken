@@ -12,6 +12,7 @@ sealed class TypeFlags(value: Long) : Flags<TypeFlags>(value) {
     object OPTIONAL_EXPLICIT : TypeFlags(1 shl 6)
     object PRIMITIVE         : TypeFlags(1 shl 7)
     object INTERFACE         : TypeFlags(1 shl 8)
-    object GENERIC           : TypeFlags(1 shl 9)
-    object OPEN              : TypeFlags(1 shl 10)
+    object STRICT            : TypeFlags(1 shl 9)
+    object GENERIC           : TypeFlags(1 shl 10)
+    object OPEN              : TypeFlags(1 shl 11)
 }

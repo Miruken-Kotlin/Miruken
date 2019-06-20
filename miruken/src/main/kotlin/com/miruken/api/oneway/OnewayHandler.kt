@@ -10,7 +10,7 @@ class OnewayHandler
 
     @Handles
     fun <TResp: NamedType> oneway(
-            request:  Oneway<TResp>,
+            request:  Oneway,
             composer: Handling
     ) = composer.send(request.request, request.requestType)
 }
