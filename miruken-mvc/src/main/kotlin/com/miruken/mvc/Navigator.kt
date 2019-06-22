@@ -88,7 +88,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                     }
 
                     if (style == NavigationStyle.PUSH) {
-                        child.parent!!.childContextEnded += { (ctx, reason) ->
+                        child.childContextEnded += { (ctx, reason) ->
                             if (reason is NavigationException) {
                                 ctx.parent?.end(reason)
                                 reject(reason)

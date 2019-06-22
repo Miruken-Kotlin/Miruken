@@ -33,9 +33,11 @@ class NavigatorTest {
         rootContext.addHandlers(navigator, TypeHandlers)
 
         factory = MutableHandlerDescriptorFactory().apply {
+            registerDescriptor<Navigator>()
             registerDescriptor<HelloController>()
             registerDescriptor<GoodbyeController>()
             registerDescriptor<PartialController>()
+            registerDescriptor<Navigator>()
             HandlerDescriptorFactory.useFactory(this)
         }
     }
