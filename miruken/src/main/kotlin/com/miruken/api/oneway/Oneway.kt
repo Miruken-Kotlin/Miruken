@@ -7,7 +7,7 @@ import com.miruken.typeOf
 
 data class Oneway(
         val request:     NamedType,
-        val requestType: TypeReference
+        val requestType: TypeReference? = null
 ) : NamedType {
     override val typeName: String = Oneway.typeName
 

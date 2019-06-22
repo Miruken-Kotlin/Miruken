@@ -4,9 +4,9 @@ import com.miruken.callback.*
 import kotlin.collections.set
 
 sealed class StashAction {
-    data class Get(val key: Any, var value: Any? = null)
-    data class Put(val key: Any, var value: Any? = null)
-    data class Drop(val key: Any)
+    data class Get(val key: Any, var value: Any? = null): StashAction()
+    data class Put(val key: Any, var value: Any? = null): StashAction()
+    data class Drop(val key: Any): StashAction()
 }
 
 class StashImpl(

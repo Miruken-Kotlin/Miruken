@@ -9,8 +9,6 @@ class OnewayHandler
     constructor() : Handler() {
 
     @Handles
-    fun <TResp: NamedType> oneway(
-            request:  Oneway,
-            composer: Handling
-    ) = composer.send(request.request, request.requestType)
+    fun <TResp: NamedType> oneway(request: Oneway, composer: Handling) =
+            composer.send(request.request, request.requestType)
 }
