@@ -38,6 +38,7 @@ class NavigatorTest {
             registerDescriptor<GoodbyeController>()
             registerDescriptor<PartialController>()
             registerDescriptor<Navigator>()
+            registerDescriptor<GenericWrapper>()
             HandlerDescriptorFactory.useFactory(this)
         }
     }
