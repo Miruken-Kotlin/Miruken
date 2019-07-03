@@ -5,8 +5,8 @@ import com.miruken.callback.Options
 import com.miruken.callback.withOptions
 import com.miruken.mvc.view.ViewingLayer
 
-class  RegionOptions : Options<RegionOptions>() {
-    var tag:       Any?     = null
+class RegionOptions : Options<RegionOptions>() {
+    var region:    Any?     = null
     var push:      Boolean? = null
     var overlay:   Boolean? = null
     var unload:    Boolean? = null
@@ -17,8 +17,8 @@ class  RegionOptions : Options<RegionOptions>() {
             selector?.invoke(viewLayers)
 
     override fun mergeInto(other: RegionOptions) {
-        if (tag != null && other.tag == null)
-            other.tag = tag
+        if (region != null && other.region == null)
+            other.region = region
         if (push != null && other.push == null)
             other.push = push
         if (overlay != null && other.overlay == null)
@@ -31,6 +31,11 @@ class  RegionOptions : Options<RegionOptions>() {
             other.selector = selector
     }
 }
+
+fun Handling.region(tag: Any) =
+    withOptions(NavigationOptions().apply {
+        region = RegionOptions().apply { region = tag }
+    })
 
 val Handling.pushLayer get() =
     withOptions(NavigationOptions().apply {
