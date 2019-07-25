@@ -6,6 +6,7 @@ import com.miruken.api.StockQuoteHandler
 import com.miruken.api.send
 import com.miruken.callback.Handler
 import com.miruken.callback.Handling
+import com.miruken.callback.NotHandledException
 import com.miruken.callback.plus
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
@@ -19,6 +20,7 @@ import org.junit.Test
 import org.junit.rules.TestName
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class OnceHandlerTest {
     @Rule
@@ -54,6 +56,22 @@ class OnceHandlerTest {
         }
     }
 
+    @Test
+    fun `rejects once if no strategy found`() {
+        StockQuoteHandler.called = 0
+        val handler = (StockQuoteHandler()
+                    + OnceHandler()
+                    + TestOnceStrategy())
+        assertAsync(testName) { done ->
+            val getQuote = GetStockQuote("ABC").once
+            handler.send(getQuote) catch {
+                assertTrue(it is NotHandledException)
+                assertEquals(0, StockQuoteHandler.called)
+                done()
+            }
+        }
+    }
+
     @Test fun `Serializes once request into json`() {
         val request  = GetStockQuote("AAPL").once
         val json     = JacksonProvider.mapper.writeValueAsString(request)
@@ -65,7 +83,8 @@ class OnceHandlerTest {
         private val _requests = mutableSetOf<UUID>()
 
         @Maps
-        fun once(request: GetStockQuote) = this
+        fun once(request: GetStockQuote) =
+                if (request.symbol == "ABC") null else this
 
         override fun complete(once: Once, composer: Handling) =
             if (_requests.contains(once.requestId)) {

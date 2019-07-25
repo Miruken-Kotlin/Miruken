@@ -9,9 +9,9 @@ class OnceHandler
     constructor() : Handler() {
 
     @Handles
-    fun once(once: Once, composer: Handling): Promise<*>? {
+    fun once(once: Once, composer: Handling): Promise<*> {
         val strategy = composer.map<OnceStrategy>(
                 once.request, sourceType = once.requestType)
-        return strategy?.complete(once, composer)
+        return strategy!!.complete(once, composer)
     }
 }

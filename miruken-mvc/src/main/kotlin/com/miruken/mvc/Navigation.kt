@@ -23,6 +23,8 @@ class Navigation<C: Controller>(
     var controller: C? by weak()
         private set
 
+    var viewRegion: Any? = null
+
     var viewLayer: ViewingLayer? by weak()
 
     var noBack = false
