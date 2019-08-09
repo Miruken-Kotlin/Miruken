@@ -42,10 +42,11 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
                 initiator = nearest.second
             }
 
+            navigation.viewRegion = initiator.viewRegion
+
             if ((style != NavigationStyle.PUSH)) {
                 parent = parent.parent ?: error(
                         "Navigation seems to be in a bad state")
-                navigation.viewRegion = initiator.viewRegion
                 navigation.viewLayer  = initiator.viewLayer
             }
         }

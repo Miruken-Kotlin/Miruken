@@ -6,7 +6,6 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeoutException
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 enum class PromiseState {
@@ -37,14 +36,14 @@ open class Promise<out T>
     private var _onCancel   = Event<Unit>()
     private var _result     : Any? = null
     private var _throwable  : Throwable? = null
-    private val _completed  : AtomicBoolean = AtomicBoolean()
+    private var _completed  : Boolean = false
     private val _childCount : AtomicInteger = AtomicInteger()
     private val _guard      = Object()
 
     @Volatile var state : PromiseState = PromiseState.PENDING
         protected set
 
-    private val isCompleted get() = _completed.get()
+    private val isCompleted get() = _completed
 
     constructor(
             executor: PromiseExecutorBlock<T>
@@ -79,9 +78,9 @@ open class Promise<out T>
     }
 
     constructor(resolved: T) : this(ChildCancelMode.ANY) {
-        _result = resolved
-        state   = PromiseState.FULFILLED
-        _completed.set(true)
+        _result    = resolved
+        state      = PromiseState.FULFILLED
+        _completed = true
     }
 
     constructor(rejected: Throwable) : this(ChildCancelMode.ANY) {
@@ -90,7 +89,7 @@ open class Promise<out T>
             is CancellationException -> PromiseState.CANCELLED
             else -> PromiseState.REJECTED
         }
-        _completed.set(true)
+        _completed = true
     }
 
     infix fun <R> then(success: PromiseSuccessBlock<T, R>): Promise<R> {
@@ -102,19 +101,7 @@ open class Promise<out T>
                     rejectChild(e)
                 }
             }
-            synchronized (_guard) {
-                if (isCompleted) {
-                    @Suppress("UNCHECKED_CAST")
-                    if (state == PromiseState.FULFILLED)
-                        res(_result as T)
-                    else
-                        rejectChild(_throwable!!)
-                }
-                else {
-                    _fulfilled += res
-                    _rejected  += rejectChild
-                }
-            }
+            subscribe(res, rejectChild)
         }
     }
 
@@ -141,19 +128,7 @@ open class Promise<out T>
                     rejectChild(_throwable!!)
                 }
             }
-            synchronized (_guard) {
-                if (isCompleted) {
-                    @Suppress("UNCHECKED_CAST")
-                    if (state == PromiseState.FULFILLED)
-                        res(_result as T)
-                    else
-                        rej(_throwable!!)
-                }
-                else {
-                    _fulfilled += res
-                    _rejected  += rej
-                }
-            }
+            subscribe(res, rej)
         }
     }
 
@@ -175,21 +150,7 @@ open class Promise<out T>
                     rejectChild(_throwable!!)
                 }
             }
-            synchronized (_guard) {
-                if (isCompleted)
-                {
-                    @Suppress("UNCHECKED_CAST")
-                    if (state == PromiseState.FULFILLED)
-                        res(_result as T)
-                    else
-                        rej(_throwable!!)
-                }
-                else
-                {
-                    _fulfilled += res
-                    _rejected  += rej
-                }
-            }
+            subscribe(res, rej)
         }
     }
 
@@ -218,19 +179,7 @@ open class Promise<out T>
                     rejectChild(t)
                 }
             }
-            synchronized (_guard) {
-                if (isCompleted) {
-                    @Suppress("UNCHECKED_CAST")
-                    if (state == PromiseState.FULFILLED)
-                        res(_result as T)
-                    else
-                        rej(_throwable!!)
-                }
-                else {
-                    _fulfilled += res
-                    _rejected  += rej
-                }
-            }
+            subscribe(res, rej)
         }
     }
 
@@ -240,16 +189,16 @@ open class Promise<out T>
 
     infix fun cancelled(cancelled: PromiseCancelledBlock): Promise<T> {
         synchronized (_guard) {
-            if (isCompleted) {
-                if (state == PromiseState.CANCELLED) {
-                    cancelled(_throwable as CancellationException)
-                }
-            } else {
+            if (!isCompleted) {
                 _rejected += { e ->
                     if (e is CancellationException)
                         cancelled(e)
                 }
+                return this
             }
+        }
+        if (state == PromiseState.CANCELLED) {
+            cancelled(_throwable as CancellationException)
         }
         return this
     }
@@ -297,41 +246,73 @@ open class Promise<out T>
     ): Promise<R> = Promise(mode, executor)
 
     private fun resolve(result: T) {
-        if (_completed.compareAndSet(false, true)) {
-            _result = result
-            synchronized (_guard) {
-                state = PromiseState.FULFILLED
-                _rejected.clear()
-                _onCancel.clear()
-                _guard.notifyAll()
-                _fulfilled(result)
-                _fulfilled.clear()
-            }
+        if (_completed) return
+
+        var fulfilled: Event<T>?
+
+        synchronized(_guard) {
+            if (_completed) return
+            _completed = true
+            _result    = result
+            state      = PromiseState.FULFILLED
+            fulfilled  = _fulfilled
+            _fulfilled = Event()
+            _rejected  = Event()
+            _onCancel  = Event()
+            _guard.notifyAll()
         }
+
+        fulfilled?.invoke(result)
     }
 
     private fun reject(e: Throwable) {
-        if (_completed.compareAndSet(false, true)) {
+        if (_completed) return
+
+        var onCancel: Event<Unit>? = null
+        var rejected: Event<Throwable>?
+
+        synchronized(_guard) {
+            if (_completed) return
+            _completed = true
             _throwable = e
             val isCancellation = e is CancellationException
             if (isCancellation) {
-                try {
-                    _onCancel(Unit)
-                }
-                catch (t: Throwable) {
-                    e.addSuppressed(t)
-                }
+                onCancel = _onCancel
             }
-            synchronized (_guard) {
-                state = if (isCancellation) PromiseState.CANCELLED
-                        else PromiseState.REJECTED
-                _fulfilled.clear()
-                _onCancel.clear()
-                _guard.notifyAll()
-                _rejected(e)
-                _rejected.clear()
+            state = if (isCancellation) PromiseState.CANCELLED
+                    else PromiseState.REJECTED
+            rejected   = _rejected
+            _fulfilled = Event()
+            _rejected  = Event()
+            _onCancel  = Event()
+            _guard.notifyAll()
+        }
+
+        if (onCancel != null) {
+            try {
+                onCancel!!(Unit)
+            }
+            catch (t: Throwable) {
+                e.addSuppressed(t)
             }
         }
+
+        rejected?.invoke(e)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun subscribe(resolve: ((T) -> Unit), reject: ((Throwable) -> Unit)) {
+        synchronized (_guard) {
+            if (!isCompleted) {
+                _fulfilled += resolve
+                _rejected  += reject
+                return
+            }
+        }
+        if (state == PromiseState.FULFILLED)
+            resolve(_result as T)
+        else
+            reject(_throwable!!)
     }
 
     companion object {

@@ -17,7 +17,7 @@ class CachedHandler
     private val _cache = ConcurrentHashMap<NamedType, CacheResponse>()
 
     private data class CacheResponse(
-            val response: Promise<*>, val lastUpdate: Instant)
+            var response: Promise<*>, val lastUpdate: Instant)
 
     @Handles
     @Suppress("UNCHECKED_CAST")
@@ -66,7 +66,12 @@ class CachedHandler
             request:     NamedType,
             requestType: TypeReference,
             composer:    Handling
-    ) = CacheResponse(composer.send(request, requestType), Instant.now())
+    ): CacheResponse {
+        val response = composer.send(request, requestType)
+        val cached   = CacheResponse(response, Instant.now())
+        response then { cached.response = Promise.resolve(it) }
+        return cached
+    }
 }
 
 private val ONE_DAY = Duration.ofDays(1)
