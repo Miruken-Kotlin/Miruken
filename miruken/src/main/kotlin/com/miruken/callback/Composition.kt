@@ -3,23 +3,12 @@ package com.miruken.callback
 import com.miruken.TypeReference
 import com.miruken.runtime.isCompatibleWith
 import com.miruken.typeOf
-import kotlin.reflect.KType
 
 open class Composition(
         callback:     Any?   = null,
         callbackType: TypeReference? = null
 ) : Trampoline(callback, callbackType),
-        Callback, InferringCallback,
-        FilteringCallback, BatchingCallback {
-
-    override val resultType: KType?
-        get() = (callback as? Callback)?.resultType
-
-    override var result: Any?
-        get() = (callback as? Callback)?.result
-        set(value) {
-            (callback as? Callback)?.result = value
-        }
+        InferringCallback, FilteringCallback, BatchingCallback {
 
     override fun getCallbackKey(): Any? =
             (callback as? Callback)?.getCallbackKey()

@@ -153,7 +153,7 @@ class HandleMethodTest {
 
     @Test fun `Resolves methods calls inferred`() {
         val handler = EmailHandler()
-        val id      = handler.infer.proxy<EmailFeature>().email("Hello")
+        val id      = handler.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 

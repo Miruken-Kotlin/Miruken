@@ -21,7 +21,7 @@ fun Handling.send(
         wantsAsync = true
     }
     return try {
-        (StashImpl() + infer).handle(command) failure {
+        (StashImpl() + this).handle(command) failure {
             Promise.reject(NotHandledException(request))
         } ?: command.result as Promise<*>
     } catch (e: Throwable) {
@@ -50,7 +50,7 @@ fun <TResp: NamedType?> Handling.send(
     }
     return try {
         @Suppress("UNCHECKED_CAST")
-        (StashImpl() + infer).handle(command) failure {
+        (StashImpl() + this).handle(command) failure {
             Promise.reject(NotHandledException(request))
         } ?: command.result as Promise<TResp>
     } catch (e: Throwable) {
@@ -77,7 +77,7 @@ fun Handling.publish(
         wantsAsync = true
     }
     return try {
-        (StashImpl() + infer).handle(command) failure {
+        (StashImpl() + this).handle(command) failure {
             Promise.reject(NotHandledException(notification))
         } ?: command.result as Promise<*>
     } catch (e: Throwable) {

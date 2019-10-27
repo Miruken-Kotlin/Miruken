@@ -38,14 +38,14 @@ class ResolutionTest {
     @Test fun `Overrides providers`() {
         val demo    = DemoHandler()
         val handler = Handler()
-        val resolve = handler.infer.provide(demo).resolve<DemoHandler>()
+        val resolve = handler.provide(demo).resolve<DemoHandler>()
         assertSame(demo, resolve)
     }
 
     @Test fun `Overrides providers polymorphically`() {
         val email   = EmailHandler()
         val handler = Handler()
-        val resolve = handler.infer.provide(email).resolve<EmailFeature>()
+        val resolve = handler.provide(email).resolve<EmailFeature>()
         assertSame(email, resolve)
     }
 
@@ -53,7 +53,7 @@ class ResolutionTest {
         factory.registerDescriptor<DemoProvider>()
         val demo    = DemoHandler()
         val handler = Handler()
-        val resolve = handler.provide(demo).infer.resolve<DemoHandler>()
+        val resolve = handler.provide(demo).resolve<DemoHandler>()
         assertSame(demo, resolve)
     }
 
@@ -63,7 +63,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val id      = handler.infer.command(SendEmail("Hello")) as Int
+        val id      = handler.command(SendEmail("Hello")) as Int
         assertEquals(10, id)
     }
 
@@ -72,7 +72,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val id      = handler.infer.command(SendEmail("Hello")) as Int
+        val id      = handler.command(SendEmail("Hello")) as Int
         assertEquals(10, id)
     }
 
@@ -80,14 +80,14 @@ class ResolutionTest {
         factory.registerDescriptor<EmailHandler>()
         factory.registerDescriptor<OfflineHandler>()
         val handler = EmailProvider() + OfflineProvider()
-        val id      = handler.inferAll.command(SendEmail("Hello")) as Int
+        val id      = handler.command(SendEmail("Hello")) as Int
         assertEquals(1, id)
     }
 
     @Test fun `Resolves implied open-generic handlers`() {
         val handler = Repository<Message>()
         val message = Message()
-        val result  = handler.infer.handle(Create(message))
+        val result  = handler.handle(Create(message))
         assertEquals(HandleResult.HANDLED, result)
     }
 
@@ -97,7 +97,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val id = handler.infer.command(SendEmail("Hello")) as Int
+        val id = handler.command(SendEmail("Hello")) as Int
         assertEquals(10, id)
     }
 
@@ -106,7 +106,7 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        val balance = handler.infer.command(
+        val balance = handler.command(
                 Create(Deposit().apply { amount = 10.toBigDecimal() }))
                 as BigDecimal
         assertEquals(13.toBigDecimal(), balance)
@@ -117,14 +117,13 @@ class ResolutionTest {
                     + BillingImpl()
                     + RepositoryProvider()
                     + FilterProvider())
-        handler.infer.command(
-                Create(Deposit().apply { amount = 10.toBigDecimal() }))
+        handler.command(Create(Deposit().apply { amount = 10.toBigDecimal() }))
     }
 
     @Test fun `Fails if no handlers resolved`() {
         val handler = BillingImpl().toHandler()
         assertFailsWith(NotHandledException::class) {
-            handler.infer.command(SendEmail("Hello"))
+            handler.command(SendEmail("Hello"))
         }
     }
 
@@ -268,7 +267,7 @@ class ResolutionTest {
                      +  BillingImpl()
                      +  RepositoryProvider()
                      +  FilterProvider())
-        val id       = provider.infer.proxy<EmailFeature>().email("Hello")
+        val id       = provider.proxy<EmailFeature>().email("Hello")
         assertEquals(1, id)
     }
 

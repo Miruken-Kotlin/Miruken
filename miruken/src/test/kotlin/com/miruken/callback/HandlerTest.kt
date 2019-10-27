@@ -91,7 +91,7 @@ class HandlerTest {
     @Test fun `Handles callbacks inferred greedy`() {
         val foo     = Foo()
         val handler = SimpleHandler()
-        assertEquals(HandleResult.HANDLED, handler.infer.handle(foo, true))
+        assertEquals(HandleResult.HANDLED, handler.handle(foo, true))
         assertEquals(1, foo.handled)
     }
 
@@ -714,16 +714,14 @@ class HandlerTest {
 
     @Test fun `Infers instance implicitly`() {
         val foo = Foo()
-        assertEquals(HandleResult.HANDLED,
-                TypeHandlers.infer.handle(foo))
+        assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
         assertEquals(1, foo.handled)
     }
 
     @Test fun `Infers singleton callbacks implicitly`() {
         val foo = Foo()
         factory.registerDescriptor<SingletonHandler>()
-        assertEquals(HandleResult.HANDLED,
-                TypeHandlers.infer.handle(foo))
+        assertEquals(HandleResult.HANDLED, TypeHandlers.handle(foo))
         assertEquals(1, foo.handled)
     }
 
@@ -746,7 +744,7 @@ class HandlerTest {
         val baz = SpecialBaz()
         factory.registerDescriptor<ControllerBase>()
         factory.registerDescriptor<Controller<*,*>>()
-        val instance = TypeHandlers.infer
+        val instance = TypeHandlers
                 .with(boo).with(baz)
                 .resolve<Controller<Boo, Baz>>()
         assertNotNull(instance)
@@ -756,7 +754,7 @@ class HandlerTest {
 
     @Test fun `Provides instance implicitly`() {
         factory.registerDescriptor<ControllerBase>()
-        val bar = TypeHandlers.infer.resolve<Bar>()
+        val bar = TypeHandlers.resolve<Bar>()
         assertNotNull(bar)
     }
 
@@ -764,7 +762,7 @@ class HandlerTest {
         val view = Screen()
         factory.registerDescriptor<ControllerBase>()
         factory.registerDescriptor<Controller<*,*>>()
-        val instance = TypeHandlers.infer
+        val instance = TypeHandlers
                 .with(view).resolve<Controller<Screen, Bar>>()
         assertNotNull(instance)
         assertSame(view, instance.view)
@@ -778,7 +776,7 @@ class HandlerTest {
                     registerDescriptor<Controller<*,*>>()
                 }
         )
-        val instance = TypeHandlers.infer
+        val instance = TypeHandlers
                 .with(view).resolve<Controller<Screen, Bar>>()
         assertNull(instance)
     }
@@ -792,7 +790,7 @@ class HandlerTest {
 
     @Test fun `Creates generic singleton instance implicitly`() {
         val view    = Screen()
-        val handler = TypeHandlers.infer
+        val handler = TypeHandlers
         factory.registerDescriptor<ControllerBase>()
         factory.registerDescriptor<Controller<*,*>>()
         factory.registerDescriptor<Application<*>>()
@@ -892,7 +890,7 @@ class HandlerTest {
         factory.registerDescriptor<ScreenModel<*>>()
         Context().use { context ->
             context.addHandlers(TypeHandlers)
-            val view = context.infer.resolve<View<Bar>>()
+            val view = context.resolve<View<Bar>>()
             assertNotNull(view)
             assertSame(view, context.resolve()!!)
         }
@@ -905,7 +903,7 @@ class HandlerTest {
             context.addHandlers(TypeHandlers)
             val screen1 = context.with(Foo()).resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
-            val screen2 = context.infer.resolve<ScreenModel<Bar>>()
+            val screen2 = context.resolve<ScreenModel<Bar>>()
             assertSame(screen1, context.resolve()!!)
             assertSame(screen2, context.resolve())
         }
@@ -919,7 +917,7 @@ class HandlerTest {
             val screen1 = context.with(Foo())
                     .resolve<ScreenModel<Foo>>()
             assertNotNull(screen1)
-            val screen2 = context.infer.resolve<ScreenModel<Bar>>()
+            val screen2 = context.resolve<ScreenModel<Bar>>()
             assertNotNull(screen2)
             assertSame(screen1, context.resolve()!!)
             assertSame(screen2, context.resolve()!!)
@@ -961,7 +959,7 @@ class HandlerTest {
     @Test fun `Rejects constructor if initializer fails`() {
         factory.registerDescriptor<FailedInitialization>()
         assertAsync(testName) { done ->
-            TypeHandlers.infer.resolveAsync<FailedInitialization>() then {
+            TypeHandlers.resolveAsync<FailedInitialization>() then {
                 assertNull(it)
                 done()
             }
@@ -1186,7 +1184,7 @@ class HandlerTest {
             return when (inquiry.key) {
                 "Foo" -> Foo()
                 "Bar" -> Bar()
-                else -> Promise.EMPTY
+                else -> null
             }
         }
     }
@@ -1257,11 +1255,11 @@ class HandlerTest {
         }
 
         @Provides
-        fun providesByName(inquiry: Inquiry): Promise<Any?> {
+        fun providesByName(inquiry: Inquiry): Promise<Any>? {
             return when (inquiry.key) {
                 "Foo" -> Promise.resolve(Foo())
                 "Bar" -> Promise.resolve(Bar())
-                else -> Promise.EMPTY
+                else -> null
             }
         }
     }
@@ -1653,7 +1651,7 @@ class HandlerTest {
 
         @Handles
         @Log @Contravarint @Exceptions
-        fun handleBaz(bar: Bar): Promise<SpecialBar> {
+        fun handleBar(bar: Bar): Promise<SpecialBar> {
             return Promise.resolve(SpecialBar())
         }
 

@@ -12,7 +12,8 @@ open class Handler : Handling {
         val scope = composer
                 ?: this as? CompositionScope
                 ?: CompositionScope(this)
-        return handleCallback(callback, callbackType, greedy, scope)
+        return handleCallback(Inference.get(callback, callbackType),
+                callbackType, greedy, scope)
     }
 
     protected open fun handleCallback(

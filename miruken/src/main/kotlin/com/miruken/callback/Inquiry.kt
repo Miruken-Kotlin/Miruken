@@ -51,8 +51,12 @@ open class Inquiry(
 
     val resolutions: List<Any> get() = _resolutions.toList()
 
-    val keyClass: KClass<*>?
-        get() = (key as? KType)?.jvmErasure
+    val keyClass: KClass<*>? get() =
+        when (key) {
+            is KType -> key.jvmErasure
+            is KClass<*> -> key
+            else -> null
+        }
 
     open fun createKeyInstance(): Any? {
         return when (key) {
@@ -151,8 +155,8 @@ open class Inquiry(
             composer:   Handling
     ): Boolean {
         val res = (resolution as? Promise<*>)
-                ?.takeIf { it.state == PromiseState.FULFILLED }
-                ?.let { it.get() } ?: resolution
+            ?.takeIf { it.state == PromiseState.FULFILLED }
+                ?.get() ?: resolution
 
         if (res is Promise<*>) {
             isAsync = true

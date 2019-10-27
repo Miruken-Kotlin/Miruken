@@ -10,6 +10,7 @@ import com.miruken.runtime.matchMethod
 import com.miruken.toKType
 import com.miruken.typeOf
 import java.lang.reflect.Method
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -26,8 +27,7 @@ class HandleMethod(
     override val policy:     CallbackPolicy? get() = null
     var          exception:  Throwable? = null
 
-    override fun inferCallback() =
-            Resolution(protocol, this, TYPE)
+    override fun inferCallback(): Any = Inference(this)
 
     override fun dispatch(
             handler:      Any,
@@ -36,11 +36,16 @@ class HandleMethod(
             composer:     Handling
     ) = getTarget(handler)?.let { target ->
         val targetClass = target::class
-        BINDINGS.getOrPut(method to targetClass) {
+        val binding = BINDINGS.getOrPut(method to targetClass) {
             targetClass.matchMethod(method)?.let {
-                HandleMethodBinding(method, it)
-            }
-        }?.dispatch(target, this, composer)
+                Optional.of(HandleMethodBinding(method, it))
+            } ?: Optional.empty()
+        }
+        if (binding.isPresent) {
+            binding.get().dispatch(target, this, composer)
+        } else {
+            HandleResult.NOT_HANDLED
+        }
     } ?: HandleResult.NOT_HANDLED
 
     private fun getTarget(target: Any): Any? {
@@ -67,11 +72,31 @@ class HandleMethod(
         }
     }
 
+    private class Inference(
+            handleMethod: HandleMethod
+    ) : Trampoline(handleMethod, TYPE), InferringCallback {
+        override fun inferCallback() = this
+
+        override fun dispatch(
+                handler:      Any,
+                callbackType: TypeReference?,
+                greedy:       Boolean,
+                composer:     Handling
+        ): HandleResult {
+            val direct = super.dispatch(
+                    handler, callbackType, greedy, composer)
+            if (direct.handled) return direct
+            val handleMethod = callback as HandleMethod
+            val infer = Resolution(handleMethod.protocol, handleMethod, TYPE)
+            return infer.dispatch(handler, callbackType, greedy, composer)
+        }
+    }
+
     companion object {
         val TYPE = typeOf<HandleMethod>()
 
         private val BINDINGS = ConcurrentHashMap<
-                Pair<Method, KClass<*>>, HandleMethodBinding?>()
+                Pair<Method, KClass<*>>, Optional<HandleMethodBinding>>()
     }
 }
 

@@ -134,23 +134,22 @@ class MappingTest {
     @Test fun `Performs mapping resolving`() {
         HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         val exception = IllegalArgumentException("Value is bad")
-        val value     = _exception.infer.map<Any>(exception)
+        val value     = _exception.map<Any>(exception)
         assertEquals("java.lang.IllegalArgumentException: Value is bad", value)
     }
 
     @Test fun `Performs mapping on simple results`() {
         HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         val exception = IllegalStateException("Close not found")
-        var value     = _exception.infer.map<Any>(exception)
+        var value     = _exception.map<Any>(exception)
         assertEquals(500, value)
-        value = _exception.infer
-                .map(IllegalAccessException("Operation not allowed"))
+        value = _exception.map(IllegalAccessException("Operation not allowed"))
         assertEquals("Operation not allowed", value)
     }
 
     @Test fun `Maps to null if best effort`() {
         HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
-        val value = _exception.infer.bestEffort
+        val value = _exception.bestEffort
                 .map<Int>(InvalidClassException(""))
         assertNull(value)
     }
@@ -158,7 +157,7 @@ class MappingTest {
     @Test fun `Maps to null if best effort async`() {
         HandlerDescriptorFactory.current.registerDescriptor<ExplicitMapping>()
         assertAsync { done ->
-            _exception.infer.bestEffort
+            _exception.bestEffort
                     .mapAsync<Int>(InvalidClassException("")) then {
                 assertNull(it)
                 done()

@@ -305,6 +305,8 @@ fun KClass<*>.matchMethod(method: Method): Method? {
         java.getMethod(method.name, *method.parameterTypes)?.apply {
             isAccessible = true
         }
+    } catch (e: NoSuchMethodException) {
+        null
     } catch (e: NoSuchMethodError) {
         null
     }
