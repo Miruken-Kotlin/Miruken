@@ -18,8 +18,12 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
     ): Promise<Res> {
         val parent = callback.parent
         if (parent == null || isCompatibleWithParent(parent)) {
-            val instance = getInstance(callback, binding, next, composer)
-            if (instance != null)  return instance
+            try {
+                val instance = getInstance(callback, binding, next, composer)
+                if (instance != null) return instance
+            } catch (t: Throwable) {
+                // fall through
+            }
         }
         return next.abort()
     }

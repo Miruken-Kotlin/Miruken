@@ -58,7 +58,7 @@ class Navigator(mainRegion: ViewingRegion) : CompositeHandler() {
         @Suppress("UNCHECKED_CAST")
         return Promise(ChildCancelMode.ANY) { resolve, reject ->
             (child.xself + composer)
-                    .infer.resolveAsync(navigation.controllerKey) {
+                    .resolveAsync(navigation.controllerKey) {
                 require(Qualifier<Scoped>())
             } then {
                 if (it == null) {

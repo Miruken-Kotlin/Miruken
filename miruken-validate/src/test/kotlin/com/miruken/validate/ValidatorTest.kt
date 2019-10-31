@@ -1,11 +1,16 @@
 package com.miruken.validate
 
+import com.miruken.callback.GenericWrapper
 import com.miruken.callback.Handler
 import com.miruken.callback.plus
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
 import com.miruken.protocol.proxy
 import com.miruken.test.assertAsync
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -18,8 +23,20 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class ValidatorTest {
+    private lateinit var factory: HandlerDescriptorFactory
+
     @Rule
     @JvmField val testName = TestName()
+
+    @Before
+    fun setup() {
+        factory = MutableHandlerDescriptorFactory().apply {
+            registerDescriptor<ValidateTeam>()
+            registerDescriptor<ValidatePlayer>()
+            registerDescriptor<GenericWrapper>()
+            HandlerDescriptorFactory.useFactory(this)
+        }
+    }
 
     @Test fun `Validates target`() {
         val handler = ValidatePlayer()

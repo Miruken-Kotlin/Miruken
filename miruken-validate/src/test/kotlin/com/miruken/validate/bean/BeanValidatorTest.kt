@@ -1,6 +1,13 @@
 package com.miruken.validate.bean
 
-import com.miruken.validate.*
+import com.miruken.callback.GenericWrapper
+import com.miruken.callback.policy.HandlerDescriptorFactory
+import com.miruken.callback.policy.MutableHandlerDescriptorFactory
+import com.miruken.callback.policy.registerDescriptor
+import com.miruken.validate.Coach
+import com.miruken.validate.Player
+import com.miruken.validate.Team
+import com.miruken.validate.validate
 import org.junit.After
 import org.junit.Test
 import java.time.LocalDate
@@ -9,12 +16,19 @@ import javax.validation.ValidatorFactory
 import kotlin.test.*
 
 class BeanValidatorTest {
+    private lateinit var factory: HandlerDescriptorFactory
     private lateinit var _validatorFactory: ValidatorFactory
 
     @BeforeTest
     fun setup() {
         _validatorFactory = Validation
                 .buildDefaultValidatorFactory()
+
+        factory = MutableHandlerDescriptorFactory().apply {
+            registerDescriptor<BeanValidator>()
+            registerDescriptor<GenericWrapper>()
+            HandlerDescriptorFactory.useFactory(this)
+        }
     }
 
     @After

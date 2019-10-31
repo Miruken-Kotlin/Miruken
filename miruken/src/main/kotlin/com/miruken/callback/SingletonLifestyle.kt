@@ -5,7 +5,7 @@ import com.miruken.concurrent.Promise
 
 class SingletonLifestyle<Res> : Lifestyle<Res>() {
     @Volatile
-    private var _instance: Promise<Res>? = null
+    private var _instance: Res? = null
 
     override fun isCompatibleWithParent(parent: Inquiry) = true
 
@@ -15,16 +15,19 @@ class SingletonLifestyle<Res> : Lifestyle<Res>() {
             next:     Next<Res>,
             composer: Handling
     ): Promise<Res>? {
-        val val1 = _instance
-        if (val1 != null) return val1
-        return synchronized(this) {
-            val val2 = _instance
-            if (val2 != null) val2
-            else {
-                val instance = next()
-                _instance = instance
-                instance
+        var instance = _instance
+        if (instance == null) {
+            synchronized(this) {
+                instance = _instance
+                if (instance == null) {
+                    instance = next().get()
+                    _instance = instance
+                }
             }
+        }
+        @Suppress("UNCHECKED_CAST")
+        return instance?.let {
+            Promise.resolve(it as Any) as Promise<Res>
         }
     }
 }

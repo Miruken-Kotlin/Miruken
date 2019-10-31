@@ -925,6 +925,24 @@ class HandlerTest {
         }
     }
 
+    @Test fun `Ignores scoped errors`() {
+        factory.registerDescriptor<ControllerBase>()
+        factory.registerDescriptor<ScopedErrorProvider>()
+        Context().use { context ->
+            context.addHandlers(TypeHandlers)
+            val screen1 = context.with(Foo())
+                    .resolve<ScreenModel<Foo>>()
+            assertNotNull(screen1)
+            val screen2 = context.resolve<ScreenModel<Bar>>()
+            assertNull(screen2)
+            val screen3 = context.resolve<ScreenModel<Bar>>()
+            assertNotNull(screen3)
+            assertSame(screen1, context.resolve()!!)
+            assertSame(screen3, context.resolve()!!)
+            assertNull(context.resolve<ScreenModel<Boo>>())
+        }
+    }
+
     @Test fun `Rejects scoped creation if no context`() {
         factory.registerDescriptor<Screen>()
         val screen = TypeHandlers.resolve<Screen>()
@@ -1464,6 +1482,18 @@ class HandlerTest {
         @Provides @Scoped
         fun <M> getScreen(model: M) =
                 Promise.resolve(ScreenModel(model))
+    }
+
+    object ScopedErrorProvider {
+        private var count = 0
+
+        @Provides @Scoped
+        fun <M> getScreen(model: M) =
+                if (++count % 2 == 0) {
+                    throw InvalidStateException("Something bad")
+                } else {
+                    Promise.resolve(ScreenModel(model))
+                }
     }
 
     open class ApplicationBase

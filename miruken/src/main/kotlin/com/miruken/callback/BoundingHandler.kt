@@ -12,7 +12,7 @@ class BoundingHandler(
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        val bounded = ((callback as? Composition)
+        val bounded = ((callback as? Trampoline)
                 ?.callback ?: callback) as? BoundingCallback
         if (bounded != null && bounded.bounds == bounds)
             return HandleResult.NOT_HANDLED

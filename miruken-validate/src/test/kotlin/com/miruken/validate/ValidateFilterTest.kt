@@ -36,7 +36,7 @@ class ValidateFilterTest {
 
     @Test fun `Validates request`() {
         assertAsync(testName) { done ->
-            _handler.infer.commandAsync(CreateTeam(Team().apply {
+            _handler.commandAsync(CreateTeam(Team().apply {
                 name  = "Liverpool"
                 coach = Coach().apply {
                     firstName = "Zinedine"
@@ -55,7 +55,7 @@ class ValidateFilterTest {
 
     @Test fun `Rejects invalid request`() {
         assertAsync(testName) { done ->
-            _handler.infer.commandAsync(CreateTeam(Team())) then {
+            _handler.commandAsync(CreateTeam(Team())) then {
                 val team = it as Team
                 assertEquals(team.validationOutcome?.isValid, true)
                 assertEquals(1, team.id)

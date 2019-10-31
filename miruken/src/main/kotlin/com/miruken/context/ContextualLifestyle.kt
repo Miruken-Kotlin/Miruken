@@ -27,26 +27,26 @@ class ContextualLifestyle<Res>(val rooted: Boolean) : Lifestyle<Res>() {
         val context = composer.resolve<Context>()?.let {
             if (rooted) it.root else it
         } ?: return null
-        return _cache.getOrPut(context) {
-            next() then { instance ->
-                if (instance is Contextual) {
-                    instance.context = context
-                    val undo = instance.contextChanging.register(::changeContext)
-                    context.contextEnded += { event ->
-                        _cache.remove(event.context)
-                        undo()
-                        (instance as? AutoCloseable)?.close()
-                        instance.context = null
-                    }
-                } else {
-                    context.contextEnded += { event ->
-                        _cache.remove(event.context)
-                        (instance as? AutoCloseable)?.close()
-                    }
+        @Suppress("UNCHECKED_CAST")
+        return Promise.resolve(_cache.getOrPut(context) {
+            val instance = next().get()
+            if (instance is Contextual) {
+                instance.context = context
+                val undo = instance.contextChanging.register(::changeContext)
+                context.contextEnded += { event ->
+                    _cache.remove(event.context)
+                    undo()
+                    (instance as? AutoCloseable)?.close()
+                    instance.context = null
                 }
-                instance
+            } else {
+                context.contextEnded += { event ->
+                    _cache.remove(event.context)
+                    (instance as? AutoCloseable)?.close()
+                }
             }
-        }
+            instance
+        } as Any) as Promise<Res>
     }
 
     private fun changeContext(event: ContextChangingEvent) {
@@ -56,14 +56,14 @@ class ContextualLifestyle<Res>(val rooted: Boolean) : Lifestyle<Res>() {
         check(newContext == null) {
             "Managed instances cannot change context"
         }
-        _cache[oldContext]?.get()
+        _cache[oldContext]
                 ?.takeIf { it === event.contextual }?.also {
                     _cache.remove(oldContext)
                     (it as? AutoCloseable)?.close()
                 }
     }
 
-    private val _cache = ConcurrentHashMap<Context, Promise<Res>>()
+    private val _cache = ConcurrentHashMap<Context, Res>()
 }
 
 object ContextualLifestyleProvider : LifestyleProvider() {

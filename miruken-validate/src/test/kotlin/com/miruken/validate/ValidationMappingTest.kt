@@ -2,7 +2,6 @@ package com.miruken.validate
 
 import com.miruken.callback.Handling
 import com.miruken.callback.TypeHandlers
-import com.miruken.callback.infer
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.registerDescriptor
@@ -43,7 +42,7 @@ class ValidationMappingTest {
                                 errors = arrayOf("club not specified"))))
                 ).let(::ValidationErrorMapping)
 
-        val exception = TypeHandlers.infer.map<Throwable>(
+        val exception = TypeHandlers.map<Throwable>(
                 mapping, format = Throwable::class
         ) as? ValidationException
 
