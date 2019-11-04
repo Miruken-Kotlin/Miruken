@@ -23,10 +23,11 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
 
     init { callable.isAccessible = true }
 
-    inline   val arity       get() = arguments.size
-    inline   val owningClass get() = owningType.jvmErasure
-    inline   val returnType  get() = callable.returnType
-    override val annotations get() = callable.annotations
+    inline   val arity        get() = arguments.size
+    inline   val owningClass  get() = owningType.jvmErasure
+    inline   val returnType   get() = callable.returnType
+    inline   val isContructor get() = !callable.requiresReceiver
+    override val annotations  get() = callable.annotations
 
     val owningType get() = callable.instanceParameter?.type
             ?: callable.returnType

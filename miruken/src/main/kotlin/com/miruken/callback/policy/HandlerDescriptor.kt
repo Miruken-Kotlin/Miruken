@@ -66,11 +66,17 @@ class HandlerDescriptor(
             greedy:       Boolean,
             composer:     Handling,
             results:      CollectResultsBlock
-    ) = members.fold(HandleResult.NOT_HANDLED) { result, method ->
+    ) = members.fold(Pair(HandleResult.NOT_HANDLED, false)) { acc, method ->
+        val result = acc.first
         if ((result.handled && !greedy) || result.stop) {
             return result
         }
-        result or method.dispatch(receiver, callback,
-                callbackType, composer, this, results)
-    }
+        val isConstructor = method.dispatcher.isContructor
+        if (isConstructor && acc.second) {
+            Pair(result, true)
+        } else {
+            val res = result or method.dispatch(receiver, callback, callbackType, composer, this, results)
+            Pair(res, acc.second || (isConstructor && res.handled))
+        }
+    }.first
 }

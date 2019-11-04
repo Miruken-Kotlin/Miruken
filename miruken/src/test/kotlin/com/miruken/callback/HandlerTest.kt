@@ -1000,20 +1000,44 @@ class HandlerTest {
                     registerDescriptor<OverloadedConstructors>()
                 }
         )
-        val ctor    = TypeHandlers.resolve<OverloadedConstructors>()
+        val ctor = TypeHandlers.resolve<OverloadedConstructors>()
         assertNotNull(ctor)
         assertNull(ctor.foo)
         assertNull(ctor.bar)
-        val ctor1   = TypeHandlers.with(Foo())
-                .resolve<OverloadedConstructors>()
+        val ctor1 = TypeHandlers.with(Foo()).resolve<OverloadedConstructors>()
         assertNotNull(ctor1)
         assertNotNull(ctor1.foo)
         assertNull(ctor1.bar)
-        val ctor2   = TypeHandlers.with(Foo()).with(Bar())
+        val ctor2 = TypeHandlers.with(Foo()).with(Bar())
                 .resolve<OverloadedConstructors>()
         assertNotNull(ctor2)
         assertNotNull(ctor2.foo)
         assertNotNull(ctor2.bar)
+    }
+
+    @Test fun `Selects greediest consructor when resolving all`() {
+        HandlerDescriptorFactory.useFactory(
+                MutableHandlerDescriptorFactory().apply {
+                    registerDescriptor<Provider>()
+                    registerDescriptor<OverloadedConstructors>()
+                }
+        )
+        val ctor = TypeHandlers.resolveAll<OverloadedConstructors>()
+        assertEquals(1, ctor.size)
+        assertNotNull(ctor[0])
+        assertNull(ctor[0].foo)
+        assertNull(ctor[0].bar)
+        val ctor1 = TypeHandlers.with(Foo()).resolveAll<OverloadedConstructors>()
+        assertEquals(1, ctor1.size)
+        assertNotNull(ctor1[0])
+        assertNotNull(ctor1[0].foo)
+        assertNull(ctor1[0].bar)
+        val ctor2 = TypeHandlers.with(Foo()).with(Bar())
+                .resolveAll<OverloadedConstructors>()
+        assertEquals(1, ctor2.size)
+        assertNotNull(ctor2[0])
+        assertNotNull(ctor2[0].foo)
+        assertNotNull(ctor2[0].bar)
     }
 
     @Test fun `Ignores options at boundary `() {
