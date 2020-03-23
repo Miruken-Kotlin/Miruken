@@ -11,6 +11,7 @@ class ValidateFilter<in Cb: Any, Res: Any?>
 
     override var order: Int? = Stage.VALIDATION
 
+    @Suppress("UNCHECKED_CAST")
     override fun next(
             callback:    Cb,
             rawCallback: Any,
@@ -21,12 +22,11 @@ class ValidateFilter<in Cb: Any, Res: Any?>
     ) = validate(callback, composer) flatMap {
         next()
     } flatMap {
-        @Suppress("UNCHECKED_CAST")
-        if (it == null) {
-            Promise.EMPTY as Promise<Res>
-        } else {
-            validate(it, composer) as Promise<Res>
-        }
+        when {
+            it == null -> Promise.EMPTY
+            validateResponse(provider) -> validate(it, composer)
+            else -> Promise.resolve(it as Any)
+        } as Promise<Res>
     }
 
     private fun validate(target: Any, handler: Handling) =
@@ -35,4 +35,9 @@ class ValidateFilter<in Cb: Any, Res: Any?>
                     throw ValidationException(it)
                 target
             }
+
+    private fun validateResponse(provider: FilteringProvider?) =
+            (provider as? FilterSpecProvider)?.let {
+                (it.owner as? Validate)?.validateResponse
+            } ?: false
 }

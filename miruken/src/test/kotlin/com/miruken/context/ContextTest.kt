@@ -382,7 +382,7 @@ class ContextTest {
 
     class Observer : ContextualHandler() {
         @Handles
-        fun handle(foo: Foo, composer: Handling) {
+        fun observe(foo: Foo, composer: Handling) {
             val ctx = composer.resolve<Context>()
             assertSame(context!!.root, ctx)
             ++foo.count

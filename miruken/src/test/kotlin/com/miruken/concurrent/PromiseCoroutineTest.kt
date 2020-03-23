@@ -19,7 +19,7 @@ class PromiseCoroutineTest {
 
     @Test fun `Awaits rejected promise`() = runBlocking {
         try {
-            Promise.reject(Exception("Error")).await()
+            Promise.reject(Exception("Error")).await<Nothing>()
         } catch (t: Throwable) {
             assertEquals("Error", t.message)
         }

@@ -15,7 +15,8 @@ open class Resolution(
     override fun canDispatch(
             target:     Any,
             dispatcher: CallableDispatch
-    ) = (callback as? DispatchingCallbackGuard)
+    ) = super.canDispatch(target, dispatcher) &&
+            (callback as? DispatchingCallbackGuard)
             ?.canDispatch(target, dispatcher) != false
 
     override fun isSatisfied(

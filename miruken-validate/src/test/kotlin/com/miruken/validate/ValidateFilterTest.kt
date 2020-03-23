@@ -101,7 +101,7 @@ class ValidateFilterTest {
         private var _teamId = 0
 
         @Handles
-        @Validate
+        @Validate(validateResponse = true)
         fun createTeam(
                 create:   CreateTeam,
                 composer: Handling
