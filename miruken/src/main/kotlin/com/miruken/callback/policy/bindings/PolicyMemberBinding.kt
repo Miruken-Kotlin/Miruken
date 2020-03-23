@@ -46,12 +46,22 @@ class PolicyMemberBinding(
             composer:     Handling,
             descriptor:   HandlerDescriptor,
             results:      CollectResultsBlock
-    ): HandleResult {
-        (callback as? DispatchingCallbackGuard)?.let {
-            if (!it.canDispatch(handler, dispatcher))
-                return HandleResult.NOT_HANDLED
-        }
+    ) = (callback as? DispatchingCallbackGuard)?.let {
+        it.tryDispatch(handler, dispatcher) {
+            dispatchCore(handler, callback, callbackType,
+                    composer, descriptor, results)
+        } ?: HandleResult.NOT_HANDLED
+    } ?: dispatchCore(handler, callback, callbackType,
+            composer, descriptor, results)
 
+    private fun dispatchCore(
+            handler:      Any,
+            callback:     Any,
+            callbackType: TypeReference?,
+            composer:     Handling,
+            descriptor:   HandlerDescriptor,
+            results:      CollectResultsBlock
+    ): HandleResult {
         val ruleArgs = rule?.resolveArguments(callback) ?: emptyArray()
         val filterCallback = callbackArg?.let {
             ruleArgs[it.parameter.index - 1].takeIf { // skip receiver

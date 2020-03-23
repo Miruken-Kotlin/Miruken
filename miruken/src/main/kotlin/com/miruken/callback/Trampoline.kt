@@ -21,11 +21,15 @@ open class Trampoline(
     override val policy get() =
         (callback as? DispatchingCallback)?.policy
 
-    override fun canDispatch(
+    override fun tryDispatch(
             target:     Any,
-            dispatcher: CallableDispatch
-    ) = (callback as? DispatchingCallbackGuard)
-            ?.canDispatch(target, dispatcher) != false
+            dispatcher: CallableDispatch,
+            block:      () -> HandleResult?
+    ) = if (callback is DispatchingCallbackGuard) {
+            callback.tryDispatch(target, dispatcher, block)
+    } else {
+        block()
+    }
 
     override fun dispatch(
             handler:      Any,

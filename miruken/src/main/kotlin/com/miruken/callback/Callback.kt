@@ -33,10 +33,11 @@ interface FilteringCallback {
 }
 
 interface DispatchingCallbackGuard {
-    fun canDispatch(
+    fun tryDispatch(
             target:     Any,
-            dispatcher: CallableDispatch
-    ): Boolean
+            dispatcher: CallableDispatch,
+            block:      () -> HandleResult?
+    ): HandleResult?
 }
 
 interface DispatchingCallback {

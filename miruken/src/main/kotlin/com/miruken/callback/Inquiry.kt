@@ -125,7 +125,8 @@ open class Inquiry(
         }
 
     fun resolve(resolution: Any, composer: Handling) =
-            resolve(resolution, false, false, composer)
+            resolve(resolution, strict = false, greedy = false,
+                    composer = composer)
 
     fun resolve(
             resolution: Any,
@@ -199,14 +200,24 @@ open class Inquiry(
             composer:   Handling
     ): Boolean = true
 
-    override fun canDispatch(
+    override fun tryDispatch(
             target:     Any,
-            dispatcher: CallableDispatch
-    ): Boolean {
-        if (inProgress(target, dispatcher)) return false
-        this.target     = target
-        this.dispatcher = dispatcher
-        return true
+            dispatcher: CallableDispatch,
+            block:      () -> HandleResult?
+    ): HandleResult? {
+        if (inProgress(target, dispatcher)) {
+            return null
+        }
+        val oldTarget     = this.target
+        val oldDispatcher = this.dispatcher
+        this.target       = target
+        this.dispatcher   = dispatcher
+        try {
+            return block()
+        } finally {
+            this.target     = oldTarget
+            this.dispatcher = oldDispatcher
+        }
     }
 
     override fun dispatch(

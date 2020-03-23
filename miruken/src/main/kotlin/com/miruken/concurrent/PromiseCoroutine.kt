@@ -8,6 +8,6 @@ import kotlin.coroutines.resumeWithException
 suspend fun <T> Promise<T>.await(): T =
         suspendCancellableCoroutine { cont: CancellableContinuation<T> ->
             cont.invokeOnCancellation { cancel() }
-            then({ cont.resume(it) }, cont::resumeWithException)
+            then<Unit, Unit>(cont::resume, cont::resumeWithException)
             cancelled { cont.cancel(it) }
         }

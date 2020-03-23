@@ -12,12 +12,17 @@ open class Resolution(
 
     final override fun inferCallback() = this
 
-    override fun canDispatch(
+    override fun tryDispatch(
             target:     Any,
-            dispatcher: CallableDispatch
-    ) = super.canDispatch(target, dispatcher) &&
-            (callback as? DispatchingCallbackGuard)
-            ?.canDispatch(target, dispatcher) != false
+            dispatcher: CallableDispatch,
+            block:      () -> HandleResult?
+    ) = super.tryDispatch(target, dispatcher) {
+        if (callback is DispatchingCallbackGuard) {
+            callback.tryDispatch(target, dispatcher, block)
+        } else {
+            block()
+        }
+    }
 
     override fun isSatisfied(
             resolution: Any,

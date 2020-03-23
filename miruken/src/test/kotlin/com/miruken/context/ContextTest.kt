@@ -7,6 +7,7 @@ import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.ChildCancelMode
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
+import com.miruken.event.Event
 import com.miruken.protocol.proxy
 import org.junit.Before
 import org.junit.Test
@@ -380,7 +381,29 @@ class ContextTest {
         var count = 0
     }
 
-    class Observer : ContextualHandler() {
+    class Observer : Handler(), Contextual {
+        private var _context: Context? = null
+
+        override val contextChanging = Event<ContextChangingEvent>()
+        override val contextChanged  = Event<ContextChangedEvent>()
+
+        override var context: Context?
+            get() = _context
+            set(value) {
+                if (_context == value) return
+                val changingEvent = ContextChangingEvent(this, _context, value)
+                contextChanging {
+                    ContextChangingEvent(this, _context, value)
+                }
+                _context?.removeHandlers(this)
+                val oldContext = _context
+                _context = changingEvent.newContext
+                _context?.insertHandlers(0, this)
+                contextChanged {
+                    ContextChangedEvent(this, oldContext, _context)
+                }
+            }
+
         @Handles
         fun observe(foo: Foo, composer: Handling) {
             val ctx = composer.resolve<Context>()
