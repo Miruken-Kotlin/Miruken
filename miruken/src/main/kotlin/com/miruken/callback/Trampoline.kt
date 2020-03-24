@@ -24,12 +24,10 @@ open class Trampoline(
     override fun tryDispatch(
             target:     Any,
             dispatcher: CallableDispatch,
-            block:      () -> HandleResult?
-    ) = if (callback is DispatchingCallbackGuard) {
-            callback.tryDispatch(target, dispatcher, block)
-    } else {
-        block()
-    }
+            block:      () -> HandleResult
+    ) = (callback as? DispatchingCallbackGuard)
+            ?.tryDispatch(target, dispatcher, block)
+            ?: block()
 
     override fun dispatch(
             handler:      Any,

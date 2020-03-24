@@ -46,13 +46,12 @@ class PolicyMemberBinding(
             composer:     Handling,
             descriptor:   HandlerDescriptor,
             results:      CollectResultsBlock
-    ) = (callback as? DispatchingCallbackGuard)?.let {
-        it.tryDispatch(handler, dispatcher) {
-            dispatchCore(handler, callback, callbackType,
+    ) = (callback as? DispatchingCallbackGuard)
+            ?.tryDispatch(handler, dispatcher) {
+                dispatchCore(handler, callback, callbackType,
                     composer, descriptor, results)
-        } ?: HandleResult.NOT_HANDLED
-    } ?: dispatchCore(handler, callback, callbackType,
-            composer, descriptor, results)
+            } ?: dispatchCore(handler, callback, callbackType,
+                composer, descriptor, results)
 
     private fun dispatchCore(
             handler:      Any,

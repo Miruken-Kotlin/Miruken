@@ -203,10 +203,10 @@ open class Inquiry(
     override fun tryDispatch(
             target:     Any,
             dispatcher: CallableDispatch,
-            block:      () -> HandleResult?
-    ): HandleResult? {
+            block:      () -> HandleResult
+    ): HandleResult {
         if (inProgress(target, dispatcher)) {
-            return null
+            return HandleResult.NOT_HANDLED
         }
         val oldTarget     = this.target
         val oldDispatcher = this.dispatcher

@@ -36,8 +36,8 @@ interface DispatchingCallbackGuard {
     fun tryDispatch(
             target:     Any,
             dispatcher: CallableDispatch,
-            block:      () -> HandleResult?
-    ): HandleResult?
+            block:      () -> HandleResult
+    ): HandleResult
 }
 
 interface DispatchingCallback {
