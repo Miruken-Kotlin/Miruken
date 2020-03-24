@@ -4,7 +4,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1'
     testImplementation project(':miruken-test')
     testImplementation 'io.github.classgraph:classgraph:4.8.65'
-    testImplementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.9'
+    testImplementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.10.3'
 }
 
 def artifactName = 'miruken'
