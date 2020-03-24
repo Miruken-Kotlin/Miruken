@@ -1,46 +1,45 @@
 package com.miruken.callback
 
 import com.miruken.TypeReference
-import com.miruken.callback.policy.CallbackPolicy
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.PromiseState
 import com.miruken.concurrent.all
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.starProjectedType
 
-open class Command(
-        val callback:     Any,
-        val callbackType: TypeReference?,
-        val many:         Boolean = false
-) : Callback, AsyncCallback,
-        FilteringCallback, BatchingCallback,
-        DispatchingCallback {
-
+open class Creation(
+            type:   Any,
+        val many:   Boolean = false
+) : Callback, AsyncCallback, DispatchingCallback {
     private var _result: Any? = null
     private val _promises     = mutableListOf<Promise<*>>()
-    private val _results      = mutableListOf<Any>()
+    private val _instances    = mutableListOf<Any>()
 
-    override var wantsAsync: Boolean = false
+    val type = when (type) {
+        is KType -> type
+        is KClass<*> -> type.starProjectedType
+        is TypeReference -> type.kotlinType
+        else -> error("Only types can be created")
+    }
+
+    var target: Any? = null
+        private set
+
+    final override var wantsAsync: Boolean = false
 
     final override var isAsync: Boolean = false
         private set
 
-    override val canFilter: Boolean
-        get() = (callback as? FilteringCallback)?.canFilter != false
+    final override val policy get() = CreatesPolicy
 
-    override val canBatch: Boolean
-        get() = (callback as? BatchingCallback)?.canBatch != false
-
-    override fun getCallbackKey() = callbackType?.kotlinType
-
-    override var policy: CallbackPolicy = HandlesPolicy
-
-    val results: List<Any> get() = _results
+    val instances: List<Any> get() = _instances.toList()
 
     override val resultType: KType?
-        get() {
-            var resultType = TypeReference.ANY_TYPE
+        get() = type.let {
+            var resultType = it
             if (many) {
                 resultType = List::class.createType(listOf(
                         KTypeProjection.invariant(resultType)))
@@ -57,10 +56,10 @@ open class Command(
             if (_result == null) {
                 _result = if (isAsync) {
                     Promise.all(_promises) then {
-                        if (many) _results else _results.firstOrNull()
+                        if (many) _instances else _instances.firstOrNull()
                     }
                 } else {
-                    if (many) _result else _results.firstOrNull()
+                    if (many) _instances else _instances.firstOrNull()
                 }
             }
             if (isAsync) {
@@ -79,26 +78,26 @@ open class Command(
         }
 
     @Suppress("UNUSED_PARAMETER")
-    fun respond(response: Any, strict: Boolean) : Boolean {
-        val accepted = include(response)
-        if (accepted) _result = null
-        return accepted
-    }
-
-    private fun include(resolution: Any): Boolean {
-        val res = (resolution as? Promise<*>)
-                ?.takeIf {
-                    it.state == PromiseState.FULFILLED
-                }?.get() ?: resolution
+    fun addInstance(
+            instance: Any,
+            strict:   Boolean
+    ): Boolean {
+        val res = (instance as? Promise<*>)
+                ?.takeIf { it.state == PromiseState.FULFILLED }
+                ?.get() ?: instance
 
         if (res is Promise<*>) {
             isAsync = true
-            _promises.add(res.then {
-                if (it != null) _results.add(it)
+            _promises.add(res.then { i ->
+                if (i != null) _instances.add(i)
+            } catch {
+                // ignore failures
             })
         } else {
-            _results.add(res)
+            _instances.add(res)
         }
+
+        _result = null
         return true
     }
 
@@ -108,10 +107,9 @@ open class Command(
             greedy:       Boolean,
             composer:     Handling
     ): HandleResult {
-        val size = _results.size
-        return policy.dispatch(handler, this,
-                this.callbackType ?: callbackType,
-                greedy, composer, ::respond).otherwise(
-                _results.size > size)
+        val count = _instances.size + _promises.size
+        return policy.dispatch(handler, this, callbackType,
+                greedy, composer, ::addInstance).otherwise(
+                _instances.size + _promises.size > count)
     }
 }
