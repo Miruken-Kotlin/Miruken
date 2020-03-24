@@ -93,7 +93,8 @@ class HandleMethodBinding(
                 KTypeProjection.invariant(HandleMethod.TYPE.kotlinType),
                 KTypeProjection.invariant(handleMethod.resultType)))
         return composer.getOrderedFilters(
-                filterType, this, sequenceOf(
+                filterType, this, handleMethod, HandleMethod.TYPE,
+                    sequenceOf(
                         filterProviders,
                         filters,
                         ((target as? Filtering<*,*>)?.let {

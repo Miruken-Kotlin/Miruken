@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
 import java.util.concurrent.ConcurrentHashMap
@@ -41,10 +42,17 @@ abstract class Lifestyle<Res> : Filtering<Inquiry, Res> {
 abstract class LifestyleProvider : FilteringProvider {
     final override val required = true
 
+    override fun appliesTo(
+            callback:     Any,
+            callbackType: TypeReference?
+    ) = callback is Inquiry
+
     override fun getFilters(
-            binding:    MemberBinding,
-            filterType: KType,
-            composer:   Handling
+            binding:      MemberBinding,
+            filterType:   KType,
+            callback:     Any,
+            callbackType: TypeReference?,
+            composer:     Handling
     ): List<Lifestyle<*>> {
         val resultType = filterType.arguments[1].type!!
         return listOf(LIFESTYLES.getOrPut(

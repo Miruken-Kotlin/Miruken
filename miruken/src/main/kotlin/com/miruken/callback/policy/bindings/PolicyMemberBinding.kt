@@ -183,12 +183,13 @@ class PolicyMemberBinding(
                 KTypeProjection.invariant(cbType),
                 KTypeProjection.invariant(resultType)))
         return composer.getOrderedFilters(
-                filterType, this, sequenceOf(
-                filters, dispatcher.filterProviders,
-                descriptor.filters, policy.filters,
-                ((handler as? Filtering<*,*>)?.let {
-                    listOf(FilterInstanceProvider(true, it))
-                } ?: emptyList()))
+                filterType, this, callback, callbackType,
+                sequenceOf(
+                    filters, dispatcher.filterProviders,
+                    descriptor.filters, policy.filters,
+                    ((handler as? Filtering<*,*>)?.let {
+                        listOf(FilterInstanceProvider(true, it))
+                    } ?: emptyList()))
         ) as? List<Pair<Filtering<Any,Any?>, FilteringProvider>>
     }
 

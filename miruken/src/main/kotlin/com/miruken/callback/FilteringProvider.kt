@@ -1,15 +1,23 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.bindings.MemberBinding
 import kotlin.reflect.KType
 
 interface FilteringProvider {
     val required: Boolean
 
+    fun appliesTo(
+            callback:     Any,
+            callbackType: TypeReference?
+    ) : Boolean?
+
     fun getFilters(
-            binding:    MemberBinding,
-            filterType: KType,
-            composer:   Handling
+            binding:      MemberBinding,
+            filterType:   KType,
+            callback:     Any,
+            callbackType: TypeReference?,
+            composer:     Handling
     ): List<Filtering<*,*>>?
 
     fun configure(owner: Any) {}

@@ -1,5 +1,6 @@
 package com.miruken.callback
 
+import com.miruken.TypeReference
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.runtime.isCompatibleWith
 import kotlin.reflect.KType
@@ -25,10 +26,17 @@ open class FilterSpecProvider(
         this.owner = owner
     }
 
+    override fun appliesTo(
+            callback:     Any,
+            callbackType: TypeReference?
+    ): Boolean? = null
+
     override fun getFilters(
-            binding:    MemberBinding,
-            filterType: KType,
-            composer:   Handling
+            binding:      MemberBinding,
+            filterType:   KType,
+            callback:     Any,
+            callbackType: TypeReference?,
+            composer:     Handling
     ): List<Filtering<*,*>>? {
         val filterClass       = filterSpec.filterby
         val filterConformance = filterClass.getFilteringInterface()

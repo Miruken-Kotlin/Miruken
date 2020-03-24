@@ -1,6 +1,7 @@
 package com.miruken.callback
 
 import com.miruken.OrderedComparator
+import com.miruken.TypeReference
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.runtime.getMetaAnnotations
 import com.miruken.runtime.normalize
@@ -38,11 +39,14 @@ fun Handling.withFilters(vararg specs: FilterSpec) =
 fun Handling.getOrderedFilters(
         filterType:      KType,
         binding:         MemberBinding,
+        callback:        Any,
+        callbackType:    TypeReference?,
         filterProviders: Sequence<Collection<FilteringProvider>>
 ): List<Pair<Filtering<*,*>, FilteringProvider>>? {
     val options   = getOptions(FilterOptions())
-    var providers = filterProviders.flatten() +
-            (options?.providers ?: emptyList())
+    var providers = filterProviders.flatten().filter {
+        it.appliesTo(callback, callbackType) != false
+    } + (options?.providers ?: emptyList())
 
     val handler = when (options?.skipFilters) {
         true -> {
@@ -59,7 +63,8 @@ fun Handling.getOrderedFilters(
     }
 
     return providers.toList().flatMap { provider ->
-        provider.getFilters(binding, filterType, handler)
+        provider.getFilters(binding, filterType, callback,
+                            callbackType, handler)
                 ?.map { filter -> filter to provider }
                 ?: return null
     }.asSequence()

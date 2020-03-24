@@ -2,6 +2,7 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.PromiseState
 
 class SingletonLifestyle<Res> : Lifestyle<Res>() {
     @Volatile
@@ -15,18 +16,26 @@ class SingletonLifestyle<Res> : Lifestyle<Res>() {
             next:     Next<Res>,
             composer: Handling
     ): Promise<Res>? {
-        var instance = _instance
-        if (instance == null) {
+        if (_instance == null) {
             synchronized(this) {
-                instance = _instance
-                if (instance == null) {
-                    instance = next().get()
-                    _instance = instance
+                if (_instance == null) {
+                    val result = next()
+                    when (result.state) {
+                        PromiseState.FULFILLED -> {
+                            _instance = result.get()
+                            return result
+                        }
+                        PromiseState.REJECTED,
+                        PromiseState.CANCELLED ->
+                            return result
+                        else ->
+                            _instance = result.get()
+                    }
                 }
             }
         }
         @Suppress("UNCHECKED_CAST")
-        return instance?.let {
+        return _instance?.let {
             Promise.resolve(it as Any) as Promise<Res>
         }
     }
