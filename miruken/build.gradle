@@ -11,7 +11,7 @@ def artifactName = 'miruken'
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier.set("sources")
 }
 
 publishing {
