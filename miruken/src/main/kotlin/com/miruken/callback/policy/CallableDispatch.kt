@@ -5,12 +5,16 @@ import com.miruken.TypeInfo
 import com.miruken.callback.Strict
 import com.miruken.callback.getFilterProviders
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.asPromise
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import com.miruken.runtime.requiresReceiver
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KCallable
+import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.isAccessible
@@ -40,7 +44,17 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
         return try {
             if (callable.requiresReceiver) {
-                callable.call(receiver, *arguments)
+                if (callable.isSuspend) {
+                    GlobalScope.async {
+                        callable.callSuspend(receiver, *arguments)
+                    }.asPromise()
+                } else {
+                    callable.call(receiver, *arguments)
+                }
+            } else if (callable.isSuspend) {
+                GlobalScope.async {
+                    callable.callSuspend(*arguments)
+                }.asPromise()
             } else {
                 callable.call(*arguments)
             }
