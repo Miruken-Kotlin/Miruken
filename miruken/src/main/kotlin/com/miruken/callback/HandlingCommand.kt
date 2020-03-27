@@ -2,7 +2,9 @@ package com.miruken.callback
 
 import com.miruken.TypeReference
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.await
 import com.miruken.typeOf
+import kotlin.coroutines.coroutineContext
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.command(callback: T) =
@@ -19,7 +21,6 @@ fun Handling.command(
     return command.result
 }
 
-@Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.commandAsync(callback: T) =
         commandAsync(callback, typeOf<T>())
 
@@ -40,7 +41,15 @@ fun Handling.commandAsync(
     }
 }
 
-@Suppress("UNCHECKED_CAST")
+suspend inline fun <reified T: Any> Handling.commandCo(callback: T) =
+        commandCo(callback, typeOf<T>())
+
+suspend fun Handling.commandCo(
+        callback:     Any,
+        callbackType: TypeReference
+) = with(coroutineContext)
+        .commandAsync(callback, callbackType).await()
+
 inline fun <reified T: Any> Handling.commandAll(callback: T) =
         commandAll(callback, typeOf<T>())
 
@@ -56,7 +65,6 @@ fun Handling.commandAll(
     return command.result as List<Any>
 }
 
-@Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.commandAllAsync(callback: T) =
         commandAllAsync(callback, typeOf<T>())
 
@@ -76,3 +84,11 @@ fun Handling.commandAllAsync(
         Promise.reject(e)
     }
 }
+
+suspend inline fun <reified T: Any> Handling.commandAllCo(callback: T) =
+        commandAllCo(callback, typeOf<T>())
+
+suspend fun Handling.commandAllCo(
+        callback:     Any,
+        callbackType: TypeReference
+) = with(coroutineContext).commandAllAsync(callback, callbackType).await()

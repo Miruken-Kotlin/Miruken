@@ -8,11 +8,11 @@ import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.registerDescriptor
 import com.miruken.test.assertAsync
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
-import java.lang.IllegalStateException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -48,6 +48,18 @@ class CoroutineTest {
     }
 
     @Test
+    fun `Handles suspending callbacks no return await`() = runBlocking<Unit> {
+        val handler = SuspendingHandler()
+        handler.commandAsync(Dial("8675309")).await()
+    }
+
+    @Test
+    fun `Handles suspending callbacks no return suspend`() = runBlocking<Unit> {
+        val handler = SuspendingHandler()
+        handler.commandCo(Dial("8675309"))
+    }
+
+    @Test
     fun `Handles suspending callbacks with return`() {
         val handler     = SuspendingHandler()
         val converation = handler.command(Talk("8675309")) as Conversation
@@ -64,6 +76,13 @@ class CoroutineTest {
                 done()
             }
         }
+    }
+
+    @Test
+    fun `Handles suspending callbacks with return await`() = runBlocking {
+        val handler      = SuspendingHandler()
+        val conversation = handler.commandAsync(Talk("8675309")).await() as Conversation
+        assertEquals("Hello 8675309", conversation.words)
     }
 
     @Test
@@ -93,6 +112,13 @@ class CoroutineTest {
                 done()
             }
         }
+    }
+
+    @Test
+    fun `Provides suspending callbacks await`() = runBlocking {
+        val handler      = SuspendingHandler()
+        val conversation = handler.resolveAsync<Conversation>().await()
+        assertEquals("How was your day?", conversation?.words)
     }
 
     data class Dial(val number: String)

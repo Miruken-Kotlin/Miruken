@@ -56,7 +56,6 @@ class HandlerTest {
             registerDescriptor<OpenGenericHandler>()
             registerDescriptor<BoundedGenericHandler>()
             registerDescriptor<OpenGenericRejectHandler>()
-            registerDescriptor<Provider>()
             factory = this
         })
     }
@@ -772,7 +771,6 @@ class HandlerTest {
         val view = Screen()
         HandlerDescriptorFactory.useFactory(
                 MutableHandlerDescriptorFactory().apply {
-                    registerDescriptor<Provider>()
                     registerDescriptor<Controller<*,*>>()
                 }
         )
@@ -996,7 +994,6 @@ class HandlerTest {
     @Test fun `Selects greediest consructor`() {
         HandlerDescriptorFactory.useFactory(
                 MutableHandlerDescriptorFactory().apply {
-                    registerDescriptor<Provider>()
                     registerDescriptor<OverloadedConstructors>()
                 }
         )
@@ -1018,7 +1015,6 @@ class HandlerTest {
     @Test fun `Selects greediest consructor when resolving all`() {
         HandlerDescriptorFactory.useFactory(
                 MutableHandlerDescriptorFactory().apply {
-                    registerDescriptor<Provider>()
                     registerDescriptor<OverloadedConstructors>()
                 }
         )

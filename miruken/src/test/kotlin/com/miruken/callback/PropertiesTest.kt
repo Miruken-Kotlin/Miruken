@@ -1,11 +1,8 @@
 package com.miruken.callback
 
 import com.miruken.callback.policy.HandlerDescriptorFactory
-import com.miruken.callback.policy.MutableHandlerDescriptorFactory
-import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.test.assertAsync
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -19,14 +16,6 @@ class PropertiesTest {
     class Foo
     interface Auction {
         fun buy(itemId: Long): UUID
-    }
-
-    @Before
-    fun setup() {
-        HandlerDescriptorFactory.useFactory(
-                MutableHandlerDescriptorFactory().apply {
-                    registerDescriptor<Provider>()
-                })
     }
 
     @Test fun `Delegates property to handler`() {

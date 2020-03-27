@@ -3,7 +3,9 @@ package com.miruken.callback.policy
 import com.miruken.Initializing
 import com.miruken.TypeReference
 import com.miruken.addSorted
+import com.miruken.callback.GenericWrapper
 import com.miruken.callback.InitializeProvider
+import com.miruken.callback.Provider
 import com.miruken.callback.policy.bindings.PolicyMemberBinding
 import com.miruken.callback.policy.bindings.PolicyMemberBindingInfo
 import com.miruken.runtime.getMetaAnnotations
@@ -21,6 +23,8 @@ class MutableHandlerDescriptorFactory(
 
     private val _descriptors =
             ConcurrentHashMap<KClass<*>, Lazy<HandlerDescriptor>>()
+
+    init { registerDefaults() }
 
     override fun getDescriptor(handlerClass: KClass<*>) =
         _descriptors[handlerClass]?.value
@@ -221,5 +225,10 @@ class MutableHandlerDescriptorFactory(
               !handlerClass.isSubclassOf(Collection::class)) {
             "Handlers cannot be collections or arrays: ${handlerClass.qualifiedName}"
         }
+    }
+
+    private fun registerDefaults() {
+        registerDescriptor<Provider>()
+        registerDescriptor<GenericWrapper>()
     }
 }

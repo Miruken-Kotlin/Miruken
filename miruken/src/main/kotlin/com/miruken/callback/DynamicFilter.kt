@@ -32,8 +32,8 @@ open class DynamicFilter<in Cb: Any, Res: Any?> : Filtering<Cb, Res> {
                 @Suppress("UNCHECKED_CAST")
                 resolveArguments(dispatcher, callback, rawCallback,
                         binding, composer, next, provider)
-                    ?.fold({ dispatcher.invoke(this, it) },
-                           { p -> p then { dispatcher.invoke(this, it) } }
+                    ?.fold({ dispatcher.invoke(this, it, composer) },
+                           { p -> p then { dispatcher.invoke(this, it, composer) } }
                     ) as? Promise<Res>
             } ?: next.abort()
 

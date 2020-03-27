@@ -65,15 +65,3 @@ class Mapping(
             composer, ::mapped).otherwise(_result != null)
 }
 
-fun Handling.map(
-        source:     Any,
-        targetType: TypeReference,
-        sourceType: TypeReference? = null,
-        target:     Any?           = null,
-        format:     Any?           = null
-): Any? {
-    val mapping = Mapping(source, targetType,
-            sourceType, target, format)
-    return handle(mapping) success { return mapping.result }
-            ?: throw NotHandledException(mapping)
-}

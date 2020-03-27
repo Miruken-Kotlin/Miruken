@@ -1,6 +1,5 @@
 package com.miruken.validate.bean
 
-import com.miruken.callback.GenericWrapper
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.registerDescriptor
@@ -26,7 +25,6 @@ class BeanValidatorTest {
 
         factory = MutableHandlerDescriptorFactory().apply {
             registerDescriptor<BeanValidator>()
-            registerDescriptor<GenericWrapper>()
             HandlerDescriptorFactory.useFactory(this)
         }
     }

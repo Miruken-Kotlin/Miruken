@@ -4,8 +4,37 @@ import com.miruken.TypeReference
 import com.miruken.callback.Handling
 import com.miruken.callback.NotHandledException
 import com.miruken.callback.handle
+import com.miruken.callback.with
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.await
 import com.miruken.typeOf
+import kotlin.coroutines.coroutineContext
+
+inline fun <reified T> Handling.map(
+        source:     Any,
+        format:     Any?           = null,
+        sourceType: TypeReference? = null
+) = map(source, typeOf<T>(), sourceType, null, format) as? T
+
+fun Handling.map(
+        source:     Any,
+        targetType: TypeReference,
+        sourceType: TypeReference? = null,
+        target:     Any?           = null,
+        format:     Any?           = null
+): Any? {
+    val mapping = Mapping(source, targetType,
+            sourceType, target, format)
+    return handle(mapping) success { return mapping.result }
+            ?: throw NotHandledException(mapping)
+}
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T: Any> Handling.mapAsync(
+        source:     Any,
+        format:     Any?           = null,
+        sourceType: TypeReference? = null
+) = mapAsync(source, typeOf<T>(), sourceType, null, format) as Promise<T?>
 
 fun Handling.mapAsync(
         source:     Any,
@@ -24,25 +53,21 @@ fun Handling.mapAsync(
     } ?: Promise.reject(NotHandledException(mapping))
 }
 
-inline fun <reified T> Handling.map(
+suspend fun Handling.mapCo(
         source:     Any,
-        format:     Any?           = null,
-        sourceType: TypeReference? = null
-) = map(source, typeOf<T>(), sourceType, null, format) as? T
+        targetType: TypeReference,
+        sourceType: TypeReference? = null,
+        target:     Any?           = null,
+        format:     Any?           = null
+) = with(coroutineContext)
+        .mapAsync(source, targetType, sourceType, target, format)
+        .await()
 
-@Suppress("UNCHECKED_CAST")
-inline fun <reified T: Any> Handling.mapAsync(
+suspend inline fun <reified T: Any> Handling.mapCo(
         source:     Any,
         format:     Any?           = null,
         sourceType: TypeReference? = null
-) = mapAsync(source, typeOf<T>(), sourceType, null, format) as Promise<T?>
-
-inline fun <reified T: Any> Handling.mapInto(
-        source:     Any,
-        target:     T,
-        format:     Any?           = null,
-        sourceType: TypeReference? = null
-) = map(source, typeOf<T>(), sourceType, target, format) as? T
+) = mapCo(source, typeOf<T>(), sourceType, null, format)
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.mapIntoAsync(
@@ -51,3 +76,19 @@ inline fun <reified T: Any> Handling.mapIntoAsync(
         format:     Any?           = null,
         sourceType: TypeReference? = null
 ) = mapAsync(source, typeOf<T>(), sourceType, target, format) as Promise<T?>
+
+inline fun <reified T: Any> Handling.mapInto(
+        source:     Any,
+        target:     T,
+        format:     Any?           = null,
+        sourceType: TypeReference? = null
+) = map(source, typeOf<T>(), sourceType, target, format) as? T
+
+suspend inline fun <reified T: Any> Handling.mapIntoCo(
+        source:     Any,
+        target:     T,
+        format:     Any?           = null,
+        sourceType: TypeReference? = null
+) = with(coroutineContext)
+        .mapAsync(source, typeOf<T>(), sourceType, target, format)
+        .await()

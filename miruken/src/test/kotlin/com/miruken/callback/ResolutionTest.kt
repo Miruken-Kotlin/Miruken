@@ -31,7 +31,6 @@ class ResolutionTest {
         factory.registerDescriptor<Repository<*>>()
         factory.registerDescriptor<RepositoryProvider>()
         factory.registerDescriptor<Accountant>()
-        factory.registerDescriptor<Provider>()
         HandlerDescriptorFactory.useFactory(factory)
     }
 

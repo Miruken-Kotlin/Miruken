@@ -7,6 +7,7 @@ import com.miruken.callback.policy.bindings.MemberBinding
 import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.test.assertAsync
+import kotlinx.coroutines.delay
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,6 +39,27 @@ class StashTest {
         val order   = Order()
         val handler = StashImpl()
         val result  = handler.stashGetOrPut(order)
+        assertSame(order, result)
+        assertSame(order, handler.stashGet()!!)
+    }
+
+    @Test fun `Get or adds to stash async`() {
+        val order   = Order()
+        val handler = StashImpl()
+        val result  = handler.stashGetOrPutAsync {
+            Promise.resolve(order)
+        }
+        assertSame(order, result)
+        assertSame(order, handler.stashGet()!!)
+    }
+
+    @Test fun `Get or adds to stash suspend`() {
+        val order   = Order()
+        val handler = StashImpl()
+        val result  = handler.stashGetOrPutCo {
+            delay(10)
+            order
+        }
         assertSame(order, result)
         assertSame(order, handler.stashGet()!!)
     }

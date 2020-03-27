@@ -5,9 +5,17 @@ import com.miruken.callback.Handling
 import com.miruken.callback.aspectBefore
 import com.miruken.callback.getOptions
 import com.miruken.callback.handle
+import com.miruken.callback.with
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.await
 import com.miruken.typeOf
+import kotlin.coroutines.coroutineContext
 import kotlin.reflect.KClass
+
+inline fun <reified T: Any> Handling.validate(
+        target:        T,
+        vararg scopes: KClass<*>
+) = validate(target, typeOf<T>(), *scopes)
 
 fun Handling.validate(
         target:        Any,
@@ -23,6 +31,11 @@ fun Handling.validate(
         (target as? ValidationAware)?.validationOutcome = it
     }
 }
+
+inline fun <reified T: Any> Handling.validateAsync(
+        target:        T,
+        vararg scopes: KClass<*>
+) = validateAsync(target, typeOf<T>(), *scopes)
 
 fun Handling.validateAsync(
         target:        Any,
@@ -42,15 +55,20 @@ fun Handling.validateAsync(
     }
 }
 
-inline fun <reified T: Any> Handling.validate(
+suspend inline fun <reified T: Any> Handling.validateCo(
         target:        T,
         vararg scopes: KClass<*>
-) = validate(target, typeOf<T>(), *scopes)
+) = with(coroutineContext)
+        .validateAsync(target, typeOf<T>(), *scopes)
+        .await()
 
-inline fun <reified T: Any> Handling.validateAsync(
-        target:        T,
+suspend fun Handling.validateCo(
+        target:        Any,
+        targetType:    TypeReference?,
         vararg scopes: KClass<*>
-) = validateAsync(target, typeOf<T>(), *scopes)
+) = with(coroutineContext)
+        .validateAsync(target, targetType)
+        .await()
 
 inline fun <reified T: Any> Handling.valid(
         target:        T,

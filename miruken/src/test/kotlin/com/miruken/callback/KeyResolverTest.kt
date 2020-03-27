@@ -27,7 +27,6 @@ class KeyResolverTest {
                     registerDescriptor<CustomerSupport>()
                     registerDescriptor<ConfigurationHandler>()
                     registerDescriptor<SimpleDependencyHandler>()
-                    registerDescriptor<GenericWrapper>()
                 }
         )
         RepositoryImpl.nextId = 0

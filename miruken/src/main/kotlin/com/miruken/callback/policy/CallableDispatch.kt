@@ -2,16 +2,20 @@ package com.miruken.callback.policy
 
 import com.miruken.TypeFlags
 import com.miruken.TypeInfo
+import com.miruken.callback.Handling
 import com.miruken.callback.Strict
 import com.miruken.callback.getFilterProviders
+import com.miruken.callback.resolve
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.asPromise
 import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import com.miruken.runtime.requiresReceiver
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import java.lang.reflect.InvocationTargetException
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KCallable
 import kotlin.reflect.full.callSuspend
@@ -41,18 +45,22 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
     val returnsSomething get() =
         !returnType.isUnit && !returnType.isNothing
 
-    fun invoke(receiver: Any, arguments: Array<Any?>): Any? {
+    fun invoke(
+            receiver:  Any,
+            arguments: Array<Any?>,
+            composer:  Handling
+    ): Any? {
         return try {
             if (callable.requiresReceiver) {
                 if (callable.isSuspend) {
-                    GlobalScope.async {
+                    getCoroutineScope(composer).async {
                         callable.callSuspend(receiver, *arguments)
                     }.asPromise()
                 } else {
                     callable.call(receiver, *arguments)
                 }
             } else if (callable.isSuspend) {
-                GlobalScope.async {
+                getCoroutineScope(composer).async {
                     callable.callSuspend(*arguments)
                 }.asPromise()
             } else {
@@ -67,4 +75,9 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
             }
         }
     }
+
+    private fun getCoroutineScope(composer: Handling) =
+            composer.resolve<CoroutineContext>()
+                    ?.let(::CoroutineScope)
+                    ?: GlobalScope
 }

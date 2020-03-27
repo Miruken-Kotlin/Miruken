@@ -105,8 +105,8 @@ class PolicyMemberBinding(
             if (args == null) {
                 completed = false
             } else {
-                args.fold({ dispatcher.invoke(handler, it) },
-                          { p -> p then { dispatcher.invoke(handler, it) }
+                args.fold({ dispatcher.invoke(handler, it, composer) },
+                          { p -> p then { dispatcher.invoke(handler, it, composer) }
                 })
             }
         } else {
@@ -118,8 +118,8 @@ class PolicyMemberBinding(
                         Promise.reject(NotHandledException(callback,
                                 "${dispatcher.callable} is missing one or more dependencies"))
                     } else {
-                        args.fold({ Promise.resolve(invoke(handler, it)) },
-                                  { p -> p then { invoke(handler, it) } })
+                        args.fold({ Promise.resolve(invoke(handler, it, comp)) },
+                                  { p -> p then { invoke(handler, it, comp) } })
                     }
                 } else {
                     completed = false
@@ -155,8 +155,12 @@ class PolicyMemberBinding(
         return accepted
     }
 
-    private fun invoke(handler: Any, args: Array<Any?>): Any? {
-        val baseResult   = dispatcher.invoke(handler, args)
+    private fun invoke(
+            handler:  Any,
+            args:     Array<Any?>,
+            composer: Handling
+    ): Any? {
+        val baseResult   = dispatcher.invoke(handler, args, composer)
         val handleResult = when (baseResult) {
             is HandleResult -> baseResult
             else -> policy.acceptResult(baseResult, this)

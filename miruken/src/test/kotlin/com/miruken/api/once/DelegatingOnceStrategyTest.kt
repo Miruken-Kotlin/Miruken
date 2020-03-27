@@ -4,7 +4,6 @@ import com.miruken.api.NamedType
 import com.miruken.api.send
 import com.miruken.callback.Handler
 import com.miruken.callback.Handles
-import com.miruken.callback.Provider
 import com.miruken.callback.plus
 import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
@@ -27,7 +26,6 @@ class DelegatingOnceStrategyTest {
         val factory = MutableHandlerDescriptorFactory()
         factory.registerDescriptor<FooHandler>()
         factory.registerDescriptor<OnceHandler>()
-        factory.registerDescriptor<Provider>()
         HandlerDescriptorFactory.useFactory(factory)
     }
 

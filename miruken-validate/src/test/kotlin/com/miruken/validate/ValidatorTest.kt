@@ -1,6 +1,5 @@
 package com.miruken.validate
 
-import com.miruken.callback.GenericWrapper
 import com.miruken.callback.Handler
 import com.miruken.callback.plus
 import com.miruken.callback.policy.HandlerDescriptorFactory
@@ -33,7 +32,6 @@ class ValidatorTest {
         factory = MutableHandlerDescriptorFactory().apply {
             registerDescriptor<ValidateTeam>()
             registerDescriptor<ValidatePlayer>()
-            registerDescriptor<GenericWrapper>()
             HandlerDescriptorFactory.useFactory(this)
         }
     }

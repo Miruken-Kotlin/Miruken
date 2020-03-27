@@ -2,7 +2,13 @@ package com.miruken.callback
 
 import com.miruken.callback.policy.bindings.ConstraintBuilder
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.await
 import com.miruken.typeOf
+import kotlin.coroutines.coroutineContext
+
+inline fun <reified T: Any> Handling.resolve(
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
+): T? = resolve(typeOf<T>(), constraints) as? T
 
 fun Handling.resolve(
         key:         Any,
@@ -16,6 +22,11 @@ fun Handling.resolve(
     constraints?.invoke(ConstraintBuilder(inquiry))
     return handle(inquiry) success { inquiry.result }
 }
+
+inline fun <reified T: Any> Handling.resolveAsync(
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
+): Promise<T?> =
+        resolveAsync(typeOf<T>(), constraints) then { it as? T }
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAsync(
@@ -33,14 +44,20 @@ fun Handling.resolveAsync(
     } ?: Promise.EMPTY
 }
 
-inline fun <reified T: Any> Handling.resolve(
+suspend inline fun <reified T: Any> Handling.resolveCo(
         noinline constraints: (ConstraintBuilder.() -> Unit)? = null
-): T? = resolve(typeOf<T>(), constraints) as? T
+) = resolveCo(typeOf<T>(), constraints)
 
-inline fun <reified T: Any> Handling.resolveAsync(
+suspend fun Handling.resolveCo(
+        key:         Any,
+        constraints: (ConstraintBuilder.() -> Unit)? = null
+) = with(coroutineContext)
+        .resolveAsync(key, constraints).await()
+
+inline fun <reified T: Any> Handling.resolveAll(
         noinline constraints: (ConstraintBuilder.() -> Unit)? = null
-): Promise<T?> =
-        resolveAsync(typeOf<T>(), constraints) then { it as? T }
+): List<T> =
+        resolveAll(typeOf<T>(), constraints).filterIsInstance<T>()
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAll(
@@ -60,6 +77,13 @@ fun Handling.resolveAll(
         inquiry.result as? List<Any>
     } ?: emptyList()
 }
+
+inline fun <reified T: Any> Handling.resolveAllAsync(
+        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
+): Promise<List<T>> =
+        resolveAllAsync(typeOf<T>(), constraints) then {
+            it.filterIsInstance<T>()
+        }
 
 @Suppress("UNCHECKED_CAST")
 fun Handling.resolveAllAsync(
@@ -87,14 +111,12 @@ fun Handling.resolveAllAsync(
     } ?: Promise.EMPTY_LIST
 }
 
-inline fun <reified T: Any> Handling.resolveAll(
+suspend inline fun <reified T: Any> Handling.resolveAllCo(
         noinline constraints: (ConstraintBuilder.() -> Unit)? = null
-): List<T> =
-    resolveAll(typeOf<T>(), constraints).filterIsInstance<T>()
+) = resolveAllCo(typeOf<T>(), constraints)
 
-inline fun <reified T: Any> Handling.resolveAllAsync(
-        noinline constraints: (ConstraintBuilder.() -> Unit)? = null
-): Promise<List<T>> =
-        resolveAllAsync(typeOf<T>(), constraints) then {
-            it.filterIsInstance<T>()
-        }
+suspend fun Handling.resolveAllCo(
+        key:         Any,
+        constraints: (ConstraintBuilder.() -> Unit)? = null
+) = with(coroutineContext)
+        .resolveAllAsync(key, constraints).await()

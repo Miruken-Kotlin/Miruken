@@ -14,12 +14,6 @@ import kotlin.test.assertTrue
 
 @Suppress("UNUSED_ANONYMOUS_PARAMETER")
 class TargetActionBuilderTest {
-    @Before
-    fun setup() {
-        val factory = MutableHandlerDescriptorFactory()
-        factory.registerDescriptor<Provider>()
-        HandlerDescriptorFactory.useFactory(factory)
-    }
     @Test fun `Creates single argument action`() {
         val foo    = Foo()
         var called = false
