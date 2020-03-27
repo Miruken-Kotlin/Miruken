@@ -67,7 +67,7 @@ suspend fun Handling.validateCo(
         targetType:    TypeReference?,
         vararg scopes: KClass<*>
 ) = with(coroutineContext)
-        .validateAsync(target, targetType)
+        .validateAsync(target, targetType, *scopes)
         .await()
 
 inline fun <reified T: Any> Handling.valid(

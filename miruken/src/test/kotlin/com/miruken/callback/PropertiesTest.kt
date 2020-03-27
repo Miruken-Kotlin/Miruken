@@ -204,7 +204,7 @@ class PropertiesTest {
         val instance = object {
             val foo by handler.get<Foo>()
         }
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             instance.foo
         }
     }

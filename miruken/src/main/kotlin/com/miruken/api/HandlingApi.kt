@@ -44,7 +44,9 @@ fun Handling.send(
 suspend fun Handling.sendCo(
         request:     NamedType,
         requestType: TypeReference?
-) = with(coroutineContext).send(request, requestType).await()
+) = with(coroutineContext)
+        .send(request, requestType).
+        await()
 
 fun Contextual.send(
         request:     NamedType,
@@ -96,7 +98,9 @@ fun <TResp: NamedType?> Handling.send(
 suspend fun <TResp: NamedType?> Handling.sendCo(
         request:     Request<TResp>,
         requestType: TypeReference?
-) = with(coroutineContext).send(request, requestType).await()
+) = with(coroutineContext)
+        .send(request, requestType)
+        .await()
 
 fun <TResp: NamedType?> Contextual.send(
         request:     Request<TResp>,

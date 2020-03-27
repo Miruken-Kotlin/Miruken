@@ -68,7 +68,7 @@ class HandleMethodTest {
 
     @Test fun `Handles method strictly`() {
         val handler = OfflineHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             handler.strict.proxy<EmailFeature>().email("22")
         }
     }
@@ -87,14 +87,14 @@ class HandleMethodTest {
 
     @Test fun `Requires protocol conformance`() {
         val handler = DemoHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             handler.proxy<EmailFeature>().email("22")
         }
     }
 
     @Test fun `Requires protocol invariance`() {
         val handler = DemoHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             handler.proxy<Offline>().email("22")
         }
     }
@@ -114,7 +114,7 @@ class HandleMethodTest {
 
     @Test fun `Should not propagate best effort calls`() {
         val handler = EmailHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             handler.bestEffort.proxy<EmailFeature>().cancelEmail(1)
         }
     }
@@ -140,13 +140,13 @@ class HandleMethodTest {
     }
 
     @Test fun `Rejects unhandled method calls`() {
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             Handler().proxy<EmailFeature>().email("Hello")
         }
     }
 
     @Test fun `Rejects unhandled method calls broadcast`() {
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             Handler().broadcast.proxy<EmailFeature>().email("Hello")
         }
     }
@@ -165,7 +165,7 @@ class HandleMethodTest {
 
     @Test fun `Does not resolve methods calls implicitly`() {
         val handler = DemoHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             handler.proxy<Billing>().bill(15.toBigDecimal())
         }
     }
@@ -183,7 +183,7 @@ class HandleMethodTest {
     }
 
     @Test fun `Aborts method calls`() {
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             EmailHandler().proxy<EmailFeature>().email("Abort")
         }
     }

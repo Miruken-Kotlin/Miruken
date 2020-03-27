@@ -46,13 +46,16 @@ fun Handling.resolveAsync(
 
 suspend inline fun <reified T: Any> Handling.resolveCo(
         noinline constraints: (ConstraintBuilder.() -> Unit)? = null
-) = resolveCo(typeOf<T>(), constraints)
+) = with(coroutineContext)
+        .resolveAsync<T>(constraints)
+        .await()
 
 suspend fun Handling.resolveCo(
         key:         Any,
         constraints: (ConstraintBuilder.() -> Unit)? = null
 ) = with(coroutineContext)
-        .resolveAsync(key, constraints).await()
+        .resolveAsync(key, constraints)
+        .await()
 
 inline fun <reified T: Any> Handling.resolveAll(
         noinline constraints: (ConstraintBuilder.() -> Unit)? = null
@@ -113,10 +116,13 @@ fun Handling.resolveAllAsync(
 
 suspend inline fun <reified T: Any> Handling.resolveAllCo(
         noinline constraints: (ConstraintBuilder.() -> Unit)? = null
-) = resolveAllCo(typeOf<T>(), constraints)
+) = with(coroutineContext)
+        .resolveAllAsync<T>(constraints)
+        .await()
 
 suspend fun Handling.resolveAllCo(
         key:         Any,
         constraints: (ConstraintBuilder.() -> Unit)? = null
 ) = with(coroutineContext)
-        .resolveAllAsync(key, constraints).await()
+        .resolveAllAsync(key, constraints)
+        .await()

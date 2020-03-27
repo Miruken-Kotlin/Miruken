@@ -121,7 +121,7 @@ class ResolutionTest {
 
     @Test fun `Fails if no handlers resolved`() {
         val handler = BillingImpl().toHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             handler.command(SendEmail("Hello"))
         }
     }
@@ -170,7 +170,7 @@ class ResolutionTest {
                      + BillingImpl()
                      + RepositoryProvider()
                      + FilterProvider())
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.strict.proxy<EmailFeature>().email("22")
         }
     }
@@ -187,14 +187,14 @@ class ResolutionTest {
 
     @Test fun `Requires protocol conformance`() {
         val provider = DemoProvider()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.duck.proxy<EmailFeature>().email("22")
         }
     }
 
     @Test fun `Requires protocol invariance`() {
         val provider = DemoProvider()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.proxy<Offline>().email("22")
         }
     }
@@ -217,14 +217,14 @@ class ResolutionTest {
 
     @Test fun `Ignores unhandled methods`() {
         val provider = OfflineHandler()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.proxy<Offline>().cancelEmail(13)
         }
     }
 
     @Test fun `Finds matching method`() {
         val provider = OfflineHandler() + EmailProvider()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.proxy<Offline>().cancelEmail(13)
         }
     }
@@ -237,7 +237,7 @@ class ResolutionTest {
 
     @Test fun `Does not propagate best effort`() {
         val provider = EmailProvider()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.proxy<Offline>().cancelEmail(1)
         }
     }
@@ -278,7 +278,7 @@ class ResolutionTest {
 
     @Test fun `Does not resolve methods implicitly`() {
         val provider = DemoProvider()
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             provider.proxy<Billing>().bill(15.toBigDecimal())
         }
     }

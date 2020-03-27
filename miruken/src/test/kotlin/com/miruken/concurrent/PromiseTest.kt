@@ -717,14 +717,14 @@ class PromiseTest {
     @Test fun `Waits synchronously for promise to fail`() {
         val promise = Promise.delay(50) then {
             throw IllegalArgumentException("Bad date") }
-        assertFailsWith(IllegalArgumentException::class, "Bad date") {
+        assertFailsWith<IllegalArgumentException>("Bad date") {
             @Suppress("IMPLICIT_NOTHING_AS_TYPE_PARAMETER")
             promise.get(5000)
         }
     }
 
     @Test fun `Waits until timeout for promise to fulfill`() {
-        assertFailsWith(TimeoutException::class) {
+        assertFailsWith<TimeoutException> {
             Promise<String> { _, _ -> }.get(50)
         }
     }

@@ -1,9 +1,6 @@
 package com.miruken.api.once
 
-import com.miruken.api.GetStockQuote
-import com.miruken.api.JacksonProvider
-import com.miruken.api.StockQuoteHandler
-import com.miruken.api.send
+import com.miruken.api.*
 import com.miruken.callback.Handler
 import com.miruken.callback.Handling
 import com.miruken.callback.NotHandledException
@@ -14,6 +11,7 @@ import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.map.Maps
 import com.miruken.test.assertAsync
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -57,6 +55,21 @@ class OnceHandlerTest {
     }
 
     @Test
+    fun `handles once suspending`() = runBlocking {
+        StockQuoteHandler.called = 0
+        val handler = (StockQuoteHandler()
+                    + OnceHandler()
+                    + TestOnceStrategy())
+        val getQuote = GetStockQuote("AAPL").once
+        handler.sendCo(getQuote)
+        assertEquals(1, StockQuoteHandler.called)
+        handler.sendCo(getQuote)
+        assertEquals(1, StockQuoteHandler.called)
+        handler.sendCo(GetStockQuote("AAPL"))
+        assertEquals(2, StockQuoteHandler.called)
+    }
+
+    @Test
     fun `rejects once if no strategy found`() {
         StockQuoteHandler.called = 0
         val handler = (StockQuoteHandler()
@@ -69,6 +82,20 @@ class OnceHandlerTest {
                 assertEquals(0, StockQuoteHandler.called)
                 done()
             }
+        }
+    }
+
+    @Test
+    fun `rejects once if no strategy found suspending`() = runBlocking<Unit> {
+        StockQuoteHandler.called = 0
+        val handler = (StockQuoteHandler()
+                    + OnceHandler()
+                    + TestOnceStrategy())
+        val getQuote = GetStockQuote("ABC").once
+        try {
+            handler.sendCo(getQuote)
+        } catch (t: NotHandledException) {
+            assertEquals(0, StockQuoteHandler.called)
         }
     }
 

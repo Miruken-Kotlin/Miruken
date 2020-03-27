@@ -17,13 +17,13 @@ class ProtocolTest {
     }
 
     @Test  fun `Rejects proxy if not protocol interface`() {
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith<IllegalArgumentException> {
             PassThroughAdapter(EmailFeatureImpl()).proxy<EmailFeatureImpl>()
         }
     }
 
     @Test  fun `Protocol proxies will propagate exceptions`() {
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith<IllegalArgumentException> {
             val email = PassThroughAdapter(EmailFeatureImpl())
                     .proxy<EmailFeature>()
             email.send("")

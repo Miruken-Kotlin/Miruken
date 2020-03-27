@@ -78,14 +78,14 @@ class ValidationResultTest {
 
     @Test fun `Rejects empty property names`() {
         val outcome = ValidationResult.Outcome()
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith<IllegalArgumentException> {
             outcome.addError("", "invalid")
         }
     }
 
     @Test fun `Rejects period property names`() {
         val outcome = ValidationResult.Outcome()
-        assertFailsWith(IllegalArgumentException::class) {
+        assertFailsWith<IllegalArgumentException> {
             outcome.addError(".", "invalid")
         }
     }

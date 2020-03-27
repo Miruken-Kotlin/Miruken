@@ -272,7 +272,7 @@ class PropertiesTest {
         val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             instance.foo
         }
     }
@@ -288,7 +288,7 @@ class PropertiesTest {
         val instance = object : ContextualHandler() {
             val foo by get<Foo>()
         }.apply { context = _context }
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             instance.foo
         }
     }

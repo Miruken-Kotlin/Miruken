@@ -42,7 +42,9 @@ fun Handling.commandAsync(
 }
 
 suspend inline fun <reified T: Any> Handling.commandCo(callback: T) =
-        commandCo(callback, typeOf<T>())
+        with(coroutineContext)
+                .commandAsync(callback)
+                .await()
 
 suspend fun Handling.commandCo(
         callback:     Any,
@@ -86,9 +88,13 @@ fun Handling.commandAllAsync(
 }
 
 suspend inline fun <reified T: Any> Handling.commandAllCo(callback: T) =
-        commandAllCo(callback, typeOf<T>())
+        with(coroutineContext)
+                .commandAllAsync(callback)
+                .await()
 
 suspend fun Handling.commandAllCo(
         callback:     Any,
         callbackType: TypeReference
-) = with(coroutineContext).commandAllAsync(callback, callbackType).await()
+) = with(coroutineContext)
+        .commandAllAsync(callback, callbackType)
+        .await()

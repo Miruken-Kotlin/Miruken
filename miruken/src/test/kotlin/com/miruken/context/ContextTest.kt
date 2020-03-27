@@ -296,7 +296,7 @@ class ContextTest {
     }
 
     @Test fun `Rejects publish if no root context`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             Handler().publishFromRoot.handle(Foo())
         }
     }

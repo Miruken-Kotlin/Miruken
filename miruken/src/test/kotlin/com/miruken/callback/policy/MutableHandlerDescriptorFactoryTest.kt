@@ -20,19 +20,19 @@ class MutableHandlerDescriptorFactoryTest {
     }
 
     @Test fun `Cannot create descriptors for interfaces`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             factory.registerDescriptor<Handling>()
         }
     }
 
     @Test fun `Cannot create descriptors for primitive types`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             factory.registerDescriptor<Int>()
         }
     }
 
     @Test fun `Cannot create descriptors for collection classes`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             factory.registerDescriptor<List<Foo>>()
         }
     }
@@ -50,13 +50,13 @@ class MutableHandlerDescriptorFactoryTest {
     }
 
     @Test fun `Rejects descriptor with Handles method with no parameters`() {
-        assertFailsWith(PolicyRejectedException::class) {
+        assertFailsWith<PolicyRejectedException> {
             factory.registerDescriptor<TestHandler.NoParameters>()
         }
     }
 
     @Test fun `Rejects descriptor with Handles method with Nothing parameter`() {
-        assertFailsWith(PolicyRejectedException::class) {
+        assertFailsWith<PolicyRejectedException> {
             factory.registerDescriptor<TestHandler.NothingParameter>()
         }
     }
@@ -77,19 +77,19 @@ class MutableHandlerDescriptorFactoryTest {
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing`() {
-        assertFailsWith(PolicyRejectedException::class) {
+        assertFailsWith<PolicyRejectedException> {
             factory.registerDescriptor<TestProvider.ReturnsNothing>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Nothing taking callback`() {
-        assertFailsWith(PolicyRejectedException::class) {
+        assertFailsWith<PolicyRejectedException> {
             factory.registerDescriptor<TestProvider.ReturnsNothingWithCallback>()
         }
     }
 
     @Test fun `Rejects descriptor with Provides method returning Unit`() {
-        assertFailsWith(PolicyRejectedException::class) {
+        assertFailsWith<PolicyRejectedException> {
             factory.registerDescriptor<TestProvider.ReturnsUnit>()
         }
     }

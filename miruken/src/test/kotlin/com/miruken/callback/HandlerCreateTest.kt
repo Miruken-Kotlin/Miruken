@@ -4,6 +4,7 @@ import com.miruken.callback.policy.HandlerDescriptorFactory
 import com.miruken.callback.policy.MutableHandlerDescriptorFactory
 import com.miruken.callback.policy.registerDescriptor
 import com.miruken.test.assertAsync
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -53,6 +54,12 @@ class HandlerCreateTest {
         }
     }
 
+    @Test fun `Creates instance suspending`() = runBlocking<Unit> {
+        val controller = _handler.createCo<ControllerImpl>()
+        assertNotNull(controller)
+        assertNotNull(controller.viewFactory)
+    }
+
     @Test fun `Creates all instances`() {
         val controllers = _handler.createAll<Controller>()
         assertEquals(1, controllers.size)
@@ -69,6 +76,12 @@ class HandlerCreateTest {
         }
     }
 
+    @Test fun `Creates all instances suspending`() = runBlocking<Unit> {
+        val controllers = _handler.createAllCo<ControllerImpl>()
+        assertEquals(1, controllers.size)
+        assertNotNull(controllers.first())
+    }
+
     @Test fun `Resolves instance`() {
         val controller = _handler.resolve<ControllerImpl>()
         assertNotNull(controller)
@@ -76,7 +89,7 @@ class HandlerCreateTest {
     }
 
     @Test fun `Rejects unhandled creation`() {
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             _handler.create<ViewFactory>()
         }
     }
@@ -90,8 +103,14 @@ class HandlerCreateTest {
         }
     }
 
+    @Test fun `Rejects unhandled creation suspending`() = runBlocking<Unit> {
+        assertFailsWith<NotHandledException> {
+            _handler.createCo<ViewFactory>()
+        }
+    }
+
     @Test fun `Rejects creation if missing dependencies`() {
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             _handler.create<Warehouse>()
         }
     }

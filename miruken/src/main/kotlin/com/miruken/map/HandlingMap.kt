@@ -67,7 +67,9 @@ suspend inline fun <reified T: Any> Handling.mapCo(
         source:     Any,
         format:     Any?           = null,
         sourceType: TypeReference? = null
-) = mapCo(source, typeOf<T>(), sourceType, null, format)
+) = with(coroutineContext)
+        .mapAsync<T>(source, format, sourceType)
+        .await()
 
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T: Any> Handling.mapIntoAsync(

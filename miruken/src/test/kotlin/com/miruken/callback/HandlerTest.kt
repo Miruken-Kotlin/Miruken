@@ -536,7 +536,7 @@ class HandlerTest {
 
     @Test fun `Cancels provides async`() {
         val handler = SimpleHandler()
-        assertFailsWith(RejectedException::class) {
+        assertFailsWith<RejectedException> {
             handler.aspectBefore({ _, _ -> Promise.FALSE })
                     .resolve<Bar>()
         }
@@ -544,7 +544,7 @@ class HandlerTest {
 
     @Test fun `Cancels async provides`() {
         val handler = SimpleHandler()
-        assertFailsWith(RejectedException::class) {
+        assertFailsWith<RejectedException> {
             handler.aspectBefore({ _, _ -> false })
                     .resolveAsync<Bar>().get()
         }
@@ -552,7 +552,7 @@ class HandlerTest {
 
     @Test fun `Cancels async provides async`() {
         val handler = SimpleHandler()
-        assertFailsWith(RejectedException::class) {
+        assertFailsWith<RejectedException> {
             handler.aspectBefore({ _, _ -> Promise.FALSE })
                     .resolveAsync<Bar>().get()
         }
@@ -953,7 +953,7 @@ class HandlerTest {
             context.addHandlers(TypeHandlers)
             val screen = context.resolve<Screen>()
             assertSame(context, screen!!.context)
-            assertFailsWith(IllegalStateException::class,
+            assertFailsWith<IllegalStateException>(
                     "Managed instances cannot change context") {
                 screen.context = Context()
             }

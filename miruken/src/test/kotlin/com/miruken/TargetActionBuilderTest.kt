@@ -95,7 +95,7 @@ class TargetActionBuilderTest {
     }
 
     @Test fun `Rejects missing argument action`() {
-        assertFailsWith(IllegalStateException::class) {
+        assertFailsWith<IllegalStateException> {
             Handler().execute { a: Foo, b: Bar<String> -> }
         }
     }

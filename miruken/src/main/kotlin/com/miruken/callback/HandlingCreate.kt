@@ -31,7 +31,7 @@ fun Handling.createAsync(type: Any): Promise<Any?> {
 }
 
 suspend inline fun <reified T: Any> Handling.createCo() =
-        createCo(typeOf<T>())
+        with(coroutineContext).createAsync<T>().await()
 
 suspend fun Handling.createCo(type: Any) =
         with(coroutineContext).createAsync(type).await()
@@ -67,7 +67,7 @@ fun Handling.createAllAsync(type: Any): Promise<List<Any>> {
 }
 
 suspend inline fun <reified T: Any> Handling.createAllCo() =
-        createAllCo(typeOf<T>())
+        with(coroutineContext).createAllAsync<T>().await()
 
 suspend fun Handling.createAllCo(type: Any) =
         with(coroutineContext).createAllAsync(type).await()

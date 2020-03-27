@@ -92,7 +92,7 @@ class MappingTest {
 
     @Test fun `Rejects missing mapping`() {
         val entity = PlayerEntity(1, "Tim Howard")
-        assertFailsWith(NotHandledException::class) {
+        assertFailsWith<NotHandledException> {
             Handler().map<PlayerData>(entity)
         }
     }
