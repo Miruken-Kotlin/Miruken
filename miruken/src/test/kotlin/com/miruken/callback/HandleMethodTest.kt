@@ -11,9 +11,11 @@ import com.miruken.concurrent.Promise
 import com.miruken.kTypeOf
 import com.miruken.protocol.proxy
 import com.miruken.runtime.checkOpenConformance
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
+import java.util.*
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
@@ -32,6 +34,7 @@ class HandleMethodTest {
                 registerDescriptor<OfflineHandler>()
                 registerDescriptor<DemoHandler>()
                 registerDescriptor<BillingImpl>()
+                registerDescriptor<Amazon>()
                 registerDescriptor<StashImpl>()
             })
     }
@@ -77,6 +80,12 @@ class HandleMethodTest {
         val handler = DemoHandler()
         val id      = handler.duck.proxy<EmailFeature>().email("22")
         assertEquals(22, id)
+    }
+
+    @Test fun `Handles method suspending`() = runBlocking<Unit> {
+        val handler  = Amazon()
+        val tracking = handler.proxy<Logistics>().deliver("128921")
+        assertNotNull(tracking)
     }
 
     @Test fun `Chains method calls strictly`() {
@@ -220,6 +229,11 @@ class HandleMethodTest {
         val billing: Billing
     }
 
+    @Log
+    interface Logistics {
+        suspend fun deliver(order: String): UUID
+    }
+
     @Abort
     class EmailHandler : Handler(), EmailFeature {
         @get:Log
@@ -305,6 +319,18 @@ class HandleMethodTest {
 
         fun bill(amount: BigDecimal): BigDecimal {
             return amount * 2.toBigDecimal()
+        }
+
+        @Provides
+        @Suppress("UNCHECKED_CAST")
+        fun <Res: Any?> createLogger(inquiry: Inquiry) =
+                inquiry.createKeyInstance() as? Filtering<HandleMethod, Res>
+    }
+
+    @Log2
+    class Amazon : Handler(), Logistics {
+        override suspend fun deliver(order: String): UUID {
+            return UUID.randomUUID()
         }
 
         @Provides

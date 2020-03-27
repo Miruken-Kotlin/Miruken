@@ -54,7 +54,9 @@ class HandleMethodBinding(
                 }
             })(composer, true).let { result ->
                 result.takeIf {
-                    protocolMethod.returnType.isInstance(result)
+                    protocolMethod.returnType.let {
+                        it != Any::class.java && it.isInstance(result)
+                    }
                 } ?: result.get()
             }
         } catch (e: Throwable) {
