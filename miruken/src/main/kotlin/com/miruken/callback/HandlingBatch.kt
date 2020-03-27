@@ -1,7 +1,9 @@
 package com.miruken.callback
 
 import com.miruken.concurrent.Promise
+import com.miruken.concurrent.await
 import com.miruken.typeOf
+import kotlin.coroutines.coroutineContext
 
 fun Handling.batch(vararg tags: Any) =
         BatchingHandler(this, tags)
@@ -16,6 +18,10 @@ fun Handling.batch(
     return batch.complete()
 }
 
+suspend fun Handling.batchCo(
+        prepare: (BatchingHandler) -> Unit
+) = with(coroutineContext).batch(prepare).await()
+
 fun Handling.batch(
         vararg tags: Any,
         prepare:     (BatchingHandler) -> Unit
@@ -25,6 +31,13 @@ fun Handling.batch(
     return batch.complete()
 }
 
+suspend fun Handling.batchCo(
+        vararg tags: Any,
+        prepare:     (BatchingHandler) -> Unit
+) = with(coroutineContext)
+        .batch(*tags, prepare = prepare)
+        .await()
+
 inline fun <reified T> Handling.batchOver(
         prepare: (BatchingHandler) -> Unit
 ): Promise<List<Any?>> {
@@ -32,6 +45,10 @@ inline fun <reified T> Handling.batchOver(
     prepare(batch)
     return batch.complete()
 }
+
+suspend inline fun <reified T> Handling.batchOverCo(
+        prepare: (BatchingHandler) -> Unit
+) = with(coroutineContext).batchOver<T>(prepare).await()
 
 fun Handling.getBatch(tag: Any? = null): Batch? =
         resolve<Batch>()?.takeIf {

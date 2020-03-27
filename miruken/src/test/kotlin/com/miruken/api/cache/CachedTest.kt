@@ -1,9 +1,6 @@
 package com.miruken.api.cache
 
-import com.miruken.api.GetStockQuote
-import com.miruken.api.JacksonProvider
-import com.miruken.api.StockQuoteHandler
-import com.miruken.api.send
+import com.miruken.api.*
 import com.miruken.callback.Handling
 import com.miruken.callback.plus
 import com.miruken.callback.policy.HandlerDescriptorFactory
@@ -12,6 +9,8 @@ import com.miruken.callback.policy.registerDescriptor
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.delay
 import com.miruken.test.assertAsync
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -47,6 +46,14 @@ class CachedTest {
         }
     }
 
+    @Test fun `Makes initial request suspending`() = runBlocking {
+        assertEquals(0, StockQuoteHandler.called)
+        val getQuote = GetStockQuote("AAPL")
+        val quote    = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote.symbol)
+        assertEquals(1, StockQuoteHandler.called)
+    }
+
     @Test fun `Caches initial request`() {
         assertEquals(0, StockQuoteHandler.called)
         val getQuote = GetStockQuote("AAPL")
@@ -61,6 +68,17 @@ class CachedTest {
                 }
             }
         }
+    }
+
+    @Test fun `Caches initial request suspending`() = runBlocking {
+        assertEquals(0, StockQuoteHandler.called)
+        val getQuote = GetStockQuote("AAPL")
+        val quote1   = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote1.symbol)
+        assertEquals(1, StockQuoteHandler.called)
+        val quote2   = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote2.symbol)
+        assertEquals(1, StockQuoteHandler.called)
     }
 
     @Test fun `Refreshes cached request`() {
@@ -82,6 +100,19 @@ class CachedTest {
         }
     }
 
+    @Test fun `Refreshes cached request suspending`() = runBlocking {
+        assertEquals(0, StockQuoteHandler.called)
+        val getQuote = GetStockQuote("AAPL")
+        val quote1   = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote1.symbol)
+        assertEquals(1, StockQuoteHandler.called)
+        handler.sendCo(getQuote.cache())
+        assertEquals(1, StockQuoteHandler.called)
+        val quote2   = handler.sendCo(getQuote.refresh())
+        assertEquals("AAPL", quote2.symbol)
+        assertEquals(2, StockQuoteHandler.called)
+    }
+
     @Test fun `Refreshes stale request`() {
         assertEquals(0, StockQuoteHandler.called)
         val getQuote = GetStockQuote("AAPL")
@@ -99,6 +130,18 @@ class CachedTest {
                 }
             }
         }
+    }
+
+    @Test fun `Refreshes stale request suspending`() = runBlocking {
+        assertEquals(0, StockQuoteHandler.called)
+        val getQuote = GetStockQuote("AAPL")
+        val quote1   = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote1.symbol)
+        assertEquals(1, StockQuoteHandler.called)
+        delay(200)
+        val quote2   = handler.sendCo(getQuote.cache(Duration.ofMillis(100)))
+        assertEquals("AAPL", quote2.symbol)
+        assertEquals(2, StockQuoteHandler.called)
     }
 
     @Test fun `Invalidates response`() {
@@ -122,6 +165,21 @@ class CachedTest {
         }
     }
 
+    @Test fun `Invalidates response suspending`() = runBlocking {
+        assertEquals(0, StockQuoteHandler.called)
+        val getQuote = GetStockQuote("AAPL")
+        val quote1   = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote1.symbol)
+        assertEquals(1, StockQuoteHandler.called)
+        val quote2   = handler.sendCo(getQuote.invalidate())
+        assertEquals("AAPL", quote2!!.symbol)
+        assertEquals(quote1.value, quote2.value)
+        assertEquals(1, StockQuoteHandler.called)
+        val quote3   = handler.sendCo(getQuote.cache())
+        assertEquals("AAPL", quote3.symbol)
+        assertEquals(2, StockQuoteHandler.called)
+    }
+
     @Test fun `Refreshes failed requests`() {
         assertEquals(0, StockQuoteHandler.called)
         val getQuote = GetStockQuote("EX")
@@ -135,6 +193,20 @@ class CachedTest {
                     done()
                 }
             }
+        }
+    }
+
+    @Test fun `Refreshes failed requests suspending`() = runBlocking<Unit> {
+        assertEquals(0, StockQuoteHandler.called)
+        val getQuote = GetStockQuote("EX")
+        try {
+            handler.sendCo(getQuote.cache())
+        } catch (t: Throwable) {
+            assertEquals(1, StockQuoteHandler.called)
+            assertEquals("Stock Exchange is down", t.message)
+            val quote1 = handler.sendCo(getQuote.cache())
+            assertEquals("EX", quote1.symbol)
+            assertEquals(2, StockQuoteHandler.called)
         }
     }
 

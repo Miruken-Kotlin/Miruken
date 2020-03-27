@@ -4,6 +4,7 @@ import com.miruken.concurrent.Promise
 import com.miruken.concurrent.all
 import com.miruken.protocol.proxy
 import com.miruken.test.assertAsync
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
@@ -42,6 +43,17 @@ class BatchTest {
                 done()
             }
         }
+        assertEquals("Hello", handler.proxy<Emailing>().send("Hello"))
+    }
+
+    @Test fun `Batches protocols suspending`() = runBlocking {
+        val handler = EmailHandler()
+        assertEquals("Hello", handler.proxy<Emailing>().send("Hello"))
+        val results = handler.batchCo { batch ->
+            assertNull(batch.proxy<Emailing>().send("Hello"))
+        }
+        assertEquals(1, results.size)
+        assertEquals(listOf("Hello batch"), results.first())
         assertEquals("Hello", handler.proxy<Emailing>().send("Hello"))
     }
 
