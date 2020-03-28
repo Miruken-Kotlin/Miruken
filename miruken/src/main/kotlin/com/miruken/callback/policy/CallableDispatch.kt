@@ -49,8 +49,7 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
             receiver:  Any,
             arguments: Array<Any?>,
             composer:  Handling
-    ): Any? {
-        return try {
+    ) = try {
             if (callable.requiresReceiver) {
                 if (callable.isSuspend) {
                     getCoroutineScope(composer).async {
@@ -74,7 +73,6 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
                 throw cause
             }
         }
-    }
 
     private fun getCoroutineScope(composer: Handling) =
             composer.resolve<CoroutineContext>()

@@ -3,7 +3,6 @@ package com.miruken.callback
 import com.miruken.concurrent.Promise
 import com.miruken.concurrent.await
 import com.miruken.typeOf
-import kotlin.coroutines.coroutineContext
 
 fun Handling.batch(vararg tags: Any) =
         BatchingHandler(this, tags)
@@ -20,7 +19,11 @@ fun Handling.batch(
 
 suspend fun Handling.batchCo(
         prepare: (BatchingHandler) -> Unit
-) = with(coroutineContext).batch(prepare).await()
+):List<Any?> {
+    val batch = BatchingHandler(this)
+    prepare(batch)
+    return batch.complete().await()
+}
 
 fun Handling.batch(
         vararg tags: Any,
@@ -34,9 +37,11 @@ fun Handling.batch(
 suspend fun Handling.batchCo(
         vararg tags: Any,
         prepare:     (BatchingHandler) -> Unit
-) = with(coroutineContext)
-        .batch(*tags, prepare = prepare)
-        .await()
+): List<Any?> {
+    val batch = BatchingHandler(this, *tags)
+    prepare(batch)
+    return batch.complete().await()
+}
 
 inline fun <reified T> Handling.batchOver(
         prepare: (BatchingHandler) -> Unit
@@ -48,7 +53,11 @@ inline fun <reified T> Handling.batchOver(
 
 suspend inline fun <reified T> Handling.batchOverCo(
         prepare: (BatchingHandler) -> Unit
-) = with(coroutineContext).batchOver<T>(prepare).await()
+): List<Any?> {
+    val batch = BatchingHandler(this, typeOf<T>())
+    prepare(batch)
+    return batch.complete().await()
+}
 
 fun Handling.getBatch(tag: Any? = null): Batch? =
         resolve<Batch>()?.takeIf {
