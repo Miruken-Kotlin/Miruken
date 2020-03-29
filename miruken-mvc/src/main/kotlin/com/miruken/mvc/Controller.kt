@@ -62,7 +62,7 @@ abstract class Controller : Contextual, AutoCloseable {
         context?.dispose(closeable)
     }
 
-    val async get() = requireContext().async
+    val async get() = requireContext().trackAsync
 
     // Render
 

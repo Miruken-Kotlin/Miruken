@@ -360,19 +360,19 @@ class ContextTest {
         assertSame(foo, promise.get())
         assertEquals(1, foo.count)
 
-        val promise2 = root.async.proxy<Api>().send(foo)
+        val promise2 = root.trackAsync.proxy<Api>().send(foo)
         assertEquals(PromiseState.PENDING, promise2.state)
         assertEquals(2, foo.count)
         root.end()
         assertEquals(PromiseState.CANCELLED, promise2.state)
         assertEquals(10, foo.count)
 
-        val promise3 = root.async.proxy<Api>().send(foo)
+        val promise3 = root.trackAsync.proxy<Api>().send(foo)
         assertEquals(PromiseState.FULFILLED, promise3.state)
         assertSame(foo, promise.get())
         assertEquals(11, foo.count)
 
-        val promise4 = root.async.proxy<Api>().send(foo)
+        val promise4 = root.trackAsync.proxy<Api>().send(foo)
         assertEquals(PromiseState.CANCELLED, promise4.state)
         assertEquals(10, foo.count)
     }

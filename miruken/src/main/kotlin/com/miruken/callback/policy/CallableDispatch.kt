@@ -12,10 +12,11 @@ import com.miruken.runtime.isNothing
 import com.miruken.runtime.isUnit
 import com.miruken.runtime.requiresReceiver
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import java.lang.reflect.InvocationTargetException
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KCallable
 import kotlin.reflect.full.callSuspend
@@ -75,7 +76,6 @@ class CallableDispatch(val callable: KCallable<*>) : KAnnotatedElement {
         }
 
     private fun getCoroutineScope(composer: Handling) =
-            composer.resolve<CoroutineContext>()
-                    ?.let(::CoroutineScope)
-                    ?: GlobalScope
+            CoroutineScope((composer.resolve<CoroutineContext>()
+                    ?: EmptyCoroutineContext) + SupervisorJob())
 }

@@ -5,6 +5,7 @@ import com.miruken.callback.NotHandledException
 import com.miruken.callback.handle
 import com.miruken.concurrent.Promise
 import com.miruken.kTypeOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 
 inline fun <reified T: Any> Handling.stashGet(): T? {
@@ -53,7 +54,7 @@ inline fun <reified T: Any> Handling.stashGetOrPutAsync(
 }
 
 inline fun <reified T: Any> Handling.stashGetOrPutCo(
-        crossinline data: suspend () -> T
+        crossinline data: suspend CoroutineScope.() -> T
 ): T {
     val get = StashAction.Get(kTypeOf<T>())
     return handle(get) success { get.value as? T }
