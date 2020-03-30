@@ -13,10 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 import java.util.concurrent.CancellationException
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
-import kotlin.test.fail
+import kotlin.test.*
 
 class CoroutineTest {
     private lateinit var factory: HandlerDescriptorFactory
@@ -139,7 +136,7 @@ class CoroutineTest {
     fun `Handles suspending callbacks with async coroutine`() = runBlocking {
         val handler      = SuspendingHandler()
         val conversation = handler.commandCo(Talk("+01234")) as Conversation
-        assertEquals("Found long distance channel 29", conversation.words)
+        assertEquals("Found long distance channel 29 for +01234", conversation.words)
     }
 
     @Test
@@ -156,16 +153,20 @@ class CoroutineTest {
     @Test
     fun `Provides suspending callbacks`() {
         val handler = SuspendingHandler()
-        assertEquals("How was your day?", handler.resolve<Conversation>()?.words)
+        assertNull(handler.resolve<Conversation>()?.words)
+        handler.command(Talk("122131"))
+        assertEquals("Hello 122131", handler.resolve<Conversation>()?.words)
     }
 
     @Test
     fun `Provides suspending callbacks async`() {
         val handler = SuspendingHandler()
         assertAsync(testName) { done ->
-            handler.resolveAsync<Conversation>() then {
-                assertEquals("How was your day?", it?.words)
-                done()
+            handler.commandAsync(Talk("198273")) then  {
+                handler.resolveAsync<Conversation>() then {
+                    assertEquals("Hello 198273", it?.words)
+                    done()
+                }
             }
         }
     }
@@ -173,24 +174,48 @@ class CoroutineTest {
     @Test
     fun `Provides suspending callbacks await`() = runBlocking {
         val handler      = SuspendingHandler()
+        assertNull(handler.resolveAsync<Conversation>().await())
+        handler.commandAsync(Talk("888")).await()
         val conversation = handler.resolveAsync<Conversation>().await()
-        assertEquals("How was your day?", conversation?.words)
+        assertEquals("Hello 888", conversation?.words)
     }
 
     @Test
     fun `Provides suspending callbacks suspend`() = runBlocking {
-        val handler      = SuspendingHandler()
+        val handler = SuspendingHandler()
+        assertNull(handler.resolveCo<Conversation>())
+        handler.commandCo(Talk("11111111"))
         val conversation = handler.resolveCo<Conversation>()
-        assertEquals("How was your day?", conversation?.words)
+        assertEquals("Hello 11111111", conversation?.words)
+    }
+
+    @Test
+    fun `Provides suspending callbacks composition suspend`() = runBlocking {
+        val handler = SuspendingHandler()
+        val nothing = handler.commandCo(Talk("#1")) as Conversation
+        assertEquals("No conversation found", nothing.words)
+        handler.commandCo(Talk("242424"))
+        val conversation = handler.commandCo(Talk("#1")) as Conversation
+        assertEquals("Hello 242424", conversation.words)
     }
 
     data class Dial(val number: String)
 
     data class Talk(val number: String)
 
+    data class Connect(val number: String)
+
     data class Conversation(val words: String)
 
     class SuspendingHandler : Handler() {
+        private val _conversations = mutableListOf<Conversation>()
+
+        @Provides
+        suspend fun lastConversation(): Conversation? {
+            delay(10)
+            return _conversations.lastOrNull()
+        }
+
         @Handles
         suspend fun dial(dial: Dial) = coroutineScope {
             if (dial.number == "0") {
@@ -211,7 +236,7 @@ class CoroutineTest {
         }
 
         @Handles
-        suspend fun talk(talk: Talk): Conversation {
+        suspend fun talk(talk: Talk, composer: Handling): Conversation {
             delay(10)
             when {
                 talk.number == "0" -> {
@@ -227,24 +252,24 @@ class CoroutineTest {
                 }
                 talk.number.startsWith("+01") -> {
                     val channel = withContext(Dispatchers.Default) {
-                        connectLongDistance(talk.number)
+                        composer.commandCo(Connect(talk.number)) as Int
                     }
-                    return Conversation("Found long distance channel $channel")
+                    return Conversation("Found long distance channel $channel for ${talk.number}")
                 }
+                talk.number == "#1" ->
+                    return composer.resolveCo() ?:
+                            Conversation("No conversation found")
             }
-            return Conversation("Hello ${talk.number}")
+            return Conversation("Hello ${talk.number}").also {
+                _conversations.add(it)
+            }
         }
 
-        @Provides
-        suspend fun lastConversation(): Conversation {
+        @Handles
+        private suspend fun connect(connect: Connect): Int {
             delay(10)
-            return Conversation("How was your day?")
-        }
-
-        private suspend fun connectLongDistance(number: String): Int {
-            delay(10)
-            check(!number.endsWith("13")) {
-                "Long distance number $number is not reachable"
+            check(!connect.number.endsWith("13")) {
+                "Long distance number ${connect.number} is not reachable"
             }
             return 29
         }
